@@ -61,14 +61,14 @@ describe('Bundle Registry Contract', () => {
     });
 
     it('not whitelisted non-owner cannot add/remove whitelisted addresses', async () => {
-      expect(addVendor(otherAddress, vendorUrl, otherAddress)).to.be.eventually.rejected;
-      expect(removeVendor(otherAddress, otherAddress)).to.be.eventually.rejected;
+      await expect(addVendor(otherAddress, vendorUrl, otherAddress)).to.be.eventually.rejected;
+      await expect(removeVendor(otherAddress, otherAddress)).to.be.eventually.rejected;
     });
 
     it('whitelisted non-owner cannot add/remove whitelisted addresses', async () => {
       addVendor(otherAddress, vendorUrl, ownerAddress);
-      expect(addVendor(otherAddress, vendorUrl, otherAddress)).to.be.eventually.rejected;
-      expect(removeVendor(otherAddress, otherAddress)).to.be.eventually.rejected;
+      await expect(addVendor(otherAddress, vendorUrl, otherAddress)).to.be.eventually.rejected;
+      await expect(removeVendor(otherAddress, otherAddress)).to.be.eventually.rejected;
     });
   });
 
@@ -87,7 +87,7 @@ describe('Bundle Registry Contract', () => {
     });
 
     it('non-owner Url update throws', async () => {
-      expect(changeVendorUrl(otherAddress, 'some.other.url.com', otherAddress)).to.be.eventually.rejected;
+      await expect(changeVendorUrl(otherAddress, 'some.other.url.com', otherAddress)).to.be.eventually.rejected;
       expect(await getUrlForVendor(otherAddress)).to.eq(vendorUrl);
     });
   });
