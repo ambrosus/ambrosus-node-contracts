@@ -11,7 +11,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import Web3 from 'web3';
 import config from 'config';
 
-const DEFAULT_GAS = 4700000;
+export const DEFAULT_GAS = 4700000;
 
 function isValidRPCAddress(rpc) {
   return /^((?:http)|(?:ws)):\/\//g.test(rpc);

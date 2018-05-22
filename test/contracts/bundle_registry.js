@@ -11,10 +11,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../helpers/web3_tools';
-import deployContracts from '../helpers/contracts';
+import {createWeb3} from '../../scripts/web3_tools';
 import {adminAccount} from '../helpers/account';
 import web3jsChai from '../helpers/events';
+import deployContracts, { updateContracts } from '../../scripts/deploy';
 
 chai.use(web3jsChai());
 
@@ -27,7 +27,7 @@ describe('Bundle Registry Contract', () => {
   const bundleId = 'bundleId';
   const vendorUrl = 'node.ambrosus.com';
   const vendor = adminAccount.address;
-  let bundleRegistry;
+  let bundleRegistry, head;
   let web3;
   let ownerAddress;
   let otherAddress;
@@ -47,7 +47,7 @@ describe('Bundle Registry Contract', () => {
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    ({bundleRegistry} = await deployContracts(web3));
+    ({bundleRegistry, head} = await deployContracts(web3));
     [ownerAddress, otherAddress] = await web3.eth.getAccounts();
   });
 
@@ -123,6 +123,13 @@ describe('Bundle Registry Contract', () => {
       await addVendor(ownerAddress, vendorUrl);
       expect(await addBundle(bundleId, vendor)).to.emitEvent('BundleAdded');
       expect(await addBundle('bundle2', vendor)).to.emitEvent('BundleAdded');
+    });
+  });
+
+  describe('Calling functions after context changed', () => {
+    it('can not call anything after context changed', async () => {
+      await updateContracts(web3, head, ['0x0']);
+      await expect(addVendor(ownerAddress, vendorUrl)).to.be.eventually.rejected;
     });
   });
 });

@@ -8,7 +8,7 @@
   "license": "UNLICENCED",
   "scripts": {
     "build": "truffle compile",
-    "test": "export NODE_ENV=test && mocha --require babel-register --timeout 5000 --recursive"
+    "test": "export NODE_ENV=test && mocha --require babel-register --timeout 5000 --recursive --no-warnings"
   },
   "engines": {
     "node": ">=9.0",
@@ -16,8 +16,8 @@
   },
   "dependencies": {
     "config": "^1.30.0",
-    "web3": "^1.0.0-beta.34",
-    "zeppelin-solidity": "^1.9.0"
+    "openzeppelin-solidity": "^1.9.0",
+    "web3": "^1.0.0-beta.34"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
