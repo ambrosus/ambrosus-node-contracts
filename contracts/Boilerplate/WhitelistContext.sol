@@ -9,17 +9,19 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-import "../Storage/BundleRegistry.sol";
+contract WhitelistContext {
+    address[] allowed;
 
-contract Context {
-
-    BundleRegistry public bundleRegistry;
-
-    constructor(BundleRegistry _bundleRegistry) public {
-        bundleRegistry = _bundleRegistry;
+    constructor(address[] _allowed) public{
+        allowed = _allowed;
     }
 
     function canCall(address contractAddress) view public returns (bool) {
-        return bundleRegistry == contractAddress;
+        for (uint i = 0; i < allowed.length; i++) {
+            if (allowed[i]==contractAddress) {
+                return true;
+            }
+        }
+        return false;
     }
 }

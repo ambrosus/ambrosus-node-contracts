@@ -31,7 +31,7 @@ contract Base {
   }
 
   modifier canCall() {
-    require(context().canCall(address(this)), "This contract has been changed");
+    require(context().canCall(address(msg.sender)), "This contract has been changed");
     _;
   }
 
