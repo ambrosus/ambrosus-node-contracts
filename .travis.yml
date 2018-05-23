@@ -8,3 +8,4 @@ install:
   - yarn build
 script:
   - yarn test
+  - yarn dev:lint

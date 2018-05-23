@@ -10,11 +10,11 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../src/web3_tools';
-import {adminAccount} from '../helpers/account';
-import web3jsChai from '../helpers/events';
-import deployContracts from '../../src/deploy';
-import deployMockContext from '../helpers/deployWhitelistContext';
+import {createWeb3} from '../../../src/web3_tools';
+import {adminAccount} from '../../helpers/account';
+import web3jsChai from '../../helpers/events';
+import deployContracts from '../../../src/deploy';
+import deployMockContext from '../../helpers/deployWhitelistContext';
 
 chai.use(web3jsChai());
 
