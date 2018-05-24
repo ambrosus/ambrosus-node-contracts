@@ -9,17 +9,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-import "../Storage/BundleRegistry.sol";
+import "../Boilerplate/Head.sol";
+import "./Contract2.sol";
 
-contract Context {
+contract Contract1 is Base {
+    Contract2 otherContract;
 
-    BundleRegistry public bundleRegistry;
-
-    constructor(BundleRegistry _bundleRegistry) public {
-        bundleRegistry = _bundleRegistry;
+    constructor(Head _head, Contract2 _otherContract) Base(_head) {
+        otherContract = _otherContract;
     }
 
-    function isInternalToContext(address contractAddress) view public returns (bool) {
-        return bundleRegistry == contractAddress;
+    function callOtherContract() view public {
+        otherContract.contextInternalMethod();
     }
 }

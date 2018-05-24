@@ -7,19 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.23 ;
 
-import "../Storage/BundleRegistry.sol";
+import "../Boilerplate/Head.sol";
 
-contract Context {
+contract Contract2 is Base {
+    constructor(Head _head) Base(_head) { }
 
-    BundleRegistry public bundleRegistry;
-
-    constructor(BundleRegistry _bundleRegistry) public {
-        bundleRegistry = _bundleRegistry;
-    }
-
-    function isInternalToContext(address contractAddress) view public returns (bool) {
-        return bundleRegistry == contractAddress;
-    }
+    function contextInternalMethod() view onlyContextInternalCalls public { }
 }

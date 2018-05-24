@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import WhitelistContext from '../../build/contracts/WhitelistContext.json';
+import WhitelistContextJson from '../../build/contracts/WhitelistContext.json';
 
 import {
   DEFAULT_GAS,
@@ -15,15 +15,24 @@ import {
   getDefaultAddress
 } from '../../src/web3_tools';
 
-const deployWhitelistContext = async (web3, head, addresses) => {
-  const context = await deployContract(web3, WhitelistContext.abi,
-    WhitelistContext.bytecode, [addresses]);
+const deployWhitelistContext = async (web3, head, addresses, contracts) => {
+  const context = await deployContract(web3, WhitelistContextJson.abi,
+    WhitelistContextJson.bytecode, contracts);
+  await addToWhitelist(web3, context, addresses);
   await head.methods.setContext(context.options.address).
     send({
       gas: DEFAULT_GAS,
       from: getDefaultAddress(web3)
     });
   return context;
+};
+
+export const addToWhitelist = async (web3, context, addresses) => {
+  await context.methods.addToWhitelist(addresses).send({from: getDefaultAddress(web3)});
+};
+
+export const removeFromWhitelist = async (web3, context, addresses) => {
+  await context.methods.removeFromWhitelist(addresses).send({from: getDefaultAddress(web3)});
 };
 
 export default deployWhitelistContext;

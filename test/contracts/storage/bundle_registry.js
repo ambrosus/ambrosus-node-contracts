@@ -69,7 +69,7 @@ describe('Bundle Registry Contract', () => {
     web3 = await createWeb3();
     ({bundleRegistry, head} = await deployContracts(web3));
     [ownerAddress, otherAddress] = await web3.eth.getAccounts();
-    await deployMockContext(web3, head, [ownerAddress, otherAddress]);
+    await deployMockContext(web3, head, [ownerAddress, otherAddress], [bundleRegistry.options.address]);
   });
 
   describe('Whitelisting', () => {
@@ -178,39 +178,6 @@ describe('Bundle Registry Contract', () => {
       expect(await addBundle('bundle2', vendor)).
         to.
         emitEvent('BundleAdded');
-    });
-  });
-
-  describe('Calling functions after context changed should be rejected', () => {
-    beforeEach(async () => {
-      await addVendor(otherAddress, vendorUrl);
-      await deployMockContext(web3, head, [otherAddress]);
-    });
-
-    it('addVendor', async () => {
-      await expect(
-        addVendor(ownerAddress, vendorUrl)).to.be.eventually.rejected;
-    });
-
-    it('removeVendor', async () => {
-      await expect(removeVendor(otherAddress)).to.be.eventually.rejected;
-    });
-
-    it('isWhitelisted', async () => {
-      await expect(isWhitelisted(otherAddress)).to.be.eventually.rejected;
-    });
-
-    it('getUrlForVendor', async () => {
-      await expect(getUrlForVendor(otherAddress)).to.be.eventually.rejected;
-    });
-
-    it('changeVendorUrl', async () => {
-      await expect(changeVendorUrl(otherAddress,
-        'some.other.url.com')).to.be.eventually.rejected;
-    });
-
-    it('addBundle', async () => {
-      await expect(addBundle(bundleId, vendor)).to.be.eventually.rejected;
     });
   });
 });

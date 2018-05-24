@@ -9,19 +9,26 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-contract WhitelistContext {
-    address[] allowed;
+import "./Context.sol";
 
-    constructor(address[] _allowed) public{
-        allowed = _allowed;
+contract WhitelistContext is Context {
+    mapping(address => bool) whitelist;
+
+    constructor(BundleRegistry _bundleRegistry) Context(_bundleRegistry) public {}
+
+    function addToWhitelist(address[] whitelisted) public {
+        for (uint i=0; i<whitelisted.length; i++) {
+            whitelist[whitelisted[i]] = true;
+        }
     }
 
-    function canCall(address contractAddress) view public returns (bool) {
-        for (uint i = 0; i < allowed.length; i++) {
-            if (allowed[i]==contractAddress) {
-                return true;
-            }
+    function removeFromWhitelist(address[] unWhitelisted) public {
+        for (uint i=0; i<unWhitelisted.length; i++) {
+            whitelist[unWhitelisted[i]] = false;
         }
-        return false;
+    }
+
+    function isInternalToContext(address contractAddress) view public returns (bool) {
+        return whitelist[contractAddress];
     }
 }

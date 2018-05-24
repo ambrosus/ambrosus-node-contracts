@@ -34,7 +34,7 @@ describe('Context contract', () => {
   });
 
   it('canCall returns true only if such address is known', async () => {
-    expect(await context.methods.canCall(bundleRegistry.options.address).call()).to.equal(true);
-    expect(await context.methods.canCall(ownerAddress).call()).to.equal(false);
+    expect(await context.methods.isInternalToContext(bundleRegistry.options.address).call()).to.equal(true);
+    expect(await context.methods.isInternalToContext(ownerAddress).call()).to.equal(false);
   });
 });

@@ -30,8 +30,8 @@ contract Base {
     head = _head;
   }
 
-  modifier canCall() {
-    require(context().canCall(address(msg.sender)), "This contract has been changed");
+  modifier onlyContextInternalCalls() {
+    require(context().isInternalToContext(address(msg.sender)), "The message sender is not whitelisted by the context");
     _;
   }
 

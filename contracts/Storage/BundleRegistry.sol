@@ -36,39 +36,38 @@ contract BundleRegistry is Base, Ownable {
     _;
   }
 
-  function addBundle(bytes32 bundleId, address vendor) onlyWhitelisted canCall public {
+  function addBundle(bytes32 bundleId, address vendor) onlyWhitelisted public {
     bundleIds.push(bundleId);
     bundles[bundleId] = Bundle(vendor);    
     emit BundleAdded(bundleId);
   }
  
-  function getBundleCount() public view canCall returns(uint) {
+  function getBundleCount() public view returns(uint) {
     return bundleIds.length;
   }
 
-  function getVendorForBundle(bytes32 bundleId) canCall public view returns (address) {
+  function getVendorForBundle(bytes32 bundleId) public view returns (address) {
     return bundles[bundleId].creator;
   }
 
-  function addToWhitelist(address vendor, string url) canCall onlyOwner public {
+  function addToWhitelist(address vendor, string url) onlyOwner public {
     vendors[vendor].whitelisted = true;
     vendors[vendor].url = url;
   }
 
-  function removeFromWhitelist(address vendor) canCall onlyOwner public {
+  function removeFromWhitelist(address vendor) onlyOwner public {
     vendors[vendor].whitelisted = false;
   }
 
-  function isWhitelisted(address vendor) canCall view public returns (bool) {
+  function isWhitelisted(address vendor) view public returns (bool) {
     return vendors[vendor].whitelisted;
   }
 
-  function changeVendorUrl(address vendor, string url) canCall onlyOwner public {
+  function changeVendorUrl(address vendor, string url) onlyOwner public {
     vendors[vendor].url = url;
   }
 
-  function getUrlForVendor(address vendor) canCall public view returns (string) {
+  function getUrlForVendor(address vendor) public view returns (string) {
     return vendors[vendor].url;
   }
-
 }
