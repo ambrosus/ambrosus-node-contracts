@@ -38,7 +38,7 @@ describe('Head contract', () => {
     expect(await head.methods.context().call()).to.equal(otherAddress);
   });
 
-  it('not owner cannot modify context', async () => {
+  it('not owner can not modify context', async () => {
     await expect(head.methods.setContext(otherAddress).send({from: otherAddress}))
       .to.be.rejected;
   });

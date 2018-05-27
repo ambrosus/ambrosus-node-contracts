@@ -85,7 +85,7 @@ describe('Bundle Registry Contract', () => {
         eq(false);
     });
 
-    it('not whitelisted non-owner cannot add/remove whitelisted addresses',
+    it('not whitelisted non-owner can not add/remove whitelisted addresses',
       async () => {
         await expect(addVendor(otherAddress, vendorUrl,
           otherAddress)).to.be.eventually.rejected;
@@ -93,7 +93,7 @@ describe('Bundle Registry Contract', () => {
           removeVendor(otherAddress, otherAddress)).to.be.eventually.rejected;
       });
 
-    it('whitelisted non-owner cannot add/remove whitelisted addresses',
+    it('whitelisted non-owner can not add/remove whitelisted addresses',
       async () => {
         addVendor(otherAddress, vendorUrl, ownerAddress);
         await expect(addVendor(otherAddress, vendorUrl,
@@ -158,7 +158,7 @@ describe('Bundle Registry Contract', () => {
         eq(bundleId);
     });
 
-    it('non-whitelisted address cannot add bundle', async () => {
+    it('non-whitelisted address can not add bundle', async () => {
       await expect(addBundle(bundleId, vendor)).to.be.eventually.rejected;
     });
 
