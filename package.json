@@ -9,6 +9,7 @@
   "scripts": {
     "build": "truffle compile",
     "test": "export NODE_ENV=test && mocha --require babel-register --timeout 5000 --recursive --no-warnings",
+    "testall": "yarn build && yarn test",
     "dev:lint": "eslint src test config"
   },
   "engines": {

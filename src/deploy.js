@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import BundleRegistryJson from '../build/contracts/BundleRegistry.json';
+import StakeStoreJson from '../build/contracts/StakeStore.json';
 import HeadJson from '../build/contracts/Head.json';
 import ContextJson from '../build/contracts/Context.json';
 
@@ -28,9 +29,12 @@ const deployContracts = async (web3) => {
   const bundleRegistry = await deployContract(web3, BundleRegistryJson.abi,
     BundleRegistryJson.bytecode,
     [head.options.address]);
+  const stakeStore = await deployContract(web3, StakeStoreJson.abi,
+    StakeStoreJson.bytecode,
+    [head.options.address]);  
   const context = await updateContracts(web3, head,
-    [bundleRegistry.options.address]);
-  return {bundleRegistry, head, context};
+    [bundleRegistry.options.address, stakeStore.options.address]);
+  return {bundleRegistry, head, context, stakeStore};
 };
 
 export default deployContracts;
