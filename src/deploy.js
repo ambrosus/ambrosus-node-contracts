@@ -13,7 +13,7 @@ import ContextJson from '../build/contracts/Context.json';
 
 import {DEFAULT_GAS, deployContract, getDefaultAddress} from './web3_tools';
 
-export const updateContracts = async (web3, head, args) => {
+export const setupContext = async (web3, head, args) => {
   const context = await deployContract(web3, ContextJson.abi,
     ContextJson.bytecode, args);
   await head.methods.setContext(context.options.address).send({
@@ -28,7 +28,7 @@ const deployContracts = async (web3) => {
   const bundleRegistry = await deployContract(web3, BundleRegistryJson.abi,
     BundleRegistryJson.bytecode,
     [head.options.address]);
-  const context = await updateContracts(web3, head,
+  const context = await setupContext(web3, head,
     [bundleRegistry.options.address]);
   return {bundleRegistry, head, context};
 };

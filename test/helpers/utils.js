@@ -7,12 +7,5 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-pragma solidity ^0.4.23 ;
-
-import "../Boilerplate/Head.sol";
-
-contract Contract2 is Base {
-    constructor(Head _head) Base(_head) public { }
-
-    function contextInternalMethod() view onlyContextInternalCalls public { }
-}
+export const asciiToHex = (web3, arg) => web3.utils.asciiToHex(arg);
+export const hexToUtf8 = (web3, arg) => web3.utils.hexToUtf8(arg);

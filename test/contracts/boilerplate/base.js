@@ -19,9 +19,9 @@ import web3jsChai from '../../helpers/events';
 import Contract1Json from '../../../build/contracts/Contract1.json';
 import Contract2Json from '../../../build/contracts/Contract2.json';
 import HeadJson from '../../../build/contracts/Head.json';
-import deployWhitelistContext, {
+import deployMockContext, {
   removeFromWhitelist
-} from '../../helpers/deployWhitelistContext';
+} from '../../helpers/deployMockContext';
 
 
 chai.use(web3jsChai());
@@ -47,7 +47,7 @@ describe('Base contract', () => {
     contract1 = await deployContract(web3, Contract1Json.abi,
       Contract1Json.bytecode,
       [head.options.address, contract2.options.address]);
-    context = await deployWhitelistContext(web3, head, [contract1.options.address, contract2.options.address],
+    context = await deployMockContext(web3, head, [contract1.options.address, contract2.options.address],
       ['0x0']);
   });
 

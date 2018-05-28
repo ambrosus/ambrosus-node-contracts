@@ -15,7 +15,7 @@ import "./Contract2.sol";
 contract Contract1 is Base {
     Contract2 otherContract;
 
-    constructor(Head _head, Contract2 _otherContract) Base(_head) {
+    constructor(Head _head, Contract2 _otherContract) Base(_head) public{
         otherContract = _otherContract;
     }
 
