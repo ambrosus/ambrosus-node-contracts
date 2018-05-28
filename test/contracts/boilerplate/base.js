@@ -48,7 +48,7 @@ describe('Base contract', () => {
       Contract1Json.bytecode,
       [head.options.address, contract2.options.address]);
     context = await deployMockContext(web3, head, [contract1.options.address, contract2.options.address],
-      ['0x0']);
+      ['0x0', '0x0']);
   });
 
   it('onlyContextInternalCalls should allow calling methods by whitelisted contracts', async () => {
