@@ -1,18 +1,17 @@
 /*
 Copyright: Ambrosus Technologies GmbH
 Email: tech@ambrosus.com
-Developers: Marek Kirejczyk, Antoni Kedracki, Ivan Rukhavets, Bartlomiej Rutkowski
 
 This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.23;
 
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import "../Boilerplate/Head.sol";
 
-contract BundleRegistry is Ownable {
+contract BundleRegistry is Base, Ownable {
 
   struct Vendor {
     bool whitelisted;
@@ -30,8 +29,10 @@ contract BundleRegistry is Ownable {
 
   event BundleAdded(bytes32 bundleId);
 
+  constructor(Head _head) public Base(_head) { }
+
   modifier onlyWhitelisted() {
-    require(isWhitelisted(msg.sender));
+    require(isWhitelisted(msg.sender), "Sender not whitelisted");
     _;
   }
 
@@ -69,5 +70,4 @@ contract BundleRegistry is Ownable {
   function getUrlForVendor(address vendor) public view returns (string) {
     return vendors[vendor].url;
   }
-
 }
