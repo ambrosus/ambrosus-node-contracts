@@ -10,16 +10,19 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Storage/BundleRegistry.sol";
+import "../Storage/StakeStore.sol";
 
 contract Context {
 
     BundleRegistry public bundleRegistry;
+    StakeStore public stakeStore;
 
-    constructor(BundleRegistry _bundleRegistry) public {
+    constructor(BundleRegistry _bundleRegistry, StakeStore _stakeStore) public {
         bundleRegistry = _bundleRegistry;
+        stakeStore = _stakeStore;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
-        return bundleRegistry == contractAddress;
+        return bundleRegistry == contractAddress || stakeStore == contractAddress;
     }
 }
