@@ -11,6 +11,7 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
 
+
 contract BundleRegistry is Base, Ownable {
 
     struct Vendor {

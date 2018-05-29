@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./Context.sol";
 
+
 contract Head is Ownable {
     event ContextChange(Context context);
 
@@ -22,6 +23,7 @@ contract Head is Ownable {
         emit ContextChange(context);
     }
 }
+
 
 contract Base {
     Head head;

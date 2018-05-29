@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
 
+
 contract StakeStore is Base {
 
     using SafeMath for uint256;
@@ -34,19 +35,19 @@ contract StakeStore is Base {
         return stakes[node].amount > 0;
     }
 
-    function canStore(address node) public view returns (bool)  {
+    function canStore(address node) public view returns (bool) {
         return stakes[node].storageUsed < stakes[node].storageLimit;
     }
 
-    function getStorageUsed(address node) public view returns (uint)  {
+    function getStorageUsed(address node) public view returns (uint) {
         return stakes[node].storageUsed;
     }
 
-    function getStake(address node) public view returns (uint)  {
+    function getStake(address node) public view returns (uint) {
         return stakes[node].amount;
     }  
 
-    function getRole(address node) public view returns (NodeType)  {
+    function getRole(address node) public view returns (NodeType) {
         return stakes[node].role;
     }  
 
@@ -56,7 +57,13 @@ contract StakeStore is Base {
 
     function depositStake(uint _storageLimit, NodeType _role) public payable onlyContextInternalCalls {
         require(!isStaking(msg.sender));
-        stakes[msg.sender] = Stake(msg.value, _storageLimit, 0, _role);
+        
+        stakes[msg.sender] = Stake(
+            msg.value,
+            _storageLimit,
+            0,
+            _role
+        );
     }
 
     function releaseStake(address node) public onlyContextInternalCalls {    

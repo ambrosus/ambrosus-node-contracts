@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 import "../Storage/BundleRegistry.sol";
 import "../Storage/StakeStore.sol";
 
+
 contract Context {
 
     BundleRegistry public bundleRegistry;

@@ -1,5 +1,5 @@
 {
-  "extends": "solium:recommended",
+  "extends": "solium:all",
   "plugins": [
     "security"
   ],
