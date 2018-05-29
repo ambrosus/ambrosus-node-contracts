@@ -46,80 +46,99 @@ describe('StakeStore Contract', () => {
     return new BN(receipt.cumulativeGasUsed);
   };
 
-  describe('Creating contract', () => {
+  describe('Deployment', () => {
     it('properly initialized', async () => {
       expect(await stakeStore.methods.isStaking(from).call()).to.be.false;
       expect(await stakeStore.methods.canStore(from).call()).to.be.false;
       expect(await stakeStore.methods.isShelteringAny(from).call()).to.be.false;
-      expect(await stakeStore.methods.getStorageLeft(from).call()).to.be.eq('0');      
+      expect(await stakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
+      expect(await stakeStore.methods.getRole(from).call()).to.be.eq('0');
     });
   });
 
-  describe('Can not stake', () => {
-    it('if already staking', async () => {
-      await stakeStore.methods.despositStake(1, 0).send({from, value: 1});
-      await expect(stakeStore.methods.despositStake(1, 0).send({from, value: 1})).to.be.eventually.rejected;
-      await expect(await stakeStore.methods.getStorageLeft(from).call()).to.eq('1');
+  describe('Deposit a stake', () => {    
+    it('can not stake if already staking', async () => {
+      await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
+      await expect(stakeStore.methods.depositStake(1, 0).send({from, value: 2})).to.be.eventually.rejected;
+      await expect(await stakeStore.methods.getStake(from).call()).to.eq('1');
     });
-  });
 
-  describe('Staking', () => {    
-    beforeEach(async () => {
-      await stakeStore.methods.despositStake(1, 0).send({from, value: 1});
+    it('reject if not context internal call', async () => {
+      await expect(stakeStore.methods.depositStake(1, 0).send({from: other, value: 1})).to.be.eventually.rejected;
     });
 
     it('initiate stake', async () => {
+      await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
       expect(await stakeStore.methods.isStaking(from).call()).to.be.true;
       expect(await stakeStore.methods.canStore(from).call()).to.be.true;
       expect(await stakeStore.methods.isShelteringAny(from).call()).to.be.false;
-      expect(await stakeStore.methods.getStorageLeft(from).call()).to.be.eq('1');
+      expect(await stakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
+    });
+  });
+
+  describe('Increment storage used', () => {    
+    beforeEach(async () => {
+      await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
     });
 
-    it('decrease storage', async () => {
-      await stakeStore.methods.decreaseStorage(from).send({from});
+    it('increment storage used', async () => {
+      await stakeStore.methods.incrementStorageUsed(from).send({from});
       expect(await stakeStore.methods.isStaking(from).call()).to.be.true;
       expect(await stakeStore.methods.canStore(from).call()).to.be.false;
       expect(await stakeStore.methods.isShelteringAny(from).call()).to.be.true;
+      expect(await stakeStore.methods.getStorageUsed(from).call()).to.be.eq('1');      
     });
 
-    it('reject decrease storage if not context internal call', async () => {
-      expect(stakeStore.methods.decreaseStorage(from).send({from: other})).to.be.eventually.rejected;
+    it('reject if not context internal call', async () => {
+      await expect(stakeStore.methods.incrementStorageUsed(from).send({from: other})).to.be.eventually.rejected;
     });
 
-    it('reject decreaseStorage if run out of storageLeft', async () => { 
-      await stakeStore.methods.decreaseStorage(from).send({from});
-      await expect(stakeStore.methods.decreaseStorage(from).send({from})).to.be.eventually.rejected;
+    it('reject if run out of limit reached', async () => { 
+      await stakeStore.methods.incrementStorageUsed(from).send({from});
+      await expect(stakeStore.methods.incrementStorageUsed(from).send({from})).to.be.eventually.rejected;
     });
+  });
 
+  describe('Release a stake', () => {    
+    beforeEach(async () => {
+      await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
+    });
+  
     it('release a stake updates information', async () => { 
-      await stakeStore.methods.releaseStake().send({from, gasPrice: 1});
+      await stakeStore.methods.releaseStake(from).send({from, gasPrice: 1});
       expect(await stakeStore.methods.isStaking(from).call()).to.be.false;
       expect(await stakeStore.methods.canStore(from).call()).to.be.false;
       expect(await stakeStore.methods.isShelteringAny(from).call()).to.be.false;
-      expect(await stakeStore.methods.getStorageLeft(from).call()).to.be.eq('0');    
+      expect(await stakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
+      expect(await stakeStore.methods.getStake(from).call()).to.be.eq('0');
     });
 
     it('release a stake send stake back', async () => { 
       const balanceBefore = new BN(await web3.eth.getBalance(from));
-      const tx = await stakeStore.methods.releaseStake().send({from, gasPrice: 1});
+      const tx = await stakeStore.methods.releaseStake(from).send({from, gasPrice: 1});
       const balanceAfter = new BN(await web3.eth.getBalance(from));
       const expected = balanceBefore.add(new BN('1').sub(await transactionCost(tx)));
       expect(balanceAfter.eq(expected)).to.be.true;
     });
 
+    it('can not release a stake if not internal call', async () => {       
+      expect(await stakeStore.methods.getStake(from).call()).to.be.eq('1');
+      await expect(stakeStore.methods.releaseStake(from).send({from: other})).to.be.eventually.rejected;
+    });
+
     it('can not release a stake if storing', async () => { 
-      await stakeStore.methods.decreaseStorage(from).send({from});
-      await expect(stakeStore.methods.releaseStake().send({from})).to.be.eventually.rejected;
+      await stakeStore.methods.incrementStorageUsed(from).send({from});
+      await expect(stakeStore.methods.releaseStake(from).send({from})).to.be.eventually.rejected;
     });
 
     it('can not release a stake if if not staking', async () => {       
-      await expect(stakeStore.methods.releaseStake().send({other})).to.be.eventually.rejected;
+      await expect(stakeStore.methods.releaseStake(from).send({other})).to.be.eventually.rejected;
     });
   });
 
   describe('Slashing', () => {
     beforeEach(async () => {
-      await stakeStore.methods.despositStake(10, 0).send({from, value: 100});
+      await stakeStore.methods.depositStake(10, 0).send({from, value: 100});
     });
     
     it('can not slash if not staking', async () => {
@@ -131,8 +150,9 @@ describe('StakeStore Contract', () => {
       expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
     });
 
-    it('reject slash if not context internal call', async () => {
-      expect(stakeStore.methods.slash(from, other, 3).send({from: other})).to.be.eventually.rejected;
+    it('reject slash if not context internal call', async () => {      
+      await expect(stakeStore.methods.slash(from, other, 3).send({from: other})).to.be.eventually.rejected;
+      expect(await stakeStore.methods.getStake(from).call()).to.eq('100');      
     });
 
     it('slashed stake goes to recevier', async () => {

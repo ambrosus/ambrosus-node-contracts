@@ -9,14 +9,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
 
 contract StakeStore is Base {
   
+  using SafeMath for uint256;
+
   struct Stake {
     uint amount;
     uint storageLimit;
-    uint storageLeft;
+    uint storageUsed;
     NodeType role;
   }
 
@@ -27,52 +30,57 @@ contract StakeStore is Base {
   constructor(Head _head) public Base(_head) {    
   }
 
-  function despositStake(uint _storageLimit, NodeType _role) public payable {
-    require(!isStaking(msg.sender));
-    stakes[msg.sender] = Stake(msg.value, _storageLimit, _storageLimit, _role);
-  }
-
-  function releaseStake() public {    
-    require(isStaking(msg.sender));
-    require(!isShelteringAny(msg.sender));
-    uint amount = stakes[msg.sender].amount;
-    delete stakes[msg.sender];
-    msg.sender.transfer(amount);
-  }
-
   function isStaking(address node) public view returns (bool) {
     return stakes[node].amount > 0;
   }
 
   function canStore(address node) public view returns (bool)  {
-    return stakes[node].storageLeft > 0;
+    return stakes[node].storageUsed < stakes[node].storageLimit;
   }
 
-  function getStorageLeft(address node) public view returns (uint)  {
-    return stakes[node].storageLeft;
+  function getStorageUsed(address node) public view returns (uint)  {
+    return stakes[node].storageUsed;
   }
 
   function getStake(address node) public view returns (uint)  {
     return stakes[node].amount;
   }  
+
+  function getRole(address node) public view returns (NodeType)  {
+    return stakes[node].role;
+  }  
+
   function isShelteringAny(address node) view public returns (bool) {
-    return stakes[node].storageLeft < stakes[node].storageLimit;
+    return stakes[node].storageUsed > 0;
   }
 
-  function decreaseStorage(address node) public onlyContextInternalCalls {
-    require(stakes[node].storageLeft > 0);
-    stakes[node].storageLeft -= 1;
+  function depositStake(uint _storageLimit, NodeType _role) public payable onlyContextInternalCalls {
+    require(!isStaking(msg.sender));
+    stakes[msg.sender] = Stake(msg.value, _storageLimit, 0, _role);
   }
 
-  function slash(address shelterer, address challanger, uint amount) public {
+  function releaseStake(address node) public onlyContextInternalCalls {    
+    require(isStaking(node));
+    require(!isShelteringAny(node));
+    uint amount = stakes[node].amount;
+    delete stakes[node];
+    node.transfer(amount);
+  }
+
+  function incrementStorageUsed(address node) public onlyContextInternalCalls {
+    require(stakes[node].storageUsed < stakes[node].storageLimit);
+    stakes[node].storageUsed = stakes[node].storageUsed.add(1);
+  }
+
+  function slash(address shelterer, address challenger, uint amount) public onlyContextInternalCalls {
     require(isStaking(shelterer));
     uint slashedAmount;
-    if (amount > stakes[shelterer].amount) 
+    if (amount > stakes[shelterer].amount) {
       slashedAmount = stakes[shelterer].amount;
-    else
+    } else {
       slashedAmount = amount;
-    stakes[shelterer].amount -= slashedAmount;
-    challanger.transfer(slashedAmount);
+    }
+    stakes[shelterer].amount = stakes[shelterer].amount.sub(slashedAmount);
+    challenger.transfer(slashedAmount);
   }
-
 }

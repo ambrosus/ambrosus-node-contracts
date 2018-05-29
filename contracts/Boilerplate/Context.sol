@@ -17,7 +17,6 @@ contract Context {
     BundleRegistry public bundleRegistry;
     StakeStore public stakeStore;
 
-
     constructor(BundleRegistry _bundleRegistry, StakeStore _stakeStore) public {
         bundleRegistry = _bundleRegistry;
         stakeStore = _stakeStore;
