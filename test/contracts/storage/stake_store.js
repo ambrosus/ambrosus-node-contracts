@@ -81,7 +81,7 @@ describe('StakeStore Contract', () => {
       await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
     });
 
-    it('increment storage used', async () => {
+    it('properly updates contract state', async () => {
       await stakeStore.methods.incrementStorageUsed(from).send({from});
       expect(await stakeStore.methods.isStaking(from).call()).to.be.true;
       expect(await stakeStore.methods.canStore(from).call()).to.be.false;
@@ -104,7 +104,7 @@ describe('StakeStore Contract', () => {
       await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
     });
   
-    it('release a stake updates information', async () => { 
+    it('properly updates contract state', async () => { 
       await stakeStore.methods.releaseStake(from).send({from, gasPrice: 1});
       expect(await stakeStore.methods.isStaking(from).call()).to.be.false;
       expect(await stakeStore.methods.canStore(from).call()).to.be.false;
