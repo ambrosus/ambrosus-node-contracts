@@ -12,30 +12,32 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./Context.sol";
 
+
 contract Head is Ownable {
-  event ContextChange(Context context);
+    event ContextChange(Context context);
 
-  Context public context;
+    Context public context;
 
-  function setContext(Context _context) public onlyOwner {
-    context = _context;
-    emit ContextChange(context);
-  }
+    function setContext(Context _context) public onlyOwner {
+        context = _context;
+        emit ContextChange(context);
+    }
 }
 
+
 contract Base {
-  Head head;
+    Head head;
 
-  constructor(Head _head) public {
-    head = _head;
-  }
+    constructor(Head _head) public {
+        head = _head;
+    }
 
-  modifier onlyContextInternalCalls() {
-    require(context().isInternalToContext(address(msg.sender)), "The message sender is not whitelisted by the context");
-    _;
-  }
+    modifier onlyContextInternalCalls() {
+        require(context().isInternalToContext(address(msg.sender)), "The message sender is not whitelisted by the context");
+        _;
+    }
 
-  function context() view public returns (Context) {
-    return head.context();
-  }
+    function context() view public returns (Context) {
+        return head.context();
+    }
 }

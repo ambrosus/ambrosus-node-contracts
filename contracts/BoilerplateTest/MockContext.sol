@@ -11,6 +11,7 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Context.sol";
 
+
 contract MockContext is Context {
     mapping(address => bool) whitelist;
 

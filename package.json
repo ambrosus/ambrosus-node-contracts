@@ -10,7 +10,7 @@
     "build": "truffle compile",
     "test": "export NODE_ENV=test && mocha --require babel-register --timeout 5000 --recursive --no-warnings",
     "testall": "yarn build && yarn test",
-    "dev:lint": "eslint src test config"
+    "dev:lint": "eslint src test config && solium -d contracts/"
   },
   "engines": {
     "node": ">=9.0",
@@ -39,6 +39,7 @@
     "mocha": "^5.1.1",
     "sinon": "^5.0.7",
     "sinon-chai": "^3.0.0",
-    "truffle": "^4.1.8"
+    "truffle": "^4.1.8",
+    "solium": "^1.1.7"
   }
 }

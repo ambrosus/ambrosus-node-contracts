@@ -11,63 +11,64 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
 
+
 contract BundleRegistry is Base, Ownable {
 
-  struct Vendor {
-    bool whitelisted;
-    string url;
-  }
+    struct Vendor {
+        bool whitelisted;
+        string url;
+    }
 
-  struct Bundle {
-    address creator;    
-  }
+    struct Bundle {
+        address creator;    
+    }   
 
-  mapping(bytes32 => Bundle) public bundles;
-  mapping(address => Vendor) public vendors;
+    mapping(bytes32 => Bundle) public bundles;
+    mapping(address => Vendor) public vendors;
+
+    bytes32[] public bundleIds;
+
+    event BundleAdded(bytes32 bundleId);
+
+    constructor(Head _head) public Base(_head) { }
+
+    modifier onlyWhitelisted() {
+        require(isWhitelisted(msg.sender), "Sender not whitelisted");
+        _;
+    }
+
+    function addBundle(bytes32 bundleId, address vendor) onlyWhitelisted public {
+        bundleIds.push(bundleId);
+        bundles[bundleId] = Bundle(vendor);    
+        emit BundleAdded(bundleId);
+    }
   
-  bytes32[] public bundleIds;
+    function getBundleCount() public view returns(uint) {
+        return bundleIds.length;
+    }
 
-  event BundleAdded(bytes32 bundleId);
+    function getVendorForBundle(bytes32 bundleId) public view returns (address) {
+        return bundles[bundleId].creator;
+    }
 
-  constructor(Head _head) public Base(_head) { }
+    function addToWhitelist(address vendor, string url) onlyOwner public {
+        vendors[vendor].whitelisted = true;
+        vendors[vendor].url = url;
+    }
 
-  modifier onlyWhitelisted() {
-    require(isWhitelisted(msg.sender), "Sender not whitelisted");
-    _;
-  }
+    function removeFromWhitelist(address vendor) onlyOwner public {
+        vendors[vendor].whitelisted = false;
+    }
 
-  function addBundle(bytes32 bundleId, address vendor) onlyWhitelisted public {
-    bundleIds.push(bundleId);
-    bundles[bundleId] = Bundle(vendor);    
-    emit BundleAdded(bundleId);
-  }
- 
-  function getBundleCount() public view returns(uint) {
-    return bundleIds.length;
-  }
+    function isWhitelisted(address vendor) view public returns (bool) {
+        return vendors[vendor].whitelisted;
+    }
 
-  function getVendorForBundle(bytes32 bundleId) public view returns (address) {
-    return bundles[bundleId].creator;
-  }
+    function changeVendorUrl(address vendor, string url) onlyOwner public {
+        vendors[vendor].url = url;
+    }
 
-  function addToWhitelist(address vendor, string url) onlyOwner public {
-    vendors[vendor].whitelisted = true;
-    vendors[vendor].url = url;
-  }
-
-  function removeFromWhitelist(address vendor) onlyOwner public {
-    vendors[vendor].whitelisted = false;
-  }
-
-  function isWhitelisted(address vendor) view public returns (bool) {
-    return vendors[vendor].whitelisted;
-  }
-
-  function changeVendorUrl(address vendor, string url) onlyOwner public {
-    vendors[vendor].url = url;
-  }
-
-  function getUrlForVendor(address vendor) public view returns (string) {
-    return vendors[vendor].url;
-  }
+    function getUrlForVendor(address vendor) public view returns (string) {
+        return vendors[vendor].url;
+    }
 }
