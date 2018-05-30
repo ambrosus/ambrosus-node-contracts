@@ -13,9 +13,8 @@ import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import {adminAccount} from '../../helpers/account';
 import web3jsChai from '../../helpers/events';
-import deployContracts from '../../../src/deploy';
-import deployMockContext from '../../helpers/deployMockContext';
-import {asciiToHex, hexToUtf8} from '../../helpers/utils';
+import deployAll from '../../helpers/deployAll';
+import utils from '../../helpers/utils';
 
 chai.use(web3jsChai());
 
@@ -29,9 +28,6 @@ describe('Bundle Registry Contract', () => {
   const vendorUrl = 'node.ambrosus.com';
   const vendor = adminAccount.address;
   let bundleRegistry;
-  let stakeStore;
-  let kycWhitelist;
-  let head;
   let web3;
   let ownerAddress;
   let otherAddress;
@@ -40,8 +36,8 @@ describe('Bundle Registry Contract', () => {
   const removeVendor = (who, from = ownerAddress) => bundleRegistry.methods.removeFromWhitelist(who).send({from});
   const isWhitelisted = (who) => bundleRegistry.methods.isWhitelisted(who).call();
   const addBundle =
-    (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(asciiToHex(web3, bundleId), vendor).send({from});
-  const getBundleVendor = (bundleId) => bundleRegistry.methods.bundles(asciiToHex(web3, bundleId)).call();
+    (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(utils.asciiToHex(bundleId), vendor).send({from});
+  const getBundleVendor = (bundleId) => bundleRegistry.methods.bundles(utils.asciiToHex(bundleId)).call();
   const getBundleVendorByIndex = (index) => bundleRegistry.methods.bundleIds(index).call();
   const getUrlForVendor = (vendor) => bundleRegistry.methods.getUrlForVendor(vendor).call();
   const getBundleCount = () => bundleRegistry.methods.getBundleCount().call();
@@ -49,10 +45,9 @@ describe('Bundle Registry Contract', () => {
     (vendor, url, from = ownerAddress) => bundleRegistry.methods.changeVendorUrl(vendor, url).send({from});
 
   beforeEach(async () => {
-    web3 = await createWeb3();
-    ({bundleRegistry, head, stakeStore, kycWhitelist} = await deployContracts(web3));
+    web3 = await createWeb3();  
     [ownerAddress, otherAddress] = await web3.eth.getAccounts();
-    await deployMockContext(web3, head, [ownerAddress, otherAddress], [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
+    ({bundleRegistry} = await deployAll(web3));
   });
 
   describe('Whitelisting', () => {
@@ -109,7 +104,7 @@ describe('Bundle Registry Contract', () => {
 
     it('returns empty address if no bundle with such id stored', async () => {
       const emptyAddress = await bundleRegistry.methods.bundles(
-        asciiToHex(web3, 'notExists')).
+        utils.asciiToHex('notExists')).
         call();
       expect(emptyAddress).to.match(/0x0{32}/);
     });
@@ -118,7 +113,7 @@ describe('Bundle Registry Contract', () => {
       await addVendor(ownerAddress, vendorUrl);
       await addBundle(bundleId, vendor);
       expect(await getBundleVendor(bundleId)).to.eq(vendor);
-      expect(hexToUtf8(web3, await getBundleVendorByIndex(0)).trim()).to.eq(bundleId);
+      expect(utils.hexToUtf8(await getBundleVendorByIndex(0)).trim()).to.eq(bundleId);
     });
 
     it('non-whitelisted address can not add bundle', async () => {

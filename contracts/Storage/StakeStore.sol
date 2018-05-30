@@ -11,20 +11,19 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
+import "../Boilerplate/Roles.sol";
 
 
 contract StakeStore is Base {
-
+  
     using SafeMath for uint256;
 
     struct Stake {
         uint amount;
         uint storageLimit;
         uint storageUsed;
-        NodeType role;
+        Roles.NodeType role;
     }
-
-    enum NodeType {ATLAS, HERMES, APOLLO}
 
     mapping (address => Stake) stakes;
 
@@ -47,7 +46,7 @@ contract StakeStore is Base {
         return stakes[node].amount;
     }  
 
-    function getRole(address node) public view returns (NodeType) {
+    function getRole(address node) public view returns (Roles.NodeType) {
         return stakes[node].role;
     }  
 
@@ -55,13 +54,12 @@ contract StakeStore is Base {
         return stakes[node].storageUsed > 0;
     }
 
-    function depositStake(uint _storageLimit, NodeType _role) public payable onlyContextInternalCalls {
+    function depositStake(uint _storageLimit, Roles.NodeType _role) public payable onlyContextInternalCalls {
         require(!isStaking(msg.sender));
-        
         stakes[msg.sender] = Stake(
-            msg.value,
-            _storageLimit,
-            0,
+            msg.value, 
+            _storageLimit, 
+            0, 
             _role
         );
     }

@@ -19,9 +19,7 @@ import web3jsChai from '../../helpers/events';
 import Contract1Json from '../../../build/contracts/Contract1.json';
 import Contract2Json from '../../../build/contracts/Contract2.json';
 import HeadJson from '../../../build/contracts/Head.json';
-import deployMockContext, {
-  removeFromWhitelist
-} from '../../helpers/deployMockContext';
+import {deployMockContext, removeFromWhitelist} from '../../helpers/deployAll';
 
 
 chai.use(web3jsChai());
@@ -48,7 +46,7 @@ describe('Base contract', () => {
       Contract1Json.bytecode,
       [head.options.address, contract2.options.address]);
     context = await deployMockContext(web3, head, [contract1.options.address, contract2.options.address, contract2.options.address],
-      ['0x0', '0x0', '0x0']);
+      ['0x0', '0x0', '0x0', '0x0']);
   });
 
   it('onlyContextInternalCalls should allow calling methods by whitelisted contracts', async () => {
