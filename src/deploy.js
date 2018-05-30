@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import BundleRegistryJson from '../build/contracts/BundleRegistry.json';
 import StakeStoreJson from '../build/contracts/StakeStore.json';
+import BundleStoreJson from '../build/contracts/BundleStore.json';
 import HeadJson from '../build/contracts/Head.json';
 import RolesJson from '../build/contracts/Roles.json';
 import ContextJson from '../build/contracts/Context.json';
@@ -26,21 +27,22 @@ export const setupContext = async (web3, head, args) => {
   return context;
 };
 
-const deployOne = async (web3, contractJson, head) => 
+const deployOne = async (web3, contractJson, head) =>
   deployContract(web3, contractJson.abi, contractJson.bytecode, [head.options.address]);
 
 const deployContracts = async (web3) => {
-  const head = await deployContract(web3, HeadJson.abi, HeadJson.bytecode);      
-  const bundleRegistry = await deployOne(web3, BundleRegistryJson, head);
+  const head = await deployContract(web3, HeadJson.abi, HeadJson.bytecode);
+  const bundleRegistry = await deployOne(web3, BundleRegistryJson,head);
   const stakeStore = await deployOne(web3, StakeStoreJson, head);
-  const roles = await deployOne(web3, RolesJson, head);
-  const kycWhitelist = await deployOne(web3, KycWhitelistJson, head);
+    const roles = await deployOne(web3, RolesJson,head);
+  const bundleStore = await deployContract(web3, BundleStoreJson.abi,
+    BundleStoreJson.bytecode,
+    [head.options.address]);
+  constkycWhitelist = await deployOne(web3, KycWhitelistJson, head);
 
-  const context = await setupContext(web3, head, [bundleRegistry.options.address, 
-    stakeStore.options.address, 
-    kycWhitelist.options.address, 
-    roles.options.address]);
-  return {bundleRegistry, head, context, stakeStore, kycWhitelist, roles};
+  const context = await setupContext(web3, head,
+    [bundleRegistry.options.address, stakeStore.options.address, bundleStore.options.address,kycWhitelist.options.address,
+  roles.options.address]);return {bundleRegistry, head, context, stakeStore, bundleStore,kycWhitelist, roles};
 };
 
 export default deployContracts;

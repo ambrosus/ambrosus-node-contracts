@@ -28,6 +28,7 @@ describe('Bundle Registry Contract', () => {
   const vendorUrl = 'node.ambrosus.com';
   const vendor = adminAccount.address;
   let bundleRegistry;
+  let head;
   let web3;
   let ownerAddress;
   let otherAddress;
@@ -45,7 +46,7 @@ describe('Bundle Registry Contract', () => {
     (vendor, url, from = ownerAddress) => bundleRegistry.methods.changeVendorUrl(vendor, url).send({from});
 
   beforeEach(async () => {
-    web3 = await createWeb3();  
+    web3 = await createWeb3();
     [ownerAddress, otherAddress] = await web3.eth.getAccounts();
     ({bundleRegistry} = await deployAll(web3));
   });
