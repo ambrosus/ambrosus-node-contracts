@@ -30,6 +30,7 @@ describe('Bundle Registry Contract', () => {
   const vendor = adminAccount.address;
   let bundleRegistry;
   let stakeStore;
+  let kycWhitelist;
   let head;
   let web3;
   let ownerAddress;
@@ -49,9 +50,9 @@ describe('Bundle Registry Contract', () => {
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    ({bundleRegistry, head, stakeStore} = await deployContracts(web3));
+    ({bundleRegistry, head, stakeStore, kycWhitelist} = await deployContracts(web3));
     [ownerAddress, otherAddress] = await web3.eth.getAccounts();
-    await deployMockContext(web3, head, [ownerAddress, otherAddress], [bundleRegistry.options.address, stakeStore.options.address]);
+    await deployMockContext(web3, head, [ownerAddress, otherAddress], [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
   });
 
   describe('Whitelisting', () => {

@@ -29,6 +29,7 @@ describe('StakeStore Contract', () => {
   let other;
   let stakeStore;
   let bundleRegistry;
+  let kycWhitelist;
   let head;
 
   let BN;
@@ -37,8 +38,8 @@ describe('StakeStore Contract', () => {
     web3 = await createWeb3();
     ({BN} = web3.utils);
     [from, other] = await web3.eth.getAccounts();
-    ({stakeStore, bundleRegistry, head} = await deployContracts(web3));
-    await deployMockContext(web3, head, [from], [bundleRegistry.options.address, stakeStore.options.address]);
+    ({stakeStore, bundleRegistry, kycWhitelist, head} = await deployContracts(web3));
+    await deployMockContext(web3, head, [from], [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
   });
 
   const transactionCost = async (tx) => {
