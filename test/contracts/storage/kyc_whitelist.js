@@ -29,7 +29,6 @@ describe('KYC Whitelist Contract', () => {
   let stakeStore;
   let bundleRegistry;
   let kycWhitelist;
-  let internalCallAddress;
   let head;
 
 
@@ -38,38 +37,24 @@ describe('KYC Whitelist Contract', () => {
     [from, other] = await web3.eth.getAccounts();
     ({stakeStore, bundleRegistry, kycWhitelist, head} = await deployContracts(web3));
     await deployMockContext(web3, head, [from], [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
-    internalCallAddress = stakeStore.options.address;
   });
 
-  it('adds address to whitelist', async () => {
+  it(`adds removes from whitelist, checks if address is whitelisted`, async () => {
+    expect(await kycWhitelist.methods.isWhitelisted(other).call()).to.equal(false);
     await kycWhitelist.methods.add(other).send({from});
-    expect(await kycWhitelist.methods.isWhitelisted(other).call({from: internalCallAddress})).to.equal(true);
-  });
-
-  it('removes address from whitelist', async () => {
-    await kycWhitelist.methods.add(other).send({from});
+    expect(await kycWhitelist.methods.isWhitelisted(other).call()).to.equal(true);
     await kycWhitelist.methods.remove(other).send({from});
-    expect(await kycWhitelist.methods.isWhitelisted(other).call({from: internalCallAddress})).to.equal(false);
-  });
-
-  it(`checks if address is whitelisted`, async () => {
-    expect(await kycWhitelist.methods.isWhitelisted(other).call({from: internalCallAddress})).to.equal(false);
-    await kycWhitelist.methods.add(other).send({from});
-    expect(await kycWhitelist.methods.isWhitelisted(other).call({from: internalCallAddress})).to.equal(true);
-    await kycWhitelist.methods.remove(other).send({from});
-    expect(await kycWhitelist.methods.isWhitelisted(other).call({from: internalCallAddress})).to.equal(false);
-  });
-
-  it(`rejects if not context internal call on 'isWhiteListed'`, async () => {
-    await expect(kycWhitelist.methods.isWhitelisted(other).call({from: other})).to.be.eventually.rejected;
+    expect(await kycWhitelist.methods.isWhitelisted(other).call()).to.equal(false);
   });
 
   it(`rejects if non owner attempts to add`, async () => {
     await expect(kycWhitelist.methods.add(other).send({other})).to.be.eventually.rejected;
+    expect(await kycWhitelist.methods.isWhitelisted(other).call()).to.equal(false);
   });
 
   it(`rejects if non owner attempts to remove`, async () => {
     await kycWhitelist.methods.add(other).send({from});
     await expect(kycWhitelist.methods.remove(other).send({other})).to.be.eventually.rejected;
+    expect(await kycWhitelist.methods.isWhitelisted(other).call()).to.equal(true);
   });
 });

@@ -10,15 +10,11 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../Boilerplate/Head.sol";
 
 
-contract KycWhitelist is Base, Ownable {
+contract KycWhitelist is Ownable {
 
     mapping(address => bool) whitelist;
-    
-    constructor(Head _head) public Base(_head) {    
-    }
 
     function add(address _cadidate) public onlyOwner {
         whitelist[_cadidate] = true;
@@ -28,7 +24,7 @@ contract KycWhitelist is Base, Ownable {
         whitelist[_candidate] = false;
     }
 
-    function isWhitelisted(address _candidate) public view  onlyContextInternalCalls returns(bool) {
+    function isWhitelisted(address _candidate) public view returns(bool) {
         return whitelist[_candidate];
     }
 }

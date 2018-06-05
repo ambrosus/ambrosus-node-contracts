@@ -34,8 +34,7 @@ const deployContracts = async (web3) => {
     StakeStoreJson.bytecode,
     [head.options.address]);  
   const kycWhitelist = await deployContract(web3, KycWhitelistJson.abi,
-    KycWhitelistJson.bytecode,
-    [head.options.address]);  
+    KycWhitelistJson.bytecode);  
     
   const context = await setupContext(web3, head,
     [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
