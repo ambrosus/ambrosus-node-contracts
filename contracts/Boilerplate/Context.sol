@@ -11,19 +11,23 @@ pragma solidity ^0.4.23;
 
 import "../Storage/BundleRegistry.sol";
 import "../Storage/StakeStore.sol";
+import "../Storage/KycWhitelist.sol";
 
 
 contract Context {
 
     BundleRegistry public bundleRegistry;
     StakeStore public stakeStore;
+    KycWhitelist public kycWhitelist;
 
-    constructor(BundleRegistry _bundleRegistry, StakeStore _stakeStore) public {
+
+    constructor(BundleRegistry _bundleRegistry, StakeStore _stakeStore, KycWhitelist _kycWhitelist) public {
         bundleRegistry = _bundleRegistry;
         stakeStore = _stakeStore;
+        kycWhitelist = _kycWhitelist;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
-        return bundleRegistry == contractAddress || stakeStore == contractAddress;
+        return bundleRegistry == contractAddress || stakeStore == contractAddress || kycWhitelist == contractAddress;
     }
 }

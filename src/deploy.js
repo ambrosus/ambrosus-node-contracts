@@ -11,6 +11,7 @@ import BundleRegistryJson from '../build/contracts/BundleRegistry.json';
 import StakeStoreJson from '../build/contracts/StakeStore.json';
 import HeadJson from '../build/contracts/Head.json';
 import ContextJson from '../build/contracts/Context.json';
+import KycWhitelistJson from '../build/contracts/KycWhitelist.json';
 
 import {DEFAULT_GAS, deployContract, getDefaultAddress} from './web3_tools';
 
@@ -32,10 +33,12 @@ const deployContracts = async (web3) => {
   const stakeStore = await deployContract(web3, StakeStoreJson.abi,
     StakeStoreJson.bytecode,
     [head.options.address]);  
+  const kycWhitelist = await deployContract(web3, KycWhitelistJson.abi,
+    KycWhitelistJson.bytecode);  
     
   const context = await setupContext(web3, head,
-    [bundleRegistry.options.address, stakeStore.options.address]);
-  return {bundleRegistry, head, context, stakeStore};
+    [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
+  return {bundleRegistry, head, context, stakeStore, kycWhitelist};
 };
 
 export default deployContracts;

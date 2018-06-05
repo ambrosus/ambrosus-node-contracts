@@ -1,16 +1,17 @@
 {
-  "editor.tabSize": 2,
-  "solidity.soliumRules": {
-    "imports-on-top": 0,
-    "variable-declarations": 0,
-    "indentation": [
-      "error",
-      4
-    ],
-    "quotes": [
-      "error",
-      "double"
-    ]
-  },
-  "solidity.packageDefaultDependenciesContractsDirectory": ""
-}
+    "editor.tabSize": 2,
+    "solidity.soliumRules": {
+      "imports-on-top": 0,
+      "variable-declarations": 0,
+      "indentation": [
+        "error",
+        4
+      ],
+      "quotes": [
+        "error",
+        "double"
+      ]
+    },
+    "solidity.packageDefaultDependenciesContractsDirectory": ""
+  }
+  
