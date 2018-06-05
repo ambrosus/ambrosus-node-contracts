@@ -12,9 +12,8 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
-import deployContracts from '../../../src/deploy';
-import deployMockContext from '../../helpers/deployMockContext';
-import {asciiToHex} from '../../helpers/utils';
+import deployAll from '../../helpers/deployAll';
+import utils from '../../helpers/utils';
 
 chai.use(web3jsChai());
 chai.use(sinonChai);
@@ -27,45 +26,54 @@ describe('BundleStore Contract', () => {
   let from;
   let other;
   let bundleStore;
-  let head;
   let bundleId;
+  const expirationDate = 1600000000;
 
   beforeEach(async () => {
     web3 = await createWeb3();
     [from, other] = await web3.eth.getAccounts();
-    ({bundleStore, head} = await deployContracts(web3));
-    await deployMockContext(web3, head, [from], ['0x0', '0x0', '0x0']);
-    bundleId = asciiToHex(web3, 'bundleId');
+    ({bundleStore} = await deployAll(web3));
+    bundleId = utils.asciiToHex('bundleId');
   });
 
   describe('Storing a bundle', () => {
     it('should emit event when bundle was added', async () => {
-      expect(await bundleStore.methods.store(bundleId, from, 10).send({from})).to.emitEvent('BundleStored');
+      expect(await bundleStore.methods.store(bundleId, from, 1700000000).send({from})).to.emitEvent('BundleStored');
     });
 
     it('creator is a shelterer', async () => {
-      await bundleStore.methods.store(bundleId, from, 10).send({from});
+      await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([from]);
     });
 
     it('stores expiration date', async () => {
-      await bundleStore.methods.store(bundleId, from, 10).send({from});
-      expect(await bundleStore.methods.getExpirationDate(bundleId).call()).to.equal('10');
+      await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
+      expect(await bundleStore.methods.getExpirationDate(bundleId).call()).to.equal('1600000000');
     });
 
     it('reject if not context internal call', async () => {
-      await expect(bundleStore.methods.store(bundleId, from, 10).send({from: other})).to.be.eventually.rejected;
+      await expect(
+        bundleStore.methods.store(bundleId, from, expirationDate).send({from: other})).to.be.eventually.rejected;
     });
 
     it('reject if bundle with same id exists and has shelterers', async () => {
-      await bundleStore.methods.store(bundleId, from, 10).send({from});
-      await expect(bundleStore.methods.store(bundleId, from, 10).send({from})).to.be.eventually.rejected;
+      await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
+      await expect(bundleStore.methods.store(bundleId, from, expirationDate).send({from})).to.be.eventually.rejected;
+    });
+
+    it('rejects if expiration date is before now', async () => {
+      await expect(bundleStore.methods.store(bundleId, from, 32503680000).send({from})).to.be.eventually.rejected;
+    });
+
+    it('rejects if expiration date is before now', async () => {
+      await expect(
+        bundleStore.methods.store(bundleId, from, (Date.now() / 1000) - 1).send({from})).to.be.eventually.rejected;
     });
   });
 
   describe('Add and remove shelterers', () => {
     beforeEach(async () => {
-      await bundleStore.methods.store(bundleId, from, 10).send({from});
+      await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
     });
 
     it('should emit event when the shelterer was added', async () => {
@@ -84,9 +92,19 @@ describe('BundleStore Contract', () => {
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([from]);
     });
 
-    it('can put new bundle with same id when all shelterers are removed', async () => {
+    it('rejects if add shelterer to non-existing bundle', async () => {
+      await expect(
+        bundleStore.methods.addShelterer(utils.asciiToHex('unknownid'), other).send({from})).to.be.eventually.rejected;
+    });
+
+    it('rejects if add same shelterer twice', async () => {
+      expect(await bundleStore.methods.addShelterer(bundleId, other).send({from})).to.emitEvent('SheltererAdded');
+      await expect(bundleStore.methods.addShelterer(bundleId, other).send({from})).to.be.eventually.rejected;
+    });
+
+    it('cannot put new bundle with same id when all shelterers are removed', async () => {
       await bundleStore.methods.removeShelterer(bundleId, from).send({from});
-      await expect(bundleStore.methods.store(bundleId, from, 10).send({from})).to.be.eventually.fulfilled;
+      await expect(bundleStore.methods.store(bundleId, from, expirationDate).send({from})).to.be.eventually.rejected;
     });
   });
 });

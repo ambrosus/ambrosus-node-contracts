@@ -14,29 +14,26 @@ import "../Boilerplate/Head.sol";
 
 contract BundleStore is Base {
 
+    uint constant MAX_EXPIRATION_DATE = 32503680000; // year 3000
+
     struct Bundle {
         address[] shelterers;
         uint expirationDate;
     }
 
-    event BundleStored(
-        bytes32 bundleId,
-        address creator
-    );
+    event BundleStored(bytes32 bundleId, address creator);
 
-    event SheltererAdded(
-        bytes32 bundleId,
-        address shelterer
-    );
+    event SheltererAdded(bytes32 bundleId, address shelterer);
 
-    event SheltererRemoved(
-        bytes32 bundleId,
-        address shelterer
-    );
+    event SheltererRemoved(bytes32 bundleId, address shelterer);
 
     mapping(bytes32 => Bundle) bundles;
 
-    constructor(Head head) Base(head) public { }
+    constructor(Head head) Base(head) public {}
+
+    function bundleExists(bytes32 bundleId) view public returns (bool) {
+        return bundles[bundleId].expirationDate > 0;
+    }
 
     function getShelterers(bytes32 bundleId) view public returns (address[]) {
         return bundles[bundleId].shelterers;
@@ -47,29 +44,43 @@ contract BundleStore is Base {
     }
 
     function store(bytes32 bundleId, address creator, uint expirationDate) public onlyContextInternalCalls {
-        require(bundles[bundleId].shelterers.length == 0);
+        require(!bundleExists(bundleId));
+        require(expirationDate >= now);
+        require(expirationDate < MAX_EXPIRATION_DATE);
+
         bundles[bundleId] = Bundle(new address[](1), expirationDate);
         bundles[bundleId].shelterers[0] = creator;
         emit BundleStored(bundleId, creator);
     }
 
     function addShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {
+        require(bundleExists(bundleId));
+
+        for (uint i = 0; i < bundles[bundleId].shelterers.length; i++) {
+            require(bundles[bundleId].shelterers[i] != shelterer);
+        }
         bundles[bundleId].shelterers.push(shelterer);
         emit SheltererAdded(bundleId, shelterer);
     }
 
+    function removeSheltererByIndex(bytes32 bundleId, uint index) public onlyContextInternalCalls {
+        require(bundleExists(bundleId));
+        require(bundles[bundleId].shelterers.length > index);
+
+        bundles[bundleId].shelterers[index] = bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
+        delete bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
+        bundles[bundleId].shelterers.length -= 1;
+    }
+
     function removeShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {
-        bool removed = false;
+        require(bundleExists(bundleId));
+
         for (uint i = 0; i < bundles[bundleId].shelterers.length; i++) {
             if (bundles[bundleId].shelterers[i] == shelterer) {
-                bundles[bundleId].shelterers[i] = bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
-                delete bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
-                bundles[bundleId].shelterers.length -= 1;
-                removed = true;
+                removeSheltererByIndex(bundleId, i);
+                emit SheltererRemoved(bundleId, shelterer);
+                return;
             }
-        }
-        if (removed) {
-            emit SheltererRemoved(bundleId, shelterer);
         }
     }
 }

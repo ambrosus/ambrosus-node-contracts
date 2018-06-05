@@ -23,7 +23,13 @@ contract Context {
     KycWhitelist public kycWhitelist;
     Roles public roles;
 
-    constructor(BundleRegistry _bundleRegistry, StakeStore _stakeStore,BundleStore _bundleStore, KycWhitelist _kycWhitelist, Roles _roles) public {
+    constructor(
+        BundleRegistry _bundleRegistry,
+        StakeStore _stakeStore,
+        BundleStore _bundleStore,
+        KycWhitelist _kycWhitelist,
+        Roles _roles
+    ) public {
         bundleRegistry = _bundleRegistry;
         stakeStore = _stakeStore;
         bundleStore = _bundleStore;
@@ -32,7 +38,11 @@ contract Context {
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
-        return bundleRegistry == contractAddress || stakeStore == contractAddress || kycWhitelist == contractAddress || roles == contractAddress;
-
+        // solium-disable-next-line operator-whitespace
+        return bundleRegistry == contractAddress ||
+            stakeStore == contractAddress ||
+            bundleStore == contractAddress ||
+            kycWhitelist == contractAddress ||
+            roles == contractAddress;
     }
 }

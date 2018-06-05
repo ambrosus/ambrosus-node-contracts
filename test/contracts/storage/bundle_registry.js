@@ -28,7 +28,6 @@ describe('Bundle Registry Contract', () => {
   const vendorUrl = 'node.ambrosus.com';
   const vendor = adminAccount.address;
   let bundleRegistry;
-  let head;
   let web3;
   let ownerAddress;
   let otherAddress;

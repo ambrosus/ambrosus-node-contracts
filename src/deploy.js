@@ -34,15 +34,21 @@ const deployContracts = async (web3) => {
   const head = await deployContract(web3, HeadJson.abi, HeadJson.bytecode);
   const bundleRegistry = await deployOne(web3, BundleRegistryJson,head);
   const stakeStore = await deployOne(web3, StakeStoreJson, head);
-    const roles = await deployOne(web3, RolesJson,head);
+  const roles = await deployOne(web3, RolesJson,head);
   const bundleStore = await deployContract(web3, BundleStoreJson.abi,
     BundleStoreJson.bytecode,
     [head.options.address]);
-  constkycWhitelist = await deployOne(web3, KycWhitelistJson, head);
+  const kycWhitelist = await deployOne(web3, KycWhitelistJson, head);
 
   const context = await setupContext(web3, head,
-    [bundleRegistry.options.address, stakeStore.options.address, bundleStore.options.address,kycWhitelist.options.address,
-  roles.options.address]);return {bundleRegistry, head, context, stakeStore, bundleStore,kycWhitelist, roles};
+    [
+      bundleRegistry.options.address,
+      stakeStore.options.address,
+      bundleStore.options.address,
+      kycWhitelist.options.address,
+      roles.options.address
+    ]);
+  return {bundleRegistry, head, context, stakeStore, bundleStore, kycWhitelist, roles};
 };
 
 export default deployContracts;
