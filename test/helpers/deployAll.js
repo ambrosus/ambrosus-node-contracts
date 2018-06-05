@@ -37,15 +37,16 @@ export const deployMockContext = async (web3, head, addresses, contracts) => {
 };
 
 const deployAll = async (web3) => {
-  const {stakeStore, bundleRegistry, head, roles, kycWhitelist} = await deployContracts(web3);
+  const {stakeStore, bundleRegistry, head, roles, kycWhitelist, bundleStore} = await deployContracts(web3);
   const from = getDefaultAddress(web3);
   const context = await deployMockContext(web3, head, [from], [
     bundleRegistry.options.address, 
-    stakeStore.options.address, 
+    stakeStore.options.address,
+    bundleStore.options.address,
     kycWhitelist.options.address,
     roles.options.address    
   ]);
-  return {stakeStore, bundleRegistry, head, roles, context, kycWhitelist};
+  return {stakeStore, bundleRegistry, head, roles, context, kycWhitelist, bundleStore};
 };
 
 export default deployAll;

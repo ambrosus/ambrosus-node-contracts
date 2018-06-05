@@ -45,7 +45,7 @@ describe('Bundle Registry Contract', () => {
     (vendor, url, from = ownerAddress) => bundleRegistry.methods.changeVendorUrl(vendor, url).send({from});
 
   beforeEach(async () => {
-    web3 = await createWeb3();  
+    web3 = await createWeb3();
     [ownerAddress, otherAddress] = await web3.eth.getAccounts();
     ({bundleRegistry} = await deployAll(web3));
   });
