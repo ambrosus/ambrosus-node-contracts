@@ -52,27 +52,29 @@ describe('StakeStore Contract', () => {
 
   describe('Deposit a stake', () => {    
     it('can not stake if already staking', async () => {
-      await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
-      await expect(stakeStore.methods.depositStake(1, 0).send({from, value: 2})).to.be.eventually.rejected;
+      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
+      await expect(stakeStore.methods.depositStake(from, 1, 0).send({from, value: 2})).to.be.eventually.rejected;
       await expect(await stakeStore.methods.getStake(from).call()).to.eq('1');
     });
 
     it('reject if not context internal call', async () => {
-      await expect(stakeStore.methods.depositStake(1, 0).send({from: other, value: 1})).to.be.eventually.rejected;
+      await expect(stakeStore.methods.depositStake(from, 1, 0).send({from: other, value: 1})).to.be.eventually.rejected;
     });
 
     it('initiate stake', async () => {
-      await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
+      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 2});
       expect(await stakeStore.methods.isStaking(from).call()).to.be.true;
       expect(await stakeStore.methods.canStore(from).call()).to.be.true;
       expect(await stakeStore.methods.isShelteringAny(from).call()).to.be.false;
       expect(await stakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
+      expect(await stakeStore.methods.getStorageLimit(from).call()).to.eq('1');
+      expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('2');
     });
   });
 
   describe('Increment storage used', () => {    
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
+      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
     });
 
     it('properly updates contract state', async () => {
@@ -95,7 +97,7 @@ describe('StakeStore Contract', () => {
 
   describe('Release a stake', () => {    
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(1, 0).send({from, value: 1});
+      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
     });
   
     it('properly updates contract state', async () => { 
@@ -132,7 +134,7 @@ describe('StakeStore Contract', () => {
 
   describe('Slashing', () => {
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(10, 0).send({from, value: 100});
+      await stakeStore.methods.depositStake(from, 10, 0).send({from, value: 100});
     });
     
     it('can not slash if not staking', async () => {

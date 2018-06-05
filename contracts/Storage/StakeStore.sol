@@ -42,6 +42,10 @@ contract StakeStore is Base {
         return stakes[node].storageUsed;
     }
 
+    function getStorageLimit(address node) public view returns (uint) {
+        return stakes[node].storageLimit;
+    }
+
     function getStake(address node) public view returns (uint) {
         return stakes[node].amount;
     }  
@@ -54,9 +58,9 @@ contract StakeStore is Base {
         return stakes[node].storageUsed > 0;
     }
 
-    function depositStake(uint _storageLimit, Roles.NodeType _role) public payable onlyContextInternalCalls {
-        require(!isStaking(msg.sender));
-        stakes[msg.sender] = Stake(
+    function depositStake(address _who, uint _storageLimit, Roles.NodeType _role) public payable onlyContextInternalCalls {
+        require(!isStaking(_who));
+        stakes[_who] = Stake(
             msg.value, 
             _storageLimit, 
             0, 

@@ -22,10 +22,10 @@ contract Roles is Base {
     uint constant ATLAS2_STAKE = 50000 * UNIT;
     uint constant ATLAS3_STAKE = 100000 * UNIT;
 
-    uint constant HERMES_LIMIT = 100000;
-    uint constant ATLAS1_LIMIT = 250000;
-    uint constant ATLAS2_LIMIT = 750000;
-    uint constant ATLAS3_LIMIT = 1750000;
+    uint constant HERMES_STORAGE_LIMIT = 100000;
+    uint constant ATLAS1_STORAGE_LIMIT = 250000;
+    uint constant ATLAS2_STORAGE_LIMIT = 750000;
+    uint constant ATLAS3_STORAGE_LIMIT = 1750000;
   
     enum NodeType {ATLAS, HERMES, APOLLO}
 
@@ -46,16 +46,16 @@ contract Roles is Base {
     function getStorageLimit(NodeType role, uint amount) public pure returns (uint) {
         if (role == NodeType.ATLAS) { 
             if (amount >= ATLAS3_STAKE) {
-                return ATLAS3_LIMIT;
+                return ATLAS3_STORAGE_LIMIT;
             } else if (amount >= ATLAS2_STAKE) {
-                return ATLAS2_LIMIT;
+                return ATLAS2_STORAGE_LIMIT;
             } else if (amount >= ATLAS1_STAKE) {
-                return ATLAS1_LIMIT;
+                return ATLAS1_STORAGE_LIMIT;
             } else {
                 return 0;
             }
         } else if (role == NodeType.HERMES) {
-            return amount >= HERMES_STAKE ? HERMES_LIMIT : 0;
+            return amount >= HERMES_STAKE ? HERMES_STORAGE_LIMIT : 0;
         }
         return 0;
     }
