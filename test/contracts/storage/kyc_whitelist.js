@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
 import deployContracts from '../../../src/deploy';
-import deployMockContext from '../../helpers/deployMockContext';
+import deployMockContext from '../../helpers/deployAll';
 
 chai.use(web3jsChai());
 

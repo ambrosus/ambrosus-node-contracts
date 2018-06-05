@@ -12,8 +12,8 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
-import deployContracts from '../../../src/deploy';
-import deployMockContext from '../../helpers/deployMockContext';
+import deployAll from '../../helpers/deployAll';
+import BN from 'bn.js';
 
 
 chai.use(web3jsChai());
@@ -28,18 +28,11 @@ describe('StakeStore Contract', () => {
   let from;
   let other;
   let stakeStore;
-  let bundleRegistry;
-  let kycWhitelist;
-  let head;
-
-  let BN;
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    ({BN} = web3.utils);
     [from, other] = await web3.eth.getAccounts();
-    ({stakeStore, bundleRegistry, kycWhitelist, head} = await deployContracts(web3));
-    await deployMockContext(web3, head, [from], [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
+    ({stakeStore} = await deployAll(web3));
   });
 
   const transactionCost = async (tx) => {

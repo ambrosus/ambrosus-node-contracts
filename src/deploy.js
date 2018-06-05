@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import BundleRegistryJson from '../build/contracts/BundleRegistry.json';
 import StakeStoreJson from '../build/contracts/StakeStore.json';
 import HeadJson from '../build/contracts/Head.json';
+import RolesJson from '../build/contracts/Roles.json';
 import ContextJson from '../build/contracts/Context.json';
 import KycWhitelistJson from '../build/contracts/KycWhitelist.json';
 
@@ -25,20 +26,21 @@ export const setupContext = async (web3, head, args) => {
   return context;
 };
 
+const deployOne = async (web3, contractJson, head) => 
+  deployContract(web3, contractJson.abi, contractJson.bytecode, [head.options.address]);
+
 const deployContracts = async (web3) => {
-  const head = await deployContract(web3, HeadJson.abi, HeadJson.bytecode);
-  const bundleRegistry = await deployContract(web3, BundleRegistryJson.abi,
-    BundleRegistryJson.bytecode,
-    [head.options.address]);
-  const stakeStore = await deployContract(web3, StakeStoreJson.abi,
-    StakeStoreJson.bytecode,
-    [head.options.address]);  
-  const kycWhitelist = await deployContract(web3, KycWhitelistJson.abi,
-    KycWhitelistJson.bytecode);  
-    
-  const context = await setupContext(web3, head,
-    [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
-  return {bundleRegistry, head, context, stakeStore, kycWhitelist};
+  const head = await deployContract(web3, HeadJson.abi, HeadJson.bytecode);      
+  const bundleRegistry = await deployOne(web3, BundleRegistryJson, head);
+  const stakeStore = await deployOne(web3, StakeStoreJson, head);
+  const roles = await deployOne(web3, RolesJson, head);
+  const kycWhitelist = await deployOne(web3, KycWhitelistJson, head);
+
+  const context = await setupContext(web3, head, [bundleRegistry.options.address, 
+    stakeStore.options.address, 
+    kycWhitelist.options.address, 
+    roles.options.address]);
+  return {bundleRegistry, head, context, stakeStore, kycWhitelist, roles};
 };
 
 export default deployContracts;

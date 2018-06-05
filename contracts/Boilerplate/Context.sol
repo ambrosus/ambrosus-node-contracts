@@ -19,15 +19,17 @@ contract Context {
     BundleRegistry public bundleRegistry;
     StakeStore public stakeStore;
     KycWhitelist public kycWhitelist;
-
-
-    constructor(BundleRegistry _bundleRegistry, StakeStore _stakeStore, KycWhitelist _kycWhitelist) public {
+    Roles public roles;
+    
+    constructor(BundleRegistry _bundleRegistry, StakeStore _stakeStore, KycWhitelist _kycWhitelist, Roles _roles) public {
         bundleRegistry = _bundleRegistry;
         stakeStore = _stakeStore;
         kycWhitelist = _kycWhitelist;
+        roles = _roles;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
-        return bundleRegistry == contractAddress || stakeStore == contractAddress || kycWhitelist == contractAddress;
+        return bundleRegistry == contractAddress || stakeStore == contractAddress || kycWhitelist == contractAddress || roles == contractAddress;
+    
     }
 }
