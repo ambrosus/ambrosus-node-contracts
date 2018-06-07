@@ -12,6 +12,7 @@ import StakeStoreJson from '../build/contracts/StakeStore.json';
 import BundleStoreJson from '../build/contracts/BundleStore.json';
 import HeadJson from '../build/contracts/Head.json';
 import RolesJson from '../build/contracts/Roles.json';
+import StakesJson from '../build/contracts/Stakes.json';
 import ContextJson from '../build/contracts/Context.json';
 import KycWhitelistJson from '../build/contracts/KycWhitelist.json';
 
@@ -35,6 +36,7 @@ const deployContracts = async (web3) => {
   const bundleRegistry = await deployOne(web3, BundleRegistryJson,head);
   const stakeStore = await deployOne(web3, StakeStoreJson, head);
   const roles = await deployOne(web3, RolesJson,head);
+  const stakes = await deployOne(web3, StakesJson,head);
   const bundleStore = await deployContract(web3, BundleStoreJson.abi,
     BundleStoreJson.bytecode,
     [head.options.address]);
@@ -46,9 +48,10 @@ const deployContracts = async (web3) => {
       stakeStore.options.address,
       bundleStore.options.address,
       kycWhitelist.options.address,
-      roles.options.address
+      roles.options.address,
+      stakes.options.address
     ]);
-  return {bundleRegistry, head, context, stakeStore, bundleStore, kycWhitelist, roles};
+  return {bundleRegistry, head, context, stakeStore, bundleStore, kycWhitelist, roles, stakes};
 };
 
 export default deployContracts;

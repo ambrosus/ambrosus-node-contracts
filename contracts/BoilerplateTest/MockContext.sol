@@ -20,14 +20,17 @@ contract MockContext is Context {
         StakeStore _stakeStore,
         BundleStore _bundleStore,
         KycWhitelist _kycWhitelist,
-        Roles _roles
+        Roles _roles,
+        Stakes _stakes
     ) Context(
         _bundleRegistry,
         _stakeStore,
         _bundleStore,
         _kycWhitelist,
-        _roles
-    ) public {}
+        _roles,
+        _stakes
+    ) public {        
+    }
 
     function addToWhitelist(address[] whitelisted) public {
         for (uint i = 0; i < whitelisted.length; i++) {

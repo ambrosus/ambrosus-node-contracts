@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
 import deployContracts from '../../../src/deploy';
-import deployMockContext from '../../helpers/deployAll';
+import deployAll from '../../helpers/deployAll';
 
 chai.use(web3jsChai());
 
@@ -36,7 +36,7 @@ describe('KYC Whitelist Contract', () => {
     web3 = await createWeb3();
     [from, other] = await web3.eth.getAccounts();
     ({stakeStore, bundleRegistry, kycWhitelist, head} = await deployContracts(web3));
-    await deployMockContext(web3, head, [from], [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
+    await deployAll(web3, head, [from], [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
   });
 
   it(`adds removes from whitelist, checks if address is whitelisted`, async () => {

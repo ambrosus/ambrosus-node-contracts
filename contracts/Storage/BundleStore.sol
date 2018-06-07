@@ -45,9 +45,9 @@ contract BundleStore is Base {
 
     function store(bytes32 bundleId, address creator, uint expirationDate) public onlyContextInternalCalls {
         require(!bundleExists(bundleId));
+        // solium-disable-next-line security/no-block-members
         require(expirationDate >= now);
         require(expirationDate < MAX_EXPIRATION_DATE);
-
         bundles[bundleId] = Bundle(new address[](1), expirationDate);
         bundles[bundleId].shelterers[0] = creator;
         emit BundleStored(bundleId, creator);
