@@ -18,6 +18,7 @@ contract BundleStore is Base {
 
     struct Bundle {
         address[] shelterers;
+        uint uploadDate;
         uint expirationDate;
     }
 
@@ -43,11 +44,15 @@ contract BundleStore is Base {
         return bundles[bundleId].expirationDate;
     }
 
+    function getUploadDate(bytes32 bundleId) view public returns (uint) {
+        return bundles[bundleId].uploadDate;
+    }
+
     function store(bytes32 bundleId, address creator, uint expirationDate) public onlyContextInternalCalls {
         require(!bundleExists(bundleId));
         require(expirationDate >= now);
         require(expirationDate < MAX_EXPIRATION_DATE);
-        bundles[bundleId] = Bundle(new address[](1), expirationDate);
+        bundles[bundleId] = Bundle(new address[](1), now, expirationDate);
         bundles[bundleId].shelterers[0] = creator;
         emit BundleStored(bundleId, creator);
     }

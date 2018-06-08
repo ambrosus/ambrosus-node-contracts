@@ -26,14 +26,14 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe('Base contract', () => {
+describe('Base Contract', () => {
   let web3;
   let contract1;
   let contract2;
   let context;
   let deployer;
 
-  beforeEach(async () => {    
+  beforeEach(async () => {
     web3 = await createWeb3();
     deployer = new MockContextDeployer(web3);
     deployer.head = await deployContract(web3, HeadJson);
@@ -41,8 +41,8 @@ describe('Base contract', () => {
     contract2 = await deployContract(web3, Contract2Json, [headAddress]);
     contract1 = await deployContract(web3, Contract1Json, [headAddress, contract2.options.address]);
     context = await deployer.setupContext(
-      ['0x0', '0x0', '0x0', '0x0', '0x0', '0x0'], 
-      [contract1.options.address, contract2.options.address]);      
+      ['0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0'],
+      [contract1.options.address, contract2.options.address]);
   });
 
   it('onlyContextInternalCalls should allow calling methods by whitelisted contracts', async () => {

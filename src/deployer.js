@@ -15,6 +15,9 @@ import RolesJson from '../build/contracts/Roles.json';
 import StakesJson from '../build/contracts/Stakes.json';
 import ContextJson from '../build/contracts/Context.json';
 import KycWhitelistJson from '../build/contracts/KycWhitelist.json';
+import FeesJson from '../build/contracts/Fees.json';
+import ChallengesJson from '../build/contracts/Challenges.json';
+import ShelteringJson from '../build/contracts/Sheltering.json';
 
 import {DEFAULT_GAS, deployContract, getDefaultAddress} from './web3_tools';
 
@@ -24,7 +27,10 @@ const DEFAULT_CONTRACT_JSONS = {
   roles: RolesJson,
   stakes: StakesJson,
   bundleStore: BundleStoreJson,
-  kycWhitelist: KycWhitelistJson
+  kycWhitelist: KycWhitelistJson,
+  sheltering: ShelteringJson,
+  fees: FeesJson,
+  challenges: ChallengesJson
 };
 
 export default class Deployer {
@@ -74,7 +80,7 @@ export default class Deployer {
     }
 
     function prepareArgs (contractMap) {
-      return [contractMap.bundleRegistry, contractMap.stakeStore, contractMap.bundleStore, contractMap.kycWhitelist, contractMap.roles, contractMap.stakes]
+      return [contractMap.bundleRegistry, contractMap.stakeStore, contractMap.bundleStore, contractMap.kycWhitelist, contractMap.roles, contractMap.stakes, contractMap.sheltering, contractMap.fees, contractMap.challenges]
         .map((contract) => contractToAddress(contract));
     }
     this.head = await deployContract(this.web3, HeadJson);

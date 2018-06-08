@@ -16,7 +16,7 @@ import "../Configuration/Roles.sol";
 
 contract StakeStore is Base {
   
-    using SafeMath for uint256;
+    using SafeMath for uint;
 
     struct Stake {
         uint amount;

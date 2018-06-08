@@ -7,7 +7,7 @@ HermesNode -> BundleContract: registerBundle
 activate BundleContract
 BundleContract -> StakeContract: isWhitelisted
 BundleContract <- StakeContract
-BundleContract -> Challenger: startChallanges(n)
+BundleContract -> Challenger: startChallenges(n)
 BundleContract <- Challenger
 BundleContract -> BundleStore: storeBundle(...)
 BundleContract <- BundleStore
