@@ -85,4 +85,23 @@ describe('Stakes Contract', () => {
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('0');
     });
   });
+
+  describe('Release stake', () => {
+    it('Releases stake and sends it back', async () => {
+      await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
+      expect(await stakeStore.methods.getStake(from).call()).to.eq(ATLAS1_STAKE.toString());
+      await stakes.methods.releaseStake().send({from});
+      expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
+    });
+
+    it('Is not staking', async () => {
+      await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;
+    });
+
+    it('Is still sheltering', async () => {
+      await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
+      await stakeStore.methods.incrementStorageUsed(from).send({from});
+      await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;
+    });
+  });
 });

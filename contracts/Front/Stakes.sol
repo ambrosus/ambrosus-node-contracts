@@ -33,4 +33,8 @@ contract Stakes is Base, Ownable {
         stakeStore.depositStake.value(msg.value)(msg.sender, storageLimit, role);
     }
 
+    function releaseStake() public {
+        StakeStore stakeStore = head.context().stakeStore();
+        stakeStore.releaseStake(msg.sender);
+    }
 }
