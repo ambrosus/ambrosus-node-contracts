@@ -15,26 +15,26 @@ import "../Storage/StakeStore.sol";
 import "../Storage/KycWhitelist.sol";
 
 
-contract Stakes is Base, Ownable {
+contract Stakes is Base {
 
     constructor(Head _head) public Base(_head) { }
 
     function depositStake(Roles.NodeType role) public payable {
         require(role == Roles.NodeType.ATLAS || role == Roles.NodeType.HERMES || role == Roles.NodeType.APOLLO);        
         
-        KycWhitelist whitelist = head.context().kycWhitelist();
+        KycWhitelist whitelist = context().kycWhitelist();
         require(whitelist.isWhitelisted(msg.sender));
 
-        Roles roles = head.context().roles();
+        Roles roles = context().roles();
         require(roles.canStake(role, msg.value));
 
-        StakeStore stakeStore = head.context().stakeStore();
+        StakeStore stakeStore = context().stakeStore();
         uint storageLimit = roles.getStorageLimit(role, msg.value);
         stakeStore.depositStake.value(msg.value)(msg.sender, storageLimit, role);
     }
 
     function releaseStake() public {
-        StakeStore stakeStore = head.context().stakeStore();
+        StakeStore stakeStore = context().stakeStore();
         stakeStore.releaseStake(msg.sender);
     }
 }

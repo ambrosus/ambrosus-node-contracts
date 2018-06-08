@@ -21,14 +21,20 @@ contract MockContext is Context {
         BundleStore _bundleStore,
         KycWhitelist _kycWhitelist,
         Roles _roles,
-        Stakes _stakes
+        Stakes _stakes,
+        Sheltering _sheltering,
+        Fees _fees,
+        Challenges _challenges
     ) Context(
         _bundleRegistry,
         _stakeStore,
         _bundleStore,
         _kycWhitelist,
         _roles,
-        _stakes
+        _stakes,
+        _sheltering,
+        _fees,
+        _challenges
     ) public {        
     }
 
