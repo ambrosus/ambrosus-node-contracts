@@ -14,15 +14,14 @@ export const ATLAS = 0;
 export const HERMES = 1;
 export const APOLLO = 2;
 
-export const ATLAS1_STAKE = utils.toWei(new BN(25000));
-export const ATLAS2_STAKE = utils.toWei(new BN(50000));
-export const ATLAS3_STAKE = utils.toWei(new BN(100000));
-export const HERMES_STAKE = utils.toWei(new BN(100000));
-export const APOLLO_STAKE = utils.toWei(new BN(1000000));
+export const ATLAS1_STAKE = utils.toWei(new BN(10000));
+export const ATLAS2_STAKE = utils.toWei(new BN(30000));
+export const ATLAS3_STAKE = utils.toWei(new BN(75000));
+export const HERMES_STAKE = utils.toWei(new BN(150000));
+export const APOLLO_STAKE = utils.toWei(new BN(250000));
 
-export const HERMES_STORAGE_LIMIT = 100000;
-export const ATLAS1_STORAGE_LIMIT = 250000;
-export const ATLAS2_STORAGE_LIMIT = 750000;
-export const ATLAS3_STORAGE_LIMIT = 1750000;
+export const ATLAS1_STORAGE_LIMIT = 100000;
+export const ATLAS2_STORAGE_LIMIT = 400000;
+export const ATLAS3_STORAGE_LIMIT = 1000000;
 
 export const ONE = new BN(1);
