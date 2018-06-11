@@ -18,9 +18,9 @@ contract Roles is Base {
 
     uint constant APOLLO_STAKE = 10**6 * UNIT;
     uint constant HERMES_STAKE = 10**5 * UNIT;
-    uint constant ATLAS1_STAKE = 25000 * UNIT;
-    uint constant ATLAS2_STAKE = 50000 * UNIT;
-    uint constant ATLAS3_STAKE = 100000 * UNIT;
+    uint constant ATLAS1_STAKE = 10000 * UNIT;
+    uint constant ATLAS2_STAKE = 30000 * UNIT;
+    uint constant ATLAS3_STAKE = 75000 * UNIT;
 
     uint constant HERMES_STORAGE_LIMIT = 100000;
     uint constant ATLAS1_STORAGE_LIMIT = 250000;

@@ -14,9 +14,9 @@ export const ATLAS = 0;
 export const HERMES = 1;
 export const APOLLO = 2;
 
-export const ATLAS1_STAKE = utils.toWei(new BN(25000));
-export const ATLAS2_STAKE = utils.toWei(new BN(50000));
-export const ATLAS3_STAKE = utils.toWei(new BN(100000));
+export const ATLAS1_STAKE = utils.toWei(new BN(10000));
+export const ATLAS2_STAKE = utils.toWei(new BN(30000));
+export const ATLAS3_STAKE = utils.toWei(new BN(75000));
 export const HERMES_STAKE = utils.toWei(new BN(100000));
 export const APOLLO_STAKE = utils.toWei(new BN(1000000));
 
