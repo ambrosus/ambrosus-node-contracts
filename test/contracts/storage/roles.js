@@ -23,7 +23,6 @@ import {
   ATLAS3_STAKE,
   HERMES_STAKE,
   APOLLO_STAKE,
-  HERMES_STORAGE_LIMIT,
   ATLAS1_STORAGE_LIMIT,
   ATLAS2_STORAGE_LIMIT,
   ATLAS3_STORAGE_LIMIT
@@ -100,8 +99,8 @@ describe('Roles Contract', () => {
     });
 
     it('Hermes', async () => {
-      expect(await roles.methods.getStorageLimit(HERMES, HERMES_STAKE.add(ONE).toString()).call()).to.eq(HERMES_STORAGE_LIMIT.toString());
-      expect(await roles.methods.getStorageLimit(HERMES, HERMES_STAKE.toString()).call()).to.eq(HERMES_STORAGE_LIMIT.toString());
+      expect(await roles.methods.getStorageLimit(HERMES, HERMES_STAKE.add(ONE).toString()).call()).to.eq('0');
+      expect(await roles.methods.getStorageLimit(HERMES, HERMES_STAKE.toString()).call()).to.eq('0');
       expect(await roles.methods.getStorageLimit(HERMES, HERMES_STAKE.sub(ONE).toString()).call()).to.eq('0');
     });
 
