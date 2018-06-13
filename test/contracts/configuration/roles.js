@@ -10,9 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
-import deployAll from '../../helpers/deployAll';
+import deploy from '../../helpers/deploy';
 import {
   ONE,
   ATLAS,
@@ -37,12 +36,10 @@ const {expect} = chai;
 
 
 describe('Roles Contract', () => {
-  let web3;
   let roles;
 
   beforeEach(async () => {
-    web3 = await createWeb3();
-    ({roles} = await deployAll(web3));
+    ({roles} = await deploy({roles: true}));
   });
 
   describe('canStake', () => {

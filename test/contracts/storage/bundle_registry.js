@@ -10,10 +10,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/web3_tools';
 import {adminAccount} from '../../helpers/account';
 import web3jsChai from '../../helpers/events';
-import deployAll from '../../helpers/deployAll';
+import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
 
 chai.use(web3jsChai());
@@ -45,9 +44,8 @@ describe('Bundle Registry Contract', () => {
     (vendor, url, from = ownerAddress) => bundleRegistry.methods.changeVendorUrl(vendor, url).send({from});
 
   beforeEach(async () => {
-    web3 = await createWeb3();
+    ({web3, bundleRegistry} = await deploy({contracts: {bundleRegistry: true}}));
     [ownerAddress, otherAddress] = await web3.eth.getAccounts();
-    ({bundleRegistry} = await deployAll(web3));
   });
 
   describe('Whitelisting', () => {

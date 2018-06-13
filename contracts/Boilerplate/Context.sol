@@ -13,7 +13,7 @@ import "../Storage/BundleRegistry.sol";
 import "../Storage/StakeStore.sol";
 import "../Storage/BundleStore.sol";
 import "../Storage/KycWhitelist.sol";
-
+import "../Configuration/Roles.sol";
 import "../Front/Stakes.sol";
 
 
@@ -38,8 +38,8 @@ contract Context {
         stakeStore = _stakeStore;
         bundleStore = _bundleStore;
         kycWhitelist = _kycWhitelist;
-        roles = _roles;
-        stakes = _stakes;
+        roles = _roles;        
+        stakes = _stakes;        
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
