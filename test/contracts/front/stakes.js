@@ -88,7 +88,7 @@ describe('Stakes Contract', () => {
   });
 
   describe('Release stake', () => {
-    it('Releases stake and sends it back', async () => {
+    it('Clears stake and sends it back', async () => {
       await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
       expect(await stakeStore.methods.getStake(from).call()).to.eq(ATLAS1_STAKE.toString());
       const balanceBeforeRelease = new BN(await web3.eth.getBalance(from));
@@ -99,11 +99,11 @@ describe('Stakes Contract', () => {
       expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
     });
 
-    it('Is not staking', async () => {
+    it('Rejects if sender is not staking', async () => {
       await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;
     });
 
-    it('Is still sheltering', async () => {
+    it('Rejects if sender is still sheltering', async () => {
       await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
       await stakeStore.methods.incrementStorageUsed(from).send({from});
       await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;
