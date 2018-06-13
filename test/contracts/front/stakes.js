@@ -12,6 +12,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
 import deployAll from '../../helpers/deployAll';
+import BN from 'bn.js';
 import {ATLAS, APOLLO, ATLAS1_STAKE, APOLLO_STAKE, ATLAS1_STORAGE_LIMIT, ONE} from '../../../src/consts';
 
 chai.use(web3jsChai());
@@ -83,6 +84,30 @@ describe('Stakes Contract', () => {
       await expect(stakes.methods.depositStake(NON_EXISTING_ROLE).send({from, value: 100})).to.be.eventually.rejected;
       expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('0');
+    });
+  });
+
+  describe('Release stake', () => {
+    it('Clears stake and sends it back', async () => {
+      await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
+      expect(await stakeStore.methods.getStake(from).call()).to.eq(ATLAS1_STAKE.toString());
+      const balanceBeforeRelease = new BN(await web3.eth.getBalance(from));
+      await stakes.methods.releaseStake().send({from, gasPrice: '0'});
+      const balanceAfterRelease = new BN(await web3.eth.getBalance(from));
+      const balanceWithReturnedStake = balanceBeforeRelease.add(new BN(ATLAS1_STAKE));
+      expect(balanceAfterRelease).to.deep.equal(balanceWithReturnedStake);
+      expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
+    });
+
+    it('Rejects if sender is not staking', async () => {
+      await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;
+    });
+
+    it('Rejects if sender is still sheltering', async () => {
+      await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
+      await stakeStore.methods.incrementStorageUsed(from).send({from});
+      await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;
+      expect(await stakeStore.methods.getStake(from).call()).to.equal(ATLAS1_STAKE.toString());
     });
   });
 });
