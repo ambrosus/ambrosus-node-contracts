@@ -12,6 +12,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
 import deployAll from '../../helpers/deployAll';
+import BN from 'bn.js';
 import {ATLAS, APOLLO, ATLAS1_STAKE, APOLLO_STAKE, ATLAS1_STORAGE_LIMIT, ONE} from '../../../src/consts';
 
 chai.use(web3jsChai());
@@ -90,7 +91,11 @@ describe('Stakes Contract', () => {
     it('Releases stake and sends it back', async () => {
       await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
       expect(await stakeStore.methods.getStake(from).call()).to.eq(ATLAS1_STAKE.toString());
-      await stakes.methods.releaseStake().send({from});
+      const balanceBeforeRelease = new BN(await web3.eth.getBalance(from));
+      await stakes.methods.releaseStake().send({from, gasPrice: '0'});
+      const balanceAfterRelease = new BN(await web3.eth.getBalance(from));
+      const balanceWithReturnedStake = balanceBeforeRelease.add(new BN(ATLAS1_STAKE));
+      expect(balanceAfterRelease).to.deep.equal(balanceWithReturnedStake);
       expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
     });
 
@@ -102,6 +107,7 @@ describe('Stakes Contract', () => {
       await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
       await stakeStore.methods.incrementStorageUsed(from).send({from});
       await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;
+      expect(await stakeStore.methods.getStake(from).call()).to.equal(ATLAS1_STAKE.toString());
     });
   });
 });
