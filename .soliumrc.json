@@ -4,6 +4,10 @@
     "security"
   ],
   "rules": {
+    "max-len": [
+      "error",
+      160
+    ],
     "quotes": [
       "error",
       "double"
@@ -11,6 +15,11 @@
     "indentation": [
       "error",
       4
+    ],
+    "arg-overflow": 0,
+    "security/no-block-members": [
+      "error",
+      ["blockhash"]
     ]
   }
 }
