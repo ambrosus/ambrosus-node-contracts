@@ -10,12 +10,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
-import deployContracts from '../../../src/deploy';
+import deploy from '../../helpers/deploy';
 
 chai.use(web3jsChai());
-
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
@@ -25,16 +23,18 @@ describe('Context contract', () => {
   let web3;
   let context;
   let bundleRegistry;
-  let ownerAddress;
-
-  beforeEach(async () => {
-    web3 = await createWeb3();
-    ({bundleRegistry, context} = await deployContracts(web3));
-    [ownerAddress] = await web3.eth.getAccounts();
+  let accounts;
+  
+  before(async () => {
+    ({web3, bundleRegistry, context} = await deploy({contracts: {bundleRegistry: true}}));
+    accounts = await web3.eth.getAccounts();
   });
 
-  it('canCall returns true only if such address is known', async () => {
+  it('canCall returns true if address is known', async () => {
     expect(await context.methods.isInternalToContext(bundleRegistry.options.address).call()).to.equal(true);
-    expect(await context.methods.isInternalToContext(ownerAddress).call()).to.equal(false);
+  });
+
+  it('canCall returns false only if such address is unknown', async () => {
+    expect(await context.methods.isInternalToContext(accounts[1]).call()).to.equal(false);
   });
 });

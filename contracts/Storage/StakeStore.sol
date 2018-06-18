@@ -11,7 +11,7 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
-import "../Boilerplate/Roles.sol";
+import "../Configuration/Roles.sol";
 
 
 contract StakeStore is Base {

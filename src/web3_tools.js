@@ -98,12 +98,12 @@ export function loadContract(web3, abi, address) {
   });
 }
 
-export async function deployContract(web3, abi, bytecode, args = [], options = {}) {
+export async function deployContract(web3, json, args = [], options = {}) {
   const defaultAddress = getDefaultAddress(web3);
-  return new web3.eth.Contract(abi, undefined, {
+  return new web3.eth.Contract(json.abi, undefined, {
     gas: DEFAULT_GAS,
     gasPrice: web3.utils.toWei('5', 'gwei')
-  }).deploy({data: bytecode, arguments: args})
+  }).deploy({data: json.bytecode, arguments: args})
     .send({
       from: defaultAddress,
       gas: DEFAULT_GAS,

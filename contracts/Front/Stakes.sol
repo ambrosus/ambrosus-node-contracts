@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
-import "../Boilerplate/Roles.sol";
+import "../Configuration/Roles.sol";
 import "../Storage/StakeStore.sol";
 import "../Storage/KycWhitelist.sol";
 

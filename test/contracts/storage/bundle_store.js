@@ -10,9 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
-import deployAll from '../../helpers/deployAll';
+import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
 
 chai.use(web3jsChai());
@@ -30,9 +29,8 @@ describe('BundleStore Contract', () => {
   const expirationDate = 1600000000;
 
   beforeEach(async () => {
-    web3 = await createWeb3();
+    ({web3, bundleStore} = await deploy({contracts: {bundleStore: true}}));
     [from, other] = await web3.eth.getAccounts();
-    ({bundleStore} = await deployAll(web3));
     bundleId = utils.asciiToHex('bundleId');
   });
 

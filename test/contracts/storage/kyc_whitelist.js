@@ -10,10 +10,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/web3_tools';
+import {createWeb3, deployContract} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
-import deployContracts from '../../../src/deploy';
-import deployAll from '../../helpers/deployAll';
+import KycWhitelistJson from '../../../build/contracts/KycWhitelist.json';
 
 chai.use(web3jsChai());
 
@@ -26,17 +25,12 @@ describe('KYC Whitelist Contract', () => {
   let web3;
   let from;
   let other;
-  let stakeStore;
-  let bundleRegistry;
   let kycWhitelist;
-  let head;
-
 
   beforeEach(async () => {
     web3 = await createWeb3();
     [from, other] = await web3.eth.getAccounts();
-    ({stakeStore, bundleRegistry, kycWhitelist, head} = await deployContracts(web3));
-    await deployAll(web3, head, [from], [bundleRegistry.options.address, stakeStore.options.address, kycWhitelist.options.address]);
+    kycWhitelist = await deployContract(web3, KycWhitelistJson);    
   });
 
   it(`adds removes from whitelist, checks if address is whitelisted`, async () => {

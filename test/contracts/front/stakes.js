@@ -9,10 +9,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
-import deployAll from '../../helpers/deployAll';
 import BN from 'bn.js';
+import deploy from '../../helpers/deploy';
 import {ATLAS, APOLLO, ATLAS1_STAKE, APOLLO_STAKE, ATLAS1_STORAGE_LIMIT, ONE} from '../../../src/consts';
 
 chai.use(web3jsChai());
@@ -32,8 +31,12 @@ describe('Stakes Contract', () => {
   let kycWhitelist;
 
   beforeEach(async () => {
-    web3 = await createWeb3();    
-    ({stakes, stakeStore, kycWhitelist} = await deployAll(web3));
+    ({web3, stakes, stakeStore, kycWhitelist} = await deploy({contracts: {
+      stakes: true,
+      stakeStore: true,
+      kycWhitelist: true,
+      roles: true
+    }}));
     [from, other] = await web3.eth.getAccounts();
     await kycWhitelist.methods.add(from).send({from});
   });

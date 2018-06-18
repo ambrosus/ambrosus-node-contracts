@@ -10,9 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
-import deployContracts from '../../../src/deploy';
+import deploy from '../../helpers/deploy';
 
 chai.use(web3jsChai());
 
@@ -28,8 +27,7 @@ describe('Head contract', () => {
   let otherAddress;
 
   beforeEach(async () => {
-    web3 = await createWeb3();
-    ({head} = await deployContracts(web3));
+    ({web3, head} = await deploy({web3, contracts: {}}));
     [ownerAddress, otherAddress] = await web3.eth.getAccounts();
   });
 
