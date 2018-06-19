@@ -17,15 +17,24 @@ contract Fees is Ownable {
 
     using SafeMath for uint;
 
-
     uint constant UNIT = 10**18;
     uint constant ONE_YEAR_IN_SECONDS = 31536000;
 
-    uint basicChallengeFee = 1;
+    uint constant PENALTY_DIVISOR = 100;
+    uint constant PENALTY_ESCALATION_TIMEOUT = 90 days;
+    uint constant BASIC_FEE_CHALLANGE = 1;
 
     // generally fake implementation made to return anything - TBD in another ticket
-    function getFeeForChallenge(uint startTime, uint endTime) public view returns(uint) {
+    function getFeeForChallenge(uint startTime, uint endTime) public pure returns(uint) {
         uint periods = (endTime.sub(startTime)).div(ONE_YEAR_IN_SECONDS);
-        return basicChallengeFee * periods * UNIT;
+        return BASIC_FEE_CHALLANGE * periods * UNIT;
+    }
+
+    function getPenalty(uint nominalStake, uint panaltiesCount, uint lastPenaltyTime) public view returns(uint) {
+        if ((now - lastPenaltyTime) > PENALTY_ESCALATION_TIMEOUT) {
+            return nominalStake.div(PENALTY_DIVISOR);
+        } else {
+            return nominalStake.div(PENALTY_DIVISOR) * 2 ** panaltiesCount;
+        }
     }
 }

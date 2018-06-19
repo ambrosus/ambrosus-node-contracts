@@ -21,7 +21,6 @@ const {expect} = chai;
 
 const NON_EXISTING_ROLE = 3;
 
-
 describe('Stakes Contract', () => {
   let web3;
   let stakes;
