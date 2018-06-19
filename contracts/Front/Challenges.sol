@@ -20,8 +20,6 @@ contract Challenges is Base {
 
     using SafeMath for uint;
 
-    uint8 constant SYSTEM_CHALLENGES_COUNT = 5;
-
     struct Challenge {
         address sheltererId;
         bytes32 bundleId;
@@ -32,6 +30,7 @@ contract Challenges is Base {
     }
 
     event ChallengeCreated(address sheltererId, bytes32 bundleId, bytes32 challengeId);
+    event SystemChallengesCreated(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint count);
 
     mapping(bytes32 => Challenge) public challenges;
     bytes32[] public challengeIds;
@@ -48,16 +47,18 @@ contract Challenges is Base {
         emit ChallengeCreated(sheltererId, bundleId, challengeId);
     }
 
-    function startSystemChallenge(address sheltererId, bytes32 bundleId) public onlyContextInternalCalls payable {
+    function startForSystem(address sheltererId, bytes32 bundleId, uint8 challengesCount) public onlyContextInternalCalls payable {
         uint fee = validateChallengeAndGetFee(sheltererId, bundleId);
-        require(msg.value >= fee * SYSTEM_CHALLENGES_COUNT);
+        require(msg.value >= fee * challengesCount);
 
-        Challenge memory challenge = Challenge(sheltererId, bundleId, msg.sender, msg.value, now, SYSTEM_CHALLENGES_COUNT);
+        Challenge memory challenge = Challenge(sheltererId, bundleId, 0x0, msg.value, now, challengesCount);
         bytes32 challengeId = storeChallenge(challenge);
 
-        for (uint8 i = 0; i < SYSTEM_CHALLENGES_COUNT; i++) {
-            emit ChallengeCreated(sheltererId, bundleId, challengeId);
-        }
+        emit SystemChallengesCreated(sheltererId, bundleId, challengeId, challengesCount);
+    }
+
+    function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
+        return keccak256(abi.encodePacked(sheltererId, bundleId));
     }
 
     function getChallengeIds() public view returns(bytes32[]) {
@@ -93,6 +94,7 @@ contract Challenges is Base {
     }
 
     function validateChallengeAndGetFee(address sheltererId, bytes32 bundleId) private view returns (uint) {
+        require(!inProgress(sheltererId, bundleId));
         Sheltering sheltering = context().sheltering();
         require(sheltering.isSheltering(sheltererId, bundleId));
         uint startTime = sheltering.getBundleUploadDate(bundleId);
@@ -104,14 +106,11 @@ contract Challenges is Base {
         return fees.getFeeForChallenge(startTime, endTime);
     }
 
-    function getChallengeId(address sheltererId, bytes32 bundleId) private pure returns(bytes32) {
-        return keccak256(abi.encodePacked(sheltererId, bundleId));
-    }
-
     function storeChallenge(Challenge challenge) private returns(bytes32) {
         bytes32 challengeId = getChallengeId(challenge.sheltererId, challenge.bundleId);
-        require(challenges[challengeId].activeCount == 0);
-        challengeIds.push(challengeId);
+        if (challenges[challengeId].creationTime == 0) {
+            challengeIds.push(challengeId);
+        }
         challenges[challengeId] = challenge;
         return challengeId;
     }

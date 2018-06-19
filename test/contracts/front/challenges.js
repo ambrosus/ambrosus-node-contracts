@@ -61,39 +61,45 @@ describe('Challenges Contract', () => {
       systemFee = fee.mul(new BN('5'));
     });
 
-    it('startSystemChallenge is context internal', async () => {
-      await expect(challenges.methods.startSystemChallenge(from, bundleId).send({from, value: systemFee})).to.be.eventually.fulfilled;
-      await expect(challenges.methods.startSystemChallenge(other, otherBundleId).send({from: other, value: systemFee})).to.be.eventually.rejected;
+    it('startForSystem is context internal', async () => {
+      await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.fulfilled;
+      await expect(challenges.methods.startForSystem(other, otherBundleId, 5).send({from: other, value: systemFee})).to.be.eventually.rejected;
     });
 
-    it('should emit 5 events', async () => {
-      const tx = await challenges.methods.startSystemChallenge(from, bundleId).send({from, value: systemFee});
-      expect(tx.events.ChallengeCreated).to.have.length(5);
+    it('should emit event', async () => {
+      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('SystemChallengesCreated');
+    });
+
+    it('Stores challengerId as 0x0', async () => {
+      await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee});
+      const challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
+      expect(await challenges.methods.getChallengeCreationTime(challengeId).call()).to.not.equal('0');
+      expect(await challenges.methods.getChallenger(challengeId).call()).to.equal('0x0000000000000000000000000000000000000000');
     });
 
     it('Rejects if bundle is not being sheltered by provided account', async () => {
-      await expect(challenges.methods.startSystemChallenge(other, bundleId).send({from, value: systemFee})).to.be.eventually.rejected;
+      await expect(challenges.methods.startForSystem(other, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
     });
 
     it(`Accepts fee bigger than necessary`, async () => {
       const biggerFee = systemFee.add(ONE);
-      expect(await challenges.methods.startSystemChallenge(from, bundleId).send({from, value: biggerFee})).to.emitEvent('ChallengeCreated');
+      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: biggerFee})).to.emitEvent('SystemChallengesCreated');
     });
 
     it(`Rejects if challenger hasn't provided a fee of valid value`, async () => {
       const tooSmallFee = systemFee.sub(ONE);
-      await expect(challenges.methods.startSystemChallenge(from, bundleId).send({from, value: tooSmallFee})).to.be.eventually.rejected;
+      await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: tooSmallFee})).to.be.eventually.rejected;
     });
 
     it('Rejects if the challenge was added after bundle has expired', async () => {
       const expirationTime = await bundleStore.methods.getExpirationDate(bundleId).call();
       await increaseTimeTo(web3, expirationTime + 1);
-      await expect(challenges.methods.startSystemChallenge(from, bundleId).send({from, value: systemFee})).to.be.eventually.rejected;
+      await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
     });
 
     it('Rejects if added same challenge twice', async () => {
-      expect(await challenges.methods.startSystemChallenge(from, bundleId).send({from, value: systemFee})).to.emitEvent('ChallengeCreated');
-      await expect(challenges.methods.start(from, bundleId).send({from, value: systemFee})).to.be.eventually.rejected;
+      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('SystemChallengesCreated');
+      await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
     });
   });
 
@@ -142,6 +148,10 @@ describe('Challenges Contract', () => {
         const challengeBlock = await web3.eth.getBlock(challengeBlockNumber);
         challengeBlockTimestamp = challengeBlock.timestamp.toString();
         [challengeId] = await challenges.methods.getChallengeIds().call();
+      });
+
+      it('Stores challenge id', async () => {
+        expect(await challenges.methods.getChallengeId(from, bundleId).call()).to.equal(challengeId);
       });
 
       it('Shelterer id', async () => {
