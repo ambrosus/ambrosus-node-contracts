@@ -108,7 +108,7 @@ contract Challenges is Base {
 
     function storeChallenge(Challenge challenge) private returns(bytes32) {
         bytes32 challengeId = getChallengeId(challenge.sheltererId, challenge.bundleId);
-        if (challenges[challengeId].creationTime == 0) {
+        if (challenges[challengeId].bundleId == "") {
             challengeIds.push(challengeId);
         }
         challenges[challengeId] = challenge;
