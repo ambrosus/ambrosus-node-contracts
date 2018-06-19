@@ -23,6 +23,10 @@ deactivate Fees
 Anybody -> Challenges: start(sheltererId, bundleId, implicit challengerId) payable
 activate Challenges
 
+Challenges -> Challenges: inProgress(sheltererId, bundleId)
+activate Challenges
+deactivate Challenges
+
 Challenges -> Sheltering: isSheltering(sheltererId, bundleId)
 activate Sheltering
 Challenges <-- Sheltering
@@ -33,7 +37,40 @@ activate Fees
 Challenges <-- Fees
 deactivate Fees
 
-Challenges -> Challenges: storeChallenge(sheltererId, bundleId, challengerId, fee)
+Challenges -> Challenges: storeChallenge(sheltererId, bundleId, challengerId, fee, 1)
+note right: sets active count to 1
+activate Challenges
+deactivate Challenges
+
+Anybody <-- Challenges
+deactivate Challenges
+
+== Start a System challenge  ==
+
+Anybody -> Fees: getFeeFor(time, CHALLENGE)
+activate Fees
+Anybody <-- Fees
+deactivate Fees
+
+Anybody -> Challenges: startForSystem(sheltererId, bundleId, numChallenges) payable onlyInternal
+activate Challenges
+
+Challenges -> Challenges: inProgress(sheltererId, bundleId)
+activate Challenges
+deactivate Challenges
+
+Challenges -> Sheltering: isSheltering(sheltererId, bundleId)
+activate Sheltering
+Challenges <-- Sheltering
+deactivate Sheltering
+
+Challenges -> Fees: getFeeFor(time, CHALLENGE)
+activate Fees
+Challenges <-- Fees
+deactivate Fees
+
+Challenges -> Challenges: storeChallenge(sheltererId, bundleId, 0x0, fee, numChallenges)
+note right: sets active count to numChallenges
 activate Challenges
 deactivate Challenges
 
@@ -44,6 +81,10 @@ deactivate Challenges
 
 Atlas -> Challenges: resolve(sheltererId, bundleId, implicit atlasId)
 activate Challenges
+
+Challenges -> Challenges: inProgress(sheltererId, bundleId)
+activate Challenges
+deactivate Challenges
 
 Challenges -> Sheltering: isSheltering(atlasId, bundleId)
 activate Sheltering
@@ -61,6 +102,7 @@ Challenges <-- Sheltering
 deactivate Sheltering
 
 Challenges -> Challenges: removeChallenge(atlasId, bundleId)
+note right: decrements active count by 1
 activate Challenges
 deactivate Challenges
 Atlas <-- Challenges: transfer
@@ -70,6 +112,14 @@ deactivate Challenges
 
 Anybody -> Challenges: timeout(sheltererId, bundleId, implicit challengerId)
 activate Challenges
+
+Challenges -> Challenges: inProgress(sheltererId, bundleId)
+activate Challenges
+deactivate Challenges
+
+Challenges -> Challenges: didTimeout(sheltererId, bundleId)
+activate Challenges
+deactivate Challenges
 
 Challenges -> Fees: calculatePenalty(sheltererId, n)
 activate Fees
@@ -88,6 +138,7 @@ Challenges <-- Sheltering
 deactivate Sheltering
 
 Challenges -> Challenges: removeChallenge(sheltererId, bundleId)
+note right: resets active count to 0
 activate Challenges
 deactivate
 

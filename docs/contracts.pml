@@ -94,10 +94,12 @@ class Bundle #lightgray {
 }
 
 class Challenges {
-  start(sheltererId, bundleId) payable
+  start(sheltererId, bundleId, implicit challengerId) payable
+  startForSystem(sheltererId, bundleId, numChallenges) payable
   resolve(sheltererId, bundleId)
   storeChallenge(sheltererId, bundleId, challengerId, fee)
   removeChallenge(sheltererId, bundleId)
+  inProgress(sheltererId, bundleId)
 }
 
 class Transfers {
