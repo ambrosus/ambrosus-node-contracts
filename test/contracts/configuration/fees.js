@@ -20,24 +20,16 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe('Head Contract', () => {
-  let web3;
-  let head;
-  let ownerAddress;
-  let otherAddress;
+describe('Fees Contract - MOCK IMPLEMENTATION', () => {
+  let fees;
+  const startTime = 0;
+  const endTime = 63072000;
 
   beforeEach(async () => {
-    ({web3, head} = await deploy({web3, contracts: {}}));
-    [ownerAddress, otherAddress] = await web3.eth.getAccounts();
+    ({fees} = await deploy({contracts: {fees: true}}));
   });
 
-  it('owner can modify context', async () => {
-    await head.methods.setContext(otherAddress).send({from: ownerAddress});
-    expect(await head.methods.context().call()).to.equal(otherAddress);
-  });
-
-  it('not owner can not modify context', async () => {
-    await expect(head.methods.setContext(otherAddress).send({from: otherAddress}))
-      .to.be.rejected;
+  it('Returns non zero value if asked for challenge fee', async () => {
+    expect(await fees.methods.getFeeForChallenge(startTime, endTime).call()).not.to.equal('0');
   });
 });

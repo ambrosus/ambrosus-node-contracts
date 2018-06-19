@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "config": "^1.30.0",
-    "openzeppelin-solidity": "^1.9.0",
+    "openzeppelin-solidity": "^1.10.0",
     "web3": "^1.0.0-beta.34"
   },
   "devDependencies": {
@@ -39,7 +39,7 @@
     "mocha": "^5.1.1",
     "sinon": "^5.0.7",
     "sinon-chai": "^3.0.0",
-    "truffle": "^4.1.8",
-    "solium": "^1.1.7"
+    "solium": "^1.1.7",
+    "truffle": "^4.1.8"
   }
 }

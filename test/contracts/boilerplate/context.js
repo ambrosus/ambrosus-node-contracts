@@ -19,7 +19,7 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe('Context contract', () => {
+describe('Context Contract', () => {
   let web3;
   let context;
   let bundleRegistry;
