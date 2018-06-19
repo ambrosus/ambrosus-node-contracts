@@ -32,12 +32,10 @@ Sheltering -> Sheltering: addSheltering(bundleId, creatorId)
 Uploads <-- Sheltering
 deactivate Sheltering
 
-loop x times
-  Uploads -> Challenges: start(creatorId, bundleId, implicit challengerId) payable
-  activate Challenges
-  Uploads <-- Challenges
-  deactivate Challenges
-end
+Uploads -> Challenges: startForSystem(creatorId, bundleId, numChallenges) payable
+activate Challenges
+Uploads <-- Challenges
+deactivate Challenges
 
 Uploads -> Fees: splitFee() payable
 activate Fees
