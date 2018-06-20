@@ -61,7 +61,7 @@ describe('Fees Contract - MOCK IMPLEMENTATION', () => {
     });
 
     it('Each subsequent penalty should double up until 90 days', async () => {      
-      const dayMinus89 = now - (90 * day);
+      const dayMinus89 = now - (89 * day);
       expect(await getPenalty(10000, 0, dayMinus89)).to.deep.equal(['100', '1']);
       expect(await getPenalty(10000, 1, dayMinus89)).to.deep.equal(['200', '2']);
       expect(await getPenalty(10000, 2, dayMinus89)).to.deep.equal(['400', '3']);
