@@ -12,7 +12,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import web3jsChai from '../../helpers/events';
 import {createWeb3, deployContract} from '../../../src/web3_tools';
-import SafeMath2Json from '../../../build/contracts/SafeMath2.json';
+import SafeMath2Json from '../../../build/contracts/SafeMathExtensions.json';
 
 
 chai.use(web3jsChai());
@@ -22,7 +22,7 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe('SafeMath2', () => {
+describe('SafeMathExtensions', () => {
   let web3;
   let safeMath2;
 

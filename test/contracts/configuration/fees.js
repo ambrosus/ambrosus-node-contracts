@@ -46,7 +46,7 @@ describe('Fees Contract - MOCK IMPLEMENTATION', () => {
   
   describe('Penalties', () => {
     it('First penalty should equal 1% of nominal stake', async () => {
-      expect(await getPenalty(10000, 0, 0)).to.deep.equal(['100', '0']);
+      expect(await getPenalty(10000, 0, 0)).to.deep.equal(['100', '1']);
     });
 
     it('Each subsequent penalty should double', async () => {      
@@ -74,14 +74,14 @@ describe('Fees Contract - MOCK IMPLEMENTATION', () => {
 
     it('Penalty doublation should expire after 90 days', async () => {
       const dayMinus91 = now - (91 * day);
-      expect(await getPenalty(10000, 0, dayMinus91)).to.deep.equal(['100', '0']);
-      expect(await getPenalty(10000, 1, dayMinus91)).to.deep.equal(['100', '0']);
-      expect(await getPenalty(10000, 2, dayMinus91)).to.deep.equal(['100', '0']);
-      expect(await getPenalty(10000, 3, dayMinus91)).to.deep.equal(['100', '0']);
-      expect(await getPenalty(10000, 4, dayMinus91)).to.deep.equal(['100', '0']);
-      expect(await getPenalty(10000, 5, dayMinus91)).to.deep.equal(['100', '0']);
-      expect(await getPenalty(10000, 6, dayMinus91)).to.deep.equal(['100', '0']);      
-      expect(await getPenalty(10000, 7, dayMinus91)).to.deep.equal(['100', '0']);      
+      expect(await getPenalty(10000, 0, dayMinus91)).to.deep.equal(['100', '1']);
+      expect(await getPenalty(10000, 1, dayMinus91)).to.deep.equal(['100', '1']);
+      expect(await getPenalty(10000, 2, dayMinus91)).to.deep.equal(['100', '1']);
+      expect(await getPenalty(10000, 3, dayMinus91)).to.deep.equal(['100', '1']);
+      expect(await getPenalty(10000, 4, dayMinus91)).to.deep.equal(['100', '1']);
+      expect(await getPenalty(10000, 5, dayMinus91)).to.deep.equal(['100', '1']);
+      expect(await getPenalty(10000, 6, dayMinus91)).to.deep.equal(['100', '1']);      
+      expect(await getPenalty(10000, 7, dayMinus91)).to.deep.equal(['100', '1']);      
     });    
   });
 });

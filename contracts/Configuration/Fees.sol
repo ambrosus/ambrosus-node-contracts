@@ -11,13 +11,13 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../Lib/SafeMath2.sol";
+import "../Lib/SafeMathExtensions.sol";
 
 
 contract Fees is Ownable {
 
     using SafeMath for uint;
-    using SafeMath2 for uint;
+    using SafeMathExtensions for uint;
 
     uint constant UNIT = 10**18;
     uint constant ONE_YEAR_IN_SECONDS = 31536000;
@@ -34,7 +34,7 @@ contract Fees is Ownable {
 
     function getPenalty(uint nominalStake, uint panaltiesCount, uint lastPenaltyTime) public view returns(uint, uint) {
         if ((now - lastPenaltyTime) > PENALTY_ESCALATION_TIMEOUT) {
-            return (nominalStake.div(PENALTY_DIVISOR), 0);
+            return (nominalStake.div(PENALTY_DIVISOR), 1);
         } else {
             return (nominalStake.div(PENALTY_DIVISOR).mul(panaltiesCount.safePow2()), panaltiesCount + 1);
         }

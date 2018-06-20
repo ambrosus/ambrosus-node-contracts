@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 
-library SafeMath2 {
+library SafeMathExtensions {
     function safePow2(uint exponent) pure public returns (uint result) {
         require(exponent < 256);
         return 2 ** exponent;        

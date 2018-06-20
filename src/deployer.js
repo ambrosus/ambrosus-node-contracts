@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import SafeMath2Json from '../build/contracts/SafeMath2.json';
+import SafeMathExtensionsJson from '../build/contracts/SafeMathExtensions.json';
 import BundleRegistryJson from '../build/contracts/BundleRegistry.json';
 import StakeStoreJson from '../build/contracts/StakeStore.json';
 import BundleStoreJson from '../build/contracts/BundleStore.json';
@@ -69,7 +69,7 @@ export default class Deployer {
   }
 
   async deployLibs() {
-    this.libs = {SafeMath2: await deployContract(this.web3, SafeMath2Json)};
+    this.libs = {SafeMathExtensions: await deployContract(this.web3, SafeMathExtensionsJson)};
   }
 
   async deployCustom(contractJsonsOrBooleans) {    
