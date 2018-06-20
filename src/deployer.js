@@ -7,6 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import SafeMathExtensionsJson from '../build/contracts/SafeMathExtensions.json';
 import BundleRegistryJson from '../build/contracts/BundleRegistry.json';
 import StakeStoreJson from '../build/contracts/StakeStore.json';
 import BundleStoreJson from '../build/contracts/BundleStore.json';
@@ -19,7 +20,7 @@ import FeesJson from '../build/contracts/Fees.json';
 import ChallengesJson from '../build/contracts/Challenges.json';
 import ShelteringJson from '../build/contracts/Sheltering.json';
 
-import {DEFAULT_GAS, deployContract, getDefaultAddress} from './web3_tools';
+import {DEFAULT_GAS, deployContract, getDefaultAddress, link} from './web3_tools';
 
 const DEFAULT_CONTRACT_JSONS = {
   bundleRegistry: BundleRegistryJson,
@@ -54,6 +55,10 @@ export default class Deployer {
       return;      
     } 
     const contractJson = customContractJson === true ? defaultJson : customContractJson;
+    for (const lib of Object.entries(this.libs)) {
+      const [libName, libContract] = lib;
+      link(contractJson, libName, libContract);
+    }
     return deployContract(this.web3, contractJson, [this.head.options.address]);
   }
 
@@ -61,6 +66,10 @@ export default class Deployer {
     const pairs = Object.entries(DEFAULT_CONTRACT_JSONS)
       .map(([contractName]) => ({[contractName]: true}));      
     return Object.assign(...pairs);
+  }
+
+  async deployLibs() {
+    this.libs = {SafeMathExtensions: await deployContract(this.web3, SafeMathExtensionsJson)};
   }
 
   async deployCustom(contractJsonsOrBooleans) {    
@@ -72,8 +81,6 @@ export default class Deployer {
     return result;
   }
 
-
-
   async deploy(contractJsonsOrBooleans = this.getDefaultArgs()) {
     function contractToAddress (contract) {
       return contract ? contract.options.address : '0x0';
@@ -83,6 +90,7 @@ export default class Deployer {
       return [contractMap.bundleRegistry, contractMap.stakeStore, contractMap.bundleStore, contractMap.kycWhitelist, contractMap.roles, contractMap.stakes, contractMap.sheltering, contractMap.fees, contractMap.challenges]
         .map((contract) => contractToAddress(contract));
     }
+    await this.deployLibs();
     this.head = await deployContract(this.web3, HeadJson);
     const contractMap = await this.deployCustom(contractJsonsOrBooleans);
     const context = await this.setupContext(prepareArgs(contractMap));
