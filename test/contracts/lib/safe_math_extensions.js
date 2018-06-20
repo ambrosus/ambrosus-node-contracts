@@ -41,8 +41,8 @@ describe('SafeMathExtensions', () => {
     expect(await safeMath2.methods.safePow2(24).call()).to.equal('16777216');
     expect(await safeMath2.methods.safePow2(100).call()).to.equal('1267650600228229401496703205376');
     expect(await safeMath2.methods.safePow2(255).call()).to.equal('57896044618658097711785492504343953926634992332820282019728792003956564819968');
-    expect(safeMath2.methods.safePow2(256).call()).to.be.eventually.rejected;
-    expect(safeMath2.methods.safePow2(300).call()).to.be.eventually.rejected;
-    expect(safeMath2.methods.safePow2(1000).call()).to.be.eventually.rejected;
+    await expect(safeMath2.methods.safePow2(256).call()).to.be.eventually.rejected;
+    await expect(safeMath2.methods.safePow2(300).call()).to.be.eventually.rejected;
+    await expect(safeMath2.methods.safePow2(1000).call()).to.be.eventually.rejected;
   });
 });
