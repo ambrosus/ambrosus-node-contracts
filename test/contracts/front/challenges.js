@@ -14,7 +14,7 @@ import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
 import BN from 'bn.js';
 import {increaseTimeTo} from '../../helpers/web3_utils';
-import {ONE} from '../../../src/consts';
+import {ATLAS, ATLAS1_STAKE, ONE} from '../../../src/consts';
 import deploy from '../../helpers/deploy';
 
 chai.use(web3jsChai());
@@ -28,23 +28,31 @@ describe('Challenges Contract', () => {
   let web3;
   let challenges;
   let bundleStore;
+  let sheltering;
   let fees;
+  let stakes;
+  let kycWhitelist;
   let from;
   let other;
+  let resolver;
   let fee;
   const bundleId = '0xfe478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
   const expirationDate = 1600000000;
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    [from, other] = await web3.eth.getAccounts();
-    ({challenges, bundleStore, fees} = await deploy({
+    [from, other, resolver] = await web3.eth.getAccounts();
+    ({challenges, bundleStore, fees, sheltering, stakes, kycWhitelist} = await deploy({
       web3,
       contracts: {
         challenges: true,
         bundleStore: true,
         fees: true,
-        sheltering: true
+        sheltering: true,
+        stakes: true,
+        stakeStore: true,
+        roles: true,
+        kycWhitelist: true
       }}));
     await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
     const storageBlockNumber = await web3.eth.getBlockNumber();
@@ -188,24 +196,45 @@ describe('Challenges Contract', () => {
     });
   });
 
-  describe.skip('Resolving a challenge', () => {
+  describe.only('Resolving a challenge', () => {
+    let challengeId;
+
+    beforeEach(async () => {
+      await kycWhitelist.methods.add(resolver).send({from});
+      await stakes.methods.depositStake(ATLAS).send({from: resolver, value: ATLAS1_STAKE, gasPrice: 0});   
+    });
+
     describe('Resolves correctly', async () => {
+      beforeEach(async () => {
+        await challenges.methods.start(from, bundleId).send({from: other, value: fee});
+        const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+        ({challengeId} = challengeCreationEvent.returnValues);
+      });
+
       it('Stores resolver as a new shelterer', async () => {
+        await challenges.methods.resolve(challengeId).send({from: resolver});
+        expect(await sheltering.methods.isSheltering(resolver, bundleId).call()).to.equal(true);
       });
       it('Transfers reward', async () => {
+        const resolverBalanceBeforeResolve = new BN(await web3.eth.getBalance(resolver));
+        await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'});
+        const resolverBalanceAfterResolve = new BN(await web3.eth.getBalance(resolver));
+        const resolverBalanceGain = resolverBalanceAfterResolve.sub(resolverBalanceBeforeResolve);
+        expect(resolverBalanceGain.toString()).to.deep.equal(fee.toString());
       });
       it('Emits an event', async () => {
+        expect(await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'})).to.emitEvent('ChallengeResolved');
       });
     });
-    it('Rejects if challenge is not in progress', async () => {
+    xit('Rejects if challenge is not in progress', async () => {
     });
-    it('Rejects if resolver is already sheltering challenged bundle', async () => {
+    xit('Rejects if resolver is already sheltering challenged bundle', async () => {
     });
-    it(`Rejects if resolver can't store more bundles`, async () => {
+    xit(`Rejects if resolver can't store more bundles`, async () => {
     });
-    it('Decreases active count', async () => {
+    xit('Decreases active count', async () => {
     });
-    it('Removes event if active count was 1', async () => {
+    xit('Removes event if active count was 1', async () => {
     });
   });
 });
