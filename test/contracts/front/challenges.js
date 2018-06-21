@@ -66,7 +66,7 @@ describe('Challenges Contract', () => {
       await expect(challenges.methods.startForSystem(other, otherBundleId, 5).send({from: other, value: systemFee})).to.be.eventually.rejected;
     });
 
-    it('should emit event', async () => {
+    it('Should emit event', async () => {
       expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('ChallengeCreated');
     });
 
@@ -185,6 +185,27 @@ describe('Challenges Contract', () => {
         const challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
         expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(true);
       });
+    });
+  });
+
+  describe.skip('Resolving a challenge', () => {
+    describe('Resolves correctly', async () => {
+      it('Stores resolver as a new shelterer', async () => {
+      });
+      it('Transfers reward', async () => {
+      });
+      it('Emits an event', async () => {
+      });
+    });
+    it('Rejects if challenge is not in progress', async () => {
+    });
+    it('Rejects if resolver is already sheltering challenged bundle', async () => {
+    });
+    it(`Rejects if resolver can't store more bundles`, async () => {
+    });
+    it('Decreases active count', async () => {
+    });
+    it('Removes event if active count was 1', async () => {
     });
   });
 });
