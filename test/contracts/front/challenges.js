@@ -67,7 +67,7 @@ describe('Challenges Contract', () => {
     });
 
     it('should emit event', async () => {
-      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('SystemChallengesCreated');
+      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('ChallengeCreated');
     });
 
     it('Stores challengerId as 0x0', async () => {
@@ -83,7 +83,7 @@ describe('Challenges Contract', () => {
 
     it(`Accepts fee bigger than necessary`, async () => {
       const biggerFee = systemFee.add(ONE);
-      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: biggerFee})).to.emitEvent('SystemChallengesCreated');
+      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: biggerFee})).to.emitEvent('ChallengeCreated');
     });
 
     it(`Rejects if challenger hasn't provided a fee of valid value`, async () => {
@@ -98,14 +98,15 @@ describe('Challenges Contract', () => {
     });
 
     it('Rejects if added same challenge twice', async () => {
-      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('SystemChallengesCreated');
+      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('ChallengeCreated');
       await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
     });
   });
 
   describe('Starting a challenge', () => {
     it('Challenge is not in progress until not started', async () => {
-      expect(await challenges.methods.inProgress(from, bundleId).call()).to.equal(false);
+      const challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
+      expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
     });
 
     it('Creates a challenge and emits an event', async () => {
@@ -181,7 +182,8 @@ describe('Challenges Contract', () => {
       });
 
       it('Challenge in progress', async () => {
-        expect(await challenges.methods.inProgress(from, bundleId).call()).to.equal(true);
+        const challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
+        expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(true);
       });
     });
   });
