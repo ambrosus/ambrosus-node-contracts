@@ -33,13 +33,12 @@ contract Challenges is Base {
     event SystemChallengesCreated(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint count);
 
     mapping(bytes32 => Challenge) public challenges;
-    bytes32[] public challengeIds;
 
     constructor(Head _head) public Base(_head) { }
 
     function start(address sheltererId, bytes32 bundleId) public payable {
-        uint fee = validateChallengeAndGetFee(sheltererId, bundleId);
-        require(msg.value >= fee);
+        validateChallenge(sheltererId, bundleId);
+        validateFeeAmount(1, bundleId);
 
         Challenge memory challenge = Challenge(sheltererId, bundleId, msg.sender, msg.value, now, 1);
         bytes32 challengeId = storeChallenge(challenge);
@@ -48,8 +47,8 @@ contract Challenges is Base {
     }
 
     function startForSystem(address sheltererId, bytes32 bundleId, uint8 challengesCount) public onlyContextInternalCalls payable {
-        uint fee = validateChallengeAndGetFee(sheltererId, bundleId);
-        require(msg.value >= fee * challengesCount);
+        validateChallenge(sheltererId, bundleId);
+        validateFeeAmount(challengesCount, bundleId);
 
         Challenge memory challenge = Challenge(sheltererId, bundleId, 0x0, msg.value, now, challengesCount);
         bytes32 challengeId = storeChallenge(challenge);
@@ -59,10 +58,6 @@ contract Challenges is Base {
 
     function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
         return keccak256(abi.encodePacked(sheltererId, bundleId));
-    }
-
-    function getChallengeIds() public view returns(bytes32[]) {
-        return challengeIds;
     }
 
     function getChallengedShelterer(bytes32 challengeId) public view returns(address) {
@@ -93,24 +88,26 @@ contract Challenges is Base {
         return getActiveChallengesCount(getChallengeId(sheltererId, bundleId)) > 0;
     }
 
-    function validateChallengeAndGetFee(address sheltererId, bytes32 bundleId) private view returns (uint) {
+    function validateChallenge(address sheltererId, bytes32 bundleId) private view {
         require(!inProgress(sheltererId, bundleId));
         Sheltering sheltering = context().sheltering();
         require(sheltering.isSheltering(sheltererId, bundleId));
-        uint startTime = sheltering.getBundleUploadDate(bundleId);
-        uint endTime = sheltering.getBundleExpirationDate(bundleId);
-        // Note: cannot commit challenge after bundle has expired
+        BundleStore bundleStore = context().bundleStore();
+        uint endTime = bundleStore.getExpirationDate(bundleId);
         require(endTime > now);
+    }
 
+    function validateFeeAmount(uint8 challengesCount, bytes32 bundleId) private view {
+        BundleStore bundleStore = context().bundleStore();
+        uint startTime = bundleStore.getUploadDate(bundleId);
+        uint endTime = bundleStore.getExpirationDate(bundleId);
         Fees fees = context().fees();
-        return fees.getFeeForChallenge(startTime, endTime);
+        uint fee = fees.getFeeForChallenge(startTime, endTime);
+        require(msg.value >= fee * challengesCount);
     }
 
     function storeChallenge(Challenge challenge) private returns(bytes32) {
         bytes32 challengeId = getChallengeId(challenge.sheltererId, challenge.bundleId);
-        if (challenges[challengeId].bundleId == "") {
-            challengeIds.push(challengeId);
-        }
         challenges[challengeId] = challenge;
         return challengeId;
     }

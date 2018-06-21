@@ -32,14 +32,4 @@ contract Sheltering is Base {
         }
         return false;
     }
-
-    function getBundleExpirationDate(bytes32 bundleId)  public view onlyContextInternalCalls returns(uint) {
-        BundleStore bundleStore = context().bundleStore();
-        return bundleStore.getExpirationDate(bundleId);
-    }
-
-    function getBundleUploadDate(bytes32 bundleId)  public view onlyContextInternalCalls returns(uint) {
-        BundleStore bundleStore = context().bundleStore();
-        return bundleStore.getUploadDate(bundleId);
-    }
 }
