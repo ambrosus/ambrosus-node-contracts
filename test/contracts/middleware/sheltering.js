@@ -51,16 +51,4 @@ describe('Sheltering Contract', () => {
       expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
     });
   });
-
-  it('gets bundle upload date', async () => {
-    const tx = await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
-    const {blockNumber} = tx;
-    const block = await web3.eth.getBlock(blockNumber);
-    expect(await sheltering.methods.getBundleUploadDate(bundleId).call()).to.equal(block.timestamp.toString());
-  });
-
-  it('gets bundle expiration date', async () => {
-    await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
-    expect(await sheltering.methods.getBundleExpirationDate(bundleId).call()).to.equal(expirationDate.toString());
-  });
 });

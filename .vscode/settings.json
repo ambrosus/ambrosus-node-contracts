@@ -10,7 +10,12 @@
       "quotes": [
         "error",
         "double"
-      ]
+      ],
+    "arg-overflow": 0,
+    "security/no-block-members": [
+      "error",
+      ["blockhash"]
+    ]
     },
     "solidity.packageDefaultDependenciesContractsDirectory": ""
   }

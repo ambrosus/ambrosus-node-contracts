@@ -140,6 +140,7 @@ describe('Challenges Contract', () => {
 
     describe('Stores challenge correctly', () => {
       let challengeBlockTimestamp;
+      let challengeCreationEvent;
       let challengeId;
 
       beforeEach(async () => {
@@ -147,7 +148,8 @@ describe('Challenges Contract', () => {
         const challengeBlockNumber = await web3.eth.getBlockNumber();
         const challengeBlock = await web3.eth.getBlock(challengeBlockNumber);
         challengeBlockTimestamp = challengeBlock.timestamp.toString();
-        [challengeId] = await challenges.methods.getChallengeIds().call();
+        [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+        ({challengeId} = challengeCreationEvent.returnValues);
       });
 
       it('Stores challenge id', async () => {
