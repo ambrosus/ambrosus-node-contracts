@@ -229,6 +229,11 @@ describe('Challenges Contract', () => {
       it('Emits an event', async () => {
         expect(await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'})).to.emitEvent('ChallengeResolved');
       });
+
+      it('Removes challenge if active count was 1', async () => {
+        await challenges.methods.resolve(challengeId).send({from: resolver});
+        expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
+      });
     });
 
     it('Rejects if challenge does not exist', async () => {
@@ -261,8 +266,9 @@ describe('Challenges Contract', () => {
       await challenges.methods.resolve(challengeId).send({from: resolver});
       expect(await challenges.methods.getActiveChallengesCount(challengeId).call()).to.equal('2');
     });
-    it('Removes event if active count was 1', async () => {
-      await challenges.methods.start(from, bundleId).send({from: other, value: fee});
+
+    it('Removes system challenge if active count was 1', async () => {
+      await challenges.methods.startForSystem(from, bundleId, 1).send({from, value: fee});
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
       await challenges.methods.resolve(challengeId).send({from: resolver});
