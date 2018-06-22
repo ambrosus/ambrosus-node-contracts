@@ -17,7 +17,7 @@ contract MockStakeStore is StakeStore {
     constructor(Head _head) public StakeStore(_head) {    
     }
 
-    function setStorageUsed(address _node, uint _storageUsed) public {
-        stakes[_node].storageUsed = _storageUsed;
+    function setStorageUsed(address node, uint storageUsed) public {
+        stakes[node].storageUsed = storageUsed;
     }
 }
