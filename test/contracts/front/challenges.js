@@ -16,6 +16,7 @@ import BN from 'bn.js';
 import {increaseTimeTo} from '../../helpers/web3_utils';
 import {ATLAS, ATLAS1_STAKE, ONE} from '../../../src/consts';
 import deploy from '../../helpers/deploy';
+import mockStakeStoreJson from '../../../build/contracts/MockStakeStore.json';
 
 chai.use(web3jsChai());
 
@@ -31,6 +32,7 @@ describe('Challenges Contract', () => {
   let sheltering;
   let fees;
   let stakes;
+  let stakeStore;
   let kycWhitelist;
   let from;
   let other;
@@ -42,7 +44,7 @@ describe('Challenges Contract', () => {
   beforeEach(async () => {
     web3 = await createWeb3();
     [from, other, resolver] = await web3.eth.getAccounts();
-    ({challenges, bundleStore, fees, sheltering, stakes, kycWhitelist} = await deploy({
+    ({challenges, bundleStore, fees, sheltering, stakes, kycWhitelist, stakeStore} = await deploy({
       web3,
       contracts: {
         challenges: true,
@@ -50,7 +52,7 @@ describe('Challenges Contract', () => {
         fees: true,
         sheltering: true,
         stakes: true,
-        stakeStore: true,
+        stakeStore: mockStakeStoreJson,
         roles: true,
         kycWhitelist: true
       }}));
@@ -196,7 +198,7 @@ describe('Challenges Contract', () => {
     });
   });
 
-  describe.only('Resolving a challenge', () => {
+  describe('Resolving a challenge', () => {
     let challengeId;
 
     beforeEach(async () => {
@@ -215,6 +217,7 @@ describe('Challenges Contract', () => {
         await challenges.methods.resolve(challengeId).send({from: resolver});
         expect(await sheltering.methods.isSheltering(resolver, bundleId).call()).to.equal(true);
       });
+
       it('Transfers reward', async () => {
         const resolverBalanceBeforeResolve = new BN(await web3.eth.getBalance(resolver));
         await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'});
@@ -222,19 +225,48 @@ describe('Challenges Contract', () => {
         const resolverBalanceGain = resolverBalanceAfterResolve.sub(resolverBalanceBeforeResolve);
         expect(resolverBalanceGain.toString()).to.deep.equal(fee.toString());
       });
+
       it('Emits an event', async () => {
         expect(await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'})).to.emitEvent('ChallengeResolved');
       });
     });
-    xit('Rejects if challenge is not in progress', async () => {
+
+    it('Rejects if challenge does not exist', async () => {
+      const fakeChallengeId = '0xada7718d1b5db49bb9c1995152cc28ee664d4268f7de46768cf97c49ef85c9ad';
+      await expect(challenges.methods.resolve(fakeChallengeId).send({from: resolver})).to.be.eventually.rejected;
     });
-    xit('Rejects if resolver is already sheltering challenged bundle', async () => {
+
+    it('Rejects if resolver is already sheltering challenged bundle', async () => {
+      await challenges.methods.start(from, bundleId).send({from: other, value: fee});
+      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      ({challengeId} = challengeCreationEvent.returnValues);
+      await bundleStore.methods.addShelterer(bundleId, resolver).send({from});
+      await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
-    xit(`Rejects if resolver can't store more bundles`, async () => {
+
+    it(`Rejects if resolver can't store more bundles`, async () => {
+      await challenges.methods.start(from, bundleId).send({from: other, value: fee});
+      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      ({challengeId} = challengeCreationEvent.returnValues);
+      const allStorageUsed = 100000;
+      await stakeStore.methods.setStorageUsed(resolver, allStorageUsed).send({from});
+      await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
-    xit('Decreases active count', async () => {
+
+    it('Decreases active count', async () => {
+      const systemFee = fee * 3;
+      await challenges.methods.startForSystem(from, bundleId, 3).send({from, value: systemFee});
+      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      ({challengeId} = challengeCreationEvent.returnValues);
+      await challenges.methods.resolve(challengeId).send({from: resolver});
+      expect(await challenges.methods.getActiveChallengesCount(challengeId).call()).to.equal('2');
     });
-    xit('Removes event if active count was 1', async () => {
+    it('Removes event if active count was 1', async () => {
+      await challenges.methods.start(from, bundleId).send({from: other, value: fee});
+      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      ({challengeId} = challengeCreationEvent.returnValues);
+      await challenges.methods.resolve(challengeId).send({from: resolver});
+      expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
     });
   });
 });

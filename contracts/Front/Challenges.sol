@@ -61,8 +61,10 @@ contract Challenges is Base {
     function resolve(bytes32 challengeId) public {
         require(challengeIsInProgress(challengeId));
 
+        Challenge storage challenge = challenges[challengeId];
+
         Sheltering sheltering = context().sheltering();
-        bytes32 bundleId = getChallengedBundle(challengeId);
+        bytes32 bundleId = challenge.bundleId;
         require(!sheltering.isSheltering(msg.sender, bundleId));
 
         StakeStore stakeStore = context().stakeStore();
@@ -71,16 +73,14 @@ contract Challenges is Base {
         BundleStore bundleStore = context().bundleStore();
         bundleStore.addShelterer(bundleId, msg.sender);
 
-        uint feeToSend = getChallengeFee(challengeId);
-        address challengedShelterer = getChallengedShelterer(challengeId);
+        msg.sender.transfer(challenge.fee);
+        emit ChallengeResolved(challenge.sheltererId, bundleId, challengeId, msg.sender);
         removeChallengeOrDecreaseActiveCount(challengeId);
-        msg.sender.transfer(feeToSend);
-        emit ChallengeResolved(challengedShelterer, bundleId, challengeId, msg.sender);
     }
 
     function removeChallengeOrDecreaseActiveCount(bytes32 challengeId) private {
         require(challengeIsInProgress(challengeId));
-        if(getActiveChallengesCount(challengeId) == 1) {
+        if(challenges[challengeId].activeCount == 1) {
             delete challenges[challengeId];
         } else {
             challenges[challengeId].activeCount--;
