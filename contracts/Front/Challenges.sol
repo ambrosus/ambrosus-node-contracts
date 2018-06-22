@@ -64,27 +64,17 @@ contract Challenges is Base {
         Challenge storage challenge = challenges[challengeId];
 
         Sheltering sheltering = context().sheltering();
-        bytes32 bundleId = challenge.bundleId;
-        require(!sheltering.isSheltering(msg.sender, bundleId));
+        require(!sheltering.isSheltering(msg.sender, challenge.bundleId));
 
         StakeStore stakeStore = context().stakeStore();
         require(stakeStore.canStore(msg.sender));
 
         BundleStore bundleStore = context().bundleStore();
-        bundleStore.addShelterer(bundleId, msg.sender);
+        bundleStore.addShelterer(challenge.bundleId, msg.sender);
 
         msg.sender.transfer(challenge.fee);
-        emit ChallengeResolved(challenge.sheltererId, bundleId, challengeId, msg.sender);
+        emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
         removeChallengeOrDecreaseActiveCount(challengeId);
-    }
-
-    function removeChallengeOrDecreaseActiveCount(bytes32 challengeId) private {
-        require(challengeIsInProgress(challengeId));
-        if(challenges[challengeId].activeCount == 1) {
-            delete challenges[challengeId];
-        } else {
-            challenges[challengeId].activeCount--;
-        }
     }
 
     function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
@@ -141,5 +131,14 @@ contract Challenges is Base {
         bytes32 challengeId = getChallengeId(challenge.sheltererId, challenge.bundleId);
         challenges[challengeId] = challenge;
         return challengeId;
+    }
+
+    function removeChallengeOrDecreaseActiveCount(bytes32 challengeId) private {
+        require(challengeIsInProgress(challengeId));
+        if (challenges[challengeId].activeCount == 1) {
+            delete challenges[challengeId];
+        } else {
+            challenges[challengeId].activeCount--;
+        }
     }
 }
