@@ -38,6 +38,7 @@ describe('Challenges Contract', () => {
   let other;
   let resolver;
   let fee;
+  let challengeId;
   const bundleId = '0xfe478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
   const expirationDate = 1600000000;
 
@@ -60,6 +61,7 @@ describe('Challenges Contract', () => {
     const storageBlockNumber = await web3.eth.getBlockNumber();
     const storageBlock = await web3.eth.getBlock(storageBlockNumber);
     fee = new BN(await fees.methods.getFeeForChallenge(storageBlock.timestamp, expirationDate).call());
+    challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
   });
 
   describe('Starting system challenges', () => {
@@ -82,7 +84,6 @@ describe('Challenges Contract', () => {
 
     it('Stores challengerId as 0x0', async () => {
       await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee});
-      const challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
       expect(await challenges.methods.getChallengeCreationTime(challengeId).call()).to.not.equal('0');
       expect(await challenges.methods.getChallenger(challengeId).call()).to.equal('0x0000000000000000000000000000000000000000');
     });
@@ -115,7 +116,6 @@ describe('Challenges Contract', () => {
 
   describe('Starting a challenge', () => {
     it('Challenge is not in progress until not started', async () => {
-      const challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
       expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
     });
 
@@ -254,7 +254,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Decreases active count', async () => {
-      const systemFee = fee * 3;
+      const systemFee = fee.mul(new BN('3'));
       await challenges.methods.startForSystem(from, bundleId, 3).send({from, value: systemFee});
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
