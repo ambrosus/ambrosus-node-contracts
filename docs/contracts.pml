@@ -5,6 +5,9 @@ package Front <<Rectangle>> {
   class Transfers
   class Uploads
   class Stakes
+  class Payouts
+  class Challenge
+  class Transfer
 }
 
 package Storage <<Rectangle>> {
@@ -12,7 +15,8 @@ package Storage <<Rectangle>> {
   class Bundle
   class StakeStore
   class Stake
-  class KycWhitelist  
+  class KycWhitelist
+  class PayoutStorage
 }
 
 package Configuration <<Rectangle>> {
@@ -39,6 +43,9 @@ Transfers o-- Transfer
 Uploads *-- Sheltering
 Challenges o-- Challenge
 
+Payouts *-- PayoutStorage
+Challenges *-- Payouts
+
 Transfers ..> Fees
 Uploads ..> Fees
 Challenges ..> Fees
@@ -63,6 +70,20 @@ class Stake #lightgray {
 
 class Uploads {
   registerBundle()  
+}
+
+class Payouts {
+  withdraw(implicit beneficiaryId)
+  available(implicit beneficiaryId, period)
+  grantChallengeResolutionReward(beneficiaryId, bundleId) payable
+  revokeChallengeResolutionReward(beneficiaryId, bundleId, refundAddress)
+}
+
+class PayoutStorage {
+  withdraw(beneficiaryId)
+  available(beneficiaryId, period)
+  grantRepeating(beneficiaryId, periodStart, periodEnd) payable
+  revokeRepeating(beneficiaryId, periodStart, periodEnd, amount, refundAddress)
 }
 
 class StakeStore {
@@ -102,6 +123,14 @@ class Challenges {
   inProgress(sheltererId, bundleId)
 }
 
+class Challenge #lightgray {
+  shelterer : address;
+  bundle : byte32;
+  creator: address;
+  fee: uint;
+  activeCount: uint;
+}
+
 class Transfers {
   transfer(bundleId, implicit sheltererId) payable
   resolve(sheltererId, bundleId, implicit atlasId)
@@ -123,11 +152,6 @@ class Fees {
   getFeeFor(time, typeOfOperation)
   splitFee() payable
   calculatePenalty(n)
-}
-
-class Challenge #lightgray {
-  fee: uint;
-  creator: address;
 }
 
 class Roles {

@@ -1,5 +1,6 @@
 {
     "editor.tabSize": 2,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces" : false,
     "solidity.soliumRules": {
       "imports-on-top": 0,
       "variable-declarations": 0,
