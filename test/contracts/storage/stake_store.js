@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import web3jsChai from '../../helpers/events';
 import deploy from '../../helpers/deploy';
 import BN from 'bn.js';
-
+import {latestTime} from '../../helpers/web3_utils';
 
 chai.use(web3jsChai());
 
@@ -29,7 +29,7 @@ describe('StakeStore Contract', () => {
   let stakeStore;
 
   beforeEach(async () => {
-    ({web3, stakeStore} = await deploy({contracts: {stakeStore: true}}));
+    ({web3, stakeStore} = await deploy({web3, contracts: {stakeStore: true, fees: true, config: true}}));
     [from, other] = await web3.eth.getAccounts();
   });
 
@@ -66,6 +66,10 @@ describe('StakeStore Contract', () => {
       expect(await stakeStore.methods.isShelteringAny(from).call()).to.be.false;
       expect(await stakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
       expect(await stakeStore.methods.getStorageLimit(from).call()).to.eq('1');
+      expect(await stakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
+        lastPenaltyTime: '0',
+        penaltiesCount: '0'
+      });
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('2');
     });
   });
@@ -131,37 +135,86 @@ describe('StakeStore Contract', () => {
   });
 
   describe('Slashing', () => {
+    let stake;
+    let firstPenalty;
+    let secondPenalty;
+    let thirdPenalty;
+    let fourthPenalty;
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(from, 10, 0).send({from, value: 100});
+      stake = 100;
+      firstPenalty = stake / 100;
+      await stakeStore.methods.depositStake(from, 10, 0).send({from, value: stake});
     });
     
     it('can not slash if not staking', async () => {
-      await expect(stakeStore.methods.slash(other, other, 1).send({from})).to.be.eventually.rejected;
-    });
-
-    it('can not have negative stake', async () => {
-      await stakeStore.methods.slash(from, other, 200).send({from});
-      expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
+      await expect(stakeStore.methods.slash(other, other).send({from})).to.be.eventually.rejected;
     });
 
     it('reject slash if not context internal call', async () => {      
-      await expect(stakeStore.methods.slash(from, other, 3).send({from: other})).to.be.eventually.rejected;
-      expect(await stakeStore.methods.getStake(from).call()).to.eq('100');      
+      await expect(stakeStore.methods.slash(from, other).send({from: other})).to.be.eventually.rejected;
+      expect(await stakeStore.methods.getStake(from).call()).to.equal(stake.toString());      
     });
 
-    it('slashed stake goes to recevier', async () => {
+    it('slashed stake goes to receiver', async () => {
       const balanceBefore = new BN(await web3.eth.getBalance(other));      
-      await stakeStore.methods.slash(from, other, 3).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
       const balanceAfter = new BN(await web3.eth.getBalance(other));
-      const expected = balanceBefore.add(new BN('3'));      
-      expect(balanceAfter.eq(expected)).to.be.true;
+      const expected = balanceBefore.add(new BN(firstPenalty));      
+      expect(balanceAfter.toString()).to.equal(expected.toString());
     });
 
-    it('slashed stake is substracted from contract balance', async () => {
-      await stakeStore.methods.slash(from, other, 3).send({from});
+    it('slashed stake is subtracted from contract balance', async () => {
+      await stakeStore.methods.slash(from, other).send({from});
       const contractBalance = new BN(await web3.eth.getBalance(stakeStore.options.address));      
-      expect(contractBalance.eq(new BN('97'))).to.be.true;      
-      expect(await stakeStore.methods.getStake(from).call()).to.eq('97');
+      expect(contractBalance.toString()).to.equal(new BN(stake - firstPenalty).toString());    
+      const stakeAfterSlashing = await stakeStore.methods.getStake(from).call();
+      expect(stakeAfterSlashing).to.equal(new BN(stake - firstPenalty).toString());   
     });    
+
+    it('penalty rises exponentially', async () => {
+      secondPenalty = firstPenalty * 2;
+      thirdPenalty = secondPenalty * 2;
+      fourthPenalty = thirdPenalty * 2;
+      await stakeStore.methods.slash(from, other).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
+      const cumulatedPenalty = firstPenalty + secondPenalty + thirdPenalty + fourthPenalty;
+      expect(await stakeStore.methods.getStake(from).call()).to.eq((stake - cumulatedPenalty).toString());
+    });
+
+    it('can not have negative stake', async () => {
+      await stakeStore.methods.slash(from, other).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
+      await stakeStore.methods.slash(from, other).send({from});
+      expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
+    });
+
+    it('penalties updated after slashing', async () => {
+      await stakeStore.methods.slash(from, other).send({from});
+      let blockTime = await latestTime(web3);
+      expect(await stakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
+        lastPenaltyTime: blockTime.toString(),
+        penaltiesCount: '1'
+      });
+
+      await stakeStore.methods.slash(from, other).send({from});
+      blockTime = await latestTime(web3);
+      expect(await stakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
+        lastPenaltyTime: blockTime.toString(),
+        penaltiesCount: '2'
+      });
+
+      await stakeStore.methods.slash(from, other).send({from});
+      blockTime = await latestTime(web3);
+      expect(await stakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
+        lastPenaltyTime: blockTime.toString(),
+        penaltiesCount: '3'
+      });
+    });
   });
 });

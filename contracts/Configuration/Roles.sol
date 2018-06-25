@@ -14,13 +14,11 @@ import "../Boilerplate/Head.sol";
 
 contract Roles is Base {
 
-    uint constant UNIT = 10**18;
-
-    uint constant APOLLO_STAKE = 250000 * UNIT;
-    uint constant HERMES_STAKE = 150000 * UNIT;
-    uint constant ATLAS1_STAKE = 10000 * UNIT;
-    uint constant ATLAS2_STAKE = 30000 * UNIT;
-    uint constant ATLAS3_STAKE = 75000 * UNIT;
+    uint constant APOLLO_STAKE = 250000 ether;
+    uint constant HERMES_STAKE = 150000 ether;
+    uint constant ATLAS1_STAKE = 10000 ether;
+    uint constant ATLAS2_STAKE = 30000 ether;
+    uint constant ATLAS3_STAKE = 75000 ether;
 
     uint constant ATLAS1_STORAGE_LIMIT = 100000;
     uint constant ATLAS2_STORAGE_LIMIT = 400000;
@@ -33,11 +31,11 @@ contract Roles is Base {
 
     function canStake(NodeType role, uint amount) public pure returns (bool) {
         if (role == NodeType.ATLAS) { 
-            return amount >= ATLAS1_STAKE;
+            return amount == ATLAS1_STAKE || amount == ATLAS2_STAKE || amount == ATLAS3_STAKE;
         } else if (role == NodeType.HERMES) {
-            return amount >= HERMES_STAKE;
+            return amount == HERMES_STAKE;
         } else if (role == NodeType.APOLLO) {
-            return amount >= APOLLO_STAKE;
+            return amount == APOLLO_STAKE;
         }
         return false;
     }
