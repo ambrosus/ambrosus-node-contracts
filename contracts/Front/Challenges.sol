@@ -14,6 +14,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
 import "../Configuration/Fees.sol";
+import "../Configuration/Config.sol";
 import "../Storage/StakeStore.sol";
 import "../Storage/BundleStore.sol";
 
@@ -33,6 +34,7 @@ contract Challenges is Base {
 
     event ChallengeCreated(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint count);
     event ChallengeResolved(address sheltererId, bytes32 bundleId, bytes32 challengeId, address resolverId);
+    event ChallengeTimeout(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint penalty);
 
     mapping(bytes32 => Challenge) public challenges;
 
@@ -72,9 +74,35 @@ contract Challenges is Base {
         BundleStore bundleStore = context().bundleStore();
         bundleStore.addShelterer(challenge.bundleId, msg.sender);
 
-        msg.sender.transfer(challenge.fee);
+        uint feeToTransfer = challenge.fee;
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
         removeChallengeOrDecreaseActiveCount(challengeId);
+        msg.sender.transfer(feeToTransfer);
+    }
+
+    function timeout(bytes32 challengeId) public {
+        require(challengeIsInProgress(challengeId));
+        
+        Challenge storage challenge = challenges[challengeId];
+
+        Config config = context().config();
+        require(now > challenge.creationTime + config.CHALLENGE_DURATION());
+
+        StakeStore stakeStore = context().stakeStore();
+        (uint lastPenaltyTime, uint penaltiesCount) = stakeStore.getPenaltiesHistory(challenge.sheltererId);
+
+        Fees fees = context().fees();
+        (uint penalty, uint newPenaltiesCount) = fees.getPenalty(stakeStore.getBasicStake(challenge.sheltererId), lastPenaltyTime, penaltiesCount);
+        stakeStore.slash(challenge.sheltererId, challenge.challengerId, penalty, newPenaltiesCount);
+
+        BundleStore bundleStore = context().bundleStore();
+        bundleStore.removeShelterer(challenge.bundleId, challenge.sheltererId);
+
+        uint feeToReturn = challenge.fee;
+        address challengerId = challenge.challengerId;
+        emit ChallengeTimeout(challenge.sheltererId, challenge.bundleId, challengeId, penalty);
+        delete challenges[challengeId];
+        challengerId.transfer(feeToReturn);
     }
 
     function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {

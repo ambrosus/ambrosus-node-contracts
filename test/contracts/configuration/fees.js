@@ -30,13 +30,13 @@ describe('Fees Contract - MOCK IMPLEMENTATION', () => {
   const endTime = 63072000;
   
 
-  const getPenalty = async (nominalStake, panaltiesCount, lastPenaltyTime) => {
-    const result = await fees.methods.getPenalty(nominalStake, panaltiesCount, lastPenaltyTime).call();
+  const getPenalty = async (nominalStake, penaltiesCount, lastPenaltyTime) => {
+    const result = await fees.methods.getPenalty(nominalStake, penaltiesCount, lastPenaltyTime).call();
     return [result['0'], result['1']];
   };
 
   beforeEach(async () => {
-    ({fees, web3} = await deploy({contracts: {fees: true}}));
+    ({fees, web3} = await deploy({contracts: {fees: true, config: true}}));
     now = await latestTime(web3);
   });
 

@@ -9,19 +9,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-import "../Storage/StakeStore.sol";
 
-
-contract MockStakeStore is StakeStore {
-
-    constructor(Head _head) public StakeStore(_head) {    
-    }
-
-    function setStorageUsed(address node, uint storageUsed) public {
-        stakes[node].storageUsed = storageUsed;
-    }
-
-    function setAmount(address node, uint stakeAmount) public {
-        stakes[node].amount = stakeAmount;
-    }
+contract Config {
+    uint constant public CHALLENGE_DURATION = 3 days;
+    uint constant public ONE_YEAR = 365 days;
+    uint constant public PENALTY_ESCALATION_TIMEOUT = 90 days;
+    uint constant public BASIC_CHALLANGE_FEE = 1 ether;
 }

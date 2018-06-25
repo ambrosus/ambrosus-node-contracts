@@ -13,8 +13,8 @@ import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
 import BN from 'bn.js';
-import {increaseTimeTo} from '../../helpers/web3_utils';
-import {ATLAS, ATLAS1_STAKE, ONE} from '../../../src/consts';
+import {ATLAS, ATLAS1_STAKE, ONE, ATLAS1_STORAGE_LIMIT} from '../../../src/consts';
+import {increaseTime, increaseTimeTo} from '../../helpers/web3_utils';
 import deploy from '../../helpers/deploy';
 import mockStakeStoreJson from '../../../build/contracts/MockStakeStore.json';
 
@@ -37,6 +37,7 @@ describe('Challenges Contract', () => {
   let from;
   let other;
   let resolver;
+  let totalStranger;
   let fee;
   let challengeId;
   const bundleId = '0xfe478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
@@ -44,7 +45,7 @@ describe('Challenges Contract', () => {
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    [from, other, resolver] = await web3.eth.getAccounts();
+    [from, other, resolver, totalStranger] = await web3.eth.getAccounts();
     ({challenges, bundleStore, fees, sheltering, stakes, kycWhitelist, stakeStore} = await deploy({
       web3,
       contracts: {
@@ -55,7 +56,8 @@ describe('Challenges Contract', () => {
         stakes: true,
         stakeStore: mockStakeStoreJson,
         roles: true,
-        kycWhitelist: true
+        kycWhitelist: true,
+        config: true
       }}));
     await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
     const storageBlockNumber = await web3.eth.getBlockNumber();
@@ -114,7 +116,7 @@ describe('Challenges Contract', () => {
     });
   });
 
-  describe('Starting a challenge', () => {
+  describe('Starting user challenge', () => {
     it('Challenge is not in progress until not started', async () => {
       expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
     });
@@ -253,7 +255,7 @@ describe('Challenges Contract', () => {
       await challenges.methods.start(from, bundleId).send({from: other, value: fee});
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
-      const allStorageUsed = 100000;
+      const allStorageUsed = ATLAS1_STORAGE_LIMIT;
       await stakeStore.methods.setStorageUsed(resolver, allStorageUsed).send({from});
       await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
@@ -273,6 +275,123 @@ describe('Challenges Contract', () => {
       ({challengeId} = challengeCreationEvent.returnValues);
       await challenges.methods.resolve(challengeId).send({from: resolver});
       expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
+    });
+  });
+
+  describe('Timing out a challenge', () => {
+    const challengeTimeout = 259200; // 3 days in seconds
+    let challengeId;
+    const deposit = ATLAS1_STAKE;
+
+    beforeEach(async () => {
+      await challenges.methods.start(from, bundleId).send({from: other, value: fee});
+      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      ({challengeId} = challengeCreationEvent.returnValues);
+    });
+
+    it('Rejects if challenge does not exist', async () => {
+      const fakeChallengeId = '0xada7718d1b5db49bb9c1995152cc28ee664d4268f7de46768cf97c49ef85c9ad';
+      await expect(challenges.methods.timeout(fakeChallengeId).send({from: other})).to.be.eventually.rejected;
+    });
+
+    it('Rejects if challenge has already been timed out', async () => {
+      await stakeStore.methods.depositStake(from, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: deposit});
+      await increaseTime(web3, challengeTimeout + 1);
+      await challenges.methods.timeout(challengeId).send({from: other});
+      await expect(challenges.methods.timeout(challengeId).send({from: other})).to.be.eventually.rejected;
+    });
+
+    describe('Shelterer has a small deposit', () => {
+      let smallDeposit;
+
+      beforeEach(async () => {
+        smallDeposit = deposit.div(new BN('100'));
+        await stakeStore.methods.depositStake(from, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: deposit});
+        await stakeStore.methods.setAmount(from, smallDeposit).call();
+      });
+
+      it('Emits event when timed out properly', async () => {
+        await increaseTime(web3, challengeTimeout + 1);
+        expect(await challenges.methods.timeout(challengeId).send({from: other})).to.emitEvent('ChallengeTimeout');
+      });
+
+      it('Rejects if not past the timeout', async () => {
+        await increaseTime(web3, challengeTimeout - 1);
+        await expect(challenges.methods.timeout(challengeId).send({from: other})).to.be.eventually.rejected;
+      });
+
+      it('Challenger takes fee and reward', async () => {
+        await increaseTime(web3, challengeTimeout + 1);
+        const balanceBefore = new BN(await web3.eth.getBalance(other));
+        await challenges.methods.timeout(challengeId).send({from: other, gasPrice: '0'});
+        const balanceAfter = new BN(await web3.eth.getBalance(other));
+        expect(balanceAfter.sub(balanceBefore).toString()).to.eq(fee.add(new BN(smallDeposit)).toString());
+      });
+
+      it('Shelterer stake is zeroed', async () => {
+        await increaseTime(web3, challengeTimeout + 1);
+        const stakeBefore = new BN(await stakeStore.methods.getStake(from).call());
+        await challenges.methods.timeout(challengeId).send({from: other});
+        const stakeAfter = new BN(await stakeStore.methods.getStake(from).call());
+        expect(stakeBefore.sub(stakeAfter).toString()).to.equal(smallDeposit.toString());
+      });
+    });
+
+    describe('Shelterer has a large deposit', () => {
+      let reward;
+
+      beforeEach(async () => {
+        reward = deposit.div(new BN('100'));
+        await stakeStore.methods.depositStake(from, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: deposit});
+        await increaseTime(web3, challengeTimeout + 1);
+      });
+
+      it('Challenger takes fee and reward', async () => {
+        const balanceBefore = new BN(await web3.eth.getBalance(other));
+        await challenges.methods.timeout(challengeId).send({from: other, gasPrice: '0'});
+        const balanceAfter = new BN(await web3.eth.getBalance(other));
+        expect(balanceAfter.sub(balanceBefore).toString()).to.eq(fee.add(reward).toString());
+      });
+
+      it('Reward is subtracted from stake of shelterer', async () => {
+        const stakeBefore = new BN(await stakeStore.methods.getStake(from).call());
+        await challenges.methods.timeout(challengeId).send({from: other});
+        const stakeAfter = new BN(await stakeStore.methods.getStake(from).call());
+        expect(stakeBefore.sub(stakeAfter).toString()).to.equal(reward.toString());
+      });
+    });
+
+
+    describe('After challenge was timed out', () => {
+      beforeEach(async () => {
+        await stakeStore.methods.depositStake(from, ATLAS, deposit).send({from, value: deposit});
+        await increaseTime(web3, challengeTimeout + 1);
+      });
+
+      it('Anyone can call timeout', async () => {
+        expect(await challenges.methods.timeout(challengeId).send({from: totalStranger})).to.emitEvent('ChallengeTimeout');
+      });
+
+      it('Cannot call timeout on non-existing challenge', async () => {
+        const fakeId = '0xbfd158d140cec5015baa989dc32f075599ed7186dcc026e86690521ac6b8fb5f';
+        await expect(challenges.methods.timeout(fakeId).send({from: other})).to.be.eventually.rejected;
+      });
+
+      it('Cannot timeout same challenge twice', async () => {
+        await challenges.methods.timeout(challengeId).send({from: other});
+        await expect(challenges.methods.timeout(challengeId).send({from: other})).to.be.eventually.rejected;
+      });
+
+      it('Shelterer stops sheltering this bundle after challenge was failed', async () => {
+        challenges.methods.timeout(challengeId).send({from: other});
+        expect(await sheltering.methods.isSheltering(from, bundleId).call({from})).to.equal(false);
+      });
+
+      it('Challenge is not in progress after the timeout when activeCount was 1', async () => {
+        expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(true);
+        await challenges.methods.timeout(challengeId).send({from: other});
+        expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
+      });
     });
   });
 });
