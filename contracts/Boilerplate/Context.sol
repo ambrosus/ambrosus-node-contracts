@@ -13,6 +13,7 @@ import "../Storage/BundleRegistry.sol";
 import "../Storage/StakeStore.sol";
 import "../Storage/BundleStore.sol";
 import "../Storage/KycWhitelist.sol";
+import "../Storage/PayoutsStore.sol";
 
 import "../Configuration/Roles.sol";
 import "../Configuration/Fees.sol";
@@ -21,6 +22,7 @@ import "../Middleware/Sheltering.sol";
 
 import "../Front/Stakes.sol";
 import "../Front/Challenges.sol";
+import "../Front/Payouts.sol";
 
 
 contract Context {
@@ -34,17 +36,21 @@ contract Context {
     Sheltering public sheltering;
     Fees public fees;
     Challenges public challenges;
+    PayoutsStore public payoutsStore;
+    Payouts public payouts;
 
     constructor(
         BundleRegistry _bundleRegistry,
         StakeStore _stakeStore,
         BundleStore _bundleStore,
-        KycWhitelist _kycWhitelist,
+        KycWhitelist _kycWhitelist,        
         Roles _roles,
         Stakes _stakes,
         Sheltering _sheltering,
         Fees _fees,
-        Challenges _challenges
+        Challenges _challenges,
+        PayoutsStore _payoutsStore,
+        Payouts _payouts
     ) public {
         bundleRegistry = _bundleRegistry;
         stakeStore = _stakeStore;
@@ -55,6 +61,8 @@ contract Context {
         sheltering = _sheltering;
         fees = _fees;
         challenges = _challenges;
+        payoutsStore = _payoutsStore;
+        payouts = _payouts;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
@@ -67,6 +75,8 @@ contract Context {
             stakes == contractAddress ||
             sheltering == contractAddress ||
             fees == contractAddress ||
-            challenges == contractAddress;
+            challenges == contractAddress ||
+            payoutsStore == contractAddress ||
+            payouts == contractAddress;
     }
 }
