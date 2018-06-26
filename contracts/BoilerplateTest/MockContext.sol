@@ -24,7 +24,9 @@ contract MockContext is Context {
         Stakes _stakes,
         Sheltering _sheltering,
         Fees _fees,
-        Challenges _challenges
+        Challenges _challenges,
+        PayoutsStore _payoutsStore,
+        Payouts _payouts
     ) Context(
         _bundleRegistry,
         _stakeStore,
@@ -34,7 +36,9 @@ contract MockContext is Context {
         _stakes,
         _sheltering,
         _fees,
-        _challenges
+        _challenges,
+        _payoutsStore,
+        _payouts
     ) public {        
     }
 

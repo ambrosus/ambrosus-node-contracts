@@ -19,6 +19,8 @@ import KycWhitelistJson from '../build/contracts/KycWhitelist.json';
 import FeesJson from '../build/contracts/Fees.json';
 import ChallengesJson from '../build/contracts/Challenges.json';
 import ShelteringJson from '../build/contracts/Sheltering.json';
+import PayoutsStoreJson from '../build/contracts/PayoutsStore.json';
+import PayoutsJson from '../build/contracts/Payouts.json';
 
 import {DEFAULT_GAS, deployContract, getDefaultAddress, link} from './web3_tools';
 
@@ -31,7 +33,9 @@ const DEFAULT_CONTRACT_JSONS = {
   kycWhitelist: KycWhitelistJson,
   sheltering: ShelteringJson,
   fees: FeesJson,
-  challenges: ChallengesJson
+  challenges: ChallengesJson,
+  payoutsStore: PayoutsStoreJson,
+  payouts: PayoutsJson
 };
 
 export default class Deployer {
@@ -39,6 +43,15 @@ export default class Deployer {
     this.web3 = web3;
     this.from = from;
     this.gas = gas;
+    this.contextConstructorParams = ContextJson
+      .abi
+      .find((value) => value.type === 'constructor')
+      .inputs
+      .map((input) => input.name.slice(1));
+    
+    if (!this.contextConstructorParams.every((key) => DEFAULT_CONTRACT_JSONS[key] !== undefined)) {
+      throw 'DEFAULT_CONTRACT_JSONS is missing a key for a context parameter';
+    }
   }
   
   async setupContext(adresses) {
@@ -64,7 +77,7 @@ export default class Deployer {
 
   getDefaultArgs() {
     const pairs = Object.entries(DEFAULT_CONTRACT_JSONS)
-      .map(([contractName]) => ({[contractName]: true}));      
+      .map(([contractName]) => ({[contractName]: true}));
     return Object.assign(...pairs);
   }
 
@@ -82,14 +95,9 @@ export default class Deployer {
   }
 
   async deploy(contractJsonsOrBooleans = this.getDefaultArgs()) {
-    function contractToAddress (contract) {
-      return contract ? contract.options.address : '0x0';
-    }
+    const contractToAddress = (contract) => (contract ? contract.options.address : '0x0');
+    const prepareArgs = (contractMap) => this.contextConstructorParams.map((key) => contractToAddress(contractMap[key]));
 
-    function prepareArgs (contractMap) {
-      return [contractMap.bundleRegistry, contractMap.stakeStore, contractMap.bundleStore, contractMap.kycWhitelist, contractMap.roles, contractMap.stakes, contractMap.sheltering, contractMap.fees, contractMap.challenges]
-        .map((contract) => contractToAddress(contract));
-    }
     await this.deployLibs();
     this.head = await deployContract(this.web3, HeadJson);
     const contractMap = await this.deployCustom(contractJsonsOrBooleans);
