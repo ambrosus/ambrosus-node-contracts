@@ -14,7 +14,6 @@ import web3jsChai from '../../helpers/events';
 import deploy from '../../helpers/deploy';
 import BN from 'bn.js';
 
-
 chai.use(web3jsChai());
 
 chai.use(sinonChai);
@@ -29,7 +28,7 @@ describe('StakeStore Contract', () => {
   let stakeStore;
 
   beforeEach(async () => {
-    ({web3, stakeStore} = await deploy({contracts: {stakeStore: true}}));
+    ({web3, stakeStore} = await deploy({web3, contracts: {stakeStore: true}}));
     [from, other] = await web3.eth.getAccounts();
   });
 
@@ -66,6 +65,10 @@ describe('StakeStore Contract', () => {
       expect(await stakeStore.methods.isShelteringAny(from).call()).to.be.false;
       expect(await stakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
       expect(await stakeStore.methods.getStorageLimit(from).call()).to.eq('1');
+      expect(await stakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
+        lastPenaltyTime: '0',
+        penaltiesCount: '0'
+      });
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('2');
     });
   });
@@ -136,29 +139,38 @@ describe('StakeStore Contract', () => {
     });
     
     it('can not slash if not staking', async () => {
-      await expect(stakeStore.methods.slash(other, other, 1).send({from})).to.be.eventually.rejected;
+      await expect(stakeStore.methods.slash(other, other, 1, '1').send({from})).to.be.eventually.rejected;
     });
 
     it('can not have negative stake', async () => {
-      await stakeStore.methods.slash(from, other, 200).send({from});
+      await stakeStore.methods.slash(from, other, 200, '1').send({from});
       expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
     });
 
+    it('penalties updated after slashing', async () => {
+      const tx = await stakeStore.methods.slash(from, other, 200, '1').send({from});
+      const blocktime = (await web3.eth.getBlock(tx.blockNumber)).timestamp;
+      expect(await stakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
+        lastPenaltyTime: blocktime.toString(),
+        penaltiesCount: '1'
+      });
+    });
+
     it('reject slash if not context internal call', async () => {      
-      await expect(stakeStore.methods.slash(from, other, 3).send({from: other})).to.be.eventually.rejected;
+      await expect(stakeStore.methods.slash(from, other, 3, '1').send({from: other})).to.be.eventually.rejected;
       expect(await stakeStore.methods.getStake(from).call()).to.eq('100');      
     });
 
     it('slashed stake goes to recevier', async () => {
       const balanceBefore = new BN(await web3.eth.getBalance(other));      
-      await stakeStore.methods.slash(from, other, 3).send({from});
+      await stakeStore.methods.slash(from, other, 3, '1').send({from});
       const balanceAfter = new BN(await web3.eth.getBalance(other));
       const expected = balanceBefore.add(new BN('3'));      
       expect(balanceAfter.eq(expected)).to.be.true;
     });
 
     it('slashed stake is substracted from contract balance', async () => {
-      await stakeStore.methods.slash(from, other, 3).send({from});
+      await stakeStore.methods.slash(from, other, 3, '1').send({from});
       const contractBalance = new BN(await web3.eth.getBalance(stakeStore.options.address));      
       expect(contractBalance.eq(new BN('97'))).to.be.true;      
       expect(await stakeStore.methods.getStake(from).call()).to.eq('97');
