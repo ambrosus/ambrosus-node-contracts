@@ -85,8 +85,7 @@ contract Challenges is Base {
         
         Challenge storage challenge = challenges[challengeId];
 
-        Config config = context().config();
-        require(now > challenge.creationTime + config.CHALLENGE_DURATION());
+        require(isChallengeTimedOut(challengeId));
 
         StakeStore stakeStore = context().stakeStore();
         (uint lastPenaltyTime, uint penaltiesCount) = stakeStore.getPenaltiesHistory(challenge.sheltererId);
@@ -103,6 +102,11 @@ contract Challenges is Base {
         emit ChallengeTimeout(challenge.sheltererId, challenge.bundleId, challengeId, penalty);
         delete challenges[challengeId];
         challengerId.transfer(feeToReturn);
+    }
+
+    function isChallengeTimedOut(bytes32 challengeId) public view returns(bool) {
+        Config config = context().config();
+        return now > challenges[challengeId].creationTime + config.CHALLENGE_DURATION();
     }
 
     function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {

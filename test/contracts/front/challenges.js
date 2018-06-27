@@ -117,7 +117,7 @@ describe('Challenges Contract', () => {
   });
 
   describe('Starting user challenge', () => {
-    it('Challenge is not in progress until not started', async () => {
+    it('Challenge is not in progress until started', async () => {
       expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
     });
 
