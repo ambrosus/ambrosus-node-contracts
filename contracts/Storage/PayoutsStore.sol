@@ -15,4 +15,20 @@ import "../Boilerplate/Head.sol";
 contract PayoutsStore is Base {
 
     constructor(Head _head) public Base(_head) { }
+
+    function withdraw(address beneficiaryId) public onlyContextInternalCalls {
+
+    }
+
+    function available(address beneficiaryId, uint period) public view onlyContextInternalCalls returns(uint) {
+        return 0;
+    }
+
+    function grantRepeating(address beneficiaryId, uint periodStart, uint periodEnd) public payable onlyContextInternalCalls {
+
+    }
+
+    function revokeRepeating(address beneficiaryId, uint periodStart, uint periodEnd, uint amount, address refundAddress) public onlyContextInternalCalls {
+
+    }
 }
