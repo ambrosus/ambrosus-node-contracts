@@ -9,11 +9,20 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../Configuration/Time.sol";
 
-contract Config {
-    uint constant public CHALLENGE_DURATION = 3 days;
-    uint constant public ONE_YEAR = 365 days;
-    uint constant public PENALTY_ESCALATION_TIMEOUT = 90 days;
-    uint constant public BASIC_CHALLANGE_FEE = 1 ether;
-    uint constant public FINISH_SHELTERING_REWARD_SPLIT = 20;
+
+contract TimeMock is Time {
+    using SafeMath for uint;
+
+    uint public mockedTimestamp = 0;
+
+    function setCurrentTimestamp(uint _mockedTimestamp) public {
+        mockedTimestamp = _mockedTimestamp;
+    }
+
+    function currentTimestamp() public view returns(uint) {
+        return mockedTimestamp;
+    }
 }

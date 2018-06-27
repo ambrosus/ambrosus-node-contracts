@@ -16,6 +16,9 @@
       "error",
       4
     ],
+    "operator-whitespace": [
+      "error"
+    ],
     "arg-overflow": 0,
     "security/no-block-members": [
       "error",

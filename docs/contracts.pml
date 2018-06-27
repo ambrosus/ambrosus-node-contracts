@@ -82,8 +82,8 @@ class Payouts {
 class PayoutStorage {
   withdraw(beneficiaryId)
   available(beneficiaryId, period)
-  grantRepeating(beneficiaryId, periodStart, periodEnd) payable
-  revokeRepeating(beneficiaryId, periodStart, periodEnd, amount, refundAddress)
+  grantForPeriods(beneficiaryId, periodStart, periodEnd) payable
+  revokeForPeriods(beneficiaryId, periodStart, periodEnd, amount, refundAddress)
 }
 
 class StakeStore {
