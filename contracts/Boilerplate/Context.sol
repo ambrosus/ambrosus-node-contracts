@@ -17,6 +17,7 @@ import "../Storage/PayoutsStore.sol";
 
 import "../Configuration/Roles.sol";
 import "../Configuration/Fees.sol";
+import "../Configuration/Time.sol";
 
 import "../Middleware/Sheltering.sol";
 
@@ -38,8 +39,10 @@ contract Context {
     Challenges public challenges;
     PayoutsStore public payoutsStore;
     Payouts public payouts;
+    Time public time;
 
     constructor(
+        Time _time,
         BundleRegistry _bundleRegistry,
         StakeStore _stakeStore,
         BundleStore _bundleStore,
@@ -50,8 +53,9 @@ contract Context {
         Fees _fees,
         Challenges _challenges,
         PayoutsStore _payoutsStore,
-        Payouts _payouts
+        Payouts _payouts 
     ) public {
+        time = _time;
         bundleRegistry = _bundleRegistry;
         stakeStore = _stakeStore;
         bundleStore = _bundleStore;

@@ -16,6 +16,7 @@ contract MockContext is Context {
     mapping(address => bool) whitelist;
 
     constructor(
+        Time _time,
         BundleRegistry _bundleRegistry,
         StakeStore _stakeStore,
         BundleStore _bundleStore,
@@ -28,6 +29,7 @@ contract MockContext is Context {
         PayoutsStore _payoutsStore,
         Payouts _payouts
     ) Context(
+        _time,
         _bundleRegistry,
         _stakeStore,
         _bundleStore,
