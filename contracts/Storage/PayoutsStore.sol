@@ -10,11 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract PayoutsStore is Base {
-    using SafeMath for uint;
-
     struct GrantPeriodChange {
         uint increase;
         uint decrease;
