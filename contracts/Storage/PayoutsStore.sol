@@ -22,14 +22,25 @@ contract PayoutsStore is Base {
 
     mapping(address => mapping(uint => GrantPeriodChange)) public grantPeriodChanges;
     mapping(address => mapping(bytes32 => uint)) public grantSums;
+    mapping(address => uint64) public nextWithdrawPeriod;
 
     constructor(Head _head) public Base(_head) { }
 
-    function withdraw(address beneficiaryId) public onlyContextInternalCalls {
+    function withdraw(address beneficiaryId, uint64 toPeriod) public onlyContextInternalCalls {
+        uint amount = 0;
+        for (uint64 period = nextWithdrawPeriod[beneficiaryId]; period <= toPeriod; ++period) {
+            amount += available(beneficiaryId, period);
+        }
+        nextWithdrawPeriod[beneficiaryId] = toPeriod + 1;
 
+        beneficiaryId.transfer(amount);
     }
 
     function available(address beneficiaryId, uint64 period) public view onlyContextInternalCalls returns(uint) {
+        if (period < nextWithdrawPeriod[beneficiaryId]) {
+            return 0;
+        }
+
         uint accum = 0;
         for (uint i = 0; i<=period; ++i) {
             GrantPeriodChange storage grant = grantPeriodChanges[beneficiaryId][i];

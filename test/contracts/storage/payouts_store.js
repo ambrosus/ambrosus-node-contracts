@@ -32,6 +32,7 @@ describe('PayoutsStore Contract', () => {
   const grantRepeating = (beneficiary, periodBegin, periodEnd, value, senderAddress = validUser) => payoutsStore.methods.grantRepeating(beneficiary, periodBegin, periodEnd).send({from: senderAddress, value});
   const revokeRepeating = (beneficiary, periodStart, periodEnd, amount, refundAddress, senderAddress = validUser) => payoutsStore.methods.revokeRepeating(beneficiary, periodStart, periodEnd, amount, refundAddress).send({from: senderAddress});
   const available = (beneficiary, period, senderAddress = validUser) => payoutsStore.methods.available(beneficiary, period).call({from: senderAddress});
+  const withdraw = (beneficiary, toPeriod, senderAddress = validUser) => payoutsStore.methods.withdraw(beneficiary, toPeriod).send({from: senderAddress});
 
   const observeBalanceChange = async (account, codeBlock) => {
     const balanceBefore = new BN(await web3.eth.getBalance(account));    
@@ -161,15 +162,36 @@ describe('PayoutsStore Contract', () => {
 
   describe('Withdrawing', () => {
     it(`is a contextInternalCall`, async () => {
-
+      await expect(withdraw(targetUser, 10, validUser)).to.be.eventually.fulfilled;
+      await expect(withdraw(targetUser, 10, otherUser)).to.be.eventually.rejected;
     });
 
-    it(`transfers available founds for unused periods to the provided address`, () => {
+    it(`transfers available founds for  address`, async () => {
+      await grantRepeating(targetUser, 10, 14, 50);
 
+      await expectBalanceChange(targetUser, '0', async () => withdraw(targetUser, 9));
+      await expectBalanceChange(targetUser, '20', async () => withdraw(targetUser, 11));
+      await expectBalanceChange(targetUser, '30', async () => withdraw(targetUser, 14));
     });
 
-    it(`doesn't allow to transfer the founds for the same period multiple times`, () => {
+    it(`influences return value of available`, async () => {
+      await grantRepeating(targetUser, 10, 14, 50);
+      await withdraw(targetUser, 12);
 
+      expect(await available(targetUser, 9)).to.eq('0');
+      expect(await available(targetUser, 10)).to.eq('0');
+      expect(await available(targetUser, 11)).to.eq('0');
+      expect(await available(targetUser, 12)).to.eq('0');
+      expect(await available(targetUser, 13)).to.eq('10');
+      expect(await available(targetUser, 14)).to.eq('10');
+      expect(await available(targetUser, 15)).to.eq('0');
+    }); 
+
+    it(`doesn't allow to transfer the founds for the same period multiple times`, async () => {
+      await grantRepeating(targetUser, 10, 14, 50);
+
+      await expectBalanceChange(targetUser, '20', async () => withdraw(targetUser, 11));
+      await expectBalanceChange(targetUser, '0', async () => withdraw(targetUser, 11));
     });
   });
 });
