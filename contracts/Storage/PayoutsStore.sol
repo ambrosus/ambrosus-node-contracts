@@ -10,9 +10,18 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
-
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract PayoutsStore is Base {
+    using SafeMath for uint;
+
+    struct GrantPeriodChange {
+        uint increase;
+        uint decrease;
+    }
+
+    mapping(address => mapping(uint => GrantPeriodChange)) public grantPeriodChanges;
+    mapping(address => mapping(bytes32 => uint)) public grantSums;
 
     constructor(Head _head) public Base(_head) { }
 
@@ -20,15 +29,59 @@ contract PayoutsStore is Base {
 
     }
 
-    function available(address beneficiaryId, uint period) public view onlyContextInternalCalls returns(uint) {
-        return 0;
+    function available(address beneficiaryId, uint64 period) public view onlyContextInternalCalls returns(uint) {
+        uint accum = 0;
+        for (uint i = 0; i<=period; ++i) {
+            GrantPeriodChange storage grant = grantPeriodChanges[beneficiaryId][i];
+            accum += grant.increase;
+            if (i == period) {
+                return accum;
+            }
+            accum -= grant.decrease; 
+        }
     }
 
-    function grantRepeating(address beneficiaryId, uint periodStart, uint periodEnd) public payable onlyContextInternalCalls {
+    function grantRepeating(address beneficiaryId, uint64 periodStart, uint64 periodEnd) public payable onlyContextInternalCalls {
+        require(periodEnd>=periodStart);
 
+        uint amountPerPeriod = calculateAmountPerPeriod(periodStart, periodEnd, msg.value);
+
+        bytes32 periodId = calculatePeriodHash(periodStart, periodEnd);
+        grantSums[beneficiaryId][periodId] += msg.value;
+
+        GrantPeriodChange storage grantChangeBegin = grantPeriodChanges[beneficiaryId][periodStart];
+        grantChangeBegin.increase += amountPerPeriod;
+
+        GrantPeriodChange storage grantChangeEnd = grantPeriodChanges[beneficiaryId][periodEnd];
+        grantChangeEnd.decrease += amountPerPeriod;
     }
 
-    function revokeRepeating(address beneficiaryId, uint periodStart, uint periodEnd, uint amount, address refundAddress) public onlyContextInternalCalls {
+    function revokeRepeating(address beneficiaryId, uint64 periodStart, uint64 periodEnd, uint amount, address refundAddress) public onlyContextInternalCalls {
+        require(periodEnd>=periodStart);
 
+        uint amountPerPeriod = calculateAmountPerPeriod(periodStart, periodEnd, amount);
+
+        bytes32 periodId = calculatePeriodHash(periodStart, periodEnd);
+        require(grantSums[beneficiaryId][periodId] >= amount);
+        grantSums[beneficiaryId][periodId] -= amount;
+
+        GrantPeriodChange storage grantChangeBegin = grantPeriodChanges[beneficiaryId][periodStart];
+        grantChangeBegin.increase -= amountPerPeriod;
+
+        GrantPeriodChange storage grantChangeEnd = grantPeriodChanges[beneficiaryId][periodEnd];
+        grantChangeEnd.decrease -= amountPerPeriod;
+
+        refundAddress.transfer(amount);
+    }
+
+    function calculatePeriodHash(uint64 periodStart, uint64 periodEnd) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(periodStart, periodEnd));
+    }
+
+    function calculateAmountPerPeriod(uint64 periodStart, uint64 periodEnd, uint amount) public pure returns (uint) {
+        uint periodCount = periodEnd - periodStart + 1;
+        require(amount % periodCount == 0);
+
+        return amount / periodCount;
     }
 }
