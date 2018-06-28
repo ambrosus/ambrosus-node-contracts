@@ -48,12 +48,6 @@ describe('PayoutsStore Contract', () => {
     [validUser, targetUser, otherUser] = await web3.eth.getAccounts();
   });
 
-  describe('Deployment', () => {
-    it('properly initializes', async () => {
-
-    });
-  });
-
   describe('Granting repeated payouts', () => {
     it('increases founds available for withdrawal', async () => {
       await grantRepeating(targetUser, 10, 12, 30);
