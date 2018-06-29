@@ -62,6 +62,13 @@ describe('Stakes Contract', () => {
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq(ATLAS1_STAKE.toString());
     });
 
+    it('Stake too high', async () => {
+      const value = ATLAS1_STAKE.add(ONE);
+      await expect(stakes.methods.depositStake(ATLAS).send({from, value})).to.be.eventually.rejected;
+      expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
+      expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('0');      
+    });
+
     it('Stake too low (just a bit)', async () => {
       const value = ATLAS1_STAKE.sub(ONE);
       await expect(stakes.methods.depositStake(ATLAS).send({from, value})).to.be.eventually.rejected;
@@ -101,11 +108,11 @@ describe('Stakes Contract', () => {
       expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
     });
 
-    it('Rejects if sender is not staking', async () => {
+    it('Fails if sender is not staking', async () => {
       await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;
     });
 
-    it('Rejects if sender is still sheltering', async () => {
+    it('Fails if sender is still sheltering', async () => {
       await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
       await stakeStore.methods.incrementStorageUsed(from).send({from});
       await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;

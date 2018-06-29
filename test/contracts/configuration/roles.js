@@ -47,33 +47,33 @@ describe('Roles Contract', () => {
       expect(await roles.methods.canStake(ATLAS, 0).call()).to.be.false;
       expect(await roles.methods.canStake(ATLAS, ATLAS1_STAKE.sub(ONE).toString()).call()).to.be.false;
       expect(await roles.methods.canStake(ATLAS, ATLAS1_STAKE.toString()).call()).to.be.true;
-      expect(await roles.methods.canStake(ATLAS, ATLAS1_STAKE.add(ONE).toString()).call()).to.be.true;
+      expect(await roles.methods.canStake(ATLAS, ATLAS1_STAKE.add(ONE).toString()).call()).to.be.false;
     });
 
     it('Atlas 2', async () => {
       expect(await roles.methods.canStake(ATLAS, ATLAS2_STAKE.toString()).call()).to.be.true;
-      expect(await roles.methods.canStake(ATLAS, ATLAS2_STAKE.sub(ONE).toString()).call()).to.be.true;
-      expect(await roles.methods.canStake(ATLAS, ATLAS2_STAKE.add(ONE).toString()).call()).to.be.true;
+      expect(await roles.methods.canStake(ATLAS, ATLAS2_STAKE.sub(ONE).toString()).call()).to.be.false;
+      expect(await roles.methods.canStake(ATLAS, ATLAS2_STAKE.add(ONE).toString()).call()).to.be.false;
     });
 
     it('Atlas 3', async () => {
       expect(await roles.methods.canStake(ATLAS, ATLAS3_STAKE.toString()).call()).to.be.true;
-      expect(await roles.methods.canStake(ATLAS, ATLAS3_STAKE.sub(ONE).toString()).call()).to.be.true;
-      expect(await roles.methods.canStake(ATLAS, ATLAS3_STAKE.add(ONE).toString()).call()).to.be.true;
+      expect(await roles.methods.canStake(ATLAS, ATLAS3_STAKE.sub(ONE).toString()).call()).to.be.false;
+      expect(await roles.methods.canStake(ATLAS, ATLAS3_STAKE.add(ONE).toString()).call()).to.be.false;
     });
 
     it('Hermes', async () => {
       expect(await roles.methods.canStake(HERMES, 0).call()).to.be.false;
       expect(await roles.methods.canStake(HERMES, HERMES_STAKE.sub(ONE).toString()).call()).to.be.false;
       expect(await roles.methods.canStake(HERMES, HERMES_STAKE.toString()).call()).to.be.true;
-      expect(await roles.methods.canStake(HERMES, HERMES_STAKE.add(ONE).toString()).call()).to.be.true;
+      expect(await roles.methods.canStake(HERMES, HERMES_STAKE.add(ONE).toString()).call()).to.be.false;
     });
 
     it('Apollo', async () => {
       expect(await roles.methods.canStake(APOLLO, 0).call()).to.be.false;
       expect(await roles.methods.canStake(APOLLO, APOLLO_STAKE.sub(ONE).toString()).call()).to.be.false;
       expect(await roles.methods.canStake(APOLLO, APOLLO_STAKE.toString()).call()).to.be.true;
-      expect(await roles.methods.canStake(APOLLO, APOLLO_STAKE.add(ONE).toString()).call()).to.be.true;
+      expect(await roles.methods.canStake(APOLLO, APOLLO_STAKE.add(ONE).toString()).call()).to.be.false;
     });
   });
 
