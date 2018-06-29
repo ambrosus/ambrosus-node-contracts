@@ -58,11 +58,6 @@ contract StakeStore is Base {
         return stakes[node].role;
     }
 
-    function getPenaltiesHistory(address node) public view returns (uint penaltiesCount, uint lastPenaltyTime) {
-        lastPenaltyTime = stakes[node].lastPenaltyTime;
-        penaltiesCount = stakes[node].penaltiesCount;
-    }
-
     function isShelteringAny(address node) view public returns (bool) {
         return stakes[node].storageUsed > 0;
     }
@@ -110,8 +105,13 @@ contract StakeStore is Base {
         return slashedAmount;
     }
 
+    function getPenaltiesHistory(address node) public view returns (uint penaltiesCount, uint lastPenaltyTime) {
+        penaltiesCount = stakes[node].penaltiesCount;
+        lastPenaltyTime = stakes[node].lastPenaltyTime;
+    }
+
     function setPenaltyHistory(address shelterer, uint penaltiesCount) private {
-        stakes[shelterer].lastPenaltyTime = now;
         stakes[shelterer].penaltiesCount = penaltiesCount;
+        stakes[shelterer].lastPenaltyTime = now;
     }
 }

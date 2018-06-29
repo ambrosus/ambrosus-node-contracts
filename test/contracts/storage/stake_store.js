@@ -135,14 +135,13 @@ describe('StakeStore Contract', () => {
   });
 
   describe('Slashing', () => {
-    let stake;
-    let firstPenalty;
-    let secondPenalty;
-    let thirdPenalty;
-    let fourthPenalty;
+    const stake = 100;
+    const firstPenalty = stake / 100;
+    const secondPenalty = firstPenalty * 2;
+    const thirdPenalty = secondPenalty * 2;
+    const fourthPenalty = thirdPenalty * 2;
+    
     beforeEach(async () => {
-      stake = 100;
-      firstPenalty = stake / 100;
       await stakeStore.methods.depositStake(from, 10, 0).send({from, value: stake});
     });
     
@@ -172,9 +171,6 @@ describe('StakeStore Contract', () => {
     });    
 
     it('penalty rises exponentially', async () => {
-      secondPenalty = firstPenalty * 2;
-      thirdPenalty = secondPenalty * 2;
-      fourthPenalty = thirdPenalty * 2;
       await stakeStore.methods.slash(from, other).send({from});
       await stakeStore.methods.slash(from, other).send({from});
       await stakeStore.methods.slash(from, other).send({from});
