@@ -13,6 +13,21 @@ import "../Boilerplate/Head.sol";
 
 
 contract Payouts is Base {
-
     constructor(Head _head) public Base(_head) { }
+
+    function withdraw() public {
+        
+    }
+
+    function available(uint64 period) public {
+
+    }
+
+    function grantChallengeResolutionReward(address beneficiary, bytes32 bundleId) public payable onlyContextInternalCalls {
+    
+    }
+     
+    function revokeChallengeResolutionReward(address beneficiary, bytes32 bundleId, address refundAddress) public onlyContextInternalCalls {
+
+    }
 }
