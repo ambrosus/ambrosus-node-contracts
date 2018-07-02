@@ -21,6 +21,7 @@ import ChallengesJson from '../build/contracts/Challenges.json';
 import ShelteringJson from '../build/contracts/Sheltering.json';
 import PayoutsStoreJson from '../build/contracts/PayoutsStore.json';
 import PayoutsJson from '../build/contracts/Payouts.json';
+import TransfersJson from '../build/contracts/Transfers.json';
 import TimeJson from '../build/contracts/Time.json';
 import ConfigJson from '../build/contracts/Config.json';
 
@@ -39,6 +40,7 @@ const DEFAULT_CONTRACT_JSONS = {
   challenges: ChallengesJson,
   payoutsStore: PayoutsStoreJson,
   payouts: PayoutsJson,
+  transfers: TransfersJson,
   config: ConfigJson
 };
 

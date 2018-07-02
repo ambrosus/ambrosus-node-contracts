@@ -25,6 +25,7 @@ import "../Middleware/Sheltering.sol";
 import "../Front/Stakes.sol";
 import "../Front/Challenges.sol";
 import "../Front/Payouts.sol";
+import "../Front/Transfers.sol";
 
 
 contract Context {
@@ -40,6 +41,7 @@ contract Context {
     Challenges public challenges;
     PayoutsStore public payoutsStore;
     Payouts public payouts;
+    Transfers public transfers;
     Time public time;
     Config public config;
 
@@ -56,6 +58,7 @@ contract Context {
         Challenges _challenges,
         PayoutsStore _payoutsStore,
         Payouts _payouts,
+        Transfers _transfers,
         Config _config
     ) public {
         time = _time;
@@ -70,6 +73,7 @@ contract Context {
         challenges = _challenges;
         payoutsStore = _payoutsStore;
         payouts = _payouts;
+        transfers = _transfers;
         config = _config;
     }
 
@@ -86,6 +90,7 @@ contract Context {
             challenges == contractAddress ||
             payoutsStore == contractAddress ||
             payouts == contractAddress ||
+            transfers == contractAddress ||
             config == contractAddress;
     }
 }
