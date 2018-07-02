@@ -12,7 +12,7 @@ pragma solidity ^0.4.23;
 import "../Storage/StakeStore.sol";
 
 
-contract MockStakeStore is StakeStore {
+contract StakeStoreMock is StakeStore {
 
     constructor(Head _head) public StakeStore(_head) {    
     }

@@ -16,7 +16,7 @@ import BN from 'bn.js';
 import {ATLAS, ATLAS1_STAKE, ONE, ATLAS1_STORAGE_LIMIT} from '../../../src/consts';
 import {increaseTime, increaseTimeTo, latestTime} from '../../helpers/web3_utils';
 import deploy from '../../helpers/deploy';
-import mockStakeStoreJson from '../../../build/contracts/MockStakeStore.json';
+import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
 
 chai.use(web3jsChai());
 
@@ -54,7 +54,7 @@ describe('Challenges Contract', () => {
         fees: true,
         sheltering: true,
         stakes: true,
-        stakeStore: mockStakeStoreJson,
+        stakeStore: StakeStoreMockJson,
         roles: true,
         kycWhitelist: true,
         config: true
