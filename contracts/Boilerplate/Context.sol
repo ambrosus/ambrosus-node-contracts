@@ -17,6 +17,8 @@ import "../Storage/PayoutsStore.sol";
 
 import "../Configuration/Roles.sol";
 import "../Configuration/Fees.sol";
+import "../Configuration/Time.sol";
+import "../Configuration/Config.sol";
 
 import "../Middleware/Sheltering.sol";
 
@@ -38,8 +40,11 @@ contract Context {
     Challenges public challenges;
     PayoutsStore public payoutsStore;
     Payouts public payouts;
+    Time public time;
+    Config public config;
 
     constructor(
+        Time _time,
         BundleRegistry _bundleRegistry,
         StakeStore _stakeStore,
         BundleStore _bundleStore,
@@ -50,8 +55,10 @@ contract Context {
         Fees _fees,
         Challenges _challenges,
         PayoutsStore _payoutsStore,
-        Payouts _payouts
+        Payouts _payouts,
+        Config _config
     ) public {
+        time = _time;
         bundleRegistry = _bundleRegistry;
         stakeStore = _stakeStore;
         bundleStore = _bundleStore;
@@ -63,6 +70,7 @@ contract Context {
         challenges = _challenges;
         payoutsStore = _payoutsStore;
         payouts = _payouts;
+        config = _config;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
@@ -77,6 +85,7 @@ contract Context {
             fees == contractAddress ||
             challenges == contractAddress ||
             payoutsStore == contractAddress ||
-            payouts == contractAddress;
+            payouts == contractAddress ||
+            config == contractAddress;
     }
 }

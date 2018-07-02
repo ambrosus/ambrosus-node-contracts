@@ -13,10 +13,10 @@ import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import web3jsChai from '../../helpers/events';
 import BN from 'bn.js';
-import {increaseTimeTo} from '../../helpers/web3_utils';
-import {ATLAS, ATLAS1_STAKE, ONE} from '../../../src/consts';
+import {ATLAS, ATLAS1_STAKE, ONE, ATLAS1_STORAGE_LIMIT} from '../../../src/consts';
+import {increaseTime, increaseTimeTo, latestTime} from '../../helpers/web3_utils';
 import deploy from '../../helpers/deploy';
-import mockStakeStoreJson from '../../../build/contracts/MockStakeStore.json';
+import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
 
 chai.use(web3jsChai());
 
@@ -37,6 +37,7 @@ describe('Challenges Contract', () => {
   let from;
   let other;
   let resolver;
+  let totalStranger;
   let fee;
   let challengeId;
   const bundleId = '0xfe478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
@@ -44,7 +45,7 @@ describe('Challenges Contract', () => {
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    [from, other, resolver] = await web3.eth.getAccounts();
+    [from, other, resolver, totalStranger] = await web3.eth.getAccounts();
     ({challenges, bundleStore, fees, sheltering, stakes, kycWhitelist, stakeStore} = await deploy({
       web3,
       contracts: {
@@ -53,14 +54,14 @@ describe('Challenges Contract', () => {
         fees: true,
         sheltering: true,
         stakes: true,
-        stakeStore: mockStakeStoreJson,
+        stakeStore: StakeStoreMockJson,
         roles: true,
-        kycWhitelist: true
+        kycWhitelist: true,
+        config: true
       }}));
     await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
-    const storageBlockNumber = await web3.eth.getBlockNumber();
-    const storageBlock = await web3.eth.getBlock(storageBlockNumber);
-    fee = new BN(await fees.methods.getFeeForChallenge(storageBlock.timestamp, expirationDate).call());
+    const storageTimestamp = await latestTime(web3);
+    fee = new BN(await fees.methods.getFeeForChallenge(storageTimestamp, expirationDate).call());
     challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
   });
 
@@ -88,7 +89,7 @@ describe('Challenges Contract', () => {
       expect(await challenges.methods.getChallenger(challengeId).call()).to.equal('0x0000000000000000000000000000000000000000');
     });
 
-    it('Rejects if bundle is not being sheltered by provided account', async () => {
+    it('Fails if bundle is not being sheltered by provided account', async () => {
       await expect(challenges.methods.startForSystem(other, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
     });
 
@@ -97,25 +98,25 @@ describe('Challenges Contract', () => {
       expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: biggerFee})).to.emitEvent('ChallengeCreated');
     });
 
-    it(`Rejects if challenger hasn't provided a fee of valid value`, async () => {
+    it(`Fails if challenger hasn't provided a fee of valid value`, async () => {
       const tooSmallFee = systemFee.sub(ONE);
       await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: tooSmallFee})).to.be.eventually.rejected;
     });
 
-    it('Rejects if the challenge was added after bundle has expired', async () => {
+    it('Fails if the challenge was added after bundle has expired', async () => {
       const expirationTime = await bundleStore.methods.getExpirationDate(bundleId).call();
       await increaseTimeTo(web3, expirationTime + 1);
       await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
     });
 
-    it('Rejects if added same challenge twice', async () => {
+    it('Fails if added same challenge twice', async () => {
       expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('ChallengeCreated');
       await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
     });
   });
 
-  describe('Starting a challenge', () => {
-    it('Challenge is not in progress until not started', async () => {
+  describe('Starting user challenge', () => {
+    it('Challenge is not in progress until started', async () => {
       expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
     });
 
@@ -123,7 +124,7 @@ describe('Challenges Contract', () => {
       expect(await challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.emitEvent('ChallengeCreated');
     });
 
-    it('Rejects if bundle is not being sheltered by provided account', async () => {
+    it('Fails if bundle is not being sheltered by provided account', async () => {
       await expect(challenges.methods.start(other, bundleId).send({from, value: fee})).to.be.eventually.rejected;
       expect(await challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.emitEvent('ChallengeCreated');
     });
@@ -133,18 +134,18 @@ describe('Challenges Contract', () => {
       expect(await challenges.methods.start(from, bundleId).send({from: other, value: biggerFee})).to.emitEvent('ChallengeCreated');
     });
 
-    it(`Rejects if challenger hasn't provided a fee of valid value`, async () => {
+    it(`Fails if challenger hasn't provided a fee of valid value`, async () => {
       const tooSmallFee = fee.sub(ONE);
       await expect(challenges.methods.start(from, bundleId).send({from: other, value: tooSmallFee})).to.be.eventually.rejected;
     });
 
-    it('Rejects if the challenge was added after bundle has expired', async () => {
+    it('Fails if the challenge was added after bundle has expired', async () => {
       const expirationTime = await bundleStore.methods.getExpirationDate(bundleId).call();
       await increaseTimeTo(web3, expirationTime + 1);
       await expect(challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.be.eventually.rejected;
     });
 
-    it('Rejects if added same challenge twice', async () => {
+    it('Fails if added same challenge twice', async () => {
       expect(await challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.emitEvent('ChallengeCreated');
       await expect(challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.be.eventually.rejected;
     });
@@ -156,9 +157,7 @@ describe('Challenges Contract', () => {
 
       beforeEach(async () => {
         await challenges.methods.start(from, bundleId).send({from: other, value: fee});
-        const challengeBlockNumber = await web3.eth.getBlockNumber();
-        const challengeBlock = await web3.eth.getBlock(challengeBlockNumber);
-        challengeBlockTimestamp = challengeBlock.timestamp.toString();
+        challengeBlockTimestamp = await latestTime(web3);
         [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
         ({challengeId} = challengeCreationEvent.returnValues);
       });
@@ -184,7 +183,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Challenge setup time', async () => {
-        expect(await challenges.methods.getChallengeCreationTime(challengeId).call()).to.equal(challengeBlockTimestamp);
+        expect(await challenges.methods.getChallengeCreationTime(challengeId).call()).to.equal(challengeBlockTimestamp.toString());
       });
 
       it('Challenge active count', async () => {
@@ -236,12 +235,12 @@ describe('Challenges Contract', () => {
       });
     });
 
-    it('Rejects if challenge does not exist', async () => {
+    it('Fails if challenge does not exist', async () => {
       const fakeChallengeId = '0xada7718d1b5db49bb9c1995152cc28ee664d4268f7de46768cf97c49ef85c9ad';
       await expect(challenges.methods.resolve(fakeChallengeId).send({from: resolver})).to.be.eventually.rejected;
     });
 
-    it('Rejects if resolver is already sheltering challenged bundle', async () => {
+    it('Fails if resolver is already sheltering challenged bundle', async () => {
       await challenges.methods.start(from, bundleId).send({from: other, value: fee});
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
@@ -249,11 +248,11 @@ describe('Challenges Contract', () => {
       await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
 
-    it(`Rejects if resolver can't store more bundles`, async () => {
+    it(`Fails if resolver can't store more bundles`, async () => {
       await challenges.methods.start(from, bundleId).send({from: other, value: fee});
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
-      const allStorageUsed = 100000;
+      const allStorageUsed = ATLAS1_STORAGE_LIMIT;
       await stakeStore.methods.setStorageUsed(resolver, allStorageUsed).send({from});
       await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
@@ -273,6 +272,84 @@ describe('Challenges Contract', () => {
       ({challengeId} = challengeCreationEvent.returnValues);
       await challenges.methods.resolve(challengeId).send({from: resolver});
       expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
+    });
+  });
+
+  describe('Marking challenge as expired', () => {
+    const challengeTimeout = 259200; // 3 days in seconds
+    let challengeId;
+    let deposit;
+  
+    beforeEach(async () => {
+      deposit = ATLAS1_STAKE;
+      await challenges.methods.start(from, bundleId).send({from: other, value: fee});
+      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      ({challengeId} = challengeCreationEvent.returnValues);
+      await stakeStore.methods.depositStake(from, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: deposit});
+    });
+  
+    it(`Fails if challenge does not exist`, async () => {
+      const fakeChallengeId = '0xada7718d1b5db49bb9c1995152cc28ee664d4268f7de46768cf97c49ef85c9ad';
+      await expect(challenges.methods.markAsExpired(fakeChallengeId).send({from: other})).to.be.eventually.rejected;
+    });
+
+    it(`Fails if challenge has already been marked as expired`, async () => {
+      await increaseTime(web3, challengeTimeout + 1);
+      await expect(challenges.methods.markAsExpired(challengeId).send({from: other})).to.be.fulfilled;
+      await expect(challenges.methods.markAsExpired(challengeId).send({from: other})).to.be.eventually.rejected;
+    });
+
+    it(`Fails if challenge has not timed out yet`, async () => {
+      await increaseTime(web3, challengeTimeout - 1);
+      await expect(challenges.methods.markAsExpired(challengeId).send({from: other})).to.be.eventually.rejected;
+    });
+
+    it(`Emits event when marked as expired successfully`, async () => {
+      await increaseTime(web3, challengeTimeout + 1);
+      expect(await challenges.methods.markAsExpired(challengeId).send({from: other})).to.emitEvent('ChallengeTimeout');   
+    });
+
+    it(`Can be called by anyone`, async () => {
+      await increaseTime(web3, challengeTimeout + 1);
+      await expect(challenges.methods.markAsExpired(challengeId).send({from: totalStranger})).to.be.fulfilled;
+    });
+
+    it(`Penalized shelterer stops being shelterer`, async () => {
+      await increaseTime(web3, challengeTimeout + 1);
+      challenges.methods.markAsExpired(challengeId).send({from: other});
+      expect(await sheltering.methods.isSheltering(from, bundleId).call({from})).to.equal(false);
+    });
+
+    it(`Transfer funds to challenger`, async () => {
+      await increaseTime(web3, challengeTimeout + 1);
+      const stakeBefore = new BN(await stakeStore.methods.getStake(from).call());
+      const balanceBefore = new BN(await web3.eth.getBalance(other));
+      await challenges.methods.markAsExpired(challengeId).send({from: other, gasPrice: '0'});
+      const balanceAfter = new BN(await web3.eth.getBalance(other));
+      const stakeAfter = new BN(await stakeStore.methods.getStake(from).call());
+      expect(balanceAfter.sub(balanceBefore).toString()).to.eq(fee.add(stakeBefore.sub(stakeAfter)).toString());
+    });
+
+    it(`Deletes challenge with active count equal 1`, async () => {
+      await increaseTime(web3, challengeTimeout + 1);
+      expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(true);
+      await challenges.methods.markAsExpired(challengeId).send({from: other});
+      expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
+    });
+
+    it(`Deletes challenge with active count bigger than 1`, async () => {
+      const otherBundleId = '0xaf478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
+      const systemFee = fee.mul(new BN('5'));
+      await bundleStore.methods.store(otherBundleId, other, expirationDate).send({from});
+      await challenges.methods.startForSystem(other, otherBundleId, 5).send({from, value: systemFee});
+      const [systemChallengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      const systemChallengeId = systemChallengeCreationEvent.returnValues.challengeId;
+      await increaseTime(web3, challengeTimeout + 1);
+      await stakeStore.methods.depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: deposit});
+
+      expect(await challenges.methods.getActiveChallengesCount(systemChallengeId).call()).to.equal('5');
+      await challenges.methods.markAsExpired(systemChallengeId).send({from: totalStranger});
+      expect(await challenges.methods.challengeIsInProgress(systemChallengeId).call()).to.equal(false);
     });
   });
 });

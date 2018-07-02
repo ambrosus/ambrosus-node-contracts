@@ -21,10 +21,13 @@ import ChallengesJson from '../build/contracts/Challenges.json';
 import ShelteringJson from '../build/contracts/Sheltering.json';
 import PayoutsStoreJson from '../build/contracts/PayoutsStore.json';
 import PayoutsJson from '../build/contracts/Payouts.json';
+import TimeJson from '../build/contracts/Time.json';
+import ConfigJson from '../build/contracts/Config.json';
 
 import {DEFAULT_GAS, deployContract, getDefaultAddress, link} from './web3_tools';
 
 const DEFAULT_CONTRACT_JSONS = {
+  time: TimeJson,
   bundleRegistry: BundleRegistryJson,
   stakeStore: StakeStoreJson,
   roles: RolesJson,
@@ -35,17 +38,18 @@ const DEFAULT_CONTRACT_JSONS = {
   fees: FeesJson,
   challenges: ChallengesJson,
   payoutsStore: PayoutsStoreJson,
-  payouts: PayoutsJson
+  payouts: PayoutsJson,
+  config: ConfigJson
 };
+
+const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor'); 
 
 export default class Deployer {
   constructor(web3, from = getDefaultAddress(web3), gas = DEFAULT_GAS) {
     this.web3 = web3;
     this.from = from;
     this.gas = gas;
-    this.contextConstructorParams = ContextJson
-      .abi
-      .find((value) => value.type === 'constructor')
+    this.contextConstructorParams = getContractConstructor(ContextJson)
       .inputs
       .map((input) => input.name.slice(1));
     
@@ -72,7 +76,15 @@ export default class Deployer {
       const [libName, libContract] = lib;
       link(contractJson, libName, libContract);
     }
-    return deployContract(this.web3, contractJson, [this.head.options.address]);
+
+    // Detect Base based contracts, and provide the _head address as a parameter 
+    const constructorArgs = [];
+    const constructor = getContractConstructor(contractJson);
+    if (constructor !== undefined && constructor.inputs.find((input) => input.name === '_head' && input.type === 'address') !== undefined) {
+      constructorArgs.push(this.head.options.address);
+    }
+
+    return deployContract(this.web3, contractJson, constructorArgs);
   }
 
   getDefaultArgs() {
@@ -97,7 +109,6 @@ export default class Deployer {
   async deploy(contractJsonsOrBooleans = this.getDefaultArgs()) {
     const contractToAddress = (contract) => (contract ? contract.options.address : '0x0');
     const prepareArgs = (contractMap) => this.contextConstructorParams.map((key) => contractToAddress(contractMap[key]));
-
     await this.deployLibs();
     this.head = await deployContract(this.web3, HeadJson);
     const contractMap = await this.deployCustom(contractJsonsOrBooleans);

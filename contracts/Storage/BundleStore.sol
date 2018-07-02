@@ -30,7 +30,7 @@ contract BundleStore is Base {
 
     mapping(bytes32 => Bundle) bundles;
 
-    constructor(Head head) Base(head) public {}
+    constructor(Head _head) Base(_head) public {}
 
     function bundleExists(bytes32 bundleId) view public returns (bool) {
         return bundles[bundleId].expirationDate > 0;

@@ -2,6 +2,10 @@
     "editor.tabSize": 2,
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces" : false,
     "solidity.soliumRules": {
+      "max-len": [
+        "error",
+        160
+      ],
       "imports-on-top": 0,
       "variable-declarations": 0,
       "indentation": [

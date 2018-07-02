@@ -41,7 +41,7 @@ describe('Base Contract', () => {
     contract2 = await deployContract(web3, Contract2Json, [headAddress]);
     contract1 = await deployContract(web3, Contract1Json, [headAddress, contract2.options.address]);
     context = await deployer.setupContext(
-      ['0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0'],
+      ['0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0'],
       [contract1.options.address, contract2.options.address]);
   });
 
