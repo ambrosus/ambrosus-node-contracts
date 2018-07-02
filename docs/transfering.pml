@@ -4,61 +4,54 @@ actor OldShelterer
 actor NewShelterer
 
 box "Smart Contracts" 	
-  participant Transfers  
+  participant ShelteringTransfers  
   participant Sheltering
-  participant Fees
 end box
 
 == Create transfer ==
 
-OldShelterer -> Fees: getFeeFor(time, TRANSFER)
-activate Fees
-OldShelterer <-- Fees
-deactivate Fees
+OldShelterer -> ShelteringTransfers: transfer(bundleId, implicit sheltererFromId)
+activate ShelteringTransfers
 
-OldShelterer -> Transfers: transfer(bundleId, implicit oldSheltererId) payable (fee)
-activate Transfers
-
-Transfers -> Sheltering: isSheltering(oldSheltererId, bundleId)
+ShelteringTransfers -> Sheltering: isSheltering(sheltererFromId, bundleId)
 activate Sheltering
-Transfers <-- Sheltering
+ShelteringTransfers <-- Sheltering
 deactivate Sheltering
 
-Transfers -> Fees: getFeeFor(time, TRANSFER)
-activate Fees
-Transfers <-- Fees
-deactivate Fees
+ShelteringTransfers -> ShelteringTransfers: validateTransfer(sheltererFromId, bundleId)
+activate ShelteringTransfers
+deactivate ShelteringTransfers
 
-Transfers -> Transfers: tryStoreTransfer(oldSheltererId, bundleId, fee)
-activate Transfers
-deactivate Transfers
-OldShelterer <-- Transfers
-deactivate Transfers
+ShelteringTransfers -> ShelteringTransfers: store(sheltererFromId, bundleId)
+activate ShelteringTransfers
+deactivate ShelteringTransfers
+OldShelterer <-- ShelteringTransfers
+deactivate ShelteringTransfers
 
 == Resolve transfer ==
 
-NewShelterer -> Transfers: resolve(oldSheltererId, bundleId, implicit newSheltererId)
-activate Transfers
+NewShelterer -> ShelteringTransfers: resolve(sheltererFromId, bundleId, implicit newSheltererId)
+activate ShelteringTransfers
 
-Transfers -> Sheltering: addSheltering(newSheltererId, bundleId)
+ShelteringTransfers -> Sheltering: addSheltering(newSheltererId, bundleId)
 activate Sheltering
 Sheltering -> Sheltering: isSheltering(newSheltererId, bundleId)
 activate Sheltering
 deactivate Sheltering
-Transfers <-- Sheltering
+ShelteringTransfers <-- Sheltering
 deactivate Sheltering
 
-Transfers -> Sheltering: removeSheltering(oldSheltererId, bundleId)
+ShelteringTransfers -> Sheltering: removeSheltering(sheltererFromId, bundleId)
 activate Sheltering
-Transfers <-- Sheltering
+ShelteringTransfers <-- Sheltering
 deactivate Sheltering
 
-Transfers -> Transfers: removeTransfer(oldSheltererId, bundleId)
-activate Transfers
-deactivate Transfers
-NewShelterer <- Transfers : fee
-NewShelterer <-- Transfers
-deactivate Transfers
+ShelteringTransfers -> ShelteringTransfers: removeTransfer(sheltererFromId, bundleId)
+activate ShelteringTransfers
+deactivate ShelteringTransfers
+NewShelterer <- ShelteringTransfers : fee
+NewShelterer <-- ShelteringTransfers
+deactivate ShelteringTransfers
 
 @enduml
 

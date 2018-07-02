@@ -28,7 +28,7 @@ contract MockContext is Context {
         Challenges _challenges,
         PayoutsStore _payoutsStore,
         Payouts _payouts,
-        Transfers _transfers,
+        ShelteringTransfers _shelteringTransfers,
         Config _config,
         Uploads _uploads
     ) Context(
@@ -44,7 +44,7 @@ contract MockContext is Context {
         _challenges,
         _payoutsStore,
         _payouts,
-        _transfers,
+        _shelteringTransfers,
         _config,
         _uploads
     ) public {        
