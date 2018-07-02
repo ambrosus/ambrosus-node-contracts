@@ -17,7 +17,7 @@ export class MockContextDeployer extends Deployer {
     return this.whitelisted || [this.from];
   }
 
-  async setupContext (contracts, whitelistedAddreses = this.getWhitelisted()) {
+  async setupContext(contracts, whitelistedAddreses = this.getWhitelisted()) {
     const context = await deployContract(this.web3, MockContextJson, contracts);
     await addToWhitelist(this.web3, context, whitelistedAddreses);
     await this.head.methods.setContext(context.options.address).send({
@@ -29,9 +29,9 @@ export class MockContextDeployer extends Deployer {
 }
 
 const deploy = async (options = {}) => {
-  const web3 = options.web3 || await createWeb3();  
+  const web3 = options.web3 || await createWeb3();
   const {contracts} = options;
-  const deployer = new MockContextDeployer(web3);  
+  const deployer = new MockContextDeployer(web3);
   return {web3, ...await deployer.deploy(contracts)};
 };
 

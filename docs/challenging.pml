@@ -11,6 +11,7 @@ box "Smart Contracts"
   participant StakeContract
   participant Fees
   participant StakeStore
+  participant Payout
 end box
 
 == Start a challenge ==
@@ -101,11 +102,16 @@ activate Sheltering
 Challenges <-- Sheltering
 deactivate Sheltering
 
+Challenges -> Payout: grantChallengeResolutionReward(beneficiaryId, bundleId) payable
+activate Payout
+Challenges <-- Payout
+deactivate Payout
+
 Challenges -> Challenges: removeChallenge(atlasId, bundleId)
 note right: decrements active count by 1
 activate Challenges
 deactivate Challenges
-Atlas <-- Challenges: transfer
+Atlas <-- Challenges
 deactivate Challenges
 
 == Reject a challenge (timeout) ==
@@ -131,6 +137,11 @@ activate StakeContract
 Anybody <- StakeContract: reward
 Challenges <-- StakeContract
 deactivate StakeContract
+
+Challenges -> Payout: revokeChallengeResolutionReward(beneficiaryId, bundleId, refundAddress)
+activate Payout
+Challenges <-- Payout
+deactivate Payout
 
 Challenges -> Sheltering: removeSheltering(sheltererId, bundleId)
 activate Sheltering
