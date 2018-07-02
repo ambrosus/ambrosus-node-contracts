@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import MockContextJson from '../../build/contracts/MockContext.json';
 import Deployer from '../../src/deployer';
 import {addToWhitelist} from './whitelist.js';
-import {createWeb3, deployContract} from '../../src/web3_tools';
+import {createWeb3, deployContract, getDefaultAddress} from '../../src/web3_tools';
 
 export class MockContextDeployer extends Deployer {
   getWhitelisted() {
@@ -18,8 +18,8 @@ export class MockContextDeployer extends Deployer {
   }
 
   async setupContext(contracts, whitelistedAddreses = this.getWhitelisted()) {
-    const context = await deployContract(this.web3, MockContextJson, contracts);
-    await addToWhitelist(this.web3, context, whitelistedAddreses);
+    const context = await deployContract(this.web3, MockContextJson, contracts, {from: this.from});
+    await addToWhitelist(this.web3, context, whitelistedAddreses, this.from);
     await this.head.methods.setContext(context.options.address).send({
       gas: this.gas,
       from: this.from
@@ -30,8 +30,9 @@ export class MockContextDeployer extends Deployer {
 
 const deploy = async (options = {}) => {
   const web3 = options.web3 || await createWeb3();
+  const from = options.from || getDefaultAddress(web3);
   const {contracts} = options;
-  const deployer = new MockContextDeployer(web3);
+  const deployer = new MockContextDeployer(web3, from);
   return {web3, ...await deployer.deploy(contracts)};
 };
 

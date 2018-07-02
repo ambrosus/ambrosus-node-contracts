@@ -7,8 +7,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export const day = 60 * 60 * 24;
-
 export async function latestTime(web3) {
   return (await web3.eth.getBlock('latest')).timestamp;
 }

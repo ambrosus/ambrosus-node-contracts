@@ -9,8 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {getDefaultAddress} from '../../src/web3_tools';
 
-export const addToWhitelist = async (web3, context, addresses) => {
-  await context.methods.addToWhitelist(addresses).send({from: getDefaultAddress(web3)});
+export const addToWhitelist = async (web3, context, addresses, from = getDefaultAddress(web3)) => {
+  await context.methods.addToWhitelist(addresses).send({from});
 };
 
 export const removeFromWhitelist = async (web3, context, addresses) => {

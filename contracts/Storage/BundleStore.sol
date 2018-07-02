@@ -9,10 +9,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
+import "../Configuration/Config.sol";
 
 
 contract BundleStore is Base {
+
+    using SafeMath for uint;
 
     uint constant MAX_EXPIRATION_DATE = 32503680000; // year 3000
 
@@ -48,11 +52,12 @@ contract BundleStore is Base {
         return bundles[bundleId].uploadDate;
     }
 
-    function store(bytes32 bundleId, address creator, uint expirationDate) public onlyContextInternalCalls {
+    function store(bytes32 bundleId, address creator, uint units) public onlyContextInternalCalls {
         require(!bundleExists(bundleId));
-        require(expirationDate >= now);
-        require(expirationDate < MAX_EXPIRATION_DATE);
-        bundles[bundleId] = Bundle(new address[](1), now, expirationDate);
+        require(units >= 0);
+        Config config = context().config();
+        uint expirationTime = now.add(units.mul(config.STORAGE_PERIOD_UNIT()));
+        bundles[bundleId] = Bundle(new address[](1), now, expirationTime);
         bundles[bundleId].shelterers[0] = creator;
         emit BundleStored(bundleId, creator);
     }

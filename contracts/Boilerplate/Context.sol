@@ -26,6 +26,7 @@ import "../Front/Stakes.sol";
 import "../Front/Challenges.sol";
 import "../Front/Payouts.sol";
 import "../Front/Transfers.sol";
+import "../Front/Uploads.sol";
 
 
 contract Context {
@@ -44,6 +45,7 @@ contract Context {
     Transfers public transfers;
     Time public time;
     Config public config;
+    Uploads public uploads;
 
     constructor(
         Time _time,
@@ -59,7 +61,8 @@ contract Context {
         PayoutsStore _payoutsStore,
         Payouts _payouts,
         Transfers _transfers,
-        Config _config
+        Config _config,
+        Uploads _uploads 
     ) public {
         time = _time;
         bundleRegistry = _bundleRegistry;
@@ -75,6 +78,7 @@ contract Context {
         payouts = _payouts;
         transfers = _transfers;
         config = _config;
+        uploads = _uploads;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
@@ -89,8 +93,10 @@ contract Context {
             fees == contractAddress ||
             challenges == contractAddress ||
             payoutsStore == contractAddress ||
-            payouts == contractAddress ||
             transfers == contractAddress ||
-            config == contractAddress;
+            config == contractAddress ||
+            time == contractAddress ||
+            uploads == contractAddress ||            
+            payouts == contractAddress;
     }
 }

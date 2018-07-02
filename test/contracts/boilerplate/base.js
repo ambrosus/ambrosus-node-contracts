@@ -11,15 +11,17 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract} from '../../../src/web3_tools';
-import chaiEmitEvents from '../../helpers/chaiWeb3Events';
+import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 
 import Contract1Json from '../../../build/contracts/Contract1.json';
 import Contract2Json from '../../../build/contracts/Contract2.json';
 import HeadJson from '../../../build/contracts/Head.json';
+import ContextJson from '../../../build/contracts/Context.json';
 import {removeFromWhitelist} from '../../helpers/whitelist';
 import {MockContextDeployer} from '../../helpers/deploy';
 
-chai.use(chaiEmitEvents);
+chai.use(chaiEmitEvents());
+
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
@@ -38,9 +40,10 @@ describe('Base Contract', () => {
     deployer.head = await deployContract(web3, HeadJson);
     const headAddress = deployer.head.options.address;
     contract2 = await deployContract(web3, Contract2Json, [headAddress]);
-    contract1 = await deployContract(web3, Contract1Json, [headAddress, contract2.options.address]);
-    context = await deployer.setupContext(
-      ['0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0'],
+    contract1 = await deployContract(web3, Contract1Json, [headAddress, contract2.options.address]);    
+    const constructorABI = ContextJson.abi.find((method) => method.type === 'constructor');
+    const constructorArgumentCount = constructorABI.inputs.length;
+    context = await deployer.setupContext(new Array(constructorArgumentCount).fill('0x0'),
       [contract1.options.address, contract2.options.address]);
   });
 

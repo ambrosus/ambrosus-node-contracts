@@ -18,34 +18,70 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const {expect} = chai;
+const bundleId = utils.asciiToHex('bundleId');
+const units = 1;
 
 describe('Sheltering Contract', () => {
   let web3;
   let from;
   let bundleStore;
   let sheltering;
-  let bundleId;
-  const expirationDate = 1600000000;
+  let stakeStore;
 
   beforeEach(async () => {
     web3 = await createWeb3();
     [from] = await web3.eth.getAccounts();
-    ({bundleStore, sheltering} = await deploy({web3, contracts: {
+    ({bundleStore, sheltering, stakeStore} = await deploy({web3, contracts: {
       bundleStore: true,
-      sheltering: true
+      sheltering: true,
+      stakeStore: true,
+      config: true
     }}));
-    bundleId = utils.asciiToHex('bundleId');
   });
 
-  describe('isSheltering', () => {
+  describe('isStored', () => {
+    it(`returns false if account isn't bundle's shelterer`, async () => {
+      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
+    });
+
     it(`returns true if account is bundle's shelterer`, async () => {
       expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
-      await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
+      await bundleStore.methods.store(bundleId, from, units).send({from});            
+      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(true);
+    });
+  });
+
+  describe('Storing when staking', () => {
+    beforeEach(async () => {
+      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
+    });
+
+    it(`marks as sheltered`, async () => {
+      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
+      await sheltering.methods.store(bundleId, from, units).send({from});
       expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(true);
     });
 
-    it(`returns false if account isn't bundle's shelterer`, async () => {
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
+    it(`fails if already sheltering`, async () => {
+      await sheltering.methods.store(bundleId, from, units).send({from});
+      await expect(sheltering.methods.store(bundleId, from, units).send({from})).to.be.eventually.rejected;
+    });
+
+    it(`fails if already sheltering (different expiration date`, async () => {
+      await sheltering.methods.store(bundleId, from, units).send({from});
+      await expect(sheltering.methods.store(bundleId, from, 1800000000).send({from})).to.be.eventually.rejected;
+    });
+
+    it(`increments storage used`, async () => {
+      expect(await stakeStore.methods.getStorageUsed(from).call({from})).to.eq('0');
+      await sheltering.methods.store(bundleId, from, units).send({from});
+      expect(await stakeStore.methods.getStorageUsed(from).call({from})).to.eq('1');
+    });
+  });
+  
+  describe('Storing when not staking', () => {
+    it(`fails (sender is not staking)`, async () => {      
+      await expect(sheltering.methods.store(bundleId, from, units).send({from})).to.be.eventually.rejected;
     });
   });
 });

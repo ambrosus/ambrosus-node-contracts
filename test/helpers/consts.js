@@ -1,3 +1,4 @@
+
 /*
 Copyright: Ambrosus Technologies GmbH
 Email: tech@ambrosus.com
@@ -7,16 +8,13 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-pragma solidity ^0.4.23;
+import utils from './utils';
+import BN from 'bn.js';
 
+export const COINBASE = '0x0000000000000000000000000000000000000000';
+export const BLOCK_REWARD = utils.toWei(new BN(3));
 
-library SafeMathExtensions {
-    function safePow2(uint exponent) pure public returns (uint) {
-        require(exponent < 256);
-        return 2 ** exponent;        
-    }
+export const ONE = new BN(1);
+export const TWO = new BN(2);
 
-    function mod(uint256 a, uint256 b) pure public returns (uint) {
-        return a % b; //modulo is overflow safe   
-    }
-}
+export const MAX_INTEGER = TWO.pow(new BN('256')).sub(ONE);

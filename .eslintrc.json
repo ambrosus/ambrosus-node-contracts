@@ -14,7 +14,7 @@
     "plugin:import/errors",
     "plugin:import/warnings"
   ],
-  "rules": {
+  "rules": {    
     "prefer-const": 2,
     "no-var": 2,
     "object-shorthand": 2,
@@ -89,7 +89,7 @@
     "no-new-wrappers": 2,
     "id-length": 2,
     "camelcase": 2,
-    "new-cap": 2,
+    "new-cap": [2, {"capIsNew": false}],
     "no-underscore-dangle": 2,
     "no-restricted-globals": 2,
     "semi": [

@@ -23,6 +23,9 @@
     "security/no-block-members": [
       "error",
       ["blockhash"]
+    ],
+    "operator-whitespace": [
+			"error"			
     ]
   }
 }

@@ -11,7 +11,8 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import BN from 'bn.js';
 import deploy from '../../helpers/deploy';
-import {ATLAS, APOLLO, ATLAS1_STAKE, APOLLO_STAKE, ATLAS1_STORAGE_LIMIT, ONE} from '../../../src/consts';
+import {ATLAS, APOLLO, ATLAS1_STAKE, APOLLO_STAKE, ATLAS1_STORAGE_LIMIT} from '../../../src/consts';
+import {ONE} from '../../helpers/consts';
 
 chai.use(chaiAsPromised);
 

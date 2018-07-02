@@ -21,24 +21,44 @@ contract Fees is Base, Ownable {
     using SafeMath for uint;
     using SafeMathExtensions for uint;
 
-    uint constant PENALTY_DIVISOR = 100;
-
+    uint constant public CHALLANGER_FEE_DIVISOR = 2;
+    uint constant public VALIDATOR_FEE_MULTIPLIER = 45;
+    uint constant public VALIDATOR_FEE_DIVISOR = 100;
+    uint constant public UPLOAD_FEE_MULTIPLIER = 10;
+    
     constructor(Head _head) public Base(_head) {        
     }
-
-    // generally fake implementation made to return anything - TBD in another ticket
-    function getFeeForChallenge(uint startTime, uint endTime) public view returns(uint) {
+    
+    function getFeeForUpload(uint units) public view returns(uint) {
+        require(units > 0);
         Config config = context().config();
-        uint periods = (endTime.sub(startTime)).div(config.ONE_YEAR());
-        return config.BASIC_CHALLANGE_FEE().mul(periods);
+        return config.BASIC_CHALLANGE_FEE().mul(units).mul(UPLOAD_FEE_MULTIPLIER);
+    }
+
+    function getFeeForChallenge(uint startTime, uint endTime) public view returns (uint) {
+        uint interval = endTime.sub(startTime);
+        require(interval > 0);
+        
+        Config config = context().config();        
+        uint unit = config.STORAGE_PERIOD_UNIT();        
+        require(interval.mod(unit) == 0);
+
+        uint units = interval.div(unit);
+        return getFeeForUpload(units).div(UPLOAD_FEE_MULTIPLIER);
+    }
+
+    function calculateFeeSplit(uint value) public pure returns (uint challengeFee, uint validatorsFee, uint burnFee) {
+        challengeFee = value.div(CHALLANGER_FEE_DIVISOR);
+        validatorsFee = value.mul(VALIDATOR_FEE_MULTIPLIER).div(VALIDATOR_FEE_DIVISOR);
+        burnFee = value.sub(validatorsFee).sub(challengeFee);
     }
 
     function getPenalty(uint nominalStake, uint penaltiesCount, uint lastPenaltyTime) public view returns(uint penalty, uint newPenaltiesCount) {
         Config config = context().config();
         if ((now - lastPenaltyTime) > config.PENALTY_ESCALATION_TIMEOUT()) {
-            return (nominalStake.div(PENALTY_DIVISOR), 1);
+            return (nominalStake.div(config.PENALTY_DIVISOR()), 1);
         } else {
-            return (nominalStake.div(PENALTY_DIVISOR).mul(penaltiesCount.safePow2()), penaltiesCount + 1);
+            return (nominalStake.div(config.PENALTY_DIVISOR()).mul(penaltiesCount.safePow2()), penaltiesCount + 1);
         }
     }
 }

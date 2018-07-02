@@ -11,14 +11,16 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
-import chaiEmitEvents from '../../helpers/chaiWeb3Events';
+import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import BN from 'bn.js';
-import {ATLAS, ATLAS1_STAKE, ONE, ATLAS1_STORAGE_LIMIT} from '../../../src/consts';
+import {ATLAS, ATLAS1_STAKE, ATLAS1_STORAGE_LIMIT, STORAGE_PERIOD_UNIT, DAY} from '../../../src/consts';
+import {ONE} from '../../helpers/consts';
 import {increaseTime, increaseTimeTo, latestTime} from '../../helpers/web3_utils';
 import deploy from '../../helpers/deploy';
 import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
 
-chai.use(chaiEmitEvents);
+chai.use(chaiEmitEvents());
+
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
@@ -40,7 +42,7 @@ describe('Challenges Contract', () => {
   let fee;
   let challengeId;
   const bundleId = '0xfe478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
-  const expirationDate = 1600000000;
+  let expirationDate;
 
   beforeEach(async () => {
     web3 = await createWeb3();
@@ -58,8 +60,9 @@ describe('Challenges Contract', () => {
         kycWhitelist: true,
         config: true
       }}));
-    await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
     const storageTimestamp = await latestTime(web3);
+    expirationDate = storageTimestamp + STORAGE_PERIOD_UNIT;
+    await bundleStore.methods.store(bundleId, from, 1).send({from});
     fee = new BN(await fees.methods.getFeeForChallenge(storageTimestamp, expirationDate).call());
     challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
   });
@@ -275,7 +278,7 @@ describe('Challenges Contract', () => {
   });
 
   describe('Marking challenge as expired', () => {
-    const challengeTimeout = 259200; // 3 days in seconds
+    const challengeTimeout = 3 * DAY;
     let challengeId;
     let deposit;
   
@@ -339,7 +342,7 @@ describe('Challenges Contract', () => {
     it(`Deletes challenge with active count bigger than 1`, async () => {
       const otherBundleId = '0xaf478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
       const systemFee = fee.mul(new BN('5'));
-      await bundleStore.methods.store(otherBundleId, other, expirationDate).send({from});
+      await bundleStore.methods.store(otherBundleId, other, 1).send({from});
       await challenges.methods.startForSystem(other, otherBundleId, 5).send({from, value: systemFee});
       const [systemChallengeCreationEvent] = await challenges.getPastEvents('allEvents');
       const systemChallengeId = systemChallengeCreationEvent.returnValues.challengeId;

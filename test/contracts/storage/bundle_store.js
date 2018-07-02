@@ -10,11 +10,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import chaiEmitEvents from '../../helpers/chaiWeb3Events';
+import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
+import {latestTime} from '../../helpers/web3_utils';
+import {STORAGE_PERIOD_UNIT} from '../../../src/consts';
 
-chai.use(chaiEmitEvents);
+chai.use(chaiEmitEvents());
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
@@ -26,52 +28,45 @@ describe('BundleStore Contract', () => {
   let other;
   let bundleStore;
   let bundleId;
-  const expirationDate = 1600000000;
+  const units = 1;
 
   beforeEach(async () => {
-    ({web3, bundleStore} = await deploy({contracts: {bundleStore: true}}));
+    ({web3, bundleStore} = await deploy({contracts: {bundleStore: true, config: true}}));
     [from, other] = await web3.eth.getAccounts();
     bundleId = utils.asciiToHex('bundleId');
   });
 
   describe('Storing a bundle', () => {
     it('should emit event when bundle was added', async () => {
-      expect(await bundleStore.methods.store(bundleId, from, 1700000000).send({from})).to.emitEvent('BundleStored');
+      expect(await bundleStore.methods.store(bundleId, from, 1).send({from})).to.emitEvent('BundleStored');
     });
 
     it('creator is a shelterer', async () => {
-      await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
+      await bundleStore.methods.store(bundleId, from, units).send({from});
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([from]);
     });
 
     it('stores expiration date', async () => {
-      await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
-      expect(await bundleStore.methods.getExpirationDate(bundleId).call()).to.equal('1600000000');
+      await bundleStore.methods.store(bundleId, from, units).send({from});
+      const actualExpirationDate = await bundleStore.methods.getExpirationDate(bundleId).call();
+      const expectedExpirationDate = await latestTime(web3) + STORAGE_PERIOD_UNIT;
+      expect(actualExpirationDate).to.equal(expectedExpirationDate.toString());
     });
 
     it('reject if not context internal call', async () => {
       await expect(
-        bundleStore.methods.store(bundleId, from, expirationDate).send({from: other})).to.be.eventually.rejected;
+        bundleStore.methods.store(bundleId, from, units).send({from: other})).to.be.eventually.rejected;
     });
 
     it('reject if bundle with same id exists and has shelterers', async () => {
-      await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
-      await expect(bundleStore.methods.store(bundleId, from, expirationDate).send({from})).to.be.eventually.rejected;
-    });
-
-    it('rejects if expiration date is before now', async () => {
-      await expect(bundleStore.methods.store(bundleId, from, 32503680000).send({from})).to.be.eventually.rejected;
-    });
-
-    it('rejects if expiration date is before now', async () => {
-      await expect(
-        bundleStore.methods.store(bundleId, from, (Date.now() / 1000) - 1).send({from})).to.be.eventually.rejected;
+      await bundleStore.methods.store(bundleId, from, units).send({from});
+      await expect(bundleStore.methods.store(bundleId, from, units).send({from})).to.be.eventually.rejected;
     });
   });
 
   describe('Add and remove shelterers', () => {
     beforeEach(async () => {
-      await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
+      await bundleStore.methods.store(bundleId, from, units).send({from});
     });
 
     it('should emit event when the shelterer was added', async () => {
@@ -102,7 +97,7 @@ describe('BundleStore Contract', () => {
 
     it('cannot put new bundle with same id when all shelterers are removed', async () => {
       await bundleStore.methods.removeShelterer(bundleId, from).send({from});
-      await expect(bundleStore.methods.store(bundleId, from, expirationDate).send({from})).to.be.eventually.rejected;
+      await expect(bundleStore.methods.store(bundleId, from, units).send({from})).to.be.eventually.rejected;
     });
   });
 });

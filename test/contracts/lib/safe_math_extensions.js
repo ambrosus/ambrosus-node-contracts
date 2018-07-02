@@ -12,11 +12,13 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract} from '../../../src/web3_tools';
 import SafeMathExtensions from '../../../build/contracts/SafeMathExtensions.json';
+import {MAX_INTEGER} from '../../helpers/consts';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const {expect} = chai;
+
 
 describe('SafeMathExtensions', () => {
   let web3;
@@ -40,5 +42,31 @@ describe('SafeMathExtensions', () => {
     await expect(safeMathExtensions.methods.safePow2(256).call()).to.be.eventually.rejected;
     await expect(safeMathExtensions.methods.safePow2(300).call()).to.be.eventually.rejected;
     await expect(safeMathExtensions.methods.safePow2(1000).call()).to.be.eventually.rejected;
+  });
+
+  it('mod', async () => {
+    expect(await safeMathExtensions.methods.mod(0, 2).call()).to.equal('0');
+    expect(await safeMathExtensions.methods.mod(1, 2).call()).to.equal('1');
+    expect(await safeMathExtensions.methods.mod(2, 2).call()).to.equal('0');
+    expect(await safeMathExtensions.methods.mod(3, 2).call()).to.equal('1');
+    expect(await safeMathExtensions.methods.mod(4, 2).call()).to.equal('0');
+
+    expect(await safeMathExtensions.methods.mod(0, 3).call()).to.equal('0');
+    expect(await safeMathExtensions.methods.mod(1, 3).call()).to.equal('1');
+    expect(await safeMathExtensions.methods.mod(2, 3).call()).to.equal('2');
+    expect(await safeMathExtensions.methods.mod(3, 3).call()).to.equal('0');
+    expect(await safeMathExtensions.methods.mod(4, 3).call()).to.equal('1');
+    expect(await safeMathExtensions.methods.mod(5, 3).call()).to.equal('2');
+    expect(await safeMathExtensions.methods.mod(6, 3).call()).to.equal('0'); 
+    
+    expect(await safeMathExtensions.methods.mod(0, MAX_INTEGER).call()).to.equal('0');
+    expect(await safeMathExtensions.methods.mod(7, MAX_INTEGER).call()).to.equal('7');
+    expect(await safeMathExtensions.methods.mod(MAX_INTEGER, MAX_INTEGER).call()).to.equal('0');
+
+    await expect(safeMathExtensions.methods.mod(0, 0).call()).to.be.eventually.rejected;
+    await expect(safeMathExtensions.methods.mod(1, 0).call()).to.be.eventually.rejected;
+    await expect(safeMathExtensions.methods.mod(2, 0).call()).to.be.eventually.rejected;
+    await expect(safeMathExtensions.methods.mod(10, 0).call()).to.be.eventually.rejected;
+    await expect(safeMathExtensions.methods.mod(MAX_INTEGER, 0).call()).to.be.eventually.rejected;
   });
 });

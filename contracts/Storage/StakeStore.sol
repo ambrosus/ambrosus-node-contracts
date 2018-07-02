@@ -58,7 +58,7 @@ contract StakeStore is Base {
         return stakes[node].role;
     }
 
-    function isShelteringAny(address node) view public returns (bool) {
+    function isShelteringAny(address node) public view returns (bool) {
         return stakes[node].storageUsed > 0;
     }
     
@@ -80,7 +80,7 @@ contract StakeStore is Base {
     }
 
     function incrementStorageUsed(address node) public onlyContextInternalCalls {
-        require(stakes[node].storageUsed < stakes[node].storageLimit);
+        require(canStore(node));
         stakes[node].storageUsed = stakes[node].storageUsed.add(1);
     }
 
