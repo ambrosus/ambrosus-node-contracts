@@ -30,7 +30,8 @@ function createGanacheProvider(secretKey) {
         secretKey
       },
       ...Array(9).fill({balance: '10000000000000000000000000000000000'})
-    ]
+    ],
+    vmErrorsOnRPCResponse: false
   };
   return Ganache.provider(ganacheOptions);
 }
