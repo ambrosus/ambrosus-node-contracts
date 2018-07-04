@@ -29,9 +29,9 @@ describe('Time Contract', () => {
 
   const currentTimestamp = (senderAddress = validUser) => time.methods.currentTimestamp().call({from: senderAddress});
   const currentPayoutPeriod = (senderAddress = validUser) => time.methods.currentPayoutPeriod().call({from: senderAddress});
-  const payoutPeriodForTimestamp = (timestamp, senderAddress = validUser) => time.methods.payoutPeriodForTimestamp(timestamp).call({from: senderAddress});
-  const timestampForBeginOfPayoutPeriod = (period, senderAddress = validUser) => time.methods.timestampForBeginOfPayoutPeriod(period).call({from: senderAddress});
-  const secondsSinceBeginOfPayoutPeriod = (timestamp, senderAddress = validUser) => time.methods.secondsSinceBeginOfPayoutPeriod(timestamp).call({from: senderAddress});
+  const payoutPeriod = (timestamp, senderAddress = validUser) => time.methods.payoutPeriod(timestamp).call({from: senderAddress});
+  const payoutPeriodStart = (period, senderAddress = validUser) => time.methods.payoutPeriodStart(period).call({from: senderAddress});
+  const payoutPeriodOffset = (timestamp, senderAddress = validUser) => time.methods.payoutPeriodOffset(timestamp).call({from: senderAddress});
 
   beforeEach(async () => {
     ({web3, time} = await deploy({
@@ -48,26 +48,26 @@ describe('Time Contract', () => {
   });
 
   it('Current Period uses the current block time', async () => {
-    expect(await currentPayoutPeriod()).to.equal(await payoutPeriodForTimestamp(await currentTimestamp()));
+    expect(await currentPayoutPeriod()).to.equal(await payoutPeriod(await currentTimestamp()));
   });
 
   it('Payout Period calculation returns the number of full 28 day periods since epoch', async () => {
-    expect(await payoutPeriodForTimestamp(0)).to.equal('0');
-    expect(await payoutPeriodForTimestamp(secondsInDay)).to.equal('0');
-    expect(await payoutPeriodForTimestamp(27 * secondsInDay)).to.equal('0');
-    expect(await payoutPeriodForTimestamp(28 * secondsInDay)).to.equal('1');
-    expect(await payoutPeriodForTimestamp(45 * secondsInDay)).to.equal('1');
-    expect(await payoutPeriodForTimestamp(57 * secondsInDay)).to.equal('2');
+    expect(await payoutPeriod(0)).to.equal('0');
+    expect(await payoutPeriod(secondsInDay)).to.equal('0');
+    expect(await payoutPeriod(27 * secondsInDay)).to.equal('0');
+    expect(await payoutPeriod(28 * secondsInDay)).to.equal('1');
+    expect(await payoutPeriod(45 * secondsInDay)).to.equal('1');
+    expect(await payoutPeriod(57 * secondsInDay)).to.equal('2');
   });
 
   it('Timestamp For Begin Of Payout Period returns the timestamp of the first second in the provided period', async () => {
-    expect(await timestampForBeginOfPayoutPeriod(0)).to.equal('0');
-    expect(await timestampForBeginOfPayoutPeriod(50)).to.equal((50 * 28 * secondsInDay).toString());
+    expect(await payoutPeriodStart(0)).to.equal('0');
+    expect(await payoutPeriodStart(50)).to.equal((50 * 28 * secondsInDay).toString());
   });
 
   it('Seconds Since Begin Of Payout Period returns the number of seconds since the begin of the provided period', async () => {
     const firstSecond = 50 * 28 * secondsInDay;
-    expect(await secondsSinceBeginOfPayoutPeriod(firstSecond)).to.equal('0');
-    expect(await secondsSinceBeginOfPayoutPeriod(firstSecond + 520)).to.equal('520');
+    expect(await payoutPeriodOffset(firstSecond)).to.equal('0');
+    expect(await payoutPeriodOffset(firstSecond + 520)).to.equal('520');
   });
 });

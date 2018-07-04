@@ -21,18 +21,18 @@ contract Time {
     }
 
     function currentPayoutPeriod() public view returns (uint64) {
-        return payoutPeriodForTimestamp(currentTimestamp());
+        return payoutPeriod(currentTimestamp());
     }
 
-    function payoutPeriodForTimestamp(uint timestamp) public pure returns(uint64) {
+    function payoutPeriod(uint timestamp) public pure returns(uint64) {
         return (uint64)(timestamp.div(PERIOD_DURATION));
     }
 
-    function timestampForBeginOfPayoutPeriod(uint64 period) public pure returns(uint) {
+    function payoutPeriodStart(uint64 period) public pure returns(uint) {
         return (uint)(period).mul(PERIOD_DURATION);
     }
 
-    function secondsSinceBeginOfPayoutPeriod(uint timestamp) public pure returns(uint) {
-        return timestamp.sub(timestampForBeginOfPayoutPeriod(payoutPeriodForTimestamp(timestamp)));
+    function payoutPeriodOffset(uint timestamp) public pure returns(uint) {
+        return timestamp.sub(payoutPeriodStart(payoutPeriod(timestamp)));
     }
 }
