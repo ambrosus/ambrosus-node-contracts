@@ -11,15 +11,14 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
-import web3jsChai from '../../helpers/events';
+import chaiEmitEvents from '../../helpers/chaiWeb3Events';
 import BN from 'bn.js';
 import {ATLAS, ATLAS1_STAKE, ONE, ATLAS1_STORAGE_LIMIT} from '../../../src/consts';
 import {increaseTime, increaseTimeTo, latestTime} from '../../helpers/web3_utils';
 import deploy from '../../helpers/deploy';
 import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
 
-chai.use(web3jsChai());
-
+chai.use(chaiEmitEvents);
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 

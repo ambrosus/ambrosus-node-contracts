@@ -10,10 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import web3jsChai from '../../helpers/events';
 import deploy from '../../helpers/deploy';
 
-chai.use(web3jsChai());
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 

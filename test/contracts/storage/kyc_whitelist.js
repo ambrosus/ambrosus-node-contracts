@@ -11,10 +11,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract} from '../../../src/web3_tools';
-import web3jsChai from '../../helpers/events';
 import KycWhitelistJson from '../../../build/contracts/KycWhitelist.json';
-
-chai.use(web3jsChai());
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);

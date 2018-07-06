@@ -11,7 +11,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract} from '../../../src/web3_tools';
-import web3jsChai from '../../helpers/events';
+import chaiEmitEvents from '../../helpers/chaiWeb3Events';
 
 import Contract1Json from '../../../build/contracts/Contract1.json';
 import Contract2Json from '../../../build/contracts/Contract2.json';
@@ -19,8 +19,7 @@ import HeadJson from '../../../build/contracts/Head.json';
 import {removeFromWhitelist} from '../../helpers/whitelist';
 import {MockContextDeployer} from '../../helpers/deploy';
 
-chai.use(web3jsChai());
-
+chai.use(chaiEmitEvents);
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
