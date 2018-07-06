@@ -7,14 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import web3jsChai from '../../helpers/events';
 import deploy from '../../helpers/deploy';
 import {latestTime, day} from '../../helpers/web3_utils';
-
-chai.use(web3jsChai());
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);

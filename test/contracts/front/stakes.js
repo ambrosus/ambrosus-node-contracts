@@ -9,12 +9,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import web3jsChai from '../../helpers/events';
 import BN from 'bn.js';
 import deploy from '../../helpers/deploy';
 import {ATLAS, APOLLO, ATLAS1_STAKE, APOLLO_STAKE, ATLAS1_STORAGE_LIMIT, ONE} from '../../../src/consts';
 
-chai.use(web3jsChai());
 chai.use(chaiAsPromised);
 
 const {expect} = chai;

@@ -7,19 +7,16 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-/* eslint no-underscore-dangle: ["error", { "allow": ["_obj"] }] */
-module.exports = function () {
-  const emitEventMethod = function (eventName) {
-    const tx = this._obj;
-    const eventOccurences = tx.events[eventName];
+const chaiEmitEvents = (chai, utils) => {
+  utils.addMethod(chai.Assertion.prototype, 'emitEvent', function (eventName) {
+    const tx = utils.flag(this, 'object');
+    const eventOccurrences = tx.events[eventName];
     this.assert(
-      eventOccurences,
+      eventOccurrences,
       `expected the tx to emit event: "${eventName}", but it was not emitted`,
       `expected the tx not to emit event: "${eventName}", but it was emitted one or more times`
     );
-  };
-
-  return function (chai) {
-    chai.Assertion.addMethod('emitEvent', emitEventMethod);
-  };
+  });
 };
+
+export default chaiEmitEvents;
