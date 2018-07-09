@@ -30,6 +30,22 @@ contract Sheltering is Base {
         bundleStore.store(bundleId, creator, units);
     }
 
+    function addShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {
+        StakeStore stakeStore = context().stakeStore();
+        BundleStore bundleStore = context().bundleStore();
+
+        stakeStore.incrementStorageUsed(shelterer);
+        bundleStore.addShelterer(bundleId, shelterer);
+    }
+
+    function removeShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {              
+        StakeStore stakeStore = context().stakeStore();    
+        BundleStore bundleStore = context().bundleStore();
+
+        stakeStore.decrementStorageUsed(shelterer);
+        bundleStore.removeShelterer(bundleId, shelterer);
+    }
+
     function isSheltering(address sheltererId, bytes32 bundleId) public view returns(bool) {
         BundleStore bundleStore = context().bundleStore();
         address[] memory shelterers = bundleStore.getShelterers(bundleId);

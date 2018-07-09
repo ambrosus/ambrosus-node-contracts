@@ -43,6 +43,10 @@ contract StakeStore is Base {
         return stakes[node].storageUsed < stakes[node].storageLimit;
     }
 
+    function stores(address node) public view returns (bool) {
+        return stakes[node].storageUsed > 0;
+    }
+
     function getStorageUsed(address node) public view returns (uint) {
         return stakes[node].storageUsed;
     }
@@ -78,6 +82,11 @@ contract StakeStore is Base {
         uint amount = stakes[node].amount;
         delete stakes[node];
         node.transfer(amount);
+    }
+
+    function decrementStorageUsed(address node) public onlyContextInternalCalls {
+        require(stores(node));
+        stakes[node].storageUsed = stakes[node].storageUsed.sub(1);
     }
 
     function incrementStorageUsed(address node) public onlyContextInternalCalls {

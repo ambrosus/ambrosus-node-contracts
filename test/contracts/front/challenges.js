@@ -294,6 +294,7 @@ describe('Challenges Contract', () => {
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
       await stakeStore.methods.depositStake(from, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: deposit});
+      await stakeStore.methods.setStorageUsed(from, 1).send({from});
     });
   
     it(`Fails if challenge does not exist`, async () => {
@@ -354,6 +355,7 @@ describe('Challenges Contract', () => {
       const systemChallengeId = systemChallengeCreationEvent.returnValues.challengeId;
       await setTimestamp(now + challengeTimeout + 1);
       await stakeStore.methods.depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: deposit});
+      await stakeStore.methods.setStorageUsed(other, 1).send({from});
 
       expect(await challenges.methods.getActiveChallengesCount(systemChallengeId).call()).to.equal('5');
       await challenges.methods.markAsExpired(systemChallengeId).send({from: totalStranger});
