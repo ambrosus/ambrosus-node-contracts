@@ -7,13 +7,13 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-pragma solidity ^0.4.23;
+import BN from 'bn.js';
 
+const observeBalanceChange = async (web3, account, codeBlock) => {
+  const balanceBefore = new BN(await web3.eth.getBalance(account));    
+  await codeBlock();
+  const balanceAfter = new BN(await web3.eth.getBalance(account));
+  return balanceAfter.sub(balanceBefore);
+};
 
-contract Config {
-    uint constant public CHALLENGE_DURATION = 3 days;
-    uint constant public ONE_YEAR = 365 days;
-    uint constant public PENALTY_ESCALATION_TIMEOUT = 90 days;
-    uint constant public BASIC_CHALLANGE_FEE = 1 ether;
-    uint constant public FINISH_SHELTERING_REWARD_SPLIT = 20;
-}
+export default observeBalanceChange;

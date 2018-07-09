@@ -1,27 +1,31 @@
 {
-    "editor.tabSize": 2,
-    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces" : false,
-    "solidity.soliumRules": {
-      "max-len": [
-        "error",
-        160
-      ],
-      "imports-on-top": 0,
-      "variable-declarations": 0,
-      "indentation": [
-        "error",
-        4
-      ],
-      "quotes": [
-        "error",
-        "double"
-      ],
+  "editor.tabSize": 2,
+  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+  "solidity.soliumRules": {
+    "max-len": [
+      "error",
+      160
+    ],
+    "imports-on-top": 0,
+    "variable-declarations": 0,
+    "indentation": [
+      "error",
+      4
+    ],
+    "quotes": [
+      "error",
+      "double"
+    ],
+    "operator-whitespace": [
+      "error"
+    ],
     "arg-overflow": 0,
     "security/no-block-members": [
       "error",
-      ["blockhash"]
+      [
+        "blockhash"
+      ]
     ]
-    },
-    "solidity.packageDefaultDependenciesContractsDirectory": ""
-  }
-  
+  },
+  "solidity.packageDefaultDependenciesContractsDirectory": ""
+}
