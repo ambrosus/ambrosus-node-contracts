@@ -11,8 +11,8 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
+import {ONE} from '../../helpers/consts';
 import {
-  ONE,
   ATLAS,
   HERMES,
   APOLLO,

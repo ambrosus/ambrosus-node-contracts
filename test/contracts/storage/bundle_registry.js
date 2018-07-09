@@ -11,11 +11,11 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {adminAccount} from '../../helpers/account';
-import chaiEmitEvents from '../../helpers/chaiWeb3Events';
+import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
 
-chai.use(chaiEmitEvents);
+chai.use(chaiEmitEvents());
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
