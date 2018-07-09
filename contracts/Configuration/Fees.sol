@@ -16,32 +16,38 @@ import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 
+
 contract Fees is Base, Ownable {
 
     using SafeMath for uint;
     using SafeMathExtensions for uint;
 
-    uint constant public CHALLANGER_FEE_DIVISOR = 2;
+    uint constant public CHALLENGER_FEE_DIVIDER = 2;
     uint constant public VALIDATOR_FEE_MULTIPLIER = 45;
-    uint constant public VALIDATOR_FEE_DIVISOR = 100;
-    uint constant public UPLOAD_FEE_MULTIPLIER = 10;
+    uint constant public VALIDATOR_FEE_DIVIDER = 100;
+    uint constant public CHALLENGE_FEE_DIVIDER = 10;
+
+    uint public baseUploadFee = 10 ether;
 
     constructor(Head _head) public Base(_head) {
     }
+
+    function setBaseUploadFee(uint fee) public onlyOwner {
+        baseUploadFee = fee;
+    }
     
     function getFeeForUpload(uint units) public view returns(uint) {
-        return getFeeForChallenge(units).mul(UPLOAD_FEE_MULTIPLIER);
+        require(units > 0);
+        return baseUploadFee.mul(units);
     }
 
     function getFeeForChallenge(uint units) public view returns (uint) {
-        require(units > 0);
-        Config config = context().config();
-        return config.BASIC_CHALLANGE_FEE().mul(units);
+        return getFeeForUpload(units).div(CHALLENGE_FEE_DIVIDER);
     }
 
     function calculateFeeSplit(uint value) public pure returns (uint challengeFee, uint validatorsFee, uint burnFee) {
-        challengeFee = value.div(CHALLANGER_FEE_DIVISOR);
-        validatorsFee = value.mul(VALIDATOR_FEE_MULTIPLIER).div(VALIDATOR_FEE_DIVISOR);
+        challengeFee = value.div(CHALLENGER_FEE_DIVIDER);
+        validatorsFee = value.mul(VALIDATOR_FEE_MULTIPLIER).div(VALIDATOR_FEE_DIVIDER);
         burnFee = value.sub(validatorsFee).sub(challengeFee);
     }
 
@@ -49,9 +55,9 @@ contract Fees is Base, Ownable {
         Config config = context().config();
         Time time = context().time();
         if ((time.currentTimestamp() - lastPenaltyTime) > config.PENALTY_ESCALATION_TIMEOUT()) {
-            return (nominalStake.div(config.PENALTY_DIVISOR()), 1);
+            return (nominalStake.div(config.PENALTY_DIVIDER()), 1);
         } else {
-            return (nominalStake.div(config.PENALTY_DIVISOR()).mul(penaltiesCount.safePow2()), penaltiesCount + 1);
+            return (nominalStake.div(config.PENALTY_DIVIDER()).mul(penaltiesCount.safePow2()), penaltiesCount + 1);
         }
     }
 }
