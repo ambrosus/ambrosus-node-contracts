@@ -43,7 +43,7 @@ contract StakeStore is Base {
         return stakes[node].storageUsed < stakes[node].storageLimit;
     }
 
-    function stores(address node) public view returns (bool) {
+    function isStoringAny(address node) public view returns (bool) {
         return stakes[node].storageUsed > 0;
     }
 
@@ -85,7 +85,7 @@ contract StakeStore is Base {
     }
 
     function decrementStorageUsed(address node) public onlyContextInternalCalls {
-        require(stores(node));
+        require(isStoringAny(node));
         stakes[node].storageUsed = stakes[node].storageUsed.sub(1);
     }
 

@@ -94,7 +94,7 @@ describe('Sheltering Contract', () => {
       await stakeStore.methods.depositStake(other, 1, 0).send({from, value: 1});
     });
 
-    it(`adds shelterer`, async () => {
+    it(`adds store entry`, async () => {
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.not.include(other);
       await sheltering.methods.addShelterer(bundleId, other).send({from});
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.include(other);
@@ -113,7 +113,7 @@ describe('Sheltering Contract', () => {
       await sheltering.methods.store(bundleId, from, units).send({from});
     });
     
-    it(`removes shelterer`, async () => {
+    it(`removes store entry`, async () => {
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.include(from);
       await sheltering.methods.removeShelterer(bundleId, from).send({from});
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.not.include(from);
