@@ -10,7 +10,6 @@ box "Smart Contracts"
   participant Sheltering
   participant StakeContract
   participant Fees
-  participant StakeStore
   participant Payout
 end box
 
@@ -92,10 +91,6 @@ activate Sheltering
 Challenges <-- Sheltering
 deactivate Sheltering
 
-Challenges -> StakeStore: canStore(atlasId)
-activate StakeStore
-Challenges <-- StakeStore
-deactivate StakeStore
 
 Challenges -> Sheltering: addSheltering(atlasId, bundleId)
 activate Sheltering

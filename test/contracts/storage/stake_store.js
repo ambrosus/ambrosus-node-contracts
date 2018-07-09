@@ -99,6 +99,30 @@ describe('StakeStore Contract', () => {
     });
   });
 
+  describe('Decrement storage used', () => {    
+    beforeEach(async () => {
+      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
+      await stakeStore.methods.incrementStorageUsed(from).send({from});
+    });
+
+    it('properly updates contract state', async () => {
+      await stakeStore.methods.decrementStorageUsed(from).send({from});
+      expect(await stakeStore.methods.isStaking(from).call()).to.be.true;
+      expect(await stakeStore.methods.canStore(from).call()).to.be.true;
+      expect(await stakeStore.methods.isShelteringAny(from).call()).to.be.false;
+      expect(await stakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');      
+    });
+
+    it('reject if not context internal call', async () => {
+      await expect(stakeStore.methods.decrementStorageUsed(from).send({from: other})).to.be.eventually.rejected;
+    });
+
+    it('reject if nothing is stored', async () => { 
+      await stakeStore.methods.decrementStorageUsed(from).send({from});
+      await expect(stakeStore.methods.decrementStorageUsed(from).send({from})).to.be.eventually.rejected;
+    });
+  });
+
   describe('Release a stake', () => {    
     beforeEach(async () => {
       await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});

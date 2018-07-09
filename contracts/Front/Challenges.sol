@@ -69,12 +69,8 @@ contract Challenges is Base {
 
         Sheltering sheltering = context().sheltering();
         require(!sheltering.isSheltering(msg.sender, challenge.bundleId));
-
-        StakeStore stakeStore = context().stakeStore();
-        require(stakeStore.canStore(msg.sender));
-
-        BundleStore bundleStore = context().bundleStore();
-        bundleStore.addShelterer(challenge.bundleId, msg.sender);
+   
+        sheltering.addShelterer(challenge.bundleId, msg.sender);
 
         uint feeToTransfer = challenge.fee;
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
@@ -91,8 +87,8 @@ contract Challenges is Base {
         StakeStore stakeStore = context().stakeStore();
         uint penalty = stakeStore.slash(challenge.sheltererId, challenge.challengerId);
 
-        BundleStore bundleStore = context().bundleStore();
-        bundleStore.removeShelterer(challenge.bundleId, challenge.sheltererId);
+        Sheltering sheltering = context().sheltering();
+        sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId);
 
         uint feeToReturn = challenge.fee;
         address challengerId = challenge.challengerId;
