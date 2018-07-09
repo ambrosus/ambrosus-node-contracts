@@ -25,7 +25,7 @@ contract Fees is Base, Ownable {
     uint constant public VALIDATOR_FEE_MULTIPLIER = 45;
     uint constant public VALIDATOR_FEE_DIVISOR = 100;
     uint constant public UPLOAD_FEE_MULTIPLIER = 10;
-    
+
     constructor(Head _head) public Base(_head) {        
     }
     
@@ -35,15 +35,7 @@ contract Fees is Base, Ownable {
         return config.BASIC_CHALLANGE_FEE().mul(units).mul(UPLOAD_FEE_MULTIPLIER);
     }
 
-    function getFeeForChallenge(uint startTime, uint endTime) public view returns (uint) {
-        uint interval = endTime.sub(startTime);
-        require(interval > 0);
-        
-        Config config = context().config();        
-        uint unit = config.STORAGE_PERIOD_UNIT();        
-        require(interval.mod(unit) == 0);
-
-        uint units = interval.div(unit);
+    function getFeeForChallenge(uint units) public view returns (uint) {
         return getFeeForUpload(units).div(UPLOAD_FEE_MULTIPLIER);
     }
 

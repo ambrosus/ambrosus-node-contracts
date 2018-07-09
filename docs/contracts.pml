@@ -111,7 +111,8 @@ class BundleStore {
 class Bundle #lightgray {
   shelterer: address[]
   bundleId: bytes32
-  expirationDate: uint
+  uploadDate: uint
+  shelteringDurationUnits: uint
 }
 
 class Challenges {

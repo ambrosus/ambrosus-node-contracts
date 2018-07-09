@@ -29,7 +29,7 @@ describe('BundleStore Contract', () => {
   let bundleStore;
   let time;
   let bundleId;
-  const units = 1;
+  const units = 3;
   const now = 1500000000;
 
   beforeEach(async () => {
@@ -49,10 +49,15 @@ describe('BundleStore Contract', () => {
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([from]);
     });
 
+    it('stores storage duration', async () => {
+      await bundleStore.methods.store(bundleId, from, units).send({from});
+      expect(await bundleStore.methods.getShelteringDurationUnits(bundleId).call()).to.equal(units.toString());
+    });
+
     it('stores expiration date', async () => {
       await bundleStore.methods.store(bundleId, from, units).send({from});
       const actualExpirationDate = await bundleStore.methods.getExpirationDate(bundleId).call();
-      const expectedExpirationDate = now + STORAGE_PERIOD_UNIT;
+      const expectedExpirationDate = now + (units * STORAGE_PERIOD_UNIT);
       expect(actualExpirationDate).to.equal(expectedExpirationDate.toString());
     });
 

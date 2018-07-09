@@ -147,10 +147,9 @@ contract Challenges is Base {
 
     function validateFeeAmount(uint8 challengesCount, bytes32 bundleId) private view {
         BundleStore bundleStore = context().bundleStore();
-        uint startTime = bundleStore.getUploadDate(bundleId);
-        uint endTime = bundleStore.getExpirationDate(bundleId);
+        uint units = bundleStore.getShelteringDurationUnits(bundleId);
         Fees fees = context().fees();
-        uint fee = fees.getFeeForChallenge(startTime, endTime);
+        uint fee = fees.getFeeForChallenge(units);
         require(msg.value >= fee * challengesCount);
     }
 
