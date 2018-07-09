@@ -35,7 +35,8 @@ describe('Sheltering Contract', () => {
       bundleStore: true,
       sheltering: true,
       stakeStore: true,
-      config: true
+      config: true,
+      time: true
     }}));
   });
 

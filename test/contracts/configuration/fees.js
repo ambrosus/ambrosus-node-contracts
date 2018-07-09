@@ -7,15 +7,13 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import {DAY, STORAGE_PERIOD_UNIT} from '../../../src/consts';
 import {TWO} from '../../helpers/consts';
-
-import {latestTime} from '../../helpers/web3_utils';
+import TimeMockJson from '../../../build/contracts/TimeMock.json';
 import BN from 'bn.js';
 
 const {expect} = chai;
@@ -26,7 +24,8 @@ chai.use(chaiAsPromised);
 describe('Fees Contract', () => {
   let fees;
   let web3;
-  let now;
+  const now = 1500000000;
+  let time;
   let config;
   let basicFee;
   
@@ -39,9 +38,8 @@ describe('Fees Contract', () => {
   };
 
   beforeEach(async () => {
-    ({fees, web3, config} = await deploy({contracts: {fees: true, config: true}}));    
+    ({fees, web3, config, time} = await deploy({contracts: {fees: true, config: true, time: TimeMockJson}}));
     basicFee = await config.methods.BASIC_CHALLANGE_FEE().call();
-    now = await latestTime(web3);
   });
 
   it('Basic fee challenge to be positive', () => {
@@ -95,6 +93,10 @@ describe('Fees Contract', () => {
   });
 
   describe('Penalties', () => {
+    beforeEach(async () => {
+      await time.methods.setCurrentTimestamp(now).send({from: web3.eth.defaultAccount});
+    });
+
     it('First penalty should equal 1% of nominal stake', async () => {
       expect(await getPenalty(10000, 0, 0)).to.deep.equal(['100', '1']);
     });

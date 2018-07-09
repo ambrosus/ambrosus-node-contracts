@@ -15,6 +15,7 @@ import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
 import "../Configuration/Fees.sol";
 import "../Configuration/Config.sol";
+import "../Configuration/Time.sol";
 import "../Storage/StakeStore.sol";
 import "../Storage/BundleStore.sol";
 
@@ -43,8 +44,8 @@ contract Challenges is Base {
     function start(address sheltererId, bytes32 bundleId) public payable {
         validateChallenge(sheltererId, bundleId);
         validateFeeAmount(1, bundleId);
-
-        Challenge memory challenge = Challenge(sheltererId, bundleId, msg.sender, msg.value, now, 1);
+        Time time = context().time();
+        Challenge memory challenge = Challenge(sheltererId, bundleId, msg.sender, msg.value, time.currentTimestamp(), 1);
         bytes32 challengeId = storeChallenge(challenge);
 
         emit ChallengeCreated(sheltererId, bundleId, challengeId, 1);
@@ -54,7 +55,8 @@ contract Challenges is Base {
         validateChallenge(sheltererId, bundleId);
         validateFeeAmount(challengesCount, bundleId);
 
-        Challenge memory challenge = Challenge(sheltererId, bundleId, 0x0, msg.value, now, challengesCount);
+        Time time = context().time();
+        Challenge memory challenge = Challenge(sheltererId, bundleId, 0x0, msg.value, time.currentTimestamp(), challengesCount);
         bytes32 challengeId = storeChallenge(challenge);
 
         emit ChallengeCreated(sheltererId, bundleId, challengeId, challengesCount);
@@ -101,7 +103,8 @@ contract Challenges is Base {
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns(bool) {
         Config config = context().config();
-        return now > challenges[challengeId].creationTime + config.CHALLENGE_DURATION();
+        Time time = context().time();
+        return time.currentTimestamp() > challenges[challengeId].creationTime + config.CHALLENGE_DURATION();
     }
 
     function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
@@ -142,7 +145,8 @@ contract Challenges is Base {
         require(sheltering.isSheltering(sheltererId, bundleId));
         BundleStore bundleStore = context().bundleStore();
         uint endTime = bundleStore.getExpirationDate(bundleId);
-        require(endTime > now);
+        Time time = context().time();
+        require(endTime > time.currentTimestamp());
     }
 
     function validateFeeAmount(uint8 challengesCount, bytes32 bundleId) private view {

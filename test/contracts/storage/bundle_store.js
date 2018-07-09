@@ -13,8 +13,8 @@ import sinonChai from 'sinon-chai';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
-import {latestTime} from '../../helpers/web3_utils';
 import {STORAGE_PERIOD_UNIT} from '../../../src/consts';
+import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
 chai.use(chaiEmitEvents());
 chai.use(sinonChai);
@@ -27,13 +27,16 @@ describe('BundleStore Contract', () => {
   let from;
   let other;
   let bundleStore;
+  let time;
   let bundleId;
   const units = 1;
+  const now = 1500000000;
 
   beforeEach(async () => {
-    ({web3, bundleStore} = await deploy({contracts: {bundleStore: true, config: true}}));
+    ({web3, bundleStore, time} = await deploy({contracts: {bundleStore: true, config: true, time: TimeMockJson}}));
     [from, other] = await web3.eth.getAccounts();
     bundleId = utils.asciiToHex('bundleId');
+    await time.methods.setCurrentTimestamp(now).send({from});
   });
 
   describe('Storing a bundle', () => {
@@ -49,7 +52,7 @@ describe('BundleStore Contract', () => {
     it('stores expiration date', async () => {
       await bundleStore.methods.store(bundleId, from, units).send({from});
       const actualExpirationDate = await bundleStore.methods.getExpirationDate(bundleId).call();
-      const expectedExpirationDate = await latestTime(web3) + STORAGE_PERIOD_UNIT;
+      const expectedExpirationDate = now + STORAGE_PERIOD_UNIT;
       expect(actualExpirationDate).to.equal(expectedExpirationDate.toString());
     });
 
