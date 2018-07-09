@@ -13,6 +13,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
 import "../Configuration/Roles.sol";
 import "../Configuration/Fees.sol";
+import "../Configuration/Time.sol";
 
 
 contract StakeStore is Base {
@@ -112,6 +113,7 @@ contract StakeStore is Base {
 
     function setPenaltyHistory(address shelterer, uint penaltiesCount) private {
         stakes[shelterer].penaltiesCount = penaltiesCount;
-        stakes[shelterer].lastPenaltyTime = now;
+        Time time = context().time();
+        stakes[shelterer].lastPenaltyTime = time.currentTimestamp();
     }
 }

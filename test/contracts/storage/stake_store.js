@@ -12,7 +12,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import BN from 'bn.js';
-import {latestTime} from '../../helpers/web3_utils';
+import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -24,10 +24,15 @@ describe('StakeStore Contract', () => {
   let from;
   let other;
   let stakeStore;
+  let time;
+  const now = 1500000000;
+
+  const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from});
 
   beforeEach(async () => {
-    ({web3, stakeStore} = await deploy({web3, contracts: {stakeStore: true, fees: true, config: true}}));
+    ({web3, stakeStore, time} = await deploy({web3, contracts: {stakeStore: true, fees: true, config: true, time: TimeMockJson}}));
     [from, other] = await web3.eth.getAccounts();
+    await setTimestamp(now);
   });
 
   const transactionCost = async (tx) => {
@@ -189,21 +194,23 @@ describe('StakeStore Contract', () => {
 
     it('penalties updated after slashing', async () => {
       await stakeStore.methods.slash(from, other).send({from});
-      let blockTime = await latestTime(web3);
+      let blockTime = now;
       expect(await stakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
         lastPenaltyTime: blockTime.toString(),
         penaltiesCount: '1'
       });
 
+      await setTimestamp(now + 1);
       await stakeStore.methods.slash(from, other).send({from});
-      blockTime = await latestTime(web3);
+      blockTime = now + 1;
       expect(await stakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
         lastPenaltyTime: blockTime.toString(),
         penaltiesCount: '2'
       });
 
+      await setTimestamp(now + 2);
       await stakeStore.methods.slash(from, other).send({from});
-      blockTime = await latestTime(web3);
+      blockTime =  now + 2;
       expect(await stakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
         lastPenaltyTime: blockTime.toString(),
         penaltiesCount: '3'

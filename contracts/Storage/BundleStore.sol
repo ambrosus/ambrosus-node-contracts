@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
+import "../Configuration/Time.sol";
 
 
 contract BundleStore is Base {
@@ -56,8 +57,9 @@ contract BundleStore is Base {
         require(!bundleExists(bundleId));
         require(units >= 0);
         Config config = context().config();
-        uint expirationTime = now.add(units.mul(config.STORAGE_PERIOD_UNIT()));
-        bundles[bundleId] = Bundle(new address[](1), now, expirationTime);
+        Time time = context().time();
+        uint expirationTime = time.currentTimestamp().add(units.mul(config.STORAGE_PERIOD_UNIT()));
+        bundles[bundleId] = Bundle(new address[](1), time.currentTimestamp(), expirationTime);
         bundles[bundleId].shelterers[0] = creator;
         emit BundleStored(bundleId, creator);
     }

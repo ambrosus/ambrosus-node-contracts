@@ -14,7 +14,7 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../Lib/SafeMathExtensions.sol";
 import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
-
+import "../Configuration/Time.sol";
 
 contract Fees is Base, Ownable {
 
@@ -55,7 +55,8 @@ contract Fees is Base, Ownable {
 
     function getPenalty(uint nominalStake, uint penaltiesCount, uint lastPenaltyTime) public view returns(uint penalty, uint newPenaltiesCount) {
         Config config = context().config();
-        if ((now - lastPenaltyTime) > config.PENALTY_ESCALATION_TIMEOUT()) {
+        Time time = context().time();
+        if ((time.currentTimestamp() - lastPenaltyTime) > config.PENALTY_ESCALATION_TIMEOUT()) {
             return (nominalStake.div(config.PENALTY_DIVISOR()), 1);
         } else {
             return (nominalStake.div(config.PENALTY_DIVISOR()).mul(penaltiesCount.safePow2()), penaltiesCount + 1);
