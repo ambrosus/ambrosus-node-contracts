@@ -26,17 +26,17 @@ contract Fees is Base, Ownable {
     uint constant public VALIDATOR_FEE_DIVISOR = 100;
     uint constant public UPLOAD_FEE_MULTIPLIER = 10;
 
-    constructor(Head _head) public Base(_head) {        
+    constructor(Head _head) public Base(_head) {
     }
     
     function getFeeForUpload(uint units) public view returns(uint) {
-        require(units > 0);
-        Config config = context().config();
-        return config.BASIC_CHALLANGE_FEE().mul(units).mul(UPLOAD_FEE_MULTIPLIER);
+        return getFeeForChallenge(units).mul(UPLOAD_FEE_MULTIPLIER);
     }
 
     function getFeeForChallenge(uint units) public view returns (uint) {
-        return getFeeForUpload(units).div(UPLOAD_FEE_MULTIPLIER);
+        require(units > 0);
+        Config config = context().config();
+        return config.BASIC_CHALLANGE_FEE().mul(units);
     }
 
     function calculateFeeSplit(uint value) public pure returns (uint challengeFee, uint validatorsFee, uint burnFee) {
