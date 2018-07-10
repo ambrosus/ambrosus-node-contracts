@@ -71,8 +71,8 @@ describe('ShelteringTransfers Contract', () => {
         await shelteringTransfers.methods.start(bundleId).send({from});
       });
     
-      it('Old shelterer id', async () => {
-        expect(await shelteringTransfers.methods.getSheltererFrom(transferId).call({from})).to.equal(from);
+      it('Donor id', async () => {
+        expect(await shelteringTransfers.methods.getDonor(transferId).call({from})).to.equal(from);
       });
     
       it('Bundle id', async () => {

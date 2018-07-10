@@ -10,19 +10,19 @@ end box
 
 == Create transfer ==
 
-OldShelterer -> ShelteringTransfers: transfer(bundleId, implicit sheltererFromId)
+OldShelterer -> ShelteringTransfers: start(bundleId, implicit donorId)
 activate ShelteringTransfers
 
-ShelteringTransfers -> Sheltering: isSheltering(sheltererFromId, bundleId)
+ShelteringTransfers -> Sheltering: isSheltering(donorId, bundleId)
 activate Sheltering
 ShelteringTransfers <-- Sheltering
 deactivate Sheltering
 
-ShelteringTransfers -> ShelteringTransfers: validateTransfer(sheltererFromId, bundleId)
+ShelteringTransfers -> ShelteringTransfers: validateTransfer(donorId, bundleId)
 activate ShelteringTransfers
 deactivate ShelteringTransfers
 
-ShelteringTransfers -> ShelteringTransfers: store(sheltererFromId, bundleId)
+ShelteringTransfers -> ShelteringTransfers: store(donorId, bundleId)
 activate ShelteringTransfers
 deactivate ShelteringTransfers
 OldShelterer <-- ShelteringTransfers
@@ -30,7 +30,7 @@ deactivate ShelteringTransfers
 
 == Resolve transfer ==
 
-NewShelterer -> ShelteringTransfers: resolve(sheltererFromId, bundleId, implicit newSheltererId)
+NewShelterer -> ShelteringTransfers: resolve(donorId, bundleId, implicit newSheltererId)
 activate ShelteringTransfers
 
 ShelteringTransfers -> Sheltering: addSheltering(newSheltererId, bundleId)
@@ -41,12 +41,12 @@ deactivate Sheltering
 ShelteringTransfers <-- Sheltering
 deactivate Sheltering
 
-ShelteringTransfers -> Sheltering: removeSheltering(sheltererFromId, bundleId)
+ShelteringTransfers -> Sheltering: removeSheltering(donorId, bundleId)
 activate Sheltering
 ShelteringTransfers <-- Sheltering
 deactivate Sheltering
 
-ShelteringTransfers -> ShelteringTransfers: removeTransfer(sheltererFromId, bundleId)
+ShelteringTransfers -> ShelteringTransfers: removeTransfer(donorId, bundleId)
 activate ShelteringTransfers
 deactivate ShelteringTransfers
 NewShelterer <- ShelteringTransfers : fee

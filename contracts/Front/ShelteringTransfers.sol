@@ -18,11 +18,11 @@ import "../Storage/BundleStore.sol";
 contract ShelteringTransfers is Base {
 
     struct Transfer {
-        address sheltererFromId;
+        address donorId;
         bytes32 bundleId;
     }
 
-    event TransferStarted(bytes32 transferId, address sheltererFromId, bytes32 bundleId);
+    event TransferStarted(bytes32 transferId, address donorId, bytes32 bundleId);
 
     mapping(bytes32 => Transfer) public transfers;
 
@@ -40,8 +40,8 @@ contract ShelteringTransfers is Base {
         return keccak256(abi.encodePacked(sheltererId, bundleId));
     }
 
-    function getSheltererFrom(bytes32 transferId) public view returns(address) {
-        return transfers[transferId].sheltererFromId;
+    function getDonor(bytes32 transferId) public view returns(address) {
+        return transfers[transferId].donorId;
     }
 
     function getTransferredBundle(bytes32 transferId) public view returns(bytes32) {
@@ -49,18 +49,18 @@ contract ShelteringTransfers is Base {
     }
 
     function transferIsInProgress(bytes32 transferId) public view returns(bool) {
-        return transfers[transferId].sheltererFromId != address(0x0);
+        return transfers[transferId].donorId != address(0x0);
     }
 
     function store(Transfer transfer) private returns(bytes32) {
-        bytes32 transferId = getTransferId(transfer.sheltererFromId, transfer.bundleId);
+        bytes32 transferId = getTransferId(transfer.donorId, transfer.bundleId);
         transfers[transferId] = transfer;
         return transferId;
     }
 
-    function validateTransfer(address sheltererFromId, bytes32 bundleId) private view {
+    function validateTransfer(address donorId, bytes32 bundleId) private view {
         Sheltering sheltering = context().sheltering();
-        require(sheltering.isSheltering(sheltererFromId, bundleId));
-        require(!transferIsInProgress(getTransferId(sheltererFromId, bundleId)));
+        require(sheltering.isSheltering(donorId, bundleId));
+        require(!transferIsInProgress(getTransferId(donorId, bundleId)));
     }
 }
