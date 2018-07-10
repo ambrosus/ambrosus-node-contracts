@@ -33,8 +33,8 @@ module.exports = function () {
     if (Array.isArray(args)) {
       const returnedArgs = Array.from(Array(args.length).keys()).map((index) => returnValues[index]);
       this.assert(
-        args.length === returnedArgs.length && args.every((val,idx) => val === returnedArgs[idx]),
-        `expected the tx to emit event with parameters [${args}], but instead it was emited with [${returnedArgs}]`,
+        args.length === returnedArgs.length && args.every((val, index) => val === returnedArgs[index]),
+        `expected the tx to emit event with parameters [${args}], but instead it was emitted with [${returnedArgs}]`,
         `expected the tx to emit event with parameters other then [${args}]`,
         args,
         returnedArgs

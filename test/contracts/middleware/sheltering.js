@@ -48,7 +48,7 @@ describe('Sheltering Contract', () => {
 
     it(`returns true if account is bundle's shelterer`, async () => {
       expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
-      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
+      await bundleStore.methods.store(bundleId, from, storagePeriods, 1).send({from});
       expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(true);
     });
   });

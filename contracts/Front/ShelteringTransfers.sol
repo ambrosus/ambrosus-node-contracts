@@ -39,14 +39,15 @@ contract ShelteringTransfers is Base {
     }
 
     function resolve(bytes32 transferId) public {
-        require(transferIsInProgress(transferId));
         Transfer memory transfer = transfers[transferId];
         Sheltering sheltering = context().sheltering();
-        validateResolvent(transfer, sheltering);
+        require(transferIsInProgress(transferId));
+        require(!sheltering.isSheltering(msg.sender, transfer.bundleId));
+
         sheltering.addShelterer(transfer.bundleId, msg.sender);
         sheltering.removeShelterer(transfer.bundleId, transfer.donorId);
-        transfers[transferId] = Transfer(0x0, "");
-        transferGrant(transfer.donorId, msg.sender);
+        transferGrant(sheltering, transfer.donorId, msg.sender, transfer.bundleId);
+        delete transfers[transferId];
         emit ShelteringTransferred(transfer.donorId, msg.sender, transfer.bundleId);
     }
 
@@ -72,19 +73,20 @@ contract ShelteringTransfers is Base {
         return transferId;
     }
 
-    function transferGrant(address donor, address recipient) private {
+    function transferGrant(Sheltering sheltering, address donor, address recipient, bytes32 bundleId) private {
         Payouts payouts = context().payouts();
-        payouts.revokeShelteringReward(donor, now, )
+        (uint startDate, uint storagePeriods, uint totalReward) = sheltering.getShelteringData(bundleId, donor);
+        payouts.transferShelteringReward(
+            donor,
+            recipient,
+            startDate,
+            (uint64)(storagePeriods),
+            totalReward);
     }
 
     function validateTransfer(address donorId, bytes32 bundleId) private view {
         Sheltering sheltering = context().sheltering();
         require(sheltering.isSheltering(donorId, bundleId));
         require(!transferIsInProgress(getTransferId(donorId, bundleId)));
-    }
-
-    function validateResolvent(Transfer memory transfer, Sheltering sheltering) private view {
-        require(!sheltering.isSheltering(msg.sender, transfer.bundleId));
-        require(sheltering.canStore(msg.sender));
     }
 }

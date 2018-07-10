@@ -51,7 +51,7 @@ describe('ShelteringTransfers Contract', () => {
         payouts: true,
         payoutsStore: true
       }}));
-    await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
+    await bundleStore.methods.store(bundleId, from, expirationDate, 1).send({from});
     transferId = await shelteringTransfers.methods.getTransferId(from, bundleId).call();
   });
 
@@ -151,11 +151,11 @@ describe('ShelteringTransfers Contract', () => {
         expect(await shelteringTransfers.methods.transferIsInProgress(transferId).call()).to.be.false;
       });
 
-      it('Revokes reward grant on the donor', async () => {
+      xit('Revokes reward grant on the donor', async () => {
 
       });
 
-      it('Grants reward to the recipient', async () => {
+      xit('Grants reward to the recipient', async () => {
 
       });
     });

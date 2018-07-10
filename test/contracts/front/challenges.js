@@ -69,7 +69,7 @@ describe('Challenges Contract', () => {
     const storageTimestamp = now;
     expirationDate = storageTimestamp + STORAGE_PERIOD_UNIT;
     await setTimestamp(now);
-    await bundleStore.methods.store(bundleId, from, 1).send({from});
+    await bundleStore.methods.store(bundleId, from, 1, 1).send({from});
     fee = new BN(await fees.methods.getFeeForChallenge(1).call());
     challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
   });
@@ -79,7 +79,7 @@ describe('Challenges Contract', () => {
     let systemFee;
 
     beforeEach(async () => {
-      await bundleStore.methods.store(otherBundleId, other, expirationDate).send({from});
+      await bundleStore.methods.store(otherBundleId, other, expirationDate, 1).send({from});
       systemFee = fee.mul(new BN('5'));
     });
 
@@ -253,7 +253,7 @@ describe('Challenges Contract', () => {
       await challenges.methods.start(from, bundleId).send({from: other, value: fee});
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
-      await bundleStore.methods.addShelterer(bundleId, resolver).send({from});
+      await bundleStore.methods.addShelterer(bundleId, resolver, 1).send({from});
       await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
 
@@ -350,7 +350,7 @@ describe('Challenges Contract', () => {
     it(`Deletes challenge with active count bigger than 1`, async () => {
       const otherBundleId = utils.keccak256('otherBundleId');
       const systemFee = fee.mul(new BN('5'));
-      await bundleStore.methods.store(otherBundleId, other, 1).send({from});
+      await bundleStore.methods.store(otherBundleId, other, 1, 1).send({from});
       await challenges.methods.startForSystem(other, otherBundleId, 5).send({from, value: systemFee});
       const [systemChallengeCreationEvent] = await challenges.getPastEvents('allEvents');
       const systemChallengeId = systemChallengeCreationEvent.returnValues.challengeId;
