@@ -24,7 +24,7 @@ export const ATLAS1_STORAGE_LIMIT = 100000;
 export const ATLAS2_STORAGE_LIMIT = 400000;
 export const ATLAS3_STORAGE_LIMIT = 1000000;
 
-export const PERIOD_IN_SECONDS = 28 * 24 * 60 * 60;
+export const PAYOUT_PERIOD_IN_SECONDS = 28 * 24 * 60 * 60;
 
 export const ONE = new BN(1);
 export const DAY = 60 * 60 * 24;

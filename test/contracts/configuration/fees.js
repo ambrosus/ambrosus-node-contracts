@@ -39,8 +39,8 @@ describe('Fees Contract', () => {
   const changeBaseFee = async (fee, from) =>
     fees.methods.setBaseUploadFee(utils.toWei(fee, 'ether')).send({from});
 
-  const getFeeForChallenge = async (units) => fees.methods.getFeeForChallenge(units).call();
-  const getFeeForUpload = async (units) => fees.methods.getFeeForUpload(units).call();
+  const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
+  const getFeeForUpload = async (storagePeriods) => fees.methods.getFeeForUpload(storagePeriods).call();
 
   beforeEach(async () => {
     ({fees, web3, time} = await deploy({contracts: {fees: true, config: true, time: TimeMockJson}}));

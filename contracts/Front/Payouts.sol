@@ -24,9 +24,9 @@ contract Payouts is Base {
         return payoutsStore.withdraw(msg.sender, time.currentPayoutPeriod() - 1);
     }
 
-    function available(uint64 period) public view returns (uint) {
+    function available(uint64 payoutPeriod) public view returns (uint) {
         PayoutsStore payoutsStore = context().payoutsStore();
-        return payoutsStore.available(msg.sender, period);
+        return payoutsStore.available(msg.sender, payoutPeriod);
     }
 
     function grantShelteringReward(address beneficiary, uint64 numberOfPeriods) public payable onlyContextInternalCalls {
@@ -36,7 +36,7 @@ contract Payouts is Base {
         uint beginTimestamp = time.currentTimestamp();
 
         (uint rewardAtEnd, uint rewardInFullPeriod, uint rewardUnaligned, uint rewardInFirstPeriod) = calculateRewards(
-            beginTimestamp, 
+            beginTimestamp,
             numberOfPeriods,
             msg.value);
         
@@ -112,6 +112,6 @@ contract Payouts is Base {
         rewardAtEnd = amount * config.FINISH_SHELTERING_REWARD_SPLIT() / 100;
         rewardInFullPeriod = (amount - rewardAtEnd) / numberOfPeriods;
         rewardUnaligned = amount - rewardAtEnd - rewardInFullPeriod * (numberOfPeriods - 1);
-        rewardInFirstPeriod = rewardUnaligned * (time.PERIOD_DURATION() - time.payoutPeriodOffset(beginTimestamp)) / time.PERIOD_DURATION();
+        rewardInFirstPeriod = rewardUnaligned * (time.PAYOUT_PERIOD_DURATION() - time.payoutPeriodOffset(beginTimestamp)) / time.PAYOUT_PERIOD_DURATION();
     }
 }

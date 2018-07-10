@@ -26,20 +26,20 @@ contract Uploads is Base {
 
     event BundleUploaded(bytes32 bundleId, uint uints);
 
-    function registerBundle(bytes32 bundleId, uint units) public payable {        
+    function registerBundle(bytes32 bundleId, uint storagePeriods) public payable {
         Fees fees = context().fees();
         Config config = context().config();
-        uint fee = fees.getFeeForUpload(units);
+        uint fee = fees.getFeeForUpload(storagePeriods);
 
-        require(units > 0);
+        require(storagePeriods > 0);
         require(msg.value == fee);
 
-        context().sheltering().store(bundleId, msg.sender, units);
+        context().sheltering().store(bundleId, msg.sender, storagePeriods);
         (uint challengeFee, uint validatorsFee, uint burnFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
         config.BURN_ADDRESS().transfer(burnFee);
         context().challenges().startForSystem.value(challengeFee)(msg.sender, bundleId, 5);
 
-        emit BundleUploaded(bundleId, units);
+        emit BundleUploaded(bundleId, storagePeriods);
     }
 }

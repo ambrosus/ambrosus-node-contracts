@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
-import {PERIOD_IN_SECONDS} from '../../../src/consts';
+import {PAYOUT_PERIOD_IN_SECONDS} from '../../../src/consts';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -50,7 +50,7 @@ describe('Payouts Contract', () => {
       }
     }));
     [validUser, targetUser, otherUser] = await web3.eth.getAccounts();
-    await setTimestamp(PERIOD_IN_SECONDS * 10.4);
+    await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 10.4);
   });
 
   describe('Granting a sheltering reward', () => {
@@ -64,7 +64,7 @@ describe('Payouts Contract', () => {
     });
 
     it('increases funds available for withdrawal (aligned period)', async () => {
-      await setTimestamp(PERIOD_IN_SECONDS * 10);
+      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 10);
       await grantShelteringReward(targetUser, 3, 100000);
 
       expect(await available(10, targetUser)).to.be.equal('26668');
@@ -74,7 +74,7 @@ describe('Payouts Contract', () => {
 
     it('can be used multiple times', async () => {
       await grantShelteringReward(targetUser, 3, 100000);
-      await setTimestamp(PERIOD_IN_SECONDS * 11);
+      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 11);
       await grantShelteringReward(targetUser, 3, 100000);
 
       expect(await available(10, targetUser)).to.be.equal('16000'); // 16000
@@ -102,7 +102,7 @@ describe('Payouts Contract', () => {
 
     it('is only possible on previously granted rewards', async () => {
       await grantShelteringReward(targetUser, 3, 100000);
-      await expect(revokeShelteringReward(targetUser, await getTimestamp() - PERIOD_IN_SECONDS, 3, 100000, targetUser)).to.be.eventually.rejected;
+      await expect(revokeShelteringReward(targetUser, await getTimestamp() - PAYOUT_PERIOD_IN_SECONDS, 3, 100000, targetUser)).to.be.eventually.rejected;
       await expect(revokeShelteringReward(targetUser, await getTimestamp(), 3, 120000, targetUser)).to.be.eventually.rejected;
       await expect(revokeShelteringReward(targetUser, await getTimestamp(), 4, 100000, targetUser)).to.be.eventually.rejected;
       await expect(revokeShelteringReward(otherUser, await getTimestamp(), 4, 100000, targetUser)).to.be.eventually.rejected;
@@ -114,13 +114,13 @@ describe('Payouts Contract', () => {
     });
 
     it('transfers the refund to provided address and takes withdrawals into account', async () => {
-      await setTimestamp(PERIOD_IN_SECONDS * 10.4);
+      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 10.4);
       await grantShelteringReward(targetUser, 3, 100000);
 
-      await setTimestamp(PERIOD_IN_SECONDS * 11.4);
+      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 11.4);
       await expectBalanceChange(targetUser, '16000', async () => withdraw(targetUser));
 
-      await expectBalanceChange(otherUser, '84000', async () => revokeShelteringReward(targetUser, PERIOD_IN_SECONDS * 10.4, 3, 100000, otherUser));
+      await expectBalanceChange(otherUser, '84000', async () => revokeShelteringReward(targetUser, PAYOUT_PERIOD_IN_SECONDS * 10.4, 3, 100000, otherUser));
     });
 
     it(`is a contextInternalCall`, async () => {
@@ -136,7 +136,7 @@ describe('Payouts Contract', () => {
       await injectGrantRepeating(targetUser, 8, 9, 10); // 5 per period
 
       await expectBalanceChange(targetUser, '19', async () => withdraw(targetUser)); // from periods: 7, 8, 9 => 3, 3 + 5, 3 + 5
-      await setTimestamp(PERIOD_IN_SECONDS * 11.2);
+      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 11.2);
       await expectBalanceChange(targetUser, '3', async () => withdraw(targetUser)); // from periods: 10 => 3
     });
 
