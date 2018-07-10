@@ -12,7 +12,7 @@ box "Smart Contracts"
   participant Fees
   participant StakeStore
   participant KycWhitelist
-  participant Transfers
+  participant ShelteringTransfers
   participant Challenges
   participant Sheltering
   participant BundleStore
@@ -27,7 +27,7 @@ Deployer -> Head: new()
 Deployer -> Roles: new(head)
 Deployer -> Fees: new(head)
 Deployer -> KycWhitelist: new(head)
-Deployer -> Transfers: new(head)
+Deployer -> ShelteringTransfers: new(head)
 Deployer -> Challenges: new(head)
 Deployer -> Sheltering: new(head)
 Deployer -> BundleStore: new(head)

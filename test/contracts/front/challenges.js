@@ -16,6 +16,7 @@ import BN from 'bn.js';
 import {ATLAS, ATLAS1_STAKE, ATLAS1_STORAGE_LIMIT, STORAGE_PERIOD_UNIT, DAY} from '../../../src/consts';
 import {ONE} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
+import utils from '../../helpers/utils';
 import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
@@ -42,7 +43,7 @@ describe('Challenges Contract', () => {
   let fee;
   let time;
   let challengeId;
-  const bundleId = '0xfe478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
+  const bundleId = utils.keccak256('someBundleId');
   let expirationDate;
   const now = 1500000000;
 
@@ -74,7 +75,7 @@ describe('Challenges Contract', () => {
   });
 
   describe('Starting system challenges', () => {
-    const otherBundleId = '0xaf478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
+    const otherBundleId = utils.keccak256('otherBundleId');
     let systemFee;
 
     beforeEach(async () => {
@@ -225,7 +226,7 @@ describe('Challenges Contract', () => {
         expect(await sheltering.methods.isSheltering(resolver, bundleId).call()).to.equal(true);
       });
 
-      it('Transfers reward', async () => {
+      it('ShelteringTransfers reward', async () => {
         const resolverBalanceBeforeResolve = new BN(await web3.eth.getBalance(resolver));
         await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'});
         const resolverBalanceAfterResolve = new BN(await web3.eth.getBalance(resolver));
@@ -244,7 +245,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails if challenge does not exist', async () => {
-      const fakeChallengeId = '0xada7718d1b5db49bb9c1995152cc28ee664d4268f7de46768cf97c49ef85c9ad';
+      const fakeChallengeId = utils.keccak256('fakeChallengeId');
       await expect(challenges.methods.resolve(fakeChallengeId).send({from: resolver})).to.be.eventually.rejected;
     });
 
@@ -298,7 +299,7 @@ describe('Challenges Contract', () => {
     });
   
     it(`Fails if challenge does not exist`, async () => {
-      const fakeChallengeId = '0xada7718d1b5db49bb9c1995152cc28ee664d4268f7de46768cf97c49ef85c9ad';
+      const fakeChallengeId = utils.keccak256('fakeChallengeId');
       await expect(challenges.methods.markAsExpired(fakeChallengeId).send({from: other})).to.be.eventually.rejected;
     });
 
@@ -347,7 +348,7 @@ describe('Challenges Contract', () => {
     });
 
     it(`Deletes challenge with active count bigger than 1`, async () => {
-      const otherBundleId = '0xaf478a45bbb3b0abbfcbfaf7785d2ba30e6e5adbde729c9e0e613e922c2b229a';
+      const otherBundleId = utils.keccak256('otherBundleId');
       const systemFee = fee.mul(new BN('5'));
       await bundleStore.methods.store(otherBundleId, other, 1).send({from});
       await challenges.methods.startForSystem(other, otherBundleId, 5).send({from, value: systemFee});

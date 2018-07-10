@@ -2,7 +2,7 @@
 
 package Front <<Rectangle>> {
   class Challenges
-  class Transfers
+  class ShelteringTransfers
   class Uploads
   class Stakes
   class Payouts
@@ -38,15 +38,15 @@ Stakes *-- KycWhitelist
 Stakes *-- StakeStore
 Stakes *-- Sheltering
 Challenges *-- Sheltering
-Transfers *-- Sheltering
-Transfers o-- Transfer
+ShelteringTransfers *-- Sheltering
+ShelteringTransfers o-- Transfer
 Uploads *-- Sheltering
 Challenges o-- Challenge
 
 Payouts *-- PayoutStorage
 Challenges *-- Payouts
 
-Transfers ..> Fees
+ShelteringTransfers ..> Fees
 Uploads ..> Fees
 Challenges ..> Fees
 StakeStore ..> Fees
@@ -132,10 +132,10 @@ class Challenge #lightgray {
   activeCount: uint;
 }
 
-class Transfers {
-  transfer(bundleId, implicit sheltererId) payable
+class ShelteringTransfers {
+  transfer(bundleId, implicit sheltererId)
   resolve(sheltererId, bundleId, implicit atlasId)
-  tryStoreTransfer(sheltererId, bundleId, fee)
+  store(sheltererId, bundleId)
   removeTransfer(sheltererId, bundleId)
 }
 
@@ -175,7 +175,7 @@ class Context {
   fees: Fees
   stakeStore: StakeStore
   kycWhitelist: KycWhitelist
-  transfers: Transfers
+  shelteringTransfers: ShelteringTransfers
   challenges: Challenges
   sheltering: Sheltering
   bundleStore: BundleStore
