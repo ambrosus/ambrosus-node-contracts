@@ -13,6 +13,7 @@ import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
 import "../Configuration/Fees.sol";
 import "../Storage/BundleStore.sol";
+import "./Payouts.sol";
 
 
 contract ShelteringTransfers is Base {
@@ -23,6 +24,7 @@ contract ShelteringTransfers is Base {
     }
 
     event TransferStarted(bytes32 transferId, address donorId, bytes32 bundleId);
+    event ShelteringTransferred(address donorId, address recipientId, bytes32 bundleId);
 
     mapping(bytes32 => Transfer) public transfers;
 
@@ -34,6 +36,18 @@ contract ShelteringTransfers is Base {
         Transfer memory transfer = Transfer(msg.sender, bundleId);
         bytes32 transferId = store(transfer);
         emit TransferStarted(transferId, msg.sender, bundleId);
+    }
+
+    function resolve(bytes32 transferId) public {
+        require(transferIsInProgress(transferId));
+        Transfer memory transfer = transfers[transferId];
+        Sheltering sheltering = context().sheltering();
+        validateResolvent(transfer, sheltering);
+        sheltering.addShelterer(transfer.bundleId, msg.sender);
+        sheltering.removeShelterer(transfer.bundleId, transfer.donorId);
+        transfers[transferId] = Transfer(0x0, "");
+        transferGrant(transfer.donorId, msg.sender);
+        emit ShelteringTransferred(transfer.donorId, msg.sender, transfer.bundleId);
     }
 
     function getTransferId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
@@ -58,9 +72,19 @@ contract ShelteringTransfers is Base {
         return transferId;
     }
 
+    function transferGrant(address donor, address recipient) private {
+        Payouts payouts = context().payouts();
+        payouts.revokeShelteringReward(donor, now, )
+    }
+
     function validateTransfer(address donorId, bytes32 bundleId) private view {
         Sheltering sheltering = context().sheltering();
         require(sheltering.isSheltering(donorId, bundleId));
         require(!transferIsInProgress(getTransferId(donorId, bundleId)));
+    }
+
+    function validateResolvent(Transfer memory transfer, Sheltering sheltering) private view {
+        require(!sheltering.isSheltering(msg.sender, transfer.bundleId));
+        require(sheltering.canStore(msg.sender));
     }
 }
