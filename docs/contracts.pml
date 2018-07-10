@@ -112,7 +112,7 @@ class Bundle #lightgray {
   shelterer: address[]
   bundleId: bytes32
   uploadDate: uint
-  shelteringDurationUnits: uint
+  storagePeriods: uint
 }
 
 class Challenges {

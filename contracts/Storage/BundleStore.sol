@@ -24,7 +24,7 @@ contract BundleStore is Base {
     struct Bundle {
         address[] shelterers;
         uint uploadDate;
-        uint shelteringDurationUnits;
+        uint storagePeriods;
     }
 
     event BundleStored(bytes32 bundleId, address creator);
@@ -38,7 +38,7 @@ contract BundleStore is Base {
     constructor(Head _head) Base(_head) public {}
 
     function bundleExists(bytes32 bundleId) view public returns (bool) {
-        return getShelteringDurationUnits(bundleId) > 0;
+        return getStoragePeriodsCount(bundleId) > 0;
     }
 
     function getShelterers(bytes32 bundleId) view public returns (address[]) {
@@ -49,20 +49,20 @@ contract BundleStore is Base {
         return bundles[bundleId].uploadDate;
     }
 
-    function getShelteringDurationUnits(bytes32 bundleId) view public returns (uint) {
-        return bundles[bundleId].shelteringDurationUnits;
+    function getStoragePeriodsCount(bytes32 bundleId) view public returns (uint) {
+        return bundles[bundleId].storagePeriods;
     }
 
     function getExpirationDate(bytes32 bundleId) view public returns (uint) {
         Config config = context().config();
-        return getUploadDate(bundleId).add(getShelteringDurationUnits(bundleId).mul(config.STORAGE_PERIOD_UNIT()));
+        return getUploadDate(bundleId).add(getStoragePeriodsCount(bundleId).mul(config.STORAGE_PERIOD_UNIT()));
     }
 
-    function store(bytes32 bundleId, address creator, uint units) public onlyContextInternalCalls {
+    function store(bytes32 bundleId, address creator, uint storagePeriods) public onlyContextInternalCalls {
         require(!bundleExists(bundleId));
-        require(units > 0);
+        require(storagePeriods > 0);
         Time time = context().time();
-        bundles[bundleId] = Bundle(new address[](1), time.currentTimestamp(), units);
+        bundles[bundleId] = Bundle(new address[](1), time.currentTimestamp(), storagePeriods);
         bundles[bundleId].shelterers[0] = creator;
         emit BundleStored(bundleId, creator);
     }

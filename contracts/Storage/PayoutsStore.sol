@@ -41,16 +41,16 @@ contract PayoutsStore is Base {
         beneficiaryId.transfer(payoutSum);
     }
 
-    function available(address beneficiaryId, uint64 period) public view onlyContextInternalCalls returns(uint) {
-        if (period < nextWithdrawPeriod[beneficiaryId]) {
+    function available(address beneficiaryId, uint64 payoutPeriod) public view onlyContextInternalCalls returns(uint) {
+        if (payoutPeriod < nextWithdrawPeriod[beneficiaryId]) {
             return 0;
         }
 
         uint accumulator = 0;
-        for (uint i = 0; i <= period; ++i) {
+        for (uint i = 0; i <= payoutPeriod; ++i) {
             GrantPeriodChange storage grant = grantPeriodChanges[beneficiaryId][i];
             accumulator += grant.increase;
-            if (i == period) {
+            if (i == payoutPeriod) {
                 return accumulator;
             }
             accumulator -= grant.decrease; 

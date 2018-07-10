@@ -23,11 +23,11 @@ contract Sheltering is Base {
 
     constructor(Head _head) public Base(_head) { }
 
-    function store(bytes32 bundleId, address creator, uint units) public onlyContextInternalCalls {
+    function store(bytes32 bundleId, address creator, uint storagePeriods) public onlyContextInternalCalls {
         BundleStore bundleStore = context().bundleStore();                
         StakeStore stakeStore = context().stakeStore();    
         stakeStore.incrementStorageUsed(creator);
-        bundleStore.store(bundleId, creator, units);
+        bundleStore.store(bundleId, creator, storagePeriods);
     }
 
     function addShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {

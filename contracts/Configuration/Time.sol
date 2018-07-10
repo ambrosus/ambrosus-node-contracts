@@ -15,7 +15,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract Time {
     using SafeMath for uint;
 
-    uint constant public PERIOD_DURATION = 28 days;
+    uint constant public PAYOUT_PERIOD_DURATION = 28 days;
 
     function currentTimestamp() public view returns(uint) {
         return now;
@@ -26,11 +26,11 @@ contract Time {
     }
 
     function payoutPeriod(uint timestamp) public pure returns(uint64) {
-        return (uint64)(timestamp.div(PERIOD_DURATION));
+        return (uint64)(timestamp.div(PAYOUT_PERIOD_DURATION));
     }
 
     function payoutPeriodStart(uint64 period) public pure returns(uint) {
-        return (uint)(period).mul(PERIOD_DURATION);
+        return (uint)(period).mul(PAYOUT_PERIOD_DURATION);
     }
 
     function payoutPeriodOffset(uint timestamp) public pure returns(uint) {
