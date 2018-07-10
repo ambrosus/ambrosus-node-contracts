@@ -69,7 +69,7 @@ describe('Challenges Contract', () => {
     expirationDate = storageTimestamp + STORAGE_PERIOD_UNIT;
     await setTimestamp(now);
     await bundleStore.methods.store(bundleId, from, 1).send({from});
-    fee = new BN(await fees.methods.getFeeForChallenge(storageTimestamp, expirationDate).call());
+    fee = new BN(await fees.methods.getFeeForChallenge(1).call());
     challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
   });
 
