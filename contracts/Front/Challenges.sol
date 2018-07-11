@@ -140,7 +140,7 @@ contract Challenges is Base {
         Sheltering sheltering = context().sheltering();
         require(sheltering.isSheltering(sheltererId, bundleId));
         BundleStore bundleStore = context().bundleStore();
-        uint endTime = bundleStore.getExpirationDate(bundleId);
+        uint endTime = bundleStore.getShelteringExpirationDate(bundleId, sheltererId);
         Time time = context().time();
         require(endTime > time.currentTimestamp());
     }

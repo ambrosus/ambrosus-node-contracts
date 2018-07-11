@@ -23,8 +23,8 @@ contract BundleStore is Base {
 
     struct Bundle {
         address[] shelterers;
-        uint uploadDate;
         uint storagePeriods;
+        mapping(address => uint) shelteringStartDates;
     }
 
     event BundleStored(bytes32 bundleId, address creator);
@@ -45,25 +45,29 @@ contract BundleStore is Base {
         return bundles[bundleId].shelterers;
     }
 
-    function getUploadDate(bytes32 bundleId) view public returns (uint) {
-        return bundles[bundleId].uploadDate;
+    function getShelteringStartDate(bytes32 bundleId, address shelterer) view public returns (uint) {
+        return bundles[bundleId].shelteringStartDates[shelterer];
     }
 
     function getStoragePeriodsCount(bytes32 bundleId) view public returns (uint) {
         return bundles[bundleId].storagePeriods;
     }
 
-    function getExpirationDate(bytes32 bundleId) view public returns (uint) {
+    function getShelteringExpirationDate(bytes32 bundleId, address shelterer) view public returns (uint) {
         Config config = context().config();
-        return getUploadDate(bundleId).add(getStoragePeriodsCount(bundleId).mul(config.STORAGE_PERIOD_UNIT()));
+        if (getShelteringStartDate(bundleId, shelterer) == 0) {
+            return 0;
+        }
+        return getShelteringStartDate(bundleId, shelterer).add(getStoragePeriodsCount(bundleId).mul(config.STORAGE_PERIOD_UNIT()));
     }
 
     function store(bytes32 bundleId, address creator, uint storagePeriods) public onlyContextInternalCalls {
         require(!bundleExists(bundleId));
         require(storagePeriods > 0);
         Time time = context().time();
-        bundles[bundleId] = Bundle(new address[](1), time.currentTimestamp(), storagePeriods);
+        bundles[bundleId] = Bundle(new address[](1), storagePeriods);
         bundles[bundleId].shelterers[0] = creator;
+        bundles[bundleId].shelteringStartDates[creator] = time.currentTimestamp();
         emit BundleStored(bundleId, creator);
     }
 
@@ -73,7 +77,9 @@ contract BundleStore is Base {
         for (uint i = 0; i < bundles[bundleId].shelterers.length; i++) {
             require(bundles[bundleId].shelterers[i] != shelterer);
         }
+        Time time = context().time();
         bundles[bundleId].shelterers.push(shelterer);
+        bundles[bundleId].shelteringStartDates[shelterer] = time.currentTimestamp();
         emit SheltererAdded(bundleId, shelterer);
     }
 
@@ -81,6 +87,7 @@ contract BundleStore is Base {
         require(bundleExists(bundleId));
         require(bundles[bundleId].shelterers.length > index);
 
+        delete bundles[bundleId].shelteringStartDates[bundles[bundleId].shelterers[index]];
         bundles[bundleId].shelterers[index] = bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
         delete bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
         bundles[bundleId].shelterers.length -= 1;

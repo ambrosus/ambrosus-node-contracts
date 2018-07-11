@@ -83,7 +83,7 @@ describe('Challenges Contract', () => {
       systemFee = fee.mul(new BN('5'));
     });
 
-    it('startForSystem is context internal', async () => {
+    it('Is context internal', async () => {
       await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.fulfilled;
       await expect(challenges.methods.startForSystem(other, otherBundleId, 5).send({from: other, value: systemFee})).to.be.eventually.rejected;
     });
@@ -113,7 +113,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails if the challenge was added after bundle has expired', async () => {
-      const expirationTime = await bundleStore.methods.getExpirationDate(bundleId).call();
+      const expirationTime = await bundleStore.methods.getShelteringExpirationDate(bundleId, from).call();
       await setTimestamp(expirationTime + 1);
       await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
     });
@@ -149,7 +149,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails if the challenge was added after bundle has expired', async () => {
-      const expirationTime = await bundleStore.methods.getExpirationDate(bundleId).call();
+      const expirationTime = await bundleStore.methods.getShelteringExpirationDate(bundleId, from).call();
       await setTimestamp(expirationTime + 1);
       await expect(challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.be.eventually.rejected;
     });

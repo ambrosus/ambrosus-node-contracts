@@ -56,7 +56,7 @@ describe('BundleStore Contract', () => {
 
     it('stores expiration date', async () => {
       await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      const actualExpirationDate = await bundleStore.methods.getExpirationDate(bundleId).call();
+      const actualExpirationDate = await bundleStore.methods.getShelteringExpirationDate(bundleId, from).call();
       const expectedExpirationDate = now + (storagePeriods * STORAGE_PERIOD_UNIT);
       expect(actualExpirationDate).to.equal(expectedExpirationDate.toString());
     });
@@ -85,6 +85,19 @@ describe('BundleStore Contract', () => {
     it('should emit event when the shelterer was removed', async () => {
       expect(await bundleStore.methods.removeShelterer(bundleId, from).send({from})).to.emitEvent('SheltererRemoved');
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([]);
+    });
+
+    it('adds sheltering expiration dates', async () => {
+      await bundleStore.methods.addShelterer(bundleId, other).send({from});
+      const actualExpirationDate = await bundleStore.methods.getShelteringExpirationDate(bundleId, other).call();
+      const expectedExpirationDate = now + (storagePeriods * STORAGE_PERIOD_UNIT);
+      expect(actualExpirationDate).to.equal(expectedExpirationDate.toString());
+    });
+
+    it('removes sheltering expiration dates', async () => {
+      await bundleStore.methods.removeShelterer(bundleId, from).send({from});
+      const deletedExpirationDate = await bundleStore.methods.getShelteringExpirationDate(bundleId, from).call();
+      expect(deletedExpirationDate).to.equal('0');
     });
 
     it('should do nothing if removing address who is not a shelterer', async () => {
