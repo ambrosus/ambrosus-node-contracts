@@ -88,6 +88,7 @@ describe('Sheltering Contract', () => {
   });
 
   describe('Adding shelterer', () => {
+    const exampleShelteringReward = 100;
     beforeEach(async () => {
       await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
       await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
@@ -96,13 +97,13 @@ describe('Sheltering Contract', () => {
 
     it(`adds store entry`, async () => {
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.not.include(other);
-      await sheltering.methods.addShelterer(bundleId, other).send({from});
+      await sheltering.methods.addShelterer(bundleId, other, exampleShelteringReward).send({from});
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.include(other);
     });
 
     it(`increments storage used`, async () => {
       expect(await stakeStore.methods.getStorageUsed(other).call()).to.equal('0');
-      await sheltering.methods.addShelterer(bundleId, other).send({from});
+      await sheltering.methods.addShelterer(bundleId, other, exampleShelteringReward).send({from});
       expect(await stakeStore.methods.getStorageUsed(other).call()).to.equal('1');
     });
   });

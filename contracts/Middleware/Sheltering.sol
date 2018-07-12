@@ -21,12 +21,9 @@ contract Sheltering is Base {
 
     using SafeMath for uint;
 
-    // TODO calculate reward properly
-    uint constant MOCK_SHELTERING_REWARD = 1 ether;
-
     constructor(Head _head) public Base(_head) { }
 
-    function store(bytes32 bundleId, address creator, uint storagePeriods) public onlyContextInternalCalls {
+    function store(bytes32 bundleId, address creator, uint64 storagePeriods) public onlyContextInternalCalls {
         BundleStore bundleStore = context().bundleStore();                
         StakeStore stakeStore = context().stakeStore();    
         stakeStore.incrementStorageUsed(creator);
@@ -34,7 +31,7 @@ contract Sheltering is Base {
     }
 
     function getShelteringData(bytes32 bundleId, address shelterer) public view onlyContextInternalCalls
-    returns (uint startingDate, uint storagePeriods, uint totalReward)
+    returns (uint startingDate, uint64 storagePeriods, uint totalReward)
     {
         BundleStore bundleStore = context().bundleStore();
         return (
@@ -44,12 +41,12 @@ contract Sheltering is Base {
         );
     }
 
-    function addShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {
+    function addShelterer(bytes32 bundleId, address shelterer, uint amount) public onlyContextInternalCalls {
         StakeStore stakeStore = context().stakeStore();
         BundleStore bundleStore = context().bundleStore();
 
         stakeStore.incrementStorageUsed(shelterer);
-        bundleStore.addShelterer(bundleId, shelterer, MOCK_SHELTERING_REWARD);
+        bundleStore.addShelterer(bundleId, shelterer, amount);
     }
 
     function removeShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {              

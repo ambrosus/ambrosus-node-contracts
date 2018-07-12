@@ -36,7 +36,7 @@ describe('ShelteringTransfers Contract', () => {
 
   const store = async (bundleId, from, expirationDate) => bundleStore.methods.store(bundleId, from, expirationDate).send({from});
   const isSheltering = async (from, bundleId) => sheltering.methods.isSheltering(from, bundleId).call();
-  const addShelterer = async (bundleId, other) => sheltering.methods.addShelterer(bundleId, other).send({from});
+  const addShelterer = async (bundleId, other, totalReward) => sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
   const setStorageUsed = async (from, storageUsed) => stakeStore.methods.setStorageUsed(from, storageUsed).send({from});
   const depositStake = async (other, storageLimit, value) => stakeStore.methods.depositStake(other, storageLimit, 0).send({from, value});
   const startTransfer = async (bundleId) => shelteringTransfers.methods.start(bundleId).send({from});
@@ -109,10 +109,12 @@ describe('ShelteringTransfers Contract', () => {
 
     describe('Resolving a transfer', () => {
       const storageLimit = 10;
+      const storageUsed = 1;
+      const totalReward = 100;
 
       beforeEach(async () => {
         await startTransfer(bundleId);
-        await setStorageUsed(from, 1);
+        await setStorageUsed(from, storageUsed);
         await depositStake(other, storageLimit, ATLAS1_STAKE);
       });
 
@@ -121,7 +123,7 @@ describe('ShelteringTransfers Contract', () => {
       });
 
       it('Fails to resolve if recipient is sheltering this bundle', async () => {
-        await addShelterer(bundleId, other);
+        await addShelterer(bundleId, other, totalReward);
         await expect(resolveTransfer(transferId, other)).to.be.eventually.rejected;
       });
 

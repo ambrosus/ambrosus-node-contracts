@@ -36,13 +36,13 @@ contract Fees is Base, Ownable {
         baseUploadFee = fee;
     }
     
-    function getFeeForUpload(uint storagePeriods) public view returns(uint) {
+    function getFeeForUpload(uint64 storagePeriods) public view returns(uint) {
         require(storagePeriods > 0);
-        return baseUploadFee.mul(storagePeriods);
+        return baseUploadFee * storagePeriods;
     }
 
-    function getFeeForChallenge(uint storagePeriods) public view returns (uint) {
-        return getFeeForUpload(storagePeriods).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
+    function getFeeForChallenge(uint64 storagePeriods) public view returns (uint) {
+        return getFeeForUpload(storagePeriods) / UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO;
     }
 
     function calculateFeeSplit(uint value) public pure returns (uint challengeFee, uint validatorsFee, uint burnFee) {

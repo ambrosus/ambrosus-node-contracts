@@ -43,9 +43,9 @@ contract ShelteringTransfers is Base {
         Sheltering sheltering = context().sheltering();
         requireResolutionPossible(sheltering, transferId, transfer.bundleId);
 
-        sheltering.addShelterer(transfer.bundleId, msg.sender);
+        uint totalReward = transferGrant(sheltering, transfer.donorId, msg.sender, transfer.bundleId);
+        sheltering.addShelterer(transfer.bundleId, msg.sender, totalReward);
         sheltering.removeShelterer(transfer.bundleId, transfer.donorId);
-        transferGrant(sheltering, transfer.donorId, msg.sender, transfer.bundleId);
         emit TransferResolved(transfer.donorId, msg.sender, transfer.bundleId);
         delete transfers[transferId];
     }
@@ -79,7 +79,7 @@ contract ShelteringTransfers is Base {
         return transferId;
     }
 
-    function transferGrant(Sheltering sheltering, address donor, address recipient, bytes32 bundleId) private {
+    function transferGrant(Sheltering sheltering, address donor, address recipient, bytes32 bundleId) private returns (uint) {
         Payouts payouts = context().payouts();
         (uint startDate, uint storagePeriods, uint totalReward) = sheltering.getShelteringData(bundleId, donor);
         payouts.transferShelteringReward(
@@ -88,6 +88,8 @@ contract ShelteringTransfers is Base {
             startDate,
             (uint64)(storagePeriods),
             totalReward);
+
+        return totalReward;
     }
 
     function requireTransferPossible(address donorId, bytes32 bundleId) private view {

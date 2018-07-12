@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../Boilerplate/Head.sol";
+import "../Front/Payouts.sol";
 import "../Middleware/Sheltering.sol";
 import "../Configuration/Fees.sol";
 import "../Configuration/Config.sol";
@@ -28,7 +29,7 @@ contract Challenges is Base {
         address sheltererId;
         bytes32 bundleId;
         address challengerId;
-        uint fee;
+        uint feePerChallenge;
         uint creationTime;
         uint8 activeCount;
     }
@@ -40,6 +41,8 @@ contract Challenges is Base {
     mapping(bytes32 => Challenge) public challenges;
 
     constructor(Head _head) public Base(_head) { }
+
+    function() public payable {}
 
     function start(address sheltererId, bytes32 bundleId) public payable {
         validateChallenge(sheltererId, bundleId);
@@ -56,7 +59,7 @@ contract Challenges is Base {
         validateFeeAmount(challengesCount, bundleId);
 
         Time time = context().time();
-        Challenge memory challenge = Challenge(sheltererId, bundleId, 0x0, msg.value, time.currentTimestamp(), challengesCount);
+        Challenge memory challenge = Challenge(sheltererId, bundleId, 0x0, msg.value / challengesCount, time.currentTimestamp(), challengesCount);
         bytes32 challengeId = storeChallenge(challenge);
 
         emit ChallengeCreated(sheltererId, bundleId, challengeId, challengesCount);
@@ -69,13 +72,11 @@ contract Challenges is Base {
 
         Sheltering sheltering = context().sheltering();
         require(!sheltering.isSheltering(msg.sender, challenge.bundleId));
-   
-        sheltering.addShelterer(challenge.bundleId, msg.sender);
 
-        uint feeToTransfer = challenge.fee;
+        sheltering.addShelterer(challenge.bundleId, msg.sender, challenge.feePerChallenge);
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
+        grantReward(msg.sender, challenge);
         removeChallengeOrDecreaseActiveCount(challengeId);
-        msg.sender.transfer(feeToTransfer);
     }
 
     function markAsExpired(bytes32 challengeId) public {
@@ -86,15 +87,16 @@ contract Challenges is Base {
 
         StakeStore stakeStore = context().stakeStore();
         uint penalty = stakeStore.slash(challenge.sheltererId, challenge.challengerId);
+        uint revokedReward = revokeReward(challenge);
 
         Sheltering sheltering = context().sheltering();
         sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId);
 
-        uint feeToReturn = challenge.fee;
+        uint amountToReturn = (challenge.feePerChallenge * challenge.activeCount) + revokedReward;
         address challengerId = challenge.challengerId;
         emit ChallengeTimeout(challenge.sheltererId, challenge.bundleId, challengeId, penalty);
         delete challenges[challengeId];
-        challengerId.transfer(feeToReturn);
+        challengerId.transfer(amountToReturn);
     }
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns(bool) {
@@ -120,7 +122,7 @@ contract Challenges is Base {
     }
 
     function getChallengeFee(bytes32 challengeId) public view returns(uint) {
-        return challenges[challengeId].fee;
+        return challenges[challengeId].feePerChallenge;
     }
 
     function getChallengeCreationTime(bytes32 challengeId) public view returns(uint) {
@@ -147,10 +149,10 @@ contract Challenges is Base {
 
     function validateFeeAmount(uint8 challengesCount, bytes32 bundleId) private view {
         BundleStore bundleStore = context().bundleStore();
-        uint storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
+        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
         Fees fees = context().fees();
         uint fee = fees.getFeeForChallenge(storagePeriods);
-        require(msg.value >= fee * challengesCount);
+        require(msg.value == fee * challengesCount);
     }
 
     function storeChallenge(Challenge challenge) private returns(bytes32) {
@@ -166,5 +168,25 @@ contract Challenges is Base {
         } else {
             challenges[challengeId].activeCount--;
         }
+    }
+
+    function grantReward(address newSheltererId, Challenge challenge) private {
+        BundleStore bundleStore = context().bundleStore();
+        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(challenge.bundleId);
+
+        Payouts payouts = context().payouts();
+        uint64 payoutPeriods = storagePeriods * 13;
+        payouts.grantShelteringReward.value(challenge.feePerChallenge)(newSheltererId, payoutPeriods);
+    }
+
+    function revokeReward(Challenge challenge) private returns(uint) {
+        Sheltering sheltering = context().sheltering();
+        (uint beginTimestamp, uint64 storagePeriods, uint rewardToRevoke) = sheltering.getShelteringData(challenge.bundleId, challenge.sheltererId);
+        
+        Payouts payouts = context().payouts();
+        uint64 payoutPeriods = storagePeriods * 13;
+        payouts.revokeShelteringReward(challenge.sheltererId, beginTimestamp, payoutPeriods, rewardToRevoke, address(this));
+
+        return rewardToRevoke;
     }
 }
