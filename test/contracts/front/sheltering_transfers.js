@@ -22,13 +22,14 @@ describe('ShelteringTransfers Contract', () => {
   let shelteringTransfers;
   let bundleStore;
   let from;
+  let other;
   let transferId;
   const bundleId = utils.keccak256('bundleId');
   const expirationDate = 1600000000;
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    [from] = await web3.eth.getAccounts();
+    [from, other] = await web3.eth.getAccounts();
     ({shelteringTransfers, bundleStore} = await deploy({
       web3,
       contracts: {
@@ -78,6 +79,23 @@ describe('ShelteringTransfers Contract', () => {
       it('Bundle id', async () => {
         expect(await shelteringTransfers.methods.getTransferredBundle(transferId).call({from})).to.equal(bundleId);
       });
+    });
+  });
+
+  describe('Cancelling a transfer', () => {
+    beforeEach(async () => {
+      await shelteringTransfers.methods.start(bundleId).send({from});
+    });
+
+    it('Removes transfer', async () => {
+      await shelteringTransfers.methods.cancel(transferId).send({from});
+      expect(await shelteringTransfers.methods.transferIsInProgress(transferId).call({from})).to.be.false;
+      expect(await shelteringTransfers.methods.getDonor(transferId).call({from})).to.equal('0x0000000000000000000000000000000000000000');
+      expect(utils.hexToUtf8(await shelteringTransfers.methods.getTransferredBundle(transferId).call())).to.equal('');
+    });
+
+    it('Only transfer creator can cancel', async () => {
+      await expect(shelteringTransfers.methods.cancel(transferId).send({other})).to.be.eventually.rejected;
     });
   });
 });

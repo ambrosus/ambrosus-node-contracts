@@ -36,6 +36,11 @@ contract ShelteringTransfers is Base {
         emit TransferStarted(transferId, msg.sender, bundleId);
     }
 
+    function cancel(bytes32 transferId) public {
+        require(msg.sender == transfers[transferId].donorId);
+        delete transfers[transferId];
+    }
+
     function getTransferId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
         return keccak256(abi.encodePacked(sheltererId, bundleId));
     }
