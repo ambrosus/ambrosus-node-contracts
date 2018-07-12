@@ -24,7 +24,7 @@ contract BundleStore is Base {
     struct Bundle {
         address[] shelterers;
         uint storagePeriods;
-        // Make as mapping to struct
+        // TODO Make as mapping to struct
         mapping(address => uint) shelteringStartDates;
         mapping(address => uint) totalShelteringReward;
     }
