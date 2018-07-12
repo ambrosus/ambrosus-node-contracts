@@ -253,7 +253,7 @@ describe('Challenges Contract', () => {
       await challenges.methods.start(from, bundleId).send({from: other, value: fee});
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
-      await bundleStore.methods.addShelterer(bundleId, resolver).send({from});
+      await bundleStore.methods.addShelterer(bundleId, resolver, 1).send({from});
       await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
 

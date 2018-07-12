@@ -103,6 +103,10 @@ contract Payouts is Base {
         }
     }
 
+    function transferShelteringReward(address donor, address recipient, uint beginTimestamp, uint64 numberOfPeriods, uint amount)  public {
+        // TODO Unimplemented
+    }
+
     function calculateRewards(uint beginTimestamp, uint64 numberOfPeriods, uint amount) 
         private view returns (uint rewardAtEnd, uint rewardInFullPeriod, uint rewardUnaligned,  uint rewardInFirstPeriod) 
     {

@@ -61,6 +61,12 @@ describe('BundleStore Contract', () => {
       expect(actualExpirationDate).to.equal(expectedExpirationDate.toString());
     });
 
+    it('reward for creator should be 0', async () => {
+      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
+      const actualTotalReward = await bundleStore.methods.getTotalShelteringReward(bundleId, from).call();
+      expect(actualTotalReward).to.equal('0');
+    });
+
     it('reject if not context internal call', async () => {
       await expect(
         bundleStore.methods.store(bundleId, from, storagePeriods).send({from: other})).to.be.eventually.rejected;
@@ -73,12 +79,14 @@ describe('BundleStore Contract', () => {
   });
 
   describe('Add and remove shelterers', () => {
+    const totalReward = 100;
+
     beforeEach(async () => {
       await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
     });
 
     it('should emit event when the shelterer was added', async () => {
-      expect(await bundleStore.methods.addShelterer(bundleId, other).send({from})).to.emitEvent('SheltererAdded');
+      expect(await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.emitEvent('SheltererAdded');
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([from, other]);
     });
 
@@ -88,10 +96,16 @@ describe('BundleStore Contract', () => {
     });
 
     it('adds sheltering expiration dates', async () => {
-      await bundleStore.methods.addShelterer(bundleId, other).send({from});
+      await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from});
       const actualExpirationDate = await bundleStore.methods.getShelteringExpirationDate(bundleId, other).call();
       const expectedExpirationDate = now + (storagePeriods * STORAGE_PERIOD_UNIT);
       expect(actualExpirationDate).to.equal(expectedExpirationDate.toString());
+    });
+
+    it('adds sheltering reward', async () => {
+      await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from});
+      const actualTotalReward = await bundleStore.methods.getTotalShelteringReward(bundleId, other).call();
+      expect(actualTotalReward).to.equal(totalReward.toString());
     });
 
     it('removes sheltering expiration dates', async () => {
@@ -108,12 +122,12 @@ describe('BundleStore Contract', () => {
 
     it('rejects if add shelterer to non-existing bundle', async () => {
       await expect(
-        bundleStore.methods.addShelterer(utils.asciiToHex('unknownid'), other).send({from})).to.be.eventually.rejected;
+        bundleStore.methods.addShelterer(utils.asciiToHex('unknownid'), other, totalReward).send({from})).to.be.eventually.rejected;
     });
 
     it('rejects if add same shelterer twice', async () => {
-      expect(await bundleStore.methods.addShelterer(bundleId, other).send({from})).to.emitEvent('SheltererAdded');
-      await expect(bundleStore.methods.addShelterer(bundleId, other).send({from})).to.be.eventually.rejected;
+      expect(await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.emitEvent('SheltererAdded');
+      await expect(bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.be.eventually.rejected;
     });
 
     it('cannot put new bundle with same id when all shelterers are removed', async () => {

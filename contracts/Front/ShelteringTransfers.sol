@@ -13,6 +13,7 @@ import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
 import "../Configuration/Fees.sol";
 import "../Storage/BundleStore.sol";
+import "./Payouts.sol";
 
 
 contract ShelteringTransfers is Base {
@@ -23,17 +24,29 @@ contract ShelteringTransfers is Base {
     }
 
     event TransferStarted(bytes32 transferId, address donorId, bytes32 bundleId);
+    event TransferResolved(address donorId, address recipientId, bytes32 bundleId);
 
     mapping(bytes32 => Transfer) public transfers;
 
     constructor(Head _head) public Base(_head) { }
 
     function start(bytes32 bundleId) public {
-        validateTransfer(msg.sender, bundleId);
+        requireTransferPossible(msg.sender, bundleId);
 
-        Transfer memory transfer = Transfer(msg.sender, bundleId);
-        bytes32 transferId = store(transfer);
+        bytes32 transferId = store(Transfer(msg.sender, bundleId));
         emit TransferStarted(transferId, msg.sender, bundleId);
+    }
+
+    function resolve(bytes32 transferId) public {
+        Transfer storage transfer = transfers[transferId];
+        Sheltering sheltering = context().sheltering();
+        requireResolutionPossible(sheltering, transferId, transfer.bundleId);
+
+        sheltering.addShelterer(transfer.bundleId, msg.sender);
+        sheltering.removeShelterer(transfer.bundleId, transfer.donorId);
+        transferGrant(sheltering, transfer.donorId, msg.sender, transfer.bundleId);
+        emit TransferResolved(transfer.donorId, msg.sender, transfer.bundleId);
+        delete transfers[transferId];
     }
 
     function getTransferId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
@@ -58,9 +71,25 @@ contract ShelteringTransfers is Base {
         return transferId;
     }
 
-    function validateTransfer(address donorId, bytes32 bundleId) private view {
+    function transferGrant(Sheltering sheltering, address donor, address recipient, bytes32 bundleId) private {
+        Payouts payouts = context().payouts();
+        (uint startDate, uint storagePeriods, uint totalReward) = sheltering.getShelteringData(bundleId, donor);
+        payouts.transferShelteringReward(
+            donor,
+            recipient,
+            startDate,
+            (uint64)(storagePeriods),
+            totalReward);
+    }
+
+    function requireTransferPossible(address donorId, bytes32 bundleId) private view {
         Sheltering sheltering = context().sheltering();
         require(sheltering.isSheltering(donorId, bundleId));
         require(!transferIsInProgress(getTransferId(donorId, bundleId)));
+    }
+
+    function requireResolutionPossible(Sheltering sheltering, bytes32 transferId, bytes32 bundleId) private view {
+        require(!sheltering.isSheltering(msg.sender, bundleId));
+        require(transferIsInProgress(transferId));
     }
 }
