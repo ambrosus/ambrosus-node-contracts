@@ -25,6 +25,7 @@ contract ShelteringTransfers is Base {
 
     event TransferStarted(bytes32 transferId, address donorId, bytes32 bundleId);
     event TransferResolved(address donorId, address recipientId, bytes32 bundleId);
+    event TransferCancelled(bytes32 transferId, address donorId, bytes32 bundleId);
 
     mapping(bytes32 => Transfer) public transfers;
 
@@ -46,6 +47,13 @@ contract ShelteringTransfers is Base {
         sheltering.removeShelterer(transfer.bundleId, transfer.donorId);
         transferGrant(sheltering, transfer.donorId, msg.sender, transfer.bundleId);
         emit TransferResolved(transfer.donorId, msg.sender, transfer.bundleId);
+        delete transfers[transferId];
+    }
+
+    function cancel(bytes32 transferId) public {
+        Transfer storage transfer = transfers[transferId];
+        require(msg.sender == transfer.donorId);
+        emit TransferCancelled(transferId, transfer.donorId, transfer.bundleId);
         delete transfers[transferId];
     }
 
