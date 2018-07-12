@@ -53,7 +53,7 @@ describe('ShelteringTransfers Contract', () => {
         payouts: true,
         payoutsStore: true
       }}));
-    await bundleStore.methods.store(bundleId, from, expirationDate, totalReward).send({from});
+    await bundleStore.methods.store(bundleId, from, expirationDate).send({from});
     transferId = await shelteringTransfers.methods.getTransferId(from, bundleId).call();
   });
 
@@ -102,10 +102,6 @@ describe('ShelteringTransfers Contract', () => {
         await startTransfer(bundleId);
         await stakeStore.methods.setStorageUsed(from, totalReward).send({from});
         await stakeStore.methods.depositStake(other, storageLimit, 0).send({from, value: ATLAS1_STAKE});
-      });
-
-      it('Resolves a transfer correctly', async () => {
-        await expect(resolveTransfer(transferId, other)).to.be.eventually.fulfilled;
       });
 
       it('Fails if the transfer does not exist', async () => {

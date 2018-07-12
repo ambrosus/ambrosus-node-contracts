@@ -30,7 +30,7 @@ contract Sheltering is Base {
         BundleStore bundleStore = context().bundleStore();                
         StakeStore stakeStore = context().stakeStore();    
         stakeStore.incrementStorageUsed(creator);
-        bundleStore.store(bundleId, creator, storagePeriods, MOCK_SHELTERING_REWARD);
+        bundleStore.store(bundleId, creator, storagePeriods);
     }
 
     function getShelteringData(bytes32 bundleId, address shelterer) public view onlyContextInternalCalls

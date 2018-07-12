@@ -24,6 +24,7 @@ contract BundleStore is Base {
     struct Bundle {
         address[] shelterers;
         uint storagePeriods;
+        // Make as mapping to struct
         mapping(address => uint) shelteringStartDates;
         mapping(address => uint) totalShelteringReward;
     }
@@ -66,14 +67,13 @@ contract BundleStore is Base {
         return getShelteringStartDate(bundleId, shelterer).add(getStoragePeriodsCount(bundleId).mul(config.STORAGE_PERIOD_UNIT()));
     }
 
-    function store(bytes32 bundleId, address creator, uint storagePeriods, uint totalReward) public onlyContextInternalCalls {
+    function store(bytes32 bundleId, address creator, uint storagePeriods) public onlyContextInternalCalls {
         require(!bundleExists(bundleId));
         require(storagePeriods > 0);
         Time time = context().time();
         bundles[bundleId] = Bundle(new address[](1), storagePeriods);
         bundles[bundleId].shelterers[0] = creator;
         bundles[bundleId].shelteringStartDates[creator] = time.currentTimestamp();
-        bundles[bundleId].totalShelteringReward[creator] = totalReward;
         emit BundleStored(bundleId, creator);
     }
 

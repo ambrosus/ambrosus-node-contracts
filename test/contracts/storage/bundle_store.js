@@ -31,7 +31,6 @@ describe('BundleStore Contract', () => {
   let bundleId;
   const storagePeriods = 3;
   const now = 1500000000;
-  const totalReward = 100;
 
   beforeEach(async () => {
     ({web3, bundleStore, time} = await deploy({contracts: {bundleStore: true, config: true, time: TimeMockJson}}));
@@ -42,46 +41,48 @@ describe('BundleStore Contract', () => {
 
   describe('Storing a bundle', () => {
     it('should emit event when bundle was added', async () => {
-      expect(await bundleStore.methods.store(bundleId, from, 1, totalReward).send({from})).to.emitEvent('BundleStored');
+      expect(await bundleStore.methods.store(bundleId, from, 1).send({from})).to.emitEvent('BundleStored');
     });
 
     it('creator is a shelterer', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods, totalReward).send({from});
+      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([from]);
     });
 
     it('stores storage duration', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods, totalReward).send({from});
+      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
       expect(await bundleStore.methods.getStoragePeriodsCount(bundleId).call()).to.equal(storagePeriods.toString());
     });
 
     it('stores expiration date', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods, totalReward).send({from});
+      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
       const actualExpirationDate = await bundleStore.methods.getShelteringExpirationDate(bundleId, from).call();
       const expectedExpirationDate = now + (storagePeriods * STORAGE_PERIOD_UNIT);
       expect(actualExpirationDate).to.equal(expectedExpirationDate.toString());
     });
 
-    it('stores reward', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods, totalReward).send({from});
+    it('reward for creator should be 0', async () => {
+      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
       const actualTotalReward = await bundleStore.methods.getTotalShelteringReward(bundleId, from).call();
-      expect(actualTotalReward).to.equal(totalReward.toString());
+      expect(actualTotalReward).to.equal('0');
     });
 
     it('reject if not context internal call', async () => {
       await expect(
-        bundleStore.methods.store(bundleId, from, storagePeriods, totalReward).send({from: other})).to.be.eventually.rejected;
+        bundleStore.methods.store(bundleId, from, storagePeriods).send({from: other})).to.be.eventually.rejected;
     });
 
     it('reject if bundle with same id exists and has shelterers', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods, totalReward).send({from});
-      await expect(bundleStore.methods.store(bundleId, from, storagePeriods, totalReward).send({from})).to.be.eventually.rejected;
+      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
+      await expect(bundleStore.methods.store(bundleId, from, storagePeriods).send({from})).to.be.eventually.rejected;
     });
   });
 
   describe('Add and remove shelterers', () => {
+    const totalReward = 100;
+
     beforeEach(async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods, totalReward).send({from});
+      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
     });
 
     it('should emit event when the shelterer was added', async () => {
@@ -131,7 +132,7 @@ describe('BundleStore Contract', () => {
 
     it('cannot put new bundle with same id when all shelterers are removed', async () => {
       await bundleStore.methods.removeShelterer(bundleId, from).send({from});
-      await expect(bundleStore.methods.store(bundleId, from, storagePeriods, totalReward).send({from})).to.be.eventually.rejected;
+      await expect(bundleStore.methods.store(bundleId, from, storagePeriods).send({from})).to.be.eventually.rejected;
     });
   });
 });
