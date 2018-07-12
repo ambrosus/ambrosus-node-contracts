@@ -24,14 +24,14 @@ contract ShelteringTransfers is Base {
     }
 
     event TransferStarted(bytes32 transferId, address donorId, bytes32 bundleId);
-    event ShelteringTransferred(address donorId, address recipientId, bytes32 bundleId);
+    event TransferResolved(address donorId, address recipientId, bytes32 bundleId);
 
     mapping(bytes32 => Transfer) public transfers;
 
     constructor(Head _head) public Base(_head) { }
 
     function start(bytes32 bundleId) public {
-        validateTransfer(msg.sender, bundleId);
+        requireTransferPossible(msg.sender, bundleId);
 
         Transfer memory transfer = Transfer(msg.sender, bundleId);
         bytes32 transferId = store(transfer);
@@ -39,16 +39,15 @@ contract ShelteringTransfers is Base {
     }
 
     function resolve(bytes32 transferId) public {
-        Transfer memory transfer = transfers[transferId];
+        Transfer storage transfer = transfers[transferId];
         Sheltering sheltering = context().sheltering();
-        require(transferIsInProgress(transferId));
-        require(!sheltering.isSheltering(msg.sender, transfer.bundleId));
+        requireResolutionPossible(sheltering, transferId, transfer.bundleId);
 
         sheltering.addShelterer(transfer.bundleId, msg.sender);
         sheltering.removeShelterer(transfer.bundleId, transfer.donorId);
         transferGrant(sheltering, transfer.donorId, msg.sender, transfer.bundleId);
+        emit TransferResolved(transfer.donorId, msg.sender, transfer.bundleId);
         delete transfers[transferId];
-        emit ShelteringTransferred(transfer.donorId, msg.sender, transfer.bundleId);
     }
 
     function getTransferId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
@@ -84,9 +83,14 @@ contract ShelteringTransfers is Base {
             totalReward);
     }
 
-    function validateTransfer(address donorId, bytes32 bundleId) private view {
+    function requireTransferPossible(address donorId, bytes32 bundleId) private view {
         Sheltering sheltering = context().sheltering();
         require(sheltering.isSheltering(donorId, bundleId));
         require(!transferIsInProgress(getTransferId(donorId, bundleId)));
+    }
+
+    function requireResolutionPossible(Sheltering sheltering, bytes32 transferId, bytes32 bundleId) private view {
+        require(!sheltering.isSheltering(msg.sender, bundleId));
+        require(transferIsInProgress(transferId));
     }
 }

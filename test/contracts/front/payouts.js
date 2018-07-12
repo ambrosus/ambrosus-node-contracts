@@ -130,7 +130,7 @@ describe('Payouts Contract', () => {
     });
   });
 
-  xdescribe('Transfer sheltering reward', () => {
+  describe.skip('Transfer sheltering reward', () => {
 
   });
 

@@ -46,6 +46,7 @@ describe('Challenges Contract', () => {
   const bundleId = utils.keccak256('someBundleId');
   let expirationDate;
   const now = 1500000000;
+  const storageReward = 100;
 
   const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from});
 
@@ -69,7 +70,7 @@ describe('Challenges Contract', () => {
     const storageTimestamp = now;
     expirationDate = storageTimestamp + STORAGE_PERIOD_UNIT;
     await setTimestamp(now);
-    await bundleStore.methods.store(bundleId, from, 1, 1).send({from});
+    await bundleStore.methods.store(bundleId, from, 1, storageReward).send({from});
     fee = new BN(await fees.methods.getFeeForChallenge(1).call());
     challengeId = await challenges.methods.getChallengeId(from, bundleId).call();
   });
@@ -79,7 +80,7 @@ describe('Challenges Contract', () => {
     let systemFee;
 
     beforeEach(async () => {
-      await bundleStore.methods.store(otherBundleId, other, expirationDate, 1).send({from});
+      await bundleStore.methods.store(otherBundleId, other, expirationDate, storageReward).send({from});
       systemFee = fee.mul(new BN('5'));
     });
 
@@ -350,7 +351,7 @@ describe('Challenges Contract', () => {
     it(`Deletes challenge with active count bigger than 1`, async () => {
       const otherBundleId = utils.keccak256('otherBundleId');
       const systemFee = fee.mul(new BN('5'));
-      await bundleStore.methods.store(otherBundleId, other, 1, 1).send({from});
+      await bundleStore.methods.store(otherBundleId, other, 1, storageReward).send({from});
       await challenges.methods.startForSystem(other, otherBundleId, 5).send({from, value: systemFee});
       const [systemChallengeCreationEvent] = await challenges.getPastEvents('allEvents');
       const systemChallengeId = systemChallengeCreationEvent.returnValues.challengeId;

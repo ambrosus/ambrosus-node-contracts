@@ -14,6 +14,7 @@ import {createWeb3} from '../../../src/web3_tools';
 import utils from '../../helpers/utils';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
+import {ATLAS1_STAKE} from '../../../src/consts';
 
 chai.use(chaiAsPromised);
 chai.use(chaiEmitEvents());
@@ -32,6 +33,7 @@ describe('ShelteringTransfers Contract', () => {
   let transferId;
   const bundleId = utils.keccak256('bundleId');
   const expirationDate = 1600000000;
+  const totalReward = 100;
 
   const startTransfer = async (bundleId) => shelteringTransfers.methods.start(bundleId).send({from});
   const resolveTransfer = async (transferId, from) => shelteringTransfers.methods.resolve(transferId).send({from});
@@ -51,7 +53,7 @@ describe('ShelteringTransfers Contract', () => {
         payouts: true,
         payoutsStore: true
       }}));
-    await bundleStore.methods.store(bundleId, from, expirationDate, 1).send({from});
+    await bundleStore.methods.store(bundleId, from, expirationDate, totalReward).send({from});
     transferId = await shelteringTransfers.methods.getTransferId(from, bundleId).call();
   });
 
@@ -98,24 +100,16 @@ describe('ShelteringTransfers Contract', () => {
 
       beforeEach(async () => {
         await startTransfer(bundleId);
-        await stakeStore.methods.setStorageUsed(from, 1).send({from});
-        await stakeStore.methods.depositStake(other, storageLimit, 0).send({from, value: utils.toWei('1', 'ether')});
+        await stakeStore.methods.setStorageUsed(from, totalReward).send({from});
+        await stakeStore.methods.depositStake(other, storageLimit, 0).send({from, value: ATLAS1_STAKE});
       });
 
       it('Resolves a transfer correctly', async () => {
         await expect(resolveTransfer(transferId, other)).to.be.eventually.fulfilled;
       });
 
-      it('Emits ShelteringTransferred event', async () => {
-        expect(await resolveTransfer(transferId, other)).to.emitEventWithArgs('ShelteringTransferred', {
-          donorId: from,
-          recipientId: other,
-          bundleId
-        });
-      });
-
-      it('Fails if transfer with such id does not exist', async () => {
-        await expect(resolveTransfer(utils.keccak256('whatever'), other)).to.be.eventually.rejected;
+      it('Fails if the transfer does not exist', async () => {
+        await expect(resolveTransfer(utils.keccak256('nonExistingTransferId'), other)).to.be.eventually.rejected;
       });
 
       it('Fails to resolve if recipient is sheltering this bundle', async () => {
@@ -132,13 +126,21 @@ describe('ShelteringTransfers Contract', () => {
         await expect(resolveTransfer(transferId, notSheltering)).to.be.eventually.rejected;
       });
 
-      it('Removes sheltering from the donor', async () => {
+      it('Emits ShelteringTransferred event', async () => {
+        expect(await resolveTransfer(transferId, other)).to.emitEventWithArgs('TransferResolved', {
+          donorId: from,
+          recipientId: other,
+          bundleId
+        });
+      });
+
+      it('Removes donor from shelterers of the bundle', async () => {
         expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.be.true;
         await resolveTransfer(transferId, other);
         expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.be.false;
       });
 
-      it('Recipient acquires the sheltering', async () => {
+      it('Adds recipient to shelterers of the bundle', async () => {
         expect(await sheltering.methods.isSheltering(other, bundleId).call()).to.be.false;
         await resolveTransfer(transferId, other);
         expect(await sheltering.methods.isSheltering(other, bundleId).call()).to.be.true;
@@ -151,11 +153,11 @@ describe('ShelteringTransfers Contract', () => {
         expect(await shelteringTransfers.methods.transferIsInProgress(transferId).call()).to.be.false;
       });
 
-      xit('Revokes reward grant on the donor', async () => {
+      it.skip('Revokes reward grant on the donor', async () => {
 
       });
 
-      xit('Grants reward to the recipient', async () => {
+      it.skip('Grants reward to the recipient', async () => {
 
       });
     });

@@ -32,8 +32,9 @@ module.exports = function () {
     const {returnValues} = tx.events[eventName];
     if (Array.isArray(args)) {
       const returnedArgs = Array.from(Array(args.length).keys()).map((index) => returnValues[index]);
+      const isEqual = args.every((val, index) => val === returnedArgs[index]);
       this.assert(
-        args.length === returnedArgs.length && args.every((val, index) => val === returnedArgs[index]),
+        returnedArgs[args.length] === undefined && isEqual,
         `expected the tx to emit event with parameters [${args}], but instead it was emitted with [${returnedArgs}]`,
         `expected the tx to emit event with parameters other then [${args}]`,
         args,
