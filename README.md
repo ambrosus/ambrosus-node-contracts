@@ -2,10 +2,29 @@
 # ambrosus-node-contracts
 Smart contracts used in AMB-NET
 
-## Install, setup and test
+## Using
+Install dependencies and compile contracts:
+```
+yarn
+yarn build
+```
+
+Available administrative tasks: 
+```
+yarn task deploy
+yarn task whitelist add
+yarn task whitelist remove
+```
+
+## Testing
 To install dependencies call:
 ```
 yarn
+```
+
+To compile contracts:
+```
+yarn build
 ```
 
 To run tests:
@@ -13,7 +32,14 @@ To run tests:
 yarn test
 ```
 
-To compile contracts:
+
+Alternatively, to compile contracts and test:
 ```
-yarn build
+yarn testall
+```
+
+## Development
+To run test RPC mock, with properly predefined accounts for development and testing:
+```
+yarn ganache
 ```

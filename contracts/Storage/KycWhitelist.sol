@@ -14,7 +14,7 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract KycWhitelist is Ownable {
 
-    mapping(address => bool) whitelist;
+    mapping(address => bool) public whitelist;
 
     function add(address _cadidate) public onlyOwner {
         whitelist[_cadidate] = true;

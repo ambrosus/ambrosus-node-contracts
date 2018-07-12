@@ -1,0 +1,9 @@
+{
+  "web3" : {
+    "rpc": "http://localhost:8545",
+    "nodePrivateKey": "0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696"
+  }, 
+  "contracts": {
+    "kycWhitelist": "0xF6A5F7dE4Ae4E97916C0366093c118E1CfD7b8Eb"
+  }
+}
