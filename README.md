@@ -2,18 +2,32 @@
 # ambrosus-node-contracts
 Smart contracts used in AMB-NET
 
-## Using
+## Development
 Install dependencies and compile contracts:
 ```
 yarn
 yarn build
 ```
 
-Available administrative tasks: 
+To run test RPC mock, with properly predefined accounts for development and testing:
+```
+yarn task ganache
+```
+
+Than deploy contracts and save outcome to configuration file
+```
+yarn task deploy --save-config
+```
+
+You are ready to play.
+
+Available of all administrative tasks: 
 ```
 yarn task deploy
+yarn task ganache
 yarn task whitelist add
 yarn task whitelist remove
+yarn task whitelist check
 ```
 
 ## Testing
@@ -38,8 +52,4 @@ Alternatively, to compile contracts and test:
 yarn testall
 ```
 
-## Development
-To run test RPC mock, with properly predefined accounts for development and testing:
-```
-yarn ganache
-```
+## Production and deployment

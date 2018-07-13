@@ -7,10 +7,17 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export function getEnvironment() {
-  return process.env.NODE_ENV || 'development';
-}
+export const getEnvironment = () =>
+  process.env.NODE_ENV || 'development';
 
-export function getConfig() {
-  return require(`../config/${getEnvironment()}.json`);
-}
+
+export const getConfigFilePath = () =>
+  `../config/${getEnvironment()}.json`;
+
+export const getConfigFilePathFromRoot = () =>
+`./config/${getEnvironment()}.json`;
+
+
+export const getConfig = () =>
+  require(getConfigFilePath());
+
