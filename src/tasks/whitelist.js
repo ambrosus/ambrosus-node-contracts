@@ -7,22 +7,23 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import Web3Task from './base/web3task';
-import {getDefaultAddress, getDefaultGas} from '../web3_tools';
+import TaskBase from './base/task_base';
+import {getDefaultAddress, getDefaultGas, createWeb3} from '../web3_tools';
 import Whitelist from '../../build/contracts/KycWhitelist';
 import {getConfig} from '../config';
 
-export default class WhitelistTask extends Web3Task {
+export default class WhitelistTask extends TaskBase {
   async execute(args) {
-    await this.ensureConnectedToNode();
-    if (args[0] === 'add') {
+    this.web3 = await createWeb3();
+    const [command] = args;
+    if (command === 'add') {
       await this.add(args[1]);
-    } else if (args[0] === 'remove') {
+    } else if (command === 'remove') {
       await this.remove(args[1]);
-    } else if (args[0] === 'show') {
+    } else if (command === 'check') {
       await this.show(args[1]);
     } else {
-      console.error('Unknown subcommand, use: yarn task whitelist [add/remove] [address]');
+      console.error('Unknown sub-command, use: yarn task whitelist [add/remove/check] [address]');
     }    
   }
 
@@ -62,6 +63,6 @@ export default class WhitelistTask extends Web3Task {
   }
 
   description() {
-    return '[add/remove] [address] - manages list of whitelisted stakers';
+    return '[add/remove/check] [address] - manages list of whitelisted stakers';
   }
 }

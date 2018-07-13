@@ -7,14 +7,14 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import Web3Task from './base/web3task';
+import TaskBase from './base/task_base';
 import Deployer from '../deployer';
+import {createWeb3} from '../web3_tools';
 
-
-export default class DeployTask extends Web3Task {
+export default class DeployTask extends TaskBase {
   async execute() {
     console.log('Deploying contracts. This may take some time...');
-    await this.ensureConnectedToNode();    
+    this.web3 = await createWeb3();
     const deployer = new Deployer(this.web3);  
     const addresses = await deployer.deploy();
     this.printSummary(addresses);
@@ -31,6 +31,6 @@ export default class DeployTask extends Web3Task {
   }
 
   description() {
-    return '                          - deploys all contracts';
+    return '                                - deploys all contracts';
   }
 }

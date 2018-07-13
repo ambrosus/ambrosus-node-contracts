@@ -10,11 +10,11 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import WhitelistTask from './whitelist';
 import DeployTask from './deploy';
 import GanacheTask from './ganache';
-import List from './base/list';
+import TaskList from './base/task_list';
 
 
 const runTask = () => {
-  const list = new List();
+  const list = new TaskList();
   const args = process.argv.slice(2);
   list.add('deploy', new DeployTask());
   list.add('ganache', new GanacheTask());

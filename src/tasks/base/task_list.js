@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export default class List {
+export default class TaskList {
   constructor() {
     this.tasks = {};
   }
@@ -27,7 +27,7 @@ export default class List {
   run(name, args) {
     const task = this.tasks[name];
     if (task) {
-      task.run(args)
+      task.execute(args)
         .then(() => {
           console.log('Done.');
         })

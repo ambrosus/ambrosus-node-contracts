@@ -8,11 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 
-export default class Base {
-  async run(args) {
-    await this.execute(args);
-  }
-
+export default class TaskBase {
   description() {
     return '';
   }
