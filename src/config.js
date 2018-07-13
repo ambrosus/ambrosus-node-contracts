@@ -15,9 +15,7 @@ export const getConfigFilePath = () =>
   `../config/${getEnvironment()}.json`;
 
 export const getConfigFilePathFromRoot = () =>
-`./config/${getEnvironment()}.json`;
-
+  `./config/${getEnvironment()}.json`;
 
 export const getConfig = () =>
   require(getConfigFilePath());
-

@@ -14,14 +14,14 @@ To run test RPC mock, with properly predefined accounts for development and test
 yarn task ganache
 ```
 
-Than deploy contracts and save outcome to configuration file
+Then deploy contracts and save outcome to configuration file
 ```
 yarn task deploy --save-config
 ```
 
 You are ready to play.
 
-Available of all administrative tasks: 
+The following administrative tasks are available: 
 ```
 yarn task deploy
 yarn task ganache
