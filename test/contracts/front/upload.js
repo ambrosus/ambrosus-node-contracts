@@ -62,6 +62,12 @@ describe('Upload Contract', () => {
       burnAddress = await config.methods.BURN_ADDRESS().call();
     });
 
+    it('emits event on upload', async () => {
+      expect(await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee})).to.emitEventWithArgs('BundleUploaded', {
+        bundleId, storagePeriods: '1'
+      });
+    });
+
     it(`marks as sheltered`, async () => {
       expect(await sheltering.methods.isSheltering(from, bundleId).call({from})).to.equal(false);
       await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});

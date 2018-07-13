@@ -27,11 +27,21 @@ module.exports = function () {
   };
 
   const emitEventWithArgsMethod = function (eventName, args) {
+    const eventArgsToArray = (returnValues) => Array.from(Array(args.length).keys()).map((index) => returnValues[index]);
+    const eventArgsToDict = (returnValues) => {
+      const argCount = Object.keys(returnValues).length / 2;
+      const result = {...returnValues};
+      for (let index = 0; index < argCount; index++) {
+        delete result[index];
+      }
+      return result;
+    };
+
     emitEventMethod.bind(this)(eventName, {times: 1});
     const tx = this._obj;
     const {returnValues} = tx.events[eventName];
     if (Array.isArray(args)) {
-      const returnedArgs = Array.from(Array(args.length).keys()).map((index) => returnValues[index]);
+      const returnedArgs = eventArgsToArray(returnValues);
       const isEqual = args.every((val, index) => val === returnedArgs[index]);
       this.assert(
         returnedArgs[args.length] === undefined && isEqual,
@@ -41,13 +51,14 @@ module.exports = function () {
         returnedArgs
       );
     } else {
+      const withoutPositionalArgs = eventArgsToDict(returnValues);
       const isEqual = Object.keys(args).every((key) => returnValues[key] === args[key]);
       this.assert(
-        Object.keys(args).length * 2 === Object.keys(returnValues).length && isEqual,
-        `expected the tx to emit event with parameters [${args}], but instead it was emitted with [${returnValues}]`,
+        Object.keys(args).length === Object.keys(withoutPositionalArgs).length && isEqual,
+        `expected the tx to emit event with parameters [${args}], but instead it was emitted with [${withoutPositionalArgs}]`,
         `expected the tx to emit event with parameters other then [${args}]`,
         args,
-        returnValues
+        withoutPositionalArgs
       );
     }
   };

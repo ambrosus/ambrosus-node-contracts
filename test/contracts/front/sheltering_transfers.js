@@ -79,7 +79,9 @@ describe('ShelteringTransfers Contract', () => {
     });
 
     it('Initializes transfer and emits an event', async () => {
-      expect(await startTransfer(bundleId)).to.emitEvent('TransferStarted');
+      expect(await startTransfer(bundleId)).to.emitEventWithArgs('TransferStarted', {
+        transferId, donorId: from, bundleId
+      });
     });
 
     it('Transfer is in progress after successfully started', async () => {

@@ -35,7 +35,7 @@ describe('Bundle Registry Contract', () => {
   const removeVendor = (who, from = ownerAddress) => bundleRegistry.methods.removeFromWhitelist(who).send({from});
   const isWhitelisted = (who) => bundleRegistry.methods.isWhitelisted(who).call();
   const addBundle =
-    (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(utils.asciiToHex(bundleId), vendor).send({from});
+    (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(utils.utf8ToHex(bundleId), vendor).send({from});
   const getBundleVendor = (bundleId) => bundleRegistry.methods.bundles(utils.asciiToHex(bundleId)).call();
   const getBundleVendorByIndex = (index) => bundleRegistry.methods.bundleIds(index).call();
   const getUrlForVendor = (vendor) => bundleRegistry.methods.getUrlForVendor(vendor).call();
@@ -126,8 +126,8 @@ describe('Bundle Registry Contract', () => {
 
     it('emits event when bundle added', async () => {
       await addVendor(ownerAddress, vendorUrl);
-      expect(await addBundle(bundleId, vendor)).to.emitEvent('BundleAdded');
-      expect(await addBundle('bundle2', vendor)).to.emitEvent('BundleAdded');
+      expect(await addBundle(bundleId, vendor)).to.emitEventWithArgs('BundleAdded', {bundleId: utils.toPaddedHex(bundleId)});
+      expect(await addBundle('bundle2', vendor)).to.emitEventWithArgs('BundleAdded', {bundleId: utils.toPaddedHex('bundle2')});
     });
   });
 });

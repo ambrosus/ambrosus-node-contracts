@@ -10,5 +10,10 @@ import Web3 from 'web3';
 
 const web3 = new Web3();
 const {utils} = web3;
+const toPaddedHex = (string, length = 32) => utils.padRight(utils.utf8ToHex(string), length * 2);
 
-export default utils;
+
+export default {
+  ...utils,
+  toPaddedHex
+};
