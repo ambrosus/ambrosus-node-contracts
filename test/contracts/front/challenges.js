@@ -20,7 +20,7 @@ import utils from '../../helpers/utils';
 import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
-chai.use(chaiEmitEvents());
+chai.use(chaiEmitEvents);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -89,7 +89,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Should emit event', async () => {
-      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEventWithArgs('ChallengeCreated', {
+      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('ChallengeCreated').withArgs({
         sheltererId: from, bundleId, challengeId, count: '5'
       });
     });
@@ -106,7 +106,7 @@ describe('Challenges Contract', () => {
 
     it(`Accepts fee bigger than necessary`, async () => {
       const biggerFee = systemFee.add(ONE);
-      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: biggerFee})).to.emitEventWithArgs('ChallengeCreated', {
+      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: biggerFee})).to.emitEvent('ChallengeCreated').withArgs({
         sheltererId: from, bundleId, challengeId, count: '5'
       });
     });
@@ -134,7 +134,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Creates a challenge and emits an event', async () => {
-      expect(await challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.emitEventWithArgs('ChallengeCreated', {
+      expect(await challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.emitEvent('ChallengeCreated').withArgs({
         sheltererId: from, bundleId, challengeId, count: '1'
       });
     });
@@ -241,7 +241,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Emits an event', async () => {
-        expect(await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'})).to.emitEventWithArgs('ChallengeResolved', {
+        expect(await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'})).to.emitEvent('ChallengeResolved').withArgs({
           sheltererId: from, bundleId, challengeId, resolverId: resolver
         });
       });
@@ -324,7 +324,7 @@ describe('Challenges Contract', () => {
 
     it(`Emits event when marked as expired successfully`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      expect(await challenges.methods.markAsExpired(challengeId).send({from: other})).to.emitEventWithArgs('ChallengeTimeout', {
+      expect(await challenges.methods.markAsExpired(challengeId).send({from: other})).to.emitEvent('ChallengeTimeout').withArgs({
         sheltererId: from, bundleId, challengeId, penalty: utils.toWei('100', 'ether')
       });
     });

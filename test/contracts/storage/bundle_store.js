@@ -16,7 +16,7 @@ import utils from '../../helpers/utils';
 import {STORAGE_PERIOD_UNIT} from '../../../src/consts';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
-chai.use(chaiEmitEvents());
+chai.use(chaiEmitEvents);
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
@@ -41,7 +41,7 @@ describe('BundleStore Contract', () => {
 
   describe('Storing a bundle', () => {
     it('should emit event when bundle was added', async () => {
-      expect(await bundleStore.methods.store(bundleId, from, 1).send({from})).to.emitEventWithArgs('BundleStored', {
+      expect(await bundleStore.methods.store(bundleId, from, 1).send({from})).to.emitEvent('BundleStored').withArgs({
         bundleId: utils.padRight(bundleId, 64), creator: from
       });
     });
@@ -88,14 +88,14 @@ describe('BundleStore Contract', () => {
     });
 
     it('should emit event when the shelterer was added', async () => {
-      expect(await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.emitEventWithArgs('SheltererAdded', {
+      expect(await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.emitEvent('SheltererAdded').withArgs({
         bundleId: utils.padRight(bundleId, 64), shelterer: other
       });
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([from, other]);
     });
 
     it('should emit event when the shelterer was removed', async () => {
-      expect(await bundleStore.methods.removeShelterer(bundleId, from).send({from})).to.emitEventWithArgs('SheltererRemoved', {
+      expect(await bundleStore.methods.removeShelterer(bundleId, from).send({from})).to.emitEvent('SheltererRemoved').withArgs({
         bundleId: utils.padRight(bundleId, 64), shelterer: from
       });
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([]);

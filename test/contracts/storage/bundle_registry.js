@@ -15,7 +15,7 @@ import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
 
-chai.use(chaiEmitEvents());
+chai.use(chaiEmitEvents);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -126,8 +126,8 @@ describe('Bundle Registry Contract', () => {
 
     it('emits event when bundle added', async () => {
       await addVendor(ownerAddress, vendorUrl);
-      expect(await addBundle(bundleId, vendor)).to.emitEventWithArgs('BundleAdded', {bundleId: utils.toPaddedHex(bundleId)});
-      expect(await addBundle('bundle2', vendor)).to.emitEventWithArgs('BundleAdded', {bundleId: utils.toPaddedHex('bundle2')});
+      expect(await addBundle(bundleId, vendor)).to.emitEvent('BundleAdded').withArgs({bundleId: utils.toPaddedHex(bundleId)});
+      expect(await addBundle('bundle2', vendor)).to.emitEvent('BundleAdded').withArgs({bundleId: utils.toPaddedHex('bundle2')});
     });
   });
 });

@@ -17,7 +17,7 @@ import {STORAGE_PERIOD_UNIT} from '../../../src/consts';
 import {BLOCK_REWARD, COINBASE} from '../../helpers/consts';
 import BN from 'bn.js';
 
-chai.use(chaiEmitEvents());
+chai.use(chaiEmitEvents);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -63,7 +63,7 @@ describe('Upload Contract', () => {
     });
 
     it('emits event on upload', async () => {
-      expect(await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee})).to.emitEventWithArgs('BundleUploaded', {
+      expect(await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee})).to.emitEvent('BundleUploaded').withArgs({
         bundleId, storagePeriods: '1'
       });
     });
