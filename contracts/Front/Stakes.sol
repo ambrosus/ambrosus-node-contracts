@@ -37,4 +37,9 @@ contract Stakes is Base {
         StakeStore stakeStore = context().stakeStore();
         stakeStore.releaseStake(msg.sender);
     }
+
+    function getStake(address staker) public view returns (uint) {
+        StakeStore stakeStore = context().stakeStore();
+        return stakeStore.getStake(staker);
+    }
 }
