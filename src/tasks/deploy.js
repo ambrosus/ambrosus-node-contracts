@@ -17,6 +17,7 @@ export default class DeployTask extends TaskBase {
   async execute(args) {
     console.log('Deploying contracts. This may take some time...');
     this.web3 = await createWeb3();
+    await this.printAccountInfo();
     const deployer = new Deployer(this.web3);  
     const addresses = await deployer.deploy();
     const config = this.addressesToConfig(addresses);
@@ -24,6 +25,15 @@ export default class DeployTask extends TaskBase {
       this.saveConfiguration(config);
     } else {
       this.printSummary(config);
+    }
+  }
+
+  async printAccountInfo() {
+    const accounts = await this.web3.eth.getAccounts();
+    for (const account of accounts) {
+      const balance = await this.web3.eth.getBalance(account);
+      const balanceInEth = this.web3.utils.fromWei(balance);
+      console.log(`${account}: ${balanceInEth} ETH`);
     }
   }
 

@@ -44,19 +44,22 @@ describe('Stakes Contract', () => {
       await expect(stakes.methods.depositStake(ATLAS).send({from: other, value: ATLAS1_STAKE})).to.be.eventually.rejected;
       expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('0');
+      expect(await stakes.methods.getStake(from).call({from})).to.eq('0');
     });
 
     it('Start staking', async () => {
       await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});      
       expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
-      expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq(ATLAS1_STAKE.toString());
+      expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq(ATLAS1_STAKE.toString());      
+      expect(await stakes.methods.getStake(from).call()).to.eq(ATLAS1_STAKE.toString());
       expect(await stakeStore.methods.getStake(from).call()).to.eq(ATLAS1_STAKE.toString());
-      expect(await stakeStore.methods.getStorageLimit(from).call()).to.eq(ATLAS1_STORAGE_LIMIT.toString());
+      expect(await stakeStore.methods.getStorageLimit(from).call()).to.eq(ATLAS1_STORAGE_LIMIT.toString());      
     });
 
     it('Deposit twice', async () => {
       await stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE});
       await expect(stakes.methods.depositStake(ATLAS).send({from, value: ATLAS1_STAKE})).to.be.eventually.rejected;
+      expect(await stakes.methods.getStake(from).call()).to.eq(ATLAS1_STAKE.toString());
       expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq(ATLAS1_STAKE.toString());
     });
@@ -64,6 +67,7 @@ describe('Stakes Contract', () => {
     it('Stake too high', async () => {
       const value = ATLAS1_STAKE.add(ONE);
       await expect(stakes.methods.depositStake(ATLAS).send({from, value})).to.be.eventually.rejected;
+      expect(await stakes.methods.getStake(from).call()).to.eq('0');
       expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('0');      
     });
@@ -71,6 +75,7 @@ describe('Stakes Contract', () => {
     it('Stake too low (just a bit)', async () => {
       const value = ATLAS1_STAKE.sub(ONE);
       await expect(stakes.methods.depositStake(ATLAS).send({from, value})).to.be.eventually.rejected;
+      expect(await stakes.methods.getStake(from).call()).to.eq('0');
       expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('0');      
     });
@@ -78,18 +83,21 @@ describe('Stakes Contract', () => {
     it('Stake too low for the role', async () => {
       const value = APOLLO_STAKE.sub(ONE);
       await expect(stakes.methods.depositStake(APOLLO).send({from, value})).to.be.eventually.rejected;
+      expect(await stakes.methods.getStake(from).call()).to.eq('0');
       expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('0');      
     });    
 
     it('Stake too low (zero)', async () => {
       await expect(stakes.methods.depositStake(ATLAS).send({from, value: 0})).to.be.eventually.rejected;
+      expect(await stakes.methods.getStake(from).call()).to.eq('0');
       expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('0');
     });
 
     it('Invalid role', async () => {
       await expect(stakes.methods.depositStake(NON_EXISTING_ROLE).send({from, value: 100})).to.be.eventually.rejected;
+      expect(await stakes.methods.getStake(from).call()).to.eq('0');
       expect(await web3.eth.getBalance(stakes.options.address)).to.eq('0');
       expect(await web3.eth.getBalance(stakeStore.options.address)).to.eq('0');
     });
@@ -104,7 +112,8 @@ describe('Stakes Contract', () => {
       const balanceAfterRelease = new BN(await web3.eth.getBalance(from));
       const balanceWithReturnedStake = balanceBeforeRelease.add(new BN(ATLAS1_STAKE));
       expect(balanceAfterRelease).to.deep.equal(balanceWithReturnedStake);
-      expect(await stakeStore.methods.getStake(from).call()).to.eq('0');
+      expect(await stakes.methods.getStake(from).call()).to.eq('0');
+      expect(await stakeStore.methods.getStake(from).call()).to.eq('0');      
     });
 
     it('Fails if sender is not staking', async () => {
@@ -116,6 +125,7 @@ describe('Stakes Contract', () => {
       await stakeStore.methods.incrementStorageUsed(from).send({from});
       await expect(stakes.methods.releaseStake().send({from})).to.be.eventually.rejected;
       expect(await stakeStore.methods.getStake(from).call()).to.equal(ATLAS1_STAKE.toString());
+      expect(await stakes.methods.getStake(from).call()).to.eq(ATLAS1_STAKE.toString());
     });
   });
 });

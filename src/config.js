@@ -10,7 +10,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 export const getEnvironment = () =>
   process.env.NODE_ENV || 'development';
 
-
 export const getConfigFilePath = () =>
   `../config/${getEnvironment()}.json`;
 
