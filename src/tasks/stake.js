@@ -32,16 +32,12 @@ export default class StakeTask extends TaskBase {
   }
 
   printUsage() {
+    const {fromWei} = this.web3.utils;
     console.log('\nUsage: yarn task stake [deposit/release/check] [role] [amount]');
-    console.log('Available roles and stakes are:');
-    console.log(`${ATLAS} - ATLAS  (stakes: ${ATLAS1_STAKE}, ${ATLAS2_STAKE}, ${ATLAS3_STAKE})`);
-    console.log(`${HERMES} - HERMES (stakes: ${HERMES_STAKE})`);
-    console.log(`${APOLLO} - APOLLO (stakes: ${APOLLO_STAKE})`);
-  }
-
-  getStakesContract() {
-    const contractAddress = getConfig().contracts.stakes;    
-    return new this.web3.eth.Contract(Stakes.abi, contractAddress);
+    console.log('Available roles and stakes are:');    
+    console.log(`${ATLAS} - ATLAS  (stakes: ${fromWei(ATLAS1_STAKE)}, ${fromWei(ATLAS2_STAKE)}, ${fromWei(ATLAS3_STAKE)} AMB)`);
+    console.log(`${HERMES} - HERMES (stakes: ${fromWei(HERMES_STAKE)} AMB)`);
+    console.log(`${APOLLO} - APOLLO (stakes: ${fromWei(APOLLO_STAKE)} AMB)`);
   }
 
   async deposit(args) {
@@ -54,8 +50,8 @@ export default class StakeTask extends TaskBase {
   }
 
   async doDeposit(role, amount) {        
-    const value = new BN(amount);
-    const stakes = this.getStakesContract();
+    const value = this.web3.utils.toWei(new BN(amount));
+    const stakes = this.getContract(Stakes);
     const from = getDefaultAddress(this.web3);    
     await this.validateOnWhitelist(from);
     const gas = getDefaultGas();
@@ -79,14 +75,14 @@ export default class StakeTask extends TaskBase {
   }
 
   async release() {
-    const stakes = this.getStakesContract();
+    const stakes = this.getContract(Stakes);
     const from = getDefaultAddress(this.web3);
     const gas = getDefaultGas();
     await stakes.methods.releaseStake().send({from, gas});
   }
 
   async show() {    
-    const stakes = this.getStakesContract();
+    const stakes = this.getContract(Stakes);
     const from = getDefaultAddress(this.web3);
     console.log(from);    
     const result = await stakes.methods.getStake(from).call();
@@ -94,6 +90,6 @@ export default class StakeTask extends TaskBase {
   }
 
   description() {
-    return '[deposit/release/show] [amount]  - manages stake';
+    return '[deposit/release/show] [amount]    - manages stake';
   }
 }

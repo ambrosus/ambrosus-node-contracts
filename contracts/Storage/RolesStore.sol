@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
 
+
 contract RolesStore is Base {
     mapping(address => Config.NodeType) public roles;
     mapping(address => string) public urls;

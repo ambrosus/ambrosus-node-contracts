@@ -64,6 +64,6 @@ export default class DeployTask extends TaskBase {
   }
 
   description() {
-    return '                                - deploys all contracts';
+    return '                                   - deploys all contracts';
   }
 }

@@ -10,13 +10,24 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import TaskBase from './base/task_base';
 import {createGanacheServer} from '../web3_tools';
 import {getConfig} from '../config';
+import fs from 'fs';
 
-export default class GanacheTask extends TaskBase {
+export default class GanacheTask extends TaskBase { 
   async execute() {
+    this.savePidFile();
     await createGanacheServer(getConfig().web3.nodePrivateKey);
   }
 
+  savePidFile() {
+    const filename = './ganache.pid';
+    fs.writeFile(filename, process.pid, (err) => {
+      if (err) {
+        console.error(`Unable to save pid file ${filename}: ${err}`);
+      }
+    });
+  }
+
   description() {
-    return '                               - run test RPC mock, with properly predefined accounts for development and testing';
+    return '                                  - run test RPC mock, with properly predefined accounts for development and testing';
   }
 }

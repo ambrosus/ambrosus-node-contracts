@@ -12,7 +12,8 @@ import DeployTask from './deploy';
 import GanacheTask from './ganache';
 import StakeTask from './stake';
 import TaskList from './base/task_list';
-
+import TransferTask from './transfer';
+import UploadTask from './upload';
 
 const runTask = () => {
   const list = new TaskList();
@@ -20,7 +21,9 @@ const runTask = () => {
   list.add('deploy', new DeployTask());
   list.add('ganache', new GanacheTask());
   list.add('stake', new StakeTask());
-  list.add('whitelist', new WhitelistTask());  
+  list.add('whitelist', new WhitelistTask());
+  list.add('upload', new UploadTask());
+  list.add('transfer', new TransferTask());
   list.run(args[0], args.slice(1));
 };
 

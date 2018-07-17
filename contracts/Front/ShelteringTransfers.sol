@@ -33,7 +33,6 @@ contract ShelteringTransfers is Base {
 
     function start(bytes32 bundleId) public {
         requireTransferPossible(msg.sender, bundleId);
-
         bytes32 transferId = store(Transfer(msg.sender, bundleId));
         emit TransferStarted(transferId, msg.sender, bundleId);
     }

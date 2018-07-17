@@ -5,7 +5,7 @@ node_js:
   - '9'
 install:
   - yarn install
-  - yarn build
 script:
-  - yarn test
+  - yarn testall
+  - ./scripts/test_cli.sh  
   - yarn dev:lint

@@ -9,15 +9,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import {getDefaultAddress, getDefaultGas, createWeb3} from '../web3_tools';
-import Whitelist from '../../build/contracts/KycWhitelist';
-import {getConfig} from '../config';
+import KycWhitelist from '../../build/contracts/KycWhitelist';
 
 export default class WhitelistTask extends TaskBase {
   async execute(args) {
     this.web3 = await createWeb3();
     const [command] = args;
     if (command === 'add') {
-      await this.add(args[1]);
+      await this.add(args[1], args[2]);
     } else if (command === 'remove') {
       await this.remove(args[1]);
     } else if (command === 'check') {
@@ -33,22 +32,17 @@ export default class WhitelistTask extends TaskBase {
     }
   }
 
-  getWhitelistContract() {
-    const contractAddress = getConfig().contracts.kycWhitelist;        
-    return new this.web3.eth.Contract(Whitelist.abi, contractAddress);
-  }
-
-  async add(address) {
+  async add(address, role) {
     this.validateAddress(address);
-    const whitelist = this.getWhitelistContract();
+    const whitelist = this.getContract(KycWhitelist);
     const from = getDefaultAddress(this.web3);
     const gas = getDefaultGas();
-    await whitelist.methods.add(address).send({from, gas});
+    await whitelist.methods.add(address, role).send({from, gas});
   }
 
   async remove(address) {
     this.validateAddress(address);
-    const whitelist = this.getWhitelistContract();
+    const whitelist = this.getContract(KycWhitelist);
     const from = getDefaultAddress(this.web3);
     const gas = getDefaultGas();
     await whitelist.methods.remove(address).send({from, gas});
@@ -56,13 +50,13 @@ export default class WhitelistTask extends TaskBase {
 
   async show(address) {
     this.validateAddress(address);
-    const whitelist = this.getWhitelistContract();
+    const whitelist = this.getContract(KycWhitelist);
     const from = getDefaultAddress(this.web3);
     const result = await whitelist.methods.isWhitelisted(address).call({from});
     console.log(result);
   }
 
   description() {
-    return '[add/remove/check] [address] - manages list of whitelisted stakers';
+    return '[add/remove/check] [address]    - manages list of whitelisted stakers';
   }
 }
