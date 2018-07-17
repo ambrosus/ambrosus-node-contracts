@@ -23,7 +23,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Bundle Registry Contract', () => {
-  const bundleId = 'bundleId';
+  const bundleId = utils.keccak256('bundleId');
   const vendorUrl = 'node.ambrosus.com';
   const vendor = adminAccount.address;
   let bundleRegistry;
@@ -35,8 +35,8 @@ describe('Bundle Registry Contract', () => {
   const removeVendor = (who, from = ownerAddress) => bundleRegistry.methods.removeFromWhitelist(who).send({from});
   const isWhitelisted = (who) => bundleRegistry.methods.isWhitelisted(who).call();
   const addBundle =
-    (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(utils.utf8ToHex(bundleId), vendor).send({from});
-  const getBundleVendor = (bundleId) => bundleRegistry.methods.bundles(utils.asciiToHex(bundleId)).call();
+    (bundleId, vendor, from = ownerAddress) => bundleRegistry.methods.addBundle(bundleId, vendor).send({from});
+  const getBundleVendor = (bundleId) => bundleRegistry.methods.bundles(bundleId).call();
   const getBundleVendorByIndex = (index) => bundleRegistry.methods.bundleIds(index).call();
   const getUrlForVendor = (vendor) => bundleRegistry.methods.getUrlForVendor(vendor).call();
   const getBundleCount = () => bundleRegistry.methods.getBundleCount().call();
@@ -96,7 +96,7 @@ describe('Bundle Registry Contract', () => {
   });
 
   describe('Adding bundles', () => {
-    it('Initialy there are 0 bundles', async () => {
+    it('Initially there are 0 bundles', async () => {
       expect(await getBundleCount()).to.eq('0');
     });
 
@@ -111,7 +111,7 @@ describe('Bundle Registry Contract', () => {
       await addVendor(ownerAddress, vendorUrl);
       await addBundle(bundleId, vendor);
       expect(await getBundleVendor(bundleId)).to.eq(vendor);
-      expect(utils.hexToUtf8(await getBundleVendorByIndex(0)).trim()).to.eq(bundleId);
+      expect(await getBundleVendorByIndex(0)).to.eq(bundleId);
     });
 
     it('non-whitelisted address can not add bundle', async () => {
@@ -126,8 +126,9 @@ describe('Bundle Registry Contract', () => {
 
     it('emits event when bundle added', async () => {
       await addVendor(ownerAddress, vendorUrl);
-      expect(await addBundle(bundleId, vendor)).to.emitEvent('BundleAdded').withArgs({bundleId: utils.toPaddedHex(bundleId)});
-      expect(await addBundle('bundle2', vendor)).to.emitEvent('BundleAdded').withArgs({bundleId: utils.toPaddedHex('bundle2')});
+      expect(await addBundle(bundleId, vendor)).to.emitEvent('BundleAdded').withArgs({bundleId});
+      const otherBundleId = utils.keccak256('bundle2');
+      expect(await addBundle(otherBundleId, vendor)).to.emitEvent('BundleAdded').withArgs({bundleId: otherBundleId});
     });
   });
 });

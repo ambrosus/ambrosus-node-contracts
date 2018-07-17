@@ -35,15 +35,15 @@ describe('BundleStore Contract', () => {
   beforeEach(async () => {
     ({web3, bundleStore, time} = await deploy({contracts: {bundleStore: true, config: true, time: TimeMockJson}}));
     [from, other] = await web3.eth.getAccounts();
-    bundleId = utils.asciiToHex('bundleId');
+    bundleId = utils.keccak256('bundleId');
     await time.methods.setCurrentTimestamp(now).send({from});
   });
 
   describe('Storing a bundle', () => {
     it('should emit event when bundle was added', async () => {
-      expect(await bundleStore.methods.store(bundleId, from, 1).send({from})).to.emitEvent('BundleStored').withArgs({
-        bundleId: utils.padRight(bundleId, 64), creator: from
-      });
+      expect(await bundleStore.methods.store(bundleId, from, 1).send({from}))
+        .to.emitEvent('BundleStored')
+        .withArgs({bundleId, creator: from});
     });
 
     it('creator is a shelterer', async () => {
@@ -88,16 +88,14 @@ describe('BundleStore Contract', () => {
     });
 
     it('should emit event when the shelterer was added', async () => {
-      expect(await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.emitEvent('SheltererAdded').withArgs({
-        bundleId: utils.padRight(bundleId, 64), shelterer: other
-      });
+      expect(await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.emitEvent('SheltererAdded')
+        .withArgs({bundleId, shelterer: other});
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([from, other]);
     });
 
     it('should emit event when the shelterer was removed', async () => {
-      expect(await bundleStore.methods.removeShelterer(bundleId, from).send({from})).to.emitEvent('SheltererRemoved').withArgs({
-        bundleId: utils.padRight(bundleId, 64), shelterer: from
-      });
+      expect(await bundleStore.methods.removeShelterer(bundleId, from).send({from})).to.emitEvent('SheltererRemoved')
+        .withArgs({bundleId, shelterer: from});
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([]);
     });
 
