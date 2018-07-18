@@ -38,7 +38,7 @@ contract Uploads is Base {
         (uint challengeFee, uint validatorsFee, uint burnFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
         config.BURN_ADDRESS().transfer(burnFee);
-        context().challenges().startForSystem.value(challengeFee)(msg.sender, bundleId, 5);
+        context().challenges().startForSystem.value(challengeFee)(msg.sender, bundleId, 7);
 
         emit BundleUploaded(bundleId, storagePeriods);
     }
