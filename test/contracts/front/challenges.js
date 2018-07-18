@@ -87,7 +87,7 @@ describe('Challenges Contract', () => {
 
     beforeEach(async () => {
       await bundleStore.methods.store(otherBundleId, other, expirationDate).send({from});
-      systemFee = fee.mul(new BN('5'));
+      systemFee = fee.mul(new BN(SYSTEM_CHALLENGES_COUNT));
     });
 
     it('Is context internal', async () => {

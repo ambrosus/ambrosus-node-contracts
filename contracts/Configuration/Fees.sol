@@ -22,10 +22,10 @@ contract Fees is Base, Ownable {
     using SafeMath for uint;
     using SafeMathExtensions for uint;
 
-    uint constant public CHALLENGER_FEE_DIVIDER = 2;
-    uint constant public VALIDATOR_FEE_MULTIPLIER = 45;
-    uint constant public VALIDATOR_FEE_DIVIDER = 100;
-    uint constant public CHALLENGE_FEE_DIVIDER = 10;
+    uint constant public CHALLENGER_FEE_DIVIDER = 10;
+    uint constant public CHALLENGER_FEE_MULTIPLIER = 7;
+    uint constant public VALIDATOR_FEE_DIVIDER = 4;
+    uint constant public UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO = 10;
 
     uint public baseUploadFee = 10 ether;
 
@@ -42,12 +42,12 @@ contract Fees is Base, Ownable {
     }
 
     function getFeeForChallenge(uint storagePeriods) public view returns (uint) {
-        return getFeeForUpload(storagePeriods).div(CHALLENGE_FEE_DIVIDER);
+        return getFeeForUpload(storagePeriods).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
     }
 
     function calculateFeeSplit(uint value) public pure returns (uint challengeFee, uint validatorsFee, uint burnFee) {
-        challengeFee = value.div(CHALLENGER_FEE_DIVIDER);
-        validatorsFee = value.mul(VALIDATOR_FEE_MULTIPLIER).div(VALIDATOR_FEE_DIVIDER);
+        challengeFee = value.mul(CHALLENGER_FEE_MULTIPLIER).div(CHALLENGER_FEE_DIVIDER);
+        validatorsFee = value.div(VALIDATOR_FEE_DIVIDER);
         burnFee = value.sub(validatorsFee).sub(challengeFee);
     }
 

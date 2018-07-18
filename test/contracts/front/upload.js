@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
-import {STORAGE_PERIOD_UNIT} from '../../../src/consts';
+import {STORAGE_PERIOD_UNIT, SYSTEM_CHALLENGES_COUNT} from '../../../src/consts';
 import {BLOCK_REWARD, COINBASE} from '../../helpers/consts';
 import BN from 'bn.js';
 
@@ -37,7 +37,7 @@ describe('Upload Contract', () => {
   let fee;
   let from;
 
-  const expectedMinersFee = () => fee.mul(new BN(45)).div(new BN(100));
+  const expectedMinersFee = () => fee.div(new BN(4));
   const expectedBurnAmount = () => fee.mul(new BN(5)).div(new BN(100));
 
   beforeEach(async () => {
@@ -110,7 +110,7 @@ describe('Upload Contract', () => {
       expect(events.length).to.eq(1);
       expect(events[0].returnValues).to.deep.include({
         bundleId,
-        count: '5'
+        count: SYSTEM_CHALLENGES_COUNT.toString()
       });
     });
 
