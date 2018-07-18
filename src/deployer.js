@@ -20,6 +20,7 @@ import FeesJson from '../build/contracts/Fees.json';
 import ChallengesJson from '../build/contracts/Challenges.json';
 import ShelteringJson from '../build/contracts/Sheltering.json';
 import PayoutsStoreJson from '../build/contracts/PayoutsStore.json';
+import RolesStoreJson from '../build/contracts/RolesStore.json';
 import PayoutsJson from '../build/contracts/Payouts.json';
 import ShelteringTransfersJson from '../build/contracts/ShelteringTransfers.json';
 import TimeJson from '../build/contracts/Time.json';
@@ -43,7 +44,8 @@ const DEFAULT_CONTRACT_JSONS = {
   payouts: PayoutsJson,
   shelteringTransfers: ShelteringTransfersJson,
   config: ConfigJson,
-  uploads: UploadsJson
+  uploads: UploadsJson,
+  rolesStore: RolesStoreJson
 };
 
 const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor'); 

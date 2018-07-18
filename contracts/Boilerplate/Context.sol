@@ -14,6 +14,7 @@ import "../Storage/StakeStore.sol";
 import "../Storage/BundleStore.sol";
 import "../Storage/KycWhitelist.sol";
 import "../Storage/PayoutsStore.sol";
+import "../Storage/RolesStore.sol";
 
 import "../Configuration/Roles.sol";
 import "../Configuration/Fees.sol";
@@ -46,6 +47,7 @@ contract Context {
     Time public time;
     Config public config;
     Uploads public uploads;
+    RolesStore public rolesStore;
 
     constructor(
         Time _time,
@@ -62,7 +64,8 @@ contract Context {
         Payouts _payouts,
         ShelteringTransfers _shelteringTransfers,
         Config _config,
-        Uploads _uploads 
+        Uploads _uploads,
+        RolesStore _rolesStore 
     ) public {
         time = _time;
         bundleRegistry = _bundleRegistry;
@@ -79,6 +82,7 @@ contract Context {
         shelteringTransfers = _shelteringTransfers;
         config = _config;
         uploads = _uploads;
+        rolesStore = _rolesStore;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
@@ -97,6 +101,7 @@ contract Context {
             config == contractAddress ||
             time == contractAddress ||
             uploads == contractAddress ||            
-            payouts == contractAddress;
+            payouts == contractAddress ||            
+            rolesStore == contractAddress;
     }
 }

@@ -30,7 +30,8 @@ contract MockContext is Context {
         Payouts _payouts,
         ShelteringTransfers _shelteringTransfers,
         Config _config,
-        Uploads _uploads
+        Uploads _uploads,
+        RolesStore _rolesStore
     ) Context(
         _time,
         _bundleRegistry,
@@ -46,7 +47,8 @@ contract MockContext is Context {
         _payouts,
         _shelteringTransfers,
         _config,
-        _uploads
+        _uploads,
+        _rolesStore
     ) public {        
     }
 
