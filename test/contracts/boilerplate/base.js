@@ -20,7 +20,7 @@ import ContextJson from '../../../build/contracts/Context.json';
 import {removeFromWhitelist} from '../../helpers/whitelist';
 import {MockContextDeployer} from '../../helpers/deploy';
 
-chai.use(chaiEmitEvents());
+chai.use(chaiEmitEvents);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);

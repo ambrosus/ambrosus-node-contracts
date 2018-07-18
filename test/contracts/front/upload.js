@@ -17,7 +17,7 @@ import {STORAGE_PERIOD_UNIT} from '../../../src/consts';
 import {BLOCK_REWARD, COINBASE} from '../../helpers/consts';
 import BN from 'bn.js';
 
-chai.use(chaiEmitEvents());
+chai.use(chaiEmitEvents);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -60,6 +60,12 @@ describe('Upload Contract', () => {
       await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
       fee = new BN(await fees.methods.getFeeForUpload(1).call());      
       burnAddress = await config.methods.BURN_ADDRESS().call();
+    });
+
+    it('emits event on upload', async () => {
+      expect(await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee})).to.emitEvent('BundleUploaded').withArgs({
+        bundleId, storagePeriods: '1'
+      });
     });
 
     it(`marks as sheltered`, async () => {

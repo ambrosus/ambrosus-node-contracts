@@ -13,14 +13,21 @@ import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import BN from 'bn.js';
-import {ATLAS, ATLAS1_STAKE, ATLAS1_STORAGE_LIMIT, STORAGE_PERIOD_UNIT, DAY} from '../../../src/consts';
+import {
+  ATLAS,
+  ATLAS1_STAKE,
+  ATLAS1_STORAGE_LIMIT,
+  DAY,
+  STORAGE_PERIOD_UNIT,
+  SYSTEM_CHALLENGES_COUNT
+} from '../../../src/consts';
 import {ONE} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
 import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
-chai.use(chaiEmitEvents());
+chai.use(chaiEmitEvents);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -84,43 +91,47 @@ describe('Challenges Contract', () => {
     });
 
     it('Is context internal', async () => {
-      await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.fulfilled;
-      await expect(challenges.methods.startForSystem(other, otherBundleId, 5).send({from: other, value: systemFee})).to.be.eventually.rejected;
+      await expect(challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee})).to.be.eventually.fulfilled;
+      await expect(challenges.methods.startForSystem(other, otherBundleId,SYSTEM_CHALLENGES_COUNT).send({from: other, value: systemFee})).to.be.eventually.rejected;
     });
 
     it('Should emit event', async () => {
-      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('ChallengeCreated');
+      expect(await challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee})).to.emitEvent('ChallengeCreated').withArgs({
+        sheltererId: from, bundleId, challengeId, count: SYSTEM_CHALLENGES_COUNT.toString()
+      });
     });
 
     it('Stores challengerId as 0x0', async () => {
-      await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee});
+      await challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee});
       expect(await challenges.methods.getChallengeCreationTime(challengeId).call()).to.not.equal('0');
       expect(await challenges.methods.getChallenger(challengeId).call()).to.equal('0x0000000000000000000000000000000000000000');
     });
 
     it('Fails if bundle is not being sheltered by provided account', async () => {
-      await expect(challenges.methods.startForSystem(other, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
+      await expect(challenges.methods.startForSystem(other, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee})).to.be.eventually.rejected;
     });
 
     it(`Accepts fee bigger than necessary`, async () => {
       const biggerFee = systemFee.add(ONE);
-      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: biggerFee})).to.emitEvent('ChallengeCreated');
+      expect(await challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: biggerFee})).to.emitEvent('ChallengeCreated').withArgs({
+        sheltererId: from, bundleId, challengeId, count: SYSTEM_CHALLENGES_COUNT.toString()
+      });
     });
 
     it(`Fails if challenger hasn't provided a fee of valid value`, async () => {
       const tooSmallFee = systemFee.sub(ONE);
-      await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: tooSmallFee})).to.be.eventually.rejected;
+      await expect(challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: tooSmallFee})).to.be.eventually.rejected;
     });
 
     it('Fails if the challenge was added after bundle has expired', async () => {
       const expirationTime = await bundleStore.methods.getShelteringExpirationDate(bundleId, from).call();
       await setTimestamp(expirationTime + 1);
-      await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
+      await expect(challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee})).to.be.eventually.rejected;
     });
 
     it('Fails if added same challenge twice', async () => {
-      expect(await challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.emitEvent('ChallengeCreated');
-      await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: systemFee})).to.be.eventually.rejected;
+      expect(await challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee})).to.emitEvent('ChallengeCreated');
+      await expect(challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee})).to.be.eventually.rejected;
     });
   });
 
@@ -130,7 +141,9 @@ describe('Challenges Contract', () => {
     });
 
     it('Creates a challenge and emits an event', async () => {
-      expect(await challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.emitEvent('ChallengeCreated');
+      expect(await challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.emitEvent('ChallengeCreated').withArgs({
+        sheltererId: from, bundleId, challengeId, count: '1'
+      });
     });
 
     it('Fails if bundle is not being sheltered by provided account', async () => {
@@ -235,7 +248,11 @@ describe('Challenges Contract', () => {
       });
 
       it('Emits an event', async () => {
-        expect(await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'})).to.emitEvent('ChallengeResolved');
+        expect(await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'}))
+          .to.emitEvent('ChallengeResolved')
+          .withArgs({
+            sheltererId: from, bundleId, challengeId, resolverId: resolver
+          });
       });
 
       it('Removes challenge if active count was 1', async () => {
@@ -316,7 +333,12 @@ describe('Challenges Contract', () => {
 
     it(`Emits event when marked as expired successfully`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      expect(await challenges.methods.markAsExpired(challengeId).send({from: other})).to.emitEvent('ChallengeTimeout');   
+      const penalty = utils.toWei('100', 'ether');
+      expect(await challenges.methods.markAsExpired(challengeId).send({from: other}))
+        .to.emitEvent('ChallengeTimeout')
+        .withArgs({
+          sheltererId: from, bundleId, challengeId, penalty
+        });
     });
 
     it(`Can be called by anyone`, async () => {

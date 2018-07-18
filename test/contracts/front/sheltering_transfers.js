@@ -17,7 +17,7 @@ import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
 import {ATLAS1_STAKE} from '../../../src/consts';
 
 chai.use(chaiAsPromised);
-chai.use(chaiEmitEvents());
+chai.use(chaiEmitEvents);
 
 const {expect} = chai;
 
@@ -79,7 +79,9 @@ describe('ShelteringTransfers Contract', () => {
     });
 
     it('Initializes transfer and emits an event', async () => {
-      expect(await startTransfer(bundleId)).to.emitEvent('TransferStarted');
+      expect(await startTransfer(bundleId)).to.emitEvent('TransferStarted').withArgs({
+        transferId, donorId: from, bundleId
+      });
     });
 
     it('Transfer is in progress after successfully started', async () => {
@@ -133,7 +135,7 @@ describe('ShelteringTransfers Contract', () => {
       });
 
       it('Emits ShelteringTransferred event', async () => {
-        expect(await resolveTransfer(transferId, other)).to.emitEventWithArgs('TransferResolved', {
+        expect(await resolveTransfer(transferId, other)).to.emitEvent('TransferResolved').withArgs({
           donorId: from,
           recipientId: other,
           bundleId
@@ -182,7 +184,7 @@ describe('ShelteringTransfers Contract', () => {
     });
 
     it('Emits TransferCancelled event', async () => {
-      expect(await cancelTransfer(transferId, from)).to.emitEventWithArgs('TransferCancelled', {
+      expect(await cancelTransfer(transferId, from)).to.emitEvent('TransferCancelled').withArgs({
         transferId,
         donorId: from,
         bundleId
