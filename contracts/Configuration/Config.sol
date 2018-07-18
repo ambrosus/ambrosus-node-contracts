@@ -14,7 +14,7 @@ contract Config {
     uint constant public CHALLENGE_DURATION = 3 days;
     uint constant public STORAGE_PERIOD_UNIT = 364 days;
     uint constant public PENALTY_ESCALATION_TIMEOUT = 90 days;
-    uint constant public FINISH_SHELTERING_REWARD_SPLIT = 20;
+    uint constant public FINISH_SHELTERING_REWARD_SPLIT = 22;
     uint constant public PENALTY_DIVIDER = 100;
     address constant public BURN_ADDRESS = 0x1000000000000000000000000000000000000000;
 
