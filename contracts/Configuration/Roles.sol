@@ -10,44 +10,34 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
+import "./Config.sol";
 
 
 contract Roles is Base {
 
-    uint constant APOLLO_STAKE = 250000 ether;
-    uint constant HERMES_STAKE = 150000 ether;
-    uint constant ATLAS1_STAKE = 10000 ether;
-    uint constant ATLAS2_STAKE = 30000 ether;
-    uint constant ATLAS3_STAKE = 75000 ether;
+    constructor(Head _head) public Base(_head) { }
 
-    uint constant ATLAS1_STORAGE_LIMIT = 100000;
-    uint constant ATLAS2_STORAGE_LIMIT = 400000;
-    uint constant ATLAS3_STORAGE_LIMIT = 1000000;
-  
-    enum NodeType {ATLAS, HERMES, APOLLO}
-
-    constructor(Head _head) public Base(_head) {        
-    }
-
-    function canStake(NodeType role, uint amount) public pure returns (bool) {
-        if (role == NodeType.ATLAS) { 
-            return amount == ATLAS1_STAKE || amount == ATLAS2_STAKE || amount == ATLAS3_STAKE;
-        } else if (role == NodeType.HERMES) {
-            return amount == HERMES_STAKE;
-        } else if (role == NodeType.APOLLO) {
-            return amount == APOLLO_STAKE;
+    function canStake(Config.NodeType role, uint amount) public view returns (bool) {
+        Config config = context().config();
+        if (role == Config.NodeType.ATLAS) {
+            return amount == config.ATLAS1_STAKE() || amount == config.ATLAS2_STAKE() || amount == config.ATLAS3_STAKE();
+        } else if (role == Config.NodeType.HERMES) {
+            return amount == config.HERMES_STAKE();
+        } else if (role == Config.NodeType.APOLLO) {
+            return amount == config.APOLLO_STAKE();
         }
         return false;
     }
 
-    function getStorageLimit(NodeType role, uint amount) public pure returns (uint) {
-        if (role == NodeType.ATLAS) { 
-            if (amount >= ATLAS3_STAKE) {
-                return ATLAS3_STORAGE_LIMIT;
-            } else if (amount >= ATLAS2_STAKE) {
-                return ATLAS2_STORAGE_LIMIT;
-            } else if (amount >= ATLAS1_STAKE) {
-                return ATLAS1_STORAGE_LIMIT;
+    function getStorageLimit(Config.NodeType role, uint amount) public view returns (uint) {
+        Config config = context().config();
+        if (role == Config.NodeType.ATLAS) {
+            if (amount >= config.ATLAS3_STAKE()) {
+                return config.ATLAS3_STORAGE_LIMIT();
+            } else if (amount >= config.ATLAS2_STAKE()) {
+                return config.ATLAS2_STORAGE_LIMIT();
+            } else if (amount >= config.ATLAS1_STAKE()) {
+                return config.ATLAS1_STORAGE_LIMIT();
             } else {
                 return 0;
             }

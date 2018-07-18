@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
 import "../Configuration/Roles.sol";
+import "../Configuration/Config.sol";
 import "../Configuration/Fees.sol";
 import "../Configuration/Time.sol";
 
@@ -25,7 +26,7 @@ contract StakeStore is Base {
         uint amount;
         uint storageLimit;
         uint storageUsed;
-        Roles.NodeType role;
+        Config.NodeType role;
         uint lastPenaltyTime;
         uint penaltiesCount;
     }
@@ -59,7 +60,7 @@ contract StakeStore is Base {
         return stakes[node].amount;
     }  
 
-    function getRole(address node) public view returns (Roles.NodeType) {
+    function getRole(address node) public view returns (Config.NodeType) {
         return stakes[node].role;
     }
 
@@ -71,7 +72,7 @@ contract StakeStore is Base {
         return stakes[node].initialAmount;
     }
 
-    function depositStake(address _who, uint _storageLimit, Roles.NodeType _role) public payable onlyContextInternalCalls {
+    function depositStake(address _who, uint _storageLimit, Config.NodeType _role) public payable onlyContextInternalCalls {
         require(!isStaking(_who));
         stakes[_who] = Stake(msg.value, msg.value, _storageLimit, 0, _role, 0, 0);
     }

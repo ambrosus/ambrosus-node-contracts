@@ -10,9 +10,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import utils from '../test/helpers/utils';
 import BN from 'bn.js';
 
-export const ATLAS = 0;
-export const HERMES = 1;
-export const APOLLO = 2;
+export const ATLAS = 1;
+export const HERMES = 2;
+export const APOLLO = 3;
 
 export const ATLAS1_STAKE = utils.toWei(new BN(10000));
 export const ATLAS2_STAKE = utils.toWei(new BN(30000));
