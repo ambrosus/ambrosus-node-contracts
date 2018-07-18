@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
+import "../Configuration/Config.sol";
 import "../Configuration/Roles.sol";
 import "../Storage/StakeStore.sol";
 import "../Storage/KycWhitelist.sol";
@@ -19,8 +20,8 @@ contract Stakes is Base {
 
     constructor(Head _head) public Base(_head) { }
 
-    function depositStake(Roles.NodeType role) public payable {
-        require(role == Roles.NodeType.ATLAS || role == Roles.NodeType.HERMES || role == Roles.NodeType.APOLLO);        
+    function depositStake(Config.NodeType role) public payable {
+        require(role == Config.NodeType.ATLAS || role == Config.NodeType.HERMES || role == Config.NodeType.APOLLO);
         
         KycWhitelist whitelist = context().kycWhitelist();
         require(whitelist.isWhitelisted(msg.sender));

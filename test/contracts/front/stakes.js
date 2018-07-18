@@ -33,7 +33,8 @@ describe('Stakes Contract', () => {
       stakes: true,
       stakeStore: true,
       kycWhitelist: true,
-      roles: true
+      roles: true,
+      config: true
     }}));
     [from, other] = await web3.eth.getAccounts();
     await kycWhitelist.methods.add(from).send({from});
