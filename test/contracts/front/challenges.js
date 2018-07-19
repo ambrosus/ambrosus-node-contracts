@@ -223,7 +223,7 @@ describe('Challenges Contract', () => {
     let challengeId;
 
     beforeEach(async () => {
-      await kycWhitelist.methods.add(resolver).send({from});
+      await kycWhitelist.methods.add(resolver, ATLAS).send({from});
       await stakes.methods.depositStake(ATLAS).send({from: resolver, value: ATLAS1_STAKE, gasPrice: 0});   
     });
 
