@@ -10,21 +10,30 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../Configuration/Config.sol";
 
 
 contract KycWhitelist is Ownable {
 
-    mapping(address => bool) public whitelist;
+    mapping(address => Config.NodeType) whitelist;
 
-    function add(address _cadidate) public onlyOwner {
-        whitelist[_cadidate] = true;
+    function add(address candidate, Config.NodeType role) public onlyOwner {
+        require(!isWhitelisted(candidate));
+        require(role == Config.NodeType.ATLAS || role == Config.NodeType.HERMES || role == Config.NodeType.APOLLO);
+
+        whitelist[candidate] = role;
     }
 
-    function remove(address _candidate) public onlyOwner {
-        whitelist[_candidate] = false;
+    function remove(address candidate) public onlyOwner {
+        require(isWhitelisted(candidate));
+        whitelist[candidate] = Config.NodeType.NONE;
     }
 
-    function isWhitelisted(address _candidate) public view returns(bool) {
-        return whitelist[_candidate];
+    function isWhitelisted(address candidate) public view returns(bool) {
+        return whitelist[candidate] != Config.NodeType.NONE;
+    }
+
+    function hasRoleAssigned(address candidate, Config.NodeType role) public view returns(bool) {
+        return whitelist[candidate] == role;
     }
 }

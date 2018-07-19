@@ -37,7 +37,7 @@ describe('Stakes Contract', () => {
       config: true
     }}));
     [from, other] = await web3.eth.getAccounts();
-    await kycWhitelist.methods.add(from).send({from});
+    await kycWhitelist.methods.add(from, ATLAS).send({from});
   });
 
   describe('Start staking', () => {
