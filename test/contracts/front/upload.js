@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
-import {STORAGE_PERIOD_UNIT, SYSTEM_CHALLENGES_COUNT} from '../../../src/consts';
+import {SYSTEM_CHALLENGES_COUNT, HERMES, ATLAS} from '../../../src/consts';
 import {BLOCK_REWARD, COINBASE} from '../../helpers/consts';
 import BN from 'bn.js';
 
@@ -28,7 +28,6 @@ const bundleId = utils.keccak256('bundleId');
 describe('Upload Contract', () => {
   let web3;
   let uploads;
-  let stakeStore;
   let sheltering;
   let challenges;
   let burnAddress;
@@ -36,16 +35,19 @@ describe('Upload Contract', () => {
   let fees;
   let fee;
   let from;
+  let kycWhitelist;
 
   const expectedMinersFee = () => fee.div(new BN(4));
   const expectedBurnAmount = () => fee.mul(new BN(5)).div(new BN(100));
 
   beforeEach(async () => {
-    ({uploads, sheltering, stakeStore, fees, config, web3, challenges} = await deploy({
+    ({uploads, sheltering, fees, config, web3, challenges, kycWhitelist} = await deploy({
       contracts: {
+        kycWhitelist: true,
         challenges: true,
         uploads: true, 
         sheltering: true,
+        roles: true,
         time: true, 
         fees: true,
         config: true,
@@ -53,13 +55,12 @@ describe('Upload Contract', () => {
         bundleStore: true}
     }));
     [from] = await web3.eth.getAccounts();
+    fee = new BN(await fees.methods.getFeeForUpload(1).call());
   });
 
   describe('Uploads when stake deposited', () => {
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
-      fee = new BN(await fees.methods.getFeeForUpload(1).call());      
-      burnAddress = await config.methods.BURN_ADDRESS().call();
+      await kycWhitelist.methods.add(from, HERMES).send({from});            
     });
 
     it('emits event on upload', async () => {
@@ -98,13 +99,7 @@ describe('Upload Contract', () => {
       await expect(promise).to.be.eventually.rejected;
     });
 
-    it(`increments storage used`, async () => {
-      expect(await stakeStore.methods.getStorageUsed(from).call({from})).to.eq('0');
-      await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
-      expect(await stakeStore.methods.getStorageUsed(from).call({from})).to.eq('1');
-    });
-
-    it('Starts system challanges', async() => {
+    it('Starts system challenges', async() => {
       await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
       const events = await challenges.getPastEvents('ChallengeCreated');
       expect(events.length).to.eq(1);
@@ -123,6 +118,7 @@ describe('Upload Contract', () => {
     });
 
     it('Burn tokens', async() => {
+      burnAddress = await config.methods.BURN_ADDRESS().call();
       const balanceBefore = new BN(await web3.eth.getBalance(burnAddress));
       await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee, gasPrice: '0'});
       const balanceAfter = new BN(await web3.eth.getBalance(burnAddress));
@@ -130,9 +126,16 @@ describe('Upload Contract', () => {
     });
   });
 
-  describe('Uploads when stake not deposited', () => {
-    it(`fails (sender is not staking)`, async () => {
-      await expect(sheltering.methods.store(bundleId, from, STORAGE_PERIOD_UNIT).send({from})).to.be.eventually.rejected;
+  describe('Uploads when stake not white listed', () => {
+    it(`fails if sender is not white listed`, async () => {      
+      await expect(uploads.methods.registerBundle(bundleId, 1).send({from, value: fee}))
+        .to.be.eventually.rejected;      
+    });
+
+    it(`fails if sender is not white listed as Hermes`, async () => {
+      await kycWhitelist.methods.add(from, ATLAS).send({from});
+      await expect(uploads.methods.registerBundle(bundleId, 1).send({from, value: fee}))
+        .to.be.eventually.rejected;      
     });
   });
 });
