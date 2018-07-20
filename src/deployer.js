@@ -8,11 +8,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import SafeMathExtensionsJson from '../build/contracts/SafeMathExtensions.json';
-import StakeStoreJson from '../build/contracts/StakeStore.json';
+import AtlasStakeStoreJson from '../build/contracts/AtlasStakeStore.json';
 import BundleStoreJson from '../build/contracts/BundleStore.json';
 import HeadJson from '../build/contracts/Head.json';
 import RolesJson from '../build/contracts/Roles.json';
-import StakesJson from '../build/contracts/Stakes.json';
 import ContextJson from '../build/contracts/Context.json';
 import KycWhitelistJson from '../build/contracts/KycWhitelist.json';
 import FeesJson from '../build/contracts/Fees.json';
@@ -31,9 +30,8 @@ import {DEFAULT_GAS, deployContract, getDefaultAddress, link} from './web3_tools
 
 const DEFAULT_CONTRACT_JSONS = {
   time: TimeJson,
-  stakeStore: StakeStoreJson,
+  atlasStakeStore: AtlasStakeStoreJson,
   roles: RolesJson,
-  stakes: StakesJson,
   bundleStore: BundleStoreJson,
   kycWhitelist: KycWhitelistJson,
   sheltering: ShelteringJson,

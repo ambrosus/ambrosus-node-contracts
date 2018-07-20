@@ -13,7 +13,7 @@ import deploy from '../../helpers/deploy';
 import {createWeb3} from '../../../src/web3_tools';
 import utils from '../../helpers/utils';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
-import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
+import AtlasStakeStoreMockJson from '../../../build/contracts/AtlasStakeStoreMock.json';
 import {ATLAS1_STAKE, ATLAS1_STORAGE_LIMIT} from '../../../src/consts';
 
 chai.use(chaiAsPromised);
@@ -30,7 +30,7 @@ describe('ShelteringTransfers Contract', () => {
   let other;
   let notStaking;
   let notSheltering;
-  let stakeStore;
+  let atlasStakeStore;
   let transferId;
   const bundleId = utils.keccak256('bundleId');
   const expirationDate = 1600000000;
@@ -39,8 +39,8 @@ describe('ShelteringTransfers Contract', () => {
   const store = async (bundleId, from, expirationDate) => bundleStore.methods.store(bundleId, from, expirationDate).send({from});
   const isSheltering = async (from, bundleId) => sheltering.methods.isSheltering(from, bundleId).call();
   const addShelterer = async (bundleId, other, totalReward) => sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
-  const setStorageUsed = async (from, storageUsed) => stakeStore.methods.setStorageUsed(from, storageUsed).send({from});
-  const depositStake = async (other, storageLimit, value) => stakeStore.methods.depositStake(other, storageLimit, 0).send({from, value});
+  const setStorageUsed = async (from, storageUsed) => atlasStakeStore.methods.setStorageUsed(from, storageUsed).send({from});
+  const depositStake = async (other, storageLimit, value) => atlasStakeStore.methods.depositStake(other, storageLimit).send({from, value});
   const startTransfer = async (bundleId, other) => shelteringTransfers.methods.start(bundleId).send({from: other});
   const resolveTransfer = async (transferId, from) => shelteringTransfers.methods.resolve(transferId).send({from});
   const cancelTransfer = async (transferId, from) => shelteringTransfers.methods.cancel(transferId).send({from});
@@ -53,7 +53,7 @@ describe('ShelteringTransfers Contract', () => {
   beforeEach(async () => {
     web3 = await createWeb3();
     [from, other, notSheltering, notStaking] = await web3.eth.getAccounts();
-    ({shelteringTransfers, bundleStore, stakeStore, sheltering} = await deploy({
+    ({shelteringTransfers, bundleStore, atlasStakeStore, sheltering} = await deploy({
       web3,
       contracts: {
         shelteringTransfers: true,
@@ -61,7 +61,7 @@ describe('ShelteringTransfers Contract', () => {
         sheltering: true,
         config: true,
         time: true,
-        stakeStore: StakeStoreMockJson,
+        atlasStakeStore: AtlasStakeStoreMockJson,
         payouts: true,
         payoutsStore: true
       }}));

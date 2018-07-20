@@ -14,7 +14,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../Boilerplate/Head.sol";
 import "../Storage/BundleStore.sol";
-import "../Storage/StakeStore.sol";
+import "../Storage/AtlasStakeStore.sol";
 
 
 contract Sheltering is Base {
@@ -40,18 +40,18 @@ contract Sheltering is Base {
     }
 
     function addShelterer(bytes32 bundleId, address shelterer, uint amount) public onlyContextInternalCalls {
-        StakeStore stakeStore = context().stakeStore();
+        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         BundleStore bundleStore = context().bundleStore();
 
-        stakeStore.incrementStorageUsed(shelterer);
+        atlasStakeStore.incrementStorageUsed(shelterer);
         bundleStore.addShelterer(bundleId, shelterer, amount);
     }
 
     function removeShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {              
-        StakeStore stakeStore = context().stakeStore();    
+        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         BundleStore bundleStore = context().bundleStore();
 
-        stakeStore.decrementStorageUsed(shelterer);
+        atlasStakeStore.decrementStorageUsed(shelterer);
         bundleStore.removeShelterer(bundleId, shelterer);
     }
 

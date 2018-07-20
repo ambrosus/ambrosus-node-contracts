@@ -28,15 +28,15 @@ describe('Sheltering Contract', () => {
   let other;
   let bundleStore;
   let sheltering;
-  let stakeStore;
+  let atlasStakeStore;
 
   beforeEach(async () => {
     web3 = await createWeb3();
     [from, other] = await web3.eth.getAccounts();
-    ({bundleStore, sheltering, stakeStore} = await deploy({web3, contracts: {
+    ({bundleStore, sheltering, atlasStakeStore} = await deploy({web3, contracts: {
       bundleStore: true,
       sheltering: true,
-      stakeStore: true,
+      atlasStakeStore: true,
       config: true,
       time: true
     }}));
@@ -63,7 +63,7 @@ describe('Sheltering Contract', () => {
 
   describe('Storing', () => {
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
+      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
     });
 
     it(`fails if already stored`, async () => {
@@ -86,9 +86,9 @@ describe('Sheltering Contract', () => {
   describe('Adding shelterer', () => {
     const exampleShelteringReward = 100;
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
+      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
       await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      await stakeStore.methods.depositStake(other, 1, 0).send({from, value: 1});
+      await atlasStakeStore.methods.depositStake(other, 1).send({from, value: 1});
     });
 
     it(`adds store entry`, async () => {
@@ -98,17 +98,17 @@ describe('Sheltering Contract', () => {
     });
 
     it(`increments storage used`, async () => {
-      expect(await stakeStore.methods.getStorageUsed(other).call()).to.equal('0');
+      expect(await atlasStakeStore.methods.getStorageUsed(other).call()).to.equal('0');
       await sheltering.methods.addShelterer(bundleId, other, exampleShelteringReward).send({from});
-      expect(await stakeStore.methods.getStorageUsed(other).call()).to.equal('1');
+      expect(await atlasStakeStore.methods.getStorageUsed(other).call()).to.equal('1');
     });
   });
 
   describe('Removing shelterer', () => {
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
+      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
       await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      await stakeStore.methods.depositStake(other, 1, 0).send({from, value: 1});
+      await atlasStakeStore.methods.depositStake(other, 1).send({from, value: 1});
       await sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
     });
     
@@ -119,9 +119,9 @@ describe('Sheltering Contract', () => {
     });
 
     it(`decrements storage used`, async () => {
-      expect(await stakeStore.methods.getStorageUsed(other).call()).to.equal('1');
+      expect(await atlasStakeStore.methods.getStorageUsed(other).call()).to.equal('1');
       await sheltering.methods.removeShelterer(bundleId, other).send({from});
-      expect(await stakeStore.methods.getStorageUsed(other).call()).to.equal('0');
+      expect(await atlasStakeStore.methods.getStorageUsed(other).call()).to.equal('0');
     });
   });
 });

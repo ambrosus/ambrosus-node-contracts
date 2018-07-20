@@ -23,7 +23,7 @@ import {
 import {ONE} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
-import StakeStoreMockJson from '../../../build/contracts/StakeStoreMock.json';
+import AtlasStakeStoreMockJson from '../../../build/contracts/AtlasStakeStoreMock.json';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
 chai.use(chaiEmitEvents);
@@ -39,8 +39,8 @@ describe('Challenges Contract', () => {
   let bundleStore;
   let sheltering;
   let fees;
-  let stakes;
-  let stakeStore;
+  let roles;
+  let atlasStakeStore;
   let kycWhitelist;
   let payouts;
   let from;
@@ -63,21 +63,22 @@ describe('Challenges Contract', () => {
   beforeEach(async () => {
     web3 = await createWeb3();
     [from, other, resolver, totalStranger] = await web3.eth.getAccounts();
-    ({challenges, bundleStore, fees, sheltering, stakes, kycWhitelist, stakeStore, time, payoutsStore, payouts} = await deploy({
+    ({challenges, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, payouts, payoutsStore, roles} = await deploy({
       web3,
       contracts: {
         challenges: true,
         bundleStore: true,
         fees: true,
         sheltering: true,
-        stakes: true,
-        stakeStore: StakeStoreMockJson,
+        atlasStakeStore: AtlasStakeStoreMockJson,
+        apolloDepositStore: true,
         time: TimeMockJson,
         roles: true,
         kycWhitelist: true,
         config: true,
         payouts: true,
-        payoutsStore: true
+        payoutsStore: true,
+        rolesStore: true
       }}));
     await setTimestamp(now);
     await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
@@ -176,7 +177,7 @@ describe('Challenges Contract', () => {
 
   describe('Starting user challenge', () => {
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: ATLAS1_STAKE});
+      await atlasStakeStore.methods.depositStake(other, ATLAS1_STORAGE_LIMIT).send({from, value: ATLAS1_STAKE});
       await sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
       challengeId = await challenges.methods.getChallengeId(other, bundleId).call();
     });
@@ -264,11 +265,13 @@ describe('Challenges Contract', () => {
   });
 
   describe('Resolving a challenge', () => {
+    const url = 'url';
+
     beforeEach(async () => {
       await kycWhitelist.methods.add(resolver, ATLAS).send({from});
-      await stakes.methods.depositStake(ATLAS).send({from: resolver, value: ATLAS1_STAKE, gasPrice: 0});
-      await stakeStore.methods.depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: ATLAS1_STAKE});
-      await sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});  
+      await roles.methods.onboardAsAtlas(url).send({from: resolver, value: ATLAS1_STAKE, gasPrice: '0'});
+      await atlasStakeStore.methods.depositStake(other, ATLAS1_STORAGE_LIMIT).send({from, value: ATLAS1_STAKE});
+      await sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
       await challenges.methods.start(other, bundleId).send({from, value: fee});
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
@@ -308,7 +311,7 @@ describe('Challenges Contract', () => {
 
     it(`Fails if resolver can't store more bundles`, async () => {
       const allStorageUsed = ATLAS1_STORAGE_LIMIT;
-      await stakeStore.methods.setStorageUsed(resolver, allStorageUsed).send({from});
+      await atlasStakeStore.methods.setStorageUsed(resolver, allStorageUsed).send({from});
       await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
 
@@ -332,10 +335,10 @@ describe('Challenges Contract', () => {
 
   describe('Marking challenge as expired', () => {
     const challengeTimeout = 3 * DAY;
-  
+
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS).send({from, value: ATLAS1_STAKE});
-      await sheltering.methods.addShelterer(bundleId, other, fee).send({from}); 
+      await atlasStakeStore.methods.depositStake(other, ATLAS1_STORAGE_LIMIT).send({from, value: ATLAS1_STAKE});
+      await sheltering.methods.addShelterer(bundleId, other, fee).send({from});
       await payouts.methods.grantShelteringReward(other, storagePeriods * 13).send({from, value: fee});
 
       await challenges.methods.start(other, bundleId).send({from, value: fee});
@@ -387,11 +390,11 @@ describe('Challenges Contract', () => {
 
     it(`Transfer funds to challenger`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      const stakeBefore = new BN(await stakeStore.methods.getStake(other).call());
+      const stakeBefore = new BN(await atlasStakeStore.methods.getStake(other).call());
       const balanceBefore = new BN(await web3.eth.getBalance(from));
       await challenges.methods.markAsExpired(challengeId).send({from, gasPrice: '0'});
       const balanceAfter = new BN(await web3.eth.getBalance(from));
-      const stakeAfter = new BN(await stakeStore.methods.getStake(other).call());
+      const stakeAfter = new BN(await atlasStakeStore.methods.getStake(other).call());
       expect(balanceAfter.sub(balanceBefore).toString()).to
         .equal((fee.mul(new BN(2)).add(stakeBefore.sub(stakeAfter)))
           .toString());
@@ -407,6 +410,7 @@ describe('Challenges Contract', () => {
 
   describe('Marking system challenge as expired', () => {
     const challengeTimeout = 3 * DAY;
+    const url = 'url';
     let systemChallengeCreationEvent;
     let systemChallengeId;
     let systemFee;
@@ -428,7 +432,7 @@ describe('Challenges Contract', () => {
 
     it(`Returns fee to creator (part of the fee if partially resolved)`, async () => {
       await kycWhitelist.methods.add(resolver, ATLAS).send({from});
-      await stakes.methods.depositStake(ATLAS).send({from: resolver, value: ATLAS1_STAKE, gasPrice: 0});
+      await roles.methods.onboardAsAtlas(url).send({from: resolver, value: ATLAS1_STAKE, gasPrice: '0'});
       await challenges.methods.resolve(challengeId).send({from: resolver});
 
       await setTimestamp(now + challengeTimeout + 1);

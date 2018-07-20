@@ -28,7 +28,7 @@ const bundleId = utils.keccak256('bundleId');
 describe('Upload Contract', () => {
   let web3;
   let uploads;
-  let stakeStore;
+  let atlasStakeStore;
   let challenges;
   let bundleStore;
   let burnAddress;
@@ -41,7 +41,7 @@ describe('Upload Contract', () => {
   const expectedBurnAmount = () => fee.mul(new BN(5)).div(new BN(100));
 
   beforeEach(async () => {
-    ({uploads, stakeStore, fees, config, web3, challenges, bundleStore} = await deploy({
+    ({uploads, atlasStakeStore, fees, config, web3, challenges, bundleStore} = await deploy({
       contracts: {
         challenges: true,
         uploads: true, 
@@ -49,7 +49,7 @@ describe('Upload Contract', () => {
         time: true, 
         fees: true,
         config: true,
-        stakeStore: true, 
+        atlasStakeStore: true,
         bundleStore: true}
     }));
     [from] = await web3.eth.getAccounts();
@@ -57,7 +57,7 @@ describe('Upload Contract', () => {
 
   describe('Uploads when stake deposited', () => {
     beforeEach(async () => {
-      await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
+      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
       fee = new BN(await fees.methods.getFeeForUpload(1).call());      
       burnAddress = await config.methods.BURN_ADDRESS().call();
     });
