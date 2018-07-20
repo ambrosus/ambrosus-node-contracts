@@ -20,6 +20,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 const bundleId = utils.asciiToHex('bundleId');
 const storagePeriods = 1;
+const totalReward = 100;
 
 describe('Sheltering Contract', () => {
   let web3;
@@ -46,10 +47,17 @@ describe('Sheltering Contract', () => {
       expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
     });
 
-    it(`returns true if account is bundle's shelterer`, async () => {
+    it(`returns false if account is not bundle's shelterer`, async () => {
       expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
       await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(true);
+      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
+    });
+
+    it(`returns true if account is bundle's shelterer`, async () => {
+      expect(await sheltering.methods.isSheltering(other, bundleId).call()).to.equal(false);
+      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
+      await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from});
+      expect(await sheltering.methods.isSheltering(other, bundleId).call()).to.equal(true);
     });
   });
 
@@ -58,20 +66,26 @@ describe('Sheltering Contract', () => {
       await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
     });
 
-    it(`marks as sheltered`, async () => {
+    it(`does not mark uploader as shelterer`, async () => {
       expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
       await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(true);
+      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
     });
 
-    it(`fails if already sheltering`, async () => {
+    it(`fails if already stored`, async () => {
       await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
       await expect(sheltering.methods.store(bundleId, from, storagePeriods).send({from})).to.be.eventually.rejected;
     });
 
-    it(`fails if already sheltering (different expiration date`, async () => {
+    it(`fails if already stored (different expiration date`, async () => {
       await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
       await expect(sheltering.methods.store(bundleId, from, 1800000000).send({from})).to.be.eventually.rejected;
+    });
+
+    it(`fails if already sheltered`, async () => {
+      await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
+      await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from});
+      await expect(bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.be.eventually.rejected;
     });
 
     it(`increments storage used`, async () => {
@@ -112,18 +126,20 @@ describe('Sheltering Contract', () => {
     beforeEach(async () => {
       await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
       await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
+      await stakeStore.methods.depositStake(other, 1, 0).send({from, value: 1});
+      await sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
     });
     
     it(`removes store entry`, async () => {
-      expect(await bundleStore.methods.getShelterers(bundleId).call()).to.include(from);
-      await sheltering.methods.removeShelterer(bundleId, from).send({from});
-      expect(await bundleStore.methods.getShelterers(bundleId).call()).to.not.include(from);
+      expect(await bundleStore.methods.getShelterers(bundleId).call()).to.include(other);
+      await sheltering.methods.removeShelterer(bundleId, other).send({from});
+      expect(await bundleStore.methods.getShelterers(bundleId).call()).to.not.include(other);
     });
 
     it(`decrements storage used`, async () => {
-      expect(await stakeStore.methods.getStorageUsed(from).call()).to.equal('1');
-      await sheltering.methods.removeShelterer(bundleId, from).send({from});
-      expect(await stakeStore.methods.getStorageUsed(from).call()).to.equal('0');
+      expect(await stakeStore.methods.getStorageUsed(other).call()).to.equal('1');
+      await sheltering.methods.removeShelterer(bundleId, other).send({from});
+      expect(await stakeStore.methods.getStorageUsed(other).call()).to.equal('0');
     });
   });
 });

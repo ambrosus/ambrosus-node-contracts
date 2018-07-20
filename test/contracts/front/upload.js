@@ -31,6 +31,7 @@ describe('Upload Contract', () => {
   let stakeStore;
   let sheltering;
   let challenges;
+  let bundleStore;
   let burnAddress;
   let config;
   let fees;
@@ -41,7 +42,7 @@ describe('Upload Contract', () => {
   const expectedBurnAmount = () => fee.mul(new BN(5)).div(new BN(100));
 
   beforeEach(async () => {
-    ({uploads, sheltering, stakeStore, fees, config, web3, challenges} = await deploy({
+    ({uploads, sheltering, stakeStore, fees, config, web3, challenges, bundleStore} = await deploy({
       contracts: {
         challenges: true,
         uploads: true, 
@@ -68,10 +69,11 @@ describe('Upload Contract', () => {
       });
     });
 
-    it(`marks as sheltered`, async () => {
-      expect(await sheltering.methods.isSheltering(from, bundleId).call({from})).to.equal(false);
+    it(`saves as uploader`, async () => {
+      const emptyAddress = '0x0000000000000000000000000000000000000000';
+      expect(await bundleStore.methods.getUploader(bundleId).call({from})).to.equal(emptyAddress);
       await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(true);
+      expect(await bundleStore.methods.getUploader(bundleId).call({from})).to.equal(from);
     });
 
     it(`fails if fee too high`, async () => {      
