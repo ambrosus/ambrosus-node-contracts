@@ -21,12 +21,12 @@ contract Uploads is Base {
 
     using SafeMath for uint;
 
-    event BundleUploaded(bytes32 bundleId, uint storagePeriods);
-
     constructor(Head _head) Base(_head) public {         
     }
 
-    function registerBundle(bytes32 bundleId, uint storagePeriods) public payable {
+    event BundleUploaded(bytes32 bundleId, uint storagePeriods);
+
+    function registerBundle(bytes32 bundleId, uint64 storagePeriods) public payable {
         Fees fees = context().fees();
         Config config = context().config();
         uint fee = fees.getFeeForUpload(storagePeriods);

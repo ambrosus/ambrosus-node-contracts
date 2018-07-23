@@ -46,10 +46,12 @@ contract Payouts is Base {
             beneficiary,
             firstPeriod,
             firstPeriod);
+
         payoutsStore.grantForPeriods.value(rewardInFullPeriod * (numberOfPeriods - 1))(
             beneficiary,
             firstPeriod + 1,
             firstPeriod + numberOfPeriods - 1);
+
         if (rewardUnaligned - rewardInFirstPeriod == 0) {
             payoutsStore.grantForPeriods.value(rewardAtEnd)(
                 beneficiary,
@@ -79,6 +81,7 @@ contract Payouts is Base {
             firstPeriod,
             rewardInFirstPeriod,
             refundAddress);
+
         payoutsStore.revokeForPeriods(
             beneficiary,
             firstPeriod + 1,
