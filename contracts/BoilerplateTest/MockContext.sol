@@ -17,7 +17,6 @@ contract MockContext is Context {
 
     constructor(
         Time _time,
-        BundleRegistry _bundleRegistry,
         StakeStore _stakeStore,
         BundleStore _bundleStore,
         KycWhitelist _kycWhitelist,
@@ -31,10 +30,10 @@ contract MockContext is Context {
         ShelteringTransfers _shelteringTransfers,
         Config _config,
         Uploads _uploads,
-        RolesStore _rolesStore
+        RolesStore _rolesStore,
+        ApolloDepositStore _apolloDepositStore
     ) Context(
         _time,
-        _bundleRegistry,
         _stakeStore,
         _bundleStore,
         _kycWhitelist,
@@ -48,7 +47,8 @@ contract MockContext is Context {
         _shelteringTransfers,
         _config,
         _uploads,
-        _rolesStore
+        _rolesStore,
+        _apolloDepositStore
     ) public {        
     }
 

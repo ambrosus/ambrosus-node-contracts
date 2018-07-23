@@ -28,6 +28,7 @@ import "../Front/Challenges.sol";
 import "../Front/Payouts.sol";
 import "../Front/ShelteringTransfers.sol";
 import "../Front/Uploads.sol";
+import "../Storage/ApolloDepositStore.sol";
 
 
 contract Context {
@@ -48,10 +49,10 @@ contract Context {
     Config public config;
     Uploads public uploads;
     RolesStore public rolesStore;
+    ApolloDepositStore public apolloDepositStore;
 
     constructor(
         Time _time,
-        BundleRegistry _bundleRegistry,
         StakeStore _stakeStore,
         BundleStore _bundleStore,
         KycWhitelist _kycWhitelist,        
@@ -65,10 +66,10 @@ contract Context {
         ShelteringTransfers _shelteringTransfers,
         Config _config,
         Uploads _uploads,
-        RolesStore _rolesStore 
+        RolesStore _rolesStore,
+        ApolloDepositStore _apolloDepositStore
     ) public {
         time = _time;
-        bundleRegistry = _bundleRegistry;
         stakeStore = _stakeStore;
         bundleStore = _bundleStore;
         kycWhitelist = _kycWhitelist;
@@ -83,6 +84,7 @@ contract Context {
         config = _config;
         uploads = _uploads;
         rolesStore = _rolesStore;
+        apolloDepositStore = _apolloDepositStore;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
@@ -102,6 +104,7 @@ contract Context {
             time == contractAddress ||
             uploads == contractAddress ||            
             payouts == contractAddress ||            
-            rolesStore == contractAddress;
+            rolesStore == contractAddress ||
+            apolloDepositStore == contractAddress;
     }
 }
