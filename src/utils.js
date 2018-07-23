@@ -7,16 +7,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {getConfig} from '../../config';
-import lowercaseFirstLetter from '../../utils';
-
-export default class TaskBase {
-  getContract(contractJson) {
-    const name = lowercaseFirstLetter(contractJson.contractName);
-    return new this.web3.eth.Contract(contractJson.abi, getConfig().contracts[name]);
-  }
-
-  description() {
-    return '';
-  }
+export default function lowercaseFirstLetter(string) {
+  return string.charAt(0).toLowerCase() + string.slice(1);
 }

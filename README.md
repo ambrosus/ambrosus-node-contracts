@@ -31,6 +31,11 @@ yarn task whitelist check
 yarn task stake deposit [role] [amount]
 yarn task stake release
 yarn task stake check
+yarn task upload [bundleId] [storagePeriods]
+yarn task transfer list
+yarn task transfer start [bundleId]
+yarn task transfer resolve [transferId]
+yarn task transfer cancel [transferId]
 ```
 
 ## Testing
