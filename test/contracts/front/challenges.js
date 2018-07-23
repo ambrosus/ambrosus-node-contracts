@@ -122,7 +122,7 @@ describe('Challenges Contract', () => {
       await expect(challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: tooSmallFee})).to.be.eventually.rejected;
     });
 
-    it(`Fails if challenger has provided too big fee`, async () => {
+    it(`Fails if challenger has provided fee that is too high`, async () => {
       const tooBigFee = systemFee.add(ONE);
       await expect(challenges.methods.startForSystem(from, bundleId, 5).send({from, value: tooBigFee})).to.be.eventually.rejected;
     });
@@ -138,7 +138,7 @@ describe('Challenges Contract', () => {
       await expect(challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee})).to.be.eventually.rejected;
     });
 
-    describe('Stores challenge correctly', () => {
+    describe('Stores system challenges correctly', () => {
       const nullAddress = '0x0000000000000000000000000000000000000000';
       let challengeBlockTimestamp;
       let challengeCreationEvent;
@@ -202,12 +202,12 @@ describe('Challenges Contract', () => {
       expect(await challenges.methods.start(from, bundleId).send({from: other, value: fee})).to.emitEvent('ChallengeCreated');
     });
 
-    it(`Fails if challenger has provided too small value`, async () => {
+    it(`Fails if challenger has provided too low value`, async () => {
       const tooSmallFee = fee.sub(ONE);
       await expect(challenges.methods.start(from, bundleId).send({from: other, value: tooSmallFee})).to.be.eventually.rejected;
     });
 
-    it(`Fails if challenger has provided too big value`, async () => {
+    it(`Fails if challenger has provided too high value`, async () => {
       const tooBigFee = fee.add(ONE);
       await expect(challenges.methods.start(from, bundleId).send({from: other, value: tooBigFee})).to.be.eventually.rejected;
     });
