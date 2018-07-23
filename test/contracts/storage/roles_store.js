@@ -26,7 +26,6 @@ describe('RolesStore Contract', () => {
   let apollo;
   let other;
   let rolesStore;
-  let kycWhitelist;
 
   const setRole = async (node, role, sender = from) => rolesStore.methods.setRole(node, role).send({from: sender});
   const setUrl = async (node, url, sender = from) => rolesStore.methods.setUrl(node, url).send({from: sender});
@@ -34,21 +33,14 @@ describe('RolesStore Contract', () => {
   const getUrl = async (node) => rolesStore.methods.getUrl(node).call();
 
   beforeEach(async () => {
-    ({web3, rolesStore, kycWhitelist} = await deploy({web3, contracts: {rolesStore: true, kycWhitelist: true, config: true}}));
+    ({web3, rolesStore} = await deploy({web3, contracts: {rolesStore: true, config: true}}));
     [from, atlas, hermes, apollo, other] = await web3.eth.getAccounts();
-    await kycWhitelist.methods.add(hermes, HERMES).send({from});
-    await kycWhitelist.methods.add(atlas, ATLAS).send({from});
-    await kycWhitelist.methods.add(apollo, APOLLO).send({from});
   });
 
   describe('Roles', () => {
     it('sets roles correctly', async () => {
       await setRole(hermes, HERMES);
       expect(await getRole(hermes)).to.equal(HERMES.toString());
-    });
-
-    it('throws when setting a role not permitted by KYC', async () => {
-      await expect(setRole(hermes, APOLLO)).to.be.eventually.rejected;
     });
 
     it('is contextInternal', async () => {
@@ -72,7 +64,7 @@ describe('RolesStore Contract', () => {
     it('cannot add url if role was not set', async () => {
       await expect(setUrl(atlas, url)).to.be.eventually.rejected;
       await setRole(atlas, ATLAS);
-      await setUrl(atlas, url);
+      await expect(setUrl(atlas, url)).to.be.eventually.fulfilled;
       expect(await getUrl(atlas)).to.equal(url);
     });
 
@@ -87,7 +79,7 @@ describe('RolesStore Contract', () => {
     });
 
     it('can add urls with unicode', async () => {
-      const unicodeUrl = 'https://emodzi.com/😀💩🔥';
+      const unicodeUrl = 'https://emoji.com/😀🔥';
       await setUrl(hermes, unicodeUrl);
       expect(await getUrl(hermes)).to.equal(unicodeUrl);
     });

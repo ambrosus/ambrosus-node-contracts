@@ -11,38 +11,27 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
-import "./KycWhitelist.sol";
 
 contract RolesStore is Base {
-
-    struct NodeInfo {
-        Config.NodeType role;
-        string url;
-    }
-
-    mapping(address => NodeInfo) public nodes;
+    mapping(address => Config.NodeType) public roles;
+    mapping(address => string) public urls;
 
     constructor(Head _head) public Base(_head) { }
 
     function setRole(address node, Config.NodeType role) public onlyContextInternalCalls {
-        KycWhitelist kycWhitelist = context().kycWhitelist();
-        if (role != Config.NodeType.NONE) {
-            require(kycWhitelist.hasRoleAssigned(node, role));
-        }
-
-        nodes[node].role = role;
+        roles[node] = role;
     }
 
     function setUrl(address node, string url) public onlyContextInternalCalls {
         require(getRole(node) == Config.NodeType.ATLAS || getRole(node) == Config.NodeType.HERMES);
-        nodes[node].url = url;
+        urls[node] = url;
     }
 
     function getRole(address node) public view returns(Config.NodeType) {
-        return nodes[node].role;
+        return roles[node];
     }
 
     function getUrl(address node) public view returns(string) {
-        return nodes[node].url;
+        return urls[node];
     }
 }
