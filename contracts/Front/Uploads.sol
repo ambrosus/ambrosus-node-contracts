@@ -11,7 +11,9 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
 import "../Configuration/Fees.sol";
-import "../Middleware/Sheltering.sol";
+import "../Configuration/Config.sol";
+import "../Storage/BundleStore.sol";
+import "../Storage/KycWhitelist.sol";
 import "./Challenges.sol";
 import "../Configuration/Time.sol";
 import "../Configuration/Config.sol";
@@ -29,12 +31,16 @@ contract Uploads is Base {
     function registerBundle(bytes32 bundleId, uint64 storagePeriods) public payable {
         Fees fees = context().fees();
         Config config = context().config();
+        KycWhitelist kycWhitelist = context().kycWhitelist();
         uint fee = fees.getFeeForUpload(storagePeriods);
 
+        require(kycWhitelist.hasRoleAssigned(msg.sender, Config.NodeType.HERMES));
         require(storagePeriods > 0);
         require(msg.value == fee);
 
-        context().sheltering().store(bundleId, msg.sender, storagePeriods);
+        BundleStore bundleStore = context().bundleStore();
+        bundleStore.store(bundleId, msg.sender, storagePeriods);
+
         (uint challengeFee, uint validatorsFee, uint burnFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
         config.BURN_ADDRESS().transfer(burnFee);
