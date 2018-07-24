@@ -8,7 +8,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import SafeMathExtensionsJson from '../build/contracts/SafeMathExtensions.json';
-import BundleRegistryJson from '../build/contracts/BundleRegistry.json';
 import StakeStoreJson from '../build/contracts/StakeStore.json';
 import BundleStoreJson from '../build/contracts/BundleStore.json';
 import HeadJson from '../build/contracts/Head.json';
@@ -26,12 +25,12 @@ import ShelteringTransfersJson from '../build/contracts/ShelteringTransfers.json
 import TimeJson from '../build/contracts/Time.json';
 import ConfigJson from '../build/contracts/Config.json';
 import UploadsJson from '../build/contracts/Uploads.json';
+import ApolloDepositStoreJson from '../build/contracts/ApolloDepositStore.json';
 
 import {DEFAULT_GAS, deployContract, getDefaultAddress, link} from './web3_tools';
 
 const DEFAULT_CONTRACT_JSONS = {
   time: TimeJson,
-  bundleRegistry: BundleRegistryJson,
   stakeStore: StakeStoreJson,
   roles: RolesJson,
   stakes: StakesJson,
@@ -45,7 +44,8 @@ const DEFAULT_CONTRACT_JSONS = {
   shelteringTransfers: ShelteringTransfersJson,
   config: ConfigJson,
   uploads: UploadsJson,
-  rolesStore: RolesStoreJson
+  rolesStore: RolesStoreJson,
+  apolloDepositStore: ApolloDepositStoreJson
 };
 
 const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor'); 

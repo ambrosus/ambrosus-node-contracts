@@ -20,16 +20,16 @@ const {expect} = chai;
 describe('Context Contract', () => {
   let web3;
   let context;
-  let bundleRegistry;
+  let fees;
   let accounts;
-  
+
   before(async () => {
-    ({web3, bundleRegistry, context} = await deploy({contracts: {bundleRegistry: true}}));
+    ({web3, fees, context} = await deploy({contracts: {fees: true}}));
     accounts = await web3.eth.getAccounts();
   });
 
   it('canCall returns true if address is known', async () => {
-    expect(await context.methods.isInternalToContext(bundleRegistry.options.address).call()).to.equal(true);
+    expect(await context.methods.isInternalToContext(fees.options.address).call()).to.equal(true);
   });
 
   it('canCall returns false only if such address is unknown', async () => {
