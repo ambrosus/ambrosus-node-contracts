@@ -87,18 +87,6 @@ describe('Sheltering Contract', () => {
       await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from});
       await expect(bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.be.eventually.rejected;
     });
-
-    it(`increments storage used`, async () => {
-      expect(await stakeStore.methods.getStorageUsed(from).call({from})).to.eq('0');
-      await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await stakeStore.methods.getStorageUsed(from).call({from})).to.eq('1');
-    });
-  });
-  
-  describe('Storing when not staking', () => {
-    it(`fails (sender is not staking)`, async () => {      
-      await expect(sheltering.methods.store(bundleId, from, storagePeriods).send({from})).to.be.eventually.rejected;
-    });
   });
 
   describe('Adding shelterer', () => {
