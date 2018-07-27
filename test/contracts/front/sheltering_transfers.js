@@ -148,15 +148,15 @@ describe('ShelteringTransfers Contract', () => {
       });
 
       it('Removes donor from shelterers of the bundle', async () => {
-        expect(await isSheltering(other, bundleId)).to.be.true;
+        expect(await isSheltering(bundleId, other)).to.be.true;
         await resolveTransfer(transferId, notSheltering);
-        expect(await isSheltering(other, bundleId)).to.be.false;
+        expect(await isSheltering(bundleId, other)).to.be.false;
       });
 
       it('Adds recipient to shelterers of the bundle', async () => {
-        expect(await isSheltering(notSheltering, bundleId)).to.be.false;
+        expect(await isSheltering(bundleId, notSheltering)).to.be.false;
         await resolveTransfer(transferId, notSheltering);
-        expect(await isSheltering(notSheltering, bundleId)).to.be.true;
+        expect(await isSheltering(bundleId, notSheltering)).to.be.true;
       });
 
       it('Removes the transfer from store', async () => {

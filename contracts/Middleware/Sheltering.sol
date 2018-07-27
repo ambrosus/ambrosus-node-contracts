@@ -59,7 +59,7 @@ contract Sheltering is Base {
         bundleStore.removeShelterer(bundleId, shelterer);
     }
 
-    function isSheltering(address sheltererId, bytes32 bundleId) public view returns(bool) {
+    function isSheltering(bytes32 bundleId, address sheltererId) public view returns(bool) {
         BundleStore bundleStore = context().bundleStore();
         address[] memory shelterers = bundleStore.getShelterers(bundleId);
         for (uint i = 0; i < shelterers.length; i++) {

@@ -279,7 +279,7 @@ describe('Challenges Contract', () => {
 
     it('Stores resolver as a new shelterer', async () => {
       await challenges.methods.resolve(challengeId).send({from: resolver});
-      expect(await sheltering.methods.isSheltering(resolver, bundleId).call()).to.equal(true);
+      expect(await sheltering.methods.isSheltering(bundleId, resolver).call()).to.equal(true);
     });
 
     it('Grants sheltering reward', async () => {
@@ -378,7 +378,7 @@ describe('Challenges Contract', () => {
     it(`Penalized shelterer stops being shelterer`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
       challenges.methods.markAsExpired(challengeId).send({from});
-      expect(await sheltering.methods.isSheltering(resolver, bundleId).call({from})).to.equal(false);
+      expect(await sheltering.methods.isSheltering(bundleId, resolver).call({from})).to.equal(false);
     });
 
     it(`Revokes shelterer's reward`, async () => {

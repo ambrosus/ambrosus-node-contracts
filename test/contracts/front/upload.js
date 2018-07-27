@@ -63,11 +63,8 @@ describe('Upload Contract', () => {
 
   it('emits event on upload', async () => {
     expect(await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee}))
-      .to
-      .emitEvent('BundleUploaded')
-      .withArgs({
-        bundleId, storagePeriods: '1'
-      });
+      .to.emitEvent('BundleUploaded')
+      .withArgs({bundleId, storagePeriods: '1'});
   });
 
   it(`saves as uploader`, async () => {
