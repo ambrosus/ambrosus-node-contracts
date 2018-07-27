@@ -23,7 +23,7 @@ export default class UploadTask extends TaskBase {
       this.printUsage();
     } else {
       console.log('Uploading empty bundle...');
-      this.uploadBundle(args[0], args[1]);
+      await this.uploadBundle(args[0], args[1]);
     }
   }
 

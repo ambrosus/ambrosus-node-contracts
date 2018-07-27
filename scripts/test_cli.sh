@@ -3,13 +3,11 @@ yarn build
 yarn task ganache&
 sleep 3
 yarn task deploy --save-config && \
-yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 1 && \
+yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 HERMES && \
 yarn task whitelist check 0xEbDEAC82424a053DFf79397862BD122F76798bC5 && \
 yarn task whitelist remove 0xEbDEAC82424a053DFf79397862BD122F76798bC5 && \
-yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 1 && \
-yarn task stake deposit 1 10000 && \
-yarn task stake release && \
-yarn task stake deposit 1 10000 && \
+yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 HERMES && \
+yarn task onboard HERMES localhost && \
 yarn task upload 0xcafe 1 && \
 yarn task transfer start 0xcafe && \
 yarn task transfer list && \

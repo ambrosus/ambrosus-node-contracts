@@ -17,7 +17,7 @@ import "../Middleware/Sheltering.sol";
 import "../Configuration/Fees.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
-import "../Storage/StakeStore.sol";
+import "../Storage/AtlasStakeStore.sol";
 import "../Storage/BundleStore.sol";
 
 
@@ -92,8 +92,8 @@ contract Challenges is Base {
         if (isSystemChallenge(challengeId)) {
             refundAddress = challenge.sheltererId;
         } else {
-            StakeStore stakeStore = context().stakeStore();
-            penalty = stakeStore.slash(challenge.sheltererId, challenge.challengerId);
+            AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
+            penalty = atlasStakeStore.slash(challenge.sheltererId, challenge.challengerId);
             revokedReward = revokeReward(challenge);
 
             Sheltering sheltering = context().sheltering();

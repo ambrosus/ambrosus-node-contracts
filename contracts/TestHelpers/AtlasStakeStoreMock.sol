@@ -9,12 +9,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-import "../Storage/StakeStore.sol";
+import "../Storage/AtlasStakeStore.sol";
 
 
-contract StakeStoreMock is StakeStore {
+contract AtlasStakeStoreMock is AtlasStakeStore {
 
-    constructor(Head _head) public StakeStore(_head) {    
+    constructor(Head _head) public AtlasStakeStore(_head) {
     }
 
     function setStorageUsed(address node, uint storageUsed) public {

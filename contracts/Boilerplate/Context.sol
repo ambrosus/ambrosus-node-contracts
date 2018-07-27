@@ -10,35 +10,34 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Storage/BundleRegistry.sol";
-import "../Storage/StakeStore.sol";
+import "../Storage/AtlasStakeStore.sol";
 import "../Storage/BundleStore.sol";
 import "../Storage/KycWhitelist.sol";
 import "../Storage/PayoutsStore.sol";
 import "../Storage/RolesStore.sol";
+import "../Storage/ApolloDepositStore.sol";
 
-import "../Configuration/Roles.sol";
 import "../Configuration/Fees.sol";
 import "../Configuration/Time.sol";
 import "../Configuration/Config.sol";
 
 import "../Middleware/Sheltering.sol";
 
-import "../Front/Stakes.sol";
 import "../Front/Challenges.sol";
 import "../Front/Payouts.sol";
 import "../Front/ShelteringTransfers.sol";
 import "../Front/Uploads.sol";
-import "../Storage/ApolloDepositStore.sol";
+import "../Front/Roles.sol";
+
 
 
 contract Context {
 
     BundleRegistry public bundleRegistry;
-    StakeStore public stakeStore;
+    AtlasStakeStore public atlasStakeStore;
     BundleStore public bundleStore;
     KycWhitelist public kycWhitelist;
     Roles public roles;
-    Stakes public stakes;
     Sheltering public sheltering;
     Fees public fees;
     Challenges public challenges;
@@ -53,11 +52,10 @@ contract Context {
 
     constructor(
         Time _time,
-        StakeStore _stakeStore,
+        AtlasStakeStore _atlasStakeStore,
         BundleStore _bundleStore,
         KycWhitelist _kycWhitelist,        
         Roles _roles,
-        Stakes _stakes,
         Sheltering _sheltering,
         Fees _fees,
         Challenges _challenges,
@@ -70,11 +68,10 @@ contract Context {
         ApolloDepositStore _apolloDepositStore
     ) public {
         time = _time;
-        stakeStore = _stakeStore;
+        atlasStakeStore = _atlasStakeStore;
         bundleStore = _bundleStore;
         kycWhitelist = _kycWhitelist;
         roles = _roles;
-        stakes = _stakes;
         sheltering = _sheltering;
         fees = _fees;
         challenges = _challenges;
@@ -90,11 +87,10 @@ contract Context {
     function isInternalToContext(address contractAddress) view public returns (bool) {
         // solium-disable-next-line operator-whitespace
         return bundleRegistry == contractAddress ||
-            stakeStore == contractAddress ||
+            atlasStakeStore == contractAddress ||
             bundleStore == contractAddress ||
             kycWhitelist == contractAddress ||
             roles == contractAddress ||
-            stakes == contractAddress ||
             sheltering == contractAddress ||
             fees == contractAddress ||
             challenges == contractAddress ||

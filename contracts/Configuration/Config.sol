@@ -18,7 +18,7 @@ contract Config {
     uint constant public PENALTY_DIVIDER = 100;
     address constant public BURN_ADDRESS = 0x1000000000000000000000000000000000000000;
 
-    uint constant public APOLLO_STAKE = 250000 ether;
+    uint constant public APOLLO_DEPOSIT = 250000 ether;
     uint constant public HERMES_STAKE = 150000 ether;
     uint constant public ATLAS1_STAKE = 10000 ether;
     uint constant public ATLAS2_STAKE = 30000 ether;

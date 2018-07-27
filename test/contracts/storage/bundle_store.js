@@ -49,19 +49,19 @@ describe('BundleStore Contract', () => {
         expect(await bundleStore.methods.getUploader(bundleId).call()).to.deep.equal(from);
         expect(await bundleStore.methods.isUploader(from, bundleId).call()).to.deep.equal(true);
       });
-  
+
       it('stores upload timestamp', async () => {
         expect(await bundleStore.methods.getUploadTimestamp(bundleId).call()).to.equal(now.toString());
       });
-  
+
       it('initially stores 0 shelterers', async () => {
         expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([]);
       });
-  
+
       it('stores storage duration', async () => {
         expect(await bundleStore.methods.getStoragePeriodsCount(bundleId).call()).to.equal(storagePeriods.toString());
       });
-  
+
       it('reward for creator should be 0', async () => {
         const actualTotalReward = await bundleStore.methods.getTotalShelteringReward(bundleId, from).call();
         expect(actualTotalReward).to.equal('0');

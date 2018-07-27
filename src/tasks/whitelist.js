@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import TaskBase from './base/task_base';
 import {getDefaultAddress, getDefaultGas, createWeb3} from '../web3_tools';
 import KycWhitelist from '../../build/contracts/KycWhitelist';
+import {APOLLO, ATLAS, HERMES} from '../consts';
 
 export default class WhitelistTask extends TaskBase {
   async execute(args) {
@@ -33,11 +34,12 @@ export default class WhitelistTask extends TaskBase {
   }
 
   async add(address, role) {
+    const roleCodes = {ATLAS, HERMES, APOLLO};
     this.validateAddress(address);
     const whitelist = this.getContract(KycWhitelist);
     const from = getDefaultAddress(this.web3);
     const gas = getDefaultGas();
-    await whitelist.methods.add(address, role).send({from, gas});
+    await whitelist.methods.add(address, roleCodes[role]).send({from, gas});
   }
 
   async remove(address) {

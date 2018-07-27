@@ -13,7 +13,6 @@ import "../Boilerplate/Head.sol";
 import "../Configuration/Fees.sol";
 import "../Middleware/Sheltering.sol";
 import "./Challenges.sol";
-import "../Configuration/Time.sol";
 import "../Configuration/Config.sol";
 
 

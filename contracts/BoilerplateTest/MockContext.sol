@@ -17,11 +17,10 @@ contract MockContext is Context {
 
     constructor(
         Time _time,
-        StakeStore _stakeStore,
+        AtlasStakeStore _atlasStakeStore,
         BundleStore _bundleStore,
         KycWhitelist _kycWhitelist,
         Roles _roles,
-        Stakes _stakes,
         Sheltering _sheltering,
         Fees _fees,
         Challenges _challenges,
@@ -34,11 +33,10 @@ contract MockContext is Context {
         ApolloDepositStore _apolloDepositStore
     ) Context(
         _time,
-        _stakeStore,
+        _atlasStakeStore,
         _bundleStore,
         _kycWhitelist,
         _roles,
-        _stakes,
         _sheltering,
         _fees,
         _challenges,
