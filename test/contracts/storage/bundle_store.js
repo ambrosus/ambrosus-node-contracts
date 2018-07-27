@@ -40,42 +40,38 @@ describe('BundleStore Contract', () => {
   });
 
   describe('Storing a bundle', () => {
+    describe('Stores bundle correctly', () => {
+      beforeEach(async () => {
+        await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
+      });
+
+      it('creator is saved as uploader', async () => {
+        expect(await bundleStore.methods.getUploader(bundleId).call()).to.deep.equal(from);
+        expect(await bundleStore.methods.isUploader(from, bundleId).call()).to.deep.equal(true);
+      });
+  
+      it('stores upload timestamp', async () => {
+        expect(await bundleStore.methods.getUploadTimestamp(bundleId).call()).to.equal(now.toString());
+      });
+  
+      it('initially stores 0 shelterers', async () => {
+        expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([]);
+      });
+  
+      it('stores storage duration', async () => {
+        expect(await bundleStore.methods.getStoragePeriodsCount(bundleId).call()).to.equal(storagePeriods.toString());
+      });
+  
+      it('reward for creator should be 0', async () => {
+        const actualTotalReward = await bundleStore.methods.getTotalShelteringReward(bundleId, from).call();
+        expect(actualTotalReward).to.equal('0');
+      });
+    });
+
     it('should emit event when bundle was added', async () => {
       expect(await bundleStore.methods.store(bundleId, from, 1).send({from}))
         .to.emitEvent('BundleStored')
         .withArgs({bundleId, uploader: from});
-    });
-
-    it('creator is saved as uploader', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await bundleStore.methods.getUploader(bundleId).call()).to.deep.equal(from);
-      expect(await bundleStore.methods.isUploader(from, bundleId).call()).to.deep.equal(true);
-    });
-
-    it('stores upload timestamp', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await bundleStore.methods.getUploadTimestamp(bundleId).call()).to.equal(now.toString());
-    });
-
-    it('creator is not a shelterer', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await bundleStore.methods.getShelterers(bundleId).call()).to.deep.equal([]);
-    });
-
-    it('stores storage duration', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await bundleStore.methods.getStoragePeriodsCount(bundleId).call()).to.equal(storagePeriods.toString());
-    });
-
-    it('does not store expiration date', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await bundleStore.methods.getShelteringExpirationDate(bundleId, from).call()).to.equal('0');
-    });
-
-    it('reward for creator should be 0', async () => {
-      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      const actualTotalReward = await bundleStore.methods.getTotalShelteringReward(bundleId, from).call();
-      expect(actualTotalReward).to.equal('0');
     });
 
     it('reject if not context internal call', async () => {

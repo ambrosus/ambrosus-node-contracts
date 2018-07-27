@@ -61,15 +61,9 @@ describe('Sheltering Contract', () => {
     });
   });
 
-  describe('Storing when staking', () => {
+  describe('Storing', () => {
     beforeEach(async () => {
       await stakeStore.methods.depositStake(from, 1, 0).send({from, value: 1});
-    });
-
-    it(`does not mark uploader as shelterer`, async () => {
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
-      await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
     });
 
     it(`fails if already stored`, async () => {

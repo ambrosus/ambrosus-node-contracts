@@ -90,7 +90,6 @@ contract BundleStore is Base {
         require(storagePeriods > 0);
         Time time = context().time();
         bundles[bundleId] = Bundle(uploader, time.currentTimestamp(), new address[](0), storagePeriods);
-        bundles[bundleId].uploader = uploader;
         emit BundleStored(bundleId, uploader);
     }
 
