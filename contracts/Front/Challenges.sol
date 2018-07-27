@@ -93,7 +93,7 @@ contract Challenges is Base {
             refundAddress = challenge.sheltererId;
         } else {
             AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
-            penalty = atlasStakeStore.slash(challenge.sheltererId, challenge.challengerId);
+            penalty = atlasStakeStore.slash(challenge.sheltererId, this);
             revokedReward = revokeReward(challenge);
 
             Sheltering sheltering = context().sheltering();
@@ -102,7 +102,7 @@ contract Challenges is Base {
             refundAddress = challenge.challengerId;
         }
 
-        uint amountToReturn = (challenge.feePerChallenge * challenge.activeCount) + revokedReward;
+        uint amountToReturn = (challenge.feePerChallenge * challenge.activeCount) + revokedReward + penalty;
         emit ChallengeTimeout(challenge.sheltererId, challenge.bundleId, challengeId, penalty);
         delete challenges[challengeId];
         refundAddress.transfer(amountToReturn);

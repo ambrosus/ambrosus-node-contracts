@@ -88,7 +88,7 @@ contract AtlasStakeStore is Base {
         stakes[node].storageUsed = stakes[node].storageUsed.add(1);
     }
 
-    function slash(address shelterer, address challenger) public onlyContextInternalCalls returns(uint) {
+    function slash(address shelterer, address refundAddress) public onlyContextInternalCalls returns(uint) {
         require(isStaking(shelterer));
 
         (uint penaltiesCount, uint lastPenaltyTime) = getPenaltiesHistory(shelterer);
@@ -105,7 +105,7 @@ contract AtlasStakeStore is Base {
             slashedAmount = amount;
         }
         stakes[shelterer].amount = stakes[shelterer].amount.sub(slashedAmount);
-        challenger.transfer(slashedAmount);
+        refundAddress.transfer(slashedAmount);
         return slashedAmount;
     }
 
