@@ -22,14 +22,16 @@ contract BundleStore is Base {
     uint constant MAX_EXPIRATION_DATE = 32503680000; // year 3000
 
     struct Bundle {
+        address uploader;
+        uint uploadTimestamp;
         address[] shelterers;
-        uint64 storagePeriods;
         // TODO Make as mapping to struct
         mapping(address => uint) shelteringStartDates;
         mapping(address => uint) totalShelteringReward;
+        uint64 storagePeriods;
     }
 
-    event BundleStored(bytes32 bundleId, address creator);
+    event BundleStored(bytes32 bundleId, address uploader);
 
     event SheltererAdded(bytes32 bundleId, address shelterer);
 
@@ -41,6 +43,18 @@ contract BundleStore is Base {
 
     function bundleExists(bytes32 bundleId) view public returns (bool) {
         return getStoragePeriodsCount(bundleId) > 0;
+    }
+
+    function isUploader(address nodeId, bytes32 bundleId) view public returns (bool) {
+        return bundles[bundleId].uploader == nodeId;
+    }
+
+    function getUploader(bytes32 bundleId) view public returns (address) {
+        return bundles[bundleId].uploader;
+    }
+
+    function getUploadTimestamp(bytes32 bundleId) view public returns (uint) {
+        return bundles[bundleId].uploadTimestamp;
     }
 
     function getShelterers(bytes32 bundleId) view public returns (address[]) {
@@ -71,15 +85,12 @@ contract BundleStore is Base {
         return getShelteringStartDate(bundleId, shelterer) + (getStoragePeriodsCount(bundleId) * config.STORAGE_PERIOD_UNIT());
     }
 
-    function store(bytes32 bundleId, address creator, uint64 storagePeriods) public onlyContextInternalCalls {
+    function store(bytes32 bundleId, address uploader, uint64 storagePeriods) public onlyContextInternalCalls {
         require(!bundleExists(bundleId));
         require(storagePeriods > 0);
         Time time = context().time();
-        bundles[bundleId] = Bundle(new address[](1), storagePeriods);
-        bundles[bundleId].shelterers[0] = creator;
-        bundles[bundleId].shelteringStartDates[creator] = time.currentTimestamp();
-        bundles[bundleId].totalShelteringReward[creator] = 0;
-        emit BundleStored(bundleId, creator);
+        bundles[bundleId] = Bundle(uploader, time.currentTimestamp(), new address[](0), storagePeriods);
+        emit BundleStored(bundleId, uploader);
     }
 
     function addShelterer(bytes32 bundleId, address shelterer, uint totalReward) public onlyContextInternalCalls {

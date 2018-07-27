@@ -54,15 +54,15 @@ contract Challenges is Base {
         emit ChallengeCreated(sheltererId, bundleId, challengeId, 1);
     }
 
-    function startForSystem(address sheltererId, bytes32 bundleId, uint8 challengesCount) public onlyContextInternalCalls payable {
-        validateChallenge(sheltererId, bundleId);
+    function startForSystem(address uploaderId, bytes32 bundleId, uint8 challengesCount) public onlyContextInternalCalls payable {
+        validateSystemChallenge(uploaderId, bundleId);
         validateFeeAmount(challengesCount, bundleId);
 
         Time time = context().time();
-        Challenge memory challenge = Challenge(sheltererId, bundleId, 0x0, msg.value / challengesCount, time.currentTimestamp(), challengesCount);
+        Challenge memory challenge = Challenge(uploaderId, bundleId, 0x0, msg.value / challengesCount, time.currentTimestamp(), challengesCount);
         bytes32 challengeId = storeChallenge(challenge);
 
-        emit ChallengeCreated(sheltererId, bundleId, challengeId, challengesCount);
+        emit ChallengeCreated(uploaderId, bundleId, challengeId, challengesCount);
     }
 
     function resolve(bytes32 challengeId) public {
@@ -85,24 +85,37 @@ contract Challenges is Base {
         
         Challenge storage challenge = challenges[challengeId];
 
-        StakeStore stakeStore = context().stakeStore();
-        uint penalty = stakeStore.slash(challenge.sheltererId, challenge.challengerId);
-        uint revokedReward = revokeReward(challenge);
+        uint penalty = 0;
+        uint revokedReward = 0;
+        address refundAddress;
 
-        Sheltering sheltering = context().sheltering();
-        sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId);
+        if (isSystemChallenge(challengeId)) {
+            refundAddress = challenge.sheltererId;
+        } else {
+            StakeStore stakeStore = context().stakeStore();
+            penalty = stakeStore.slash(challenge.sheltererId, challenge.challengerId);
+            revokedReward = revokeReward(challenge);
+
+            Sheltering sheltering = context().sheltering();
+            sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId);
+
+            refundAddress = challenge.challengerId;
+        }
 
         uint amountToReturn = (challenge.feePerChallenge * challenge.activeCount) + revokedReward;
-        address challengerId = challenge.challengerId;
         emit ChallengeTimeout(challenge.sheltererId, challenge.bundleId, challengeId, penalty);
         delete challenges[challengeId];
-        challengerId.transfer(amountToReturn);
+        refundAddress.transfer(amountToReturn);
     }
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns(bool) {
         Config config = context().config();
         Time time = context().time();
         return time.currentTimestamp() > challenges[challengeId].creationTime + config.CHALLENGE_DURATION();
+    }
+
+    function isSystemChallenge(bytes32 challengeId) public view returns(bool) {
+        return challenges[challengeId].challengerId == 0x0;
     }
 
     function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
@@ -145,6 +158,12 @@ contract Challenges is Base {
         uint endTime = bundleStore.getShelteringExpirationDate(bundleId, sheltererId);
         Time time = context().time();
         require(endTime > time.currentTimestamp());
+    }
+
+    function validateSystemChallenge(address uploaderId, bytes32 bundleId) private view {
+        require(!challengeIsInProgress(getChallengeId(uploaderId, bundleId)));
+        BundleStore bundleStore = context().bundleStore();
+        require(bundleStore.isUploader(uploaderId, bundleId));
     }
 
     function validateFeeAmount(uint8 challengesCount, bytes32 bundleId) private view {

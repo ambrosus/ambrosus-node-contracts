@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
-import {STORAGE_PERIOD_UNIT, SYSTEM_CHALLENGES_COUNT} from '../../../src/consts';
+import {SYSTEM_CHALLENGES_COUNT} from '../../../src/consts';
 import {BLOCK_REWARD, COINBASE} from '../../helpers/consts';
 import BN from 'bn.js';
 
@@ -29,8 +29,8 @@ describe('Upload Contract', () => {
   let web3;
   let uploads;
   let stakeStore;
-  let sheltering;
   let challenges;
+  let bundleStore;
   let burnAddress;
   let config;
   let fees;
@@ -41,7 +41,7 @@ describe('Upload Contract', () => {
   const expectedBurnAmount = () => fee.mul(new BN(5)).div(new BN(100));
 
   beforeEach(async () => {
-    ({uploads, sheltering, stakeStore, fees, config, web3, challenges} = await deploy({
+    ({uploads, stakeStore, fees, config, web3, challenges, bundleStore} = await deploy({
       contracts: {
         challenges: true,
         uploads: true, 
@@ -68,10 +68,11 @@ describe('Upload Contract', () => {
       });
     });
 
-    it(`marks as sheltered`, async () => {
-      expect(await sheltering.methods.isSheltering(from, bundleId).call({from})).to.equal(false);
+    it(`saves as uploader`, async () => {
+      const emptyAddress = '0x0000000000000000000000000000000000000000';
+      expect(await bundleStore.methods.getUploader(bundleId).call({from})).to.equal(emptyAddress);
       await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(true);
+      expect(await bundleStore.methods.getUploader(bundleId).call({from})).to.equal(from);
     });
 
     it(`fails if fee too high`, async () => {      
@@ -98,12 +99,6 @@ describe('Upload Contract', () => {
       await expect(promise).to.be.eventually.rejected;
     });
 
-    it(`increments storage used`, async () => {
-      expect(await stakeStore.methods.getStorageUsed(from).call({from})).to.eq('0');
-      await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
-      expect(await stakeStore.methods.getStorageUsed(from).call({from})).to.eq('1');
-    });
-
     it('Starts system challanges', async() => {
       await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
       const events = await challenges.getPastEvents('ChallengeCreated');
@@ -127,12 +122,6 @@ describe('Upload Contract', () => {
       await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee, gasPrice: '0'});
       const balanceAfter = new BN(await web3.eth.getBalance(burnAddress));
       expect(balanceAfter.sub(balanceBefore).eq(expectedBurnAmount())).to.be.true;
-    });
-  });
-
-  describe('Uploads when stake not deposited', () => {
-    it(`fails (sender is not staking)`, async () => {
-      await expect(sheltering.methods.store(bundleId, from, STORAGE_PERIOD_UNIT).send({from})).to.be.eventually.rejected;
     });
   });
 });
