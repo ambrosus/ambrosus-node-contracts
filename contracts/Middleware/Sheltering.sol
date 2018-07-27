@@ -13,8 +13,10 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 import "../Boilerplate/Head.sol";
+import "../Configuration/Config.sol";
 import "../Storage/BundleStore.sol";
 import "../Storage/AtlasStakeStore.sol";
+import "../Storage/RolesStore.sol";
 
 
 contract Sheltering is Base {
@@ -24,6 +26,8 @@ contract Sheltering is Base {
     constructor(Head _head) public Base(_head) { }
 
     function store(bytes32 bundleId, address creator, uint64 storagePeriods) public onlyContextInternalCalls {
+        RolesStore rolesStore = context().rolesStore();
+        require(rolesStore.getRole(creator) == Config.NodeType.HERMES);
         BundleStore bundleStore = context().bundleStore();
         bundleStore.store(bundleId, creator, storagePeriods);
     }
