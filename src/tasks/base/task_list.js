@@ -33,7 +33,7 @@ export default class TaskList {
         })
         .catch((error) => {
           console.error(error);
-        });  
+        });
     } else {
       console.error(`Error: Could not find and execute task '${name}'.\n`);
       this.printAvailableTasks();

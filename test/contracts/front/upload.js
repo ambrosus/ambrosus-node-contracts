@@ -24,7 +24,7 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 const bundleId = utils.keccak256('bundleId');
-                   
+
 describe('Upload Contract', () => {
   let web3;
   let uploads;
@@ -44,9 +44,9 @@ describe('Upload Contract', () => {
     ({uploads, atlasStakeStore, fees, config, web3, challenges, bundleStore} = await deploy({
       contracts: {
         challenges: true,
-        uploads: true, 
+        uploads: true,
         sheltering: true,
-        time: true, 
+        time: true,
         fees: true,
         config: true,
         atlasStakeStore: true,
@@ -58,7 +58,7 @@ describe('Upload Contract', () => {
   describe('Uploads when stake deposited', () => {
     beforeEach(async () => {
       await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
-      fee = new BN(await fees.methods.getFeeForUpload(1).call());      
+      fee = new BN(await fees.methods.getFeeForUpload(1).call());
       burnAddress = await config.methods.BURN_ADDRESS().call();
     });
 
@@ -75,13 +75,13 @@ describe('Upload Contract', () => {
       expect(await bundleStore.methods.getUploader(bundleId).call({from})).to.equal(from);
     });
 
-    it(`fails if fee too high`, async () => {      
+    it(`fails if fee too high`, async () => {
       const value = fee.add(new BN(1));
       await expect(uploads.methods.registerBundle(bundleId, 1).send({from, value}))
         .to.be.eventually.rejected;
     });
 
-    it(`fails if fee to low`, async () => {      
+    it(`fails if fee to low`, async () => {
       const value = fee.sub(new BN(1));
       await expect(uploads.methods.registerBundle(bundleId, 1).send({from, value}))
         .to.be.eventually.rejected;
@@ -89,13 +89,13 @@ describe('Upload Contract', () => {
 
     it(`fails if already uploaded (with the same endTime)`, async () => {
       await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
-      const promise = uploads.methods.registerBundle(bundleId, 1).send({from, value: fee}); 
+      const promise = uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
       await expect(promise).to.be.eventually.rejected;
     });
 
     it(`fails if already uploaded (with different endTime)`, async () => {
       await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
-      const promise = uploads.methods.registerBundle(bundleId, 2).send({from, value: fee}); 
+      const promise = uploads.methods.registerBundle(bundleId, 2).send({from, value: fee});
       await expect(promise).to.be.eventually.rejected;
     });
 

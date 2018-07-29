@@ -46,7 +46,7 @@ const DEFAULT_CONTRACT_JSONS = {
   apolloDepositStore: ApolloDepositStoreJson
 };
 
-const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor'); 
+const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor');
 
 export default class Deployer {
   constructor(web3, from = getDefaultAddress(web3), gas = DEFAULT_GAS) {
@@ -56,12 +56,12 @@ export default class Deployer {
     this.contextConstructorParams = getContractConstructor(ContextJson)
       .inputs
       .map((input) => input.name.slice(1));
-    
+
     if (!this.contextConstructorParams.every((key) => DEFAULT_CONTRACT_JSONS[key] !== undefined)) {
       throw 'DEFAULT_CONTRACT_JSONS is missing a key for a context parameter';
     }
   }
-  
+
   async setupContext(adresses) {
     const context = await deployContract(this.web3, ContextJson, adresses, {from: this.from});
     await this.head.methods.setContext(context.options.address).send({
@@ -70,18 +70,18 @@ export default class Deployer {
     });
     return context;
   }
-  
-  async deployOne(customContractJson, defaultJson) {    
+
+  async deployOne(customContractJson, defaultJson) {
     if (!customContractJson) {
-      return;      
-    } 
+      return;
+    }
     const contractJson = customContractJson === true ? defaultJson : customContractJson;
     for (const lib of Object.entries(this.libs)) {
       const [libName, libContract] = lib;
       link(contractJson, libName, libContract);
     }
 
-    // Detect Base based contracts, and provide the _head address as a parameter 
+    // Detect Base based contracts, and provide the _head address as a parameter
     const constructorArgs = [];
     const constructor = getContractConstructor(contractJson);
     if (constructor !== undefined && constructor.inputs.find((input) => input.name === '_head' && input.type === 'address') !== undefined) {
@@ -101,16 +101,16 @@ export default class Deployer {
     this.libs = {SafeMathExtensions: await deployContract(this.web3, SafeMathExtensionsJson, [], {from: this.from})};
   }
 
-  async deployCustom(contractJsonsOrBooleans) {    
+  async deployCustom(contractJsonsOrBooleans) {
     const defaults = DEFAULT_CONTRACT_JSONS;
     const result = {};
     for (const [contractName, jsonOrBoolean] of Object.entries(contractJsonsOrBooleans)) {
       result[contractName] = await this.deployOne(jsonOrBoolean, defaults[contractName]);
-    }    
+    }
     return result;
   }
 
-  async deploy(contractJsonsOrBooleans = this.getDefaultArgs()) {    
+  async deploy(contractJsonsOrBooleans = this.getDefaultArgs()) {
     const contractToAddress = (contract) => (contract ? contract.options.address : '0x0');
     const prepareArgs = (contractMap) => this.contextConstructorParams.map((key) => contractToAddress(contractMap[key]));
     await this.deployLibs();

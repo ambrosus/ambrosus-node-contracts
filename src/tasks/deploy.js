@@ -18,7 +18,7 @@ export default class DeployTask extends TaskBase {
     console.log('Deploying contracts. This may take some time...');
     this.web3 = await createWeb3();
     await this.printAccountInfo();
-    const deployer = new Deployer(this.web3);  
+    const deployer = new Deployer(this.web3);
     const addresses = await deployer.deploy();
     const config = this.addressesToConfig(addresses);
     if (args[0] === '--save-config') {
@@ -42,25 +42,25 @@ export default class DeployTask extends TaskBase {
     fs.writeFile(filePath, JSON.stringify(config, null, 2), (error) => {
       if (error) {
         console.error(`Unable to save configuration: ${error}`);
-      } else {        
-        console.log(`Contracts deployed, configuration saved to ${filePath}.`);      
+      } else {
+        console.log(`Contracts deployed, configuration saved to ${filePath}.`);
       }
-    }); 
+    });
   }
-  
+
   printSummary(config) {
     console.log(`Contracts deployed, save following configuration to ${getConfigFilePath()} to start using them:`);
-    console.log(config);      
+    console.log(config);
   }
-  
+
   addressesToConfig(addresses) {
     const contracts = Object.keys(addresses)
       .map((key) => [key, addresses[key].options.address])
-      .reduce((object, [key, value]) => { 
-        object[key] = value; 
-        return object; 
+      .reduce((object, [key, value]) => {
+        object[key] = value;
+        return object;
       }, {});
-    return {...getConfig(), contracts};  
+    return {...getConfig(), contracts};
   }
 
   description() {

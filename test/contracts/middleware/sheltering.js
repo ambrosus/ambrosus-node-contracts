@@ -111,7 +111,7 @@ describe('Sheltering Contract', () => {
       await atlasStakeStore.methods.depositStake(other, 1).send({from, value: 1});
       await sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
     });
-    
+
     it(`removes store entry`, async () => {
       expect(await bundleStore.methods.getShelterers(bundleId).call()).to.include(other);
       await sheltering.methods.removeShelterer(bundleId, other).send({from});

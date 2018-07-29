@@ -12,7 +12,7 @@ import {createGanacheServer} from '../web3_tools';
 import {getConfig} from '../config';
 import fs from 'fs';
 
-export default class GanacheTask extends TaskBase { 
+export default class GanacheTask extends TaskBase {
   async execute() {
     this.savePidFile();
     await createGanacheServer(getConfig().web3.nodePrivateKey);

@@ -126,7 +126,7 @@ describe('PayoutsStore Contract', () => {
 
     it('transfers the refund to provided address and takes withdrawals into account', async () => {
       await grantForPeriods(targetUser, 10, 14, 50);
-      await expectBalanceChange(targetUser, '30', async () => withdraw(targetUser, 12));      
+      await expectBalanceChange(targetUser, '30', async () => withdraw(targetUser, 12));
       await expectBalanceChange(otherUser, '20', async () => revokeForPeriods(targetUser, 10, 14, 50, otherUser));
     });
 

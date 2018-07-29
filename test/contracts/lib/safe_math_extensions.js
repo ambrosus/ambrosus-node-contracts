@@ -26,7 +26,7 @@ describe('SafeMathExtensions', () => {
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    safeMathExtensions = await deployContract(web3, SafeMathExtensions);    
+    safeMathExtensions = await deployContract(web3, SafeMathExtensions);
   });
 
   it('pow2', async () => {
@@ -57,8 +57,8 @@ describe('SafeMathExtensions', () => {
     expect(await safeMathExtensions.methods.mod(3, 3).call()).to.equal('0');
     expect(await safeMathExtensions.methods.mod(4, 3).call()).to.equal('1');
     expect(await safeMathExtensions.methods.mod(5, 3).call()).to.equal('2');
-    expect(await safeMathExtensions.methods.mod(6, 3).call()).to.equal('0'); 
-    
+    expect(await safeMathExtensions.methods.mod(6, 3).call()).to.equal('0');
+
     expect(await safeMathExtensions.methods.mod(0, MAX_INTEGER).call()).to.equal('0');
     expect(await safeMathExtensions.methods.mod(7, MAX_INTEGER).call()).to.equal('7');
     expect(await safeMathExtensions.methods.mod(MAX_INTEGER, MAX_INTEGER).call()).to.equal('0');

@@ -27,7 +27,7 @@ export default class TransferTask extends TaskBase {
     } else {
       console.error('Unknown sub-command.');
       this.printUsage();
-    }    
+    }
   }
 
   printUsage() {
@@ -52,7 +52,7 @@ export default class TransferTask extends TaskBase {
     await transfers.methods.start(bundleId).send({from, gas});
   }
 
-  async resolve(args) {        
+  async resolve(args) {
     if (args.length !== 1) {
       console.error('Invalid parameters.');
       this.printUsage();
@@ -67,7 +67,7 @@ export default class TransferTask extends TaskBase {
     const from = getDefaultAddress(this.web3);
     const gas = getDefaultGas();
     const transfers = this.getContract(ShelteringTransfers);
-    await transfers.methods.resolve(transferId).send({from, gas});    
+    await transfers.methods.resolve(transferId).send({from, gas});
   }
 
 
@@ -86,7 +86,7 @@ export default class TransferTask extends TaskBase {
     const from = getDefaultAddress(this.web3);
     const gas = getDefaultGas();
     const transfers = this.getContract(ShelteringTransfers);
-    await transfers.methods.cancel(transferId).send({from, gas});    
+    await transfers.methods.cancel(transferId).send({from, gas});
   }
 
   async list() {
@@ -95,7 +95,7 @@ export default class TransferTask extends TaskBase {
     for (const event of events) {
       const args = event.returnValues;
       console.log(`${args.transferId}: ${args.donorId} ${args.bundleId}`);
-    }    
+    }
   }
 
   description() {

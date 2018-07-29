@@ -345,7 +345,7 @@ describe('Challenges Contract', () => {
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
     });
-  
+
     it(`Fails if challenge does not exist`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
       const fakeChallengeId = utils.keccak256('fakeChallengeId');

@@ -24,7 +24,7 @@ export default class WhitelistTask extends TaskBase {
       await this.show(args[1]);
     } else {
       console.error('Unknown sub-command, use: yarn task whitelist [add/remove/check] [address]');
-    }    
+    }
   }
 
   validateAddress(address) {

@@ -34,7 +34,7 @@ describe('KYC Whitelist Contract', () => {
   beforeEach(async () => {
     web3 = await createWeb3();
     [from, other, totalStranger] = await web3.eth.getAccounts();
-    kycWhitelist = await deployContract(web3, KycWhitelistJson);    
+    kycWhitelist = await deployContract(web3, KycWhitelistJson);
   });
 
   it(`adds and removes from whitelist, checks if address is whitelisted`, async () => {
