@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import SafeMathExtensionsJson from '../build/contracts/SafeMathExtensions.json';
 import AtlasStakeStoreJson from '../build/contracts/AtlasStakeStore.json';
 import BundleStoreJson from '../build/contracts/BundleStore.json';
+import BundleRegistryJson from '../build/contracts/BundleRegistry.json';
 import HeadJson from '../build/contracts/Head.json';
 import RolesJson from '../build/contracts/Roles.json';
 import ContextJson from '../build/contracts/Context.json';
@@ -33,6 +34,7 @@ const DEFAULT_CONTRACT_JSONS = {
   atlasStakeStore: AtlasStakeStoreJson,
   roles: RolesJson,
   bundleStore: BundleStoreJson,
+  bundleRegistry: BundleRegistryJson,
   kycWhitelist: KycWhitelistJson,
   sheltering: ShelteringJson,
   fees: FeesJson,
