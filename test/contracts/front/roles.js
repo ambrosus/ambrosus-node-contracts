@@ -24,7 +24,6 @@ import {
   ATLAS3_STORAGE_LIMIT,
   HERMES
 } from '../../../src/consts';
-import AtlasStakeStoreMockJson from '../../../build/contracts/AtlasStakeStoreMock';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 
 chai.use(sinonChai);
@@ -70,7 +69,7 @@ describe('Roles Contract', () => {
         time: true,
         config: true,
         kycWhitelist: true,
-        atlasStakeStore: AtlasStakeStoreMockJson,
+        atlasStakeStore: true,
         rolesStore: true,
         apolloDepositStore: true
       }
@@ -207,7 +206,7 @@ describe('Roles Contract', () => {
       });
 
       it('throws if atlas is storing something', async () => {
-        await atlasStakeStore.methods.setStorageUsed(atlas, 10).send({from});
+        await atlasStakeStore.methods.incrementStorageUsed(atlas).send({from});
         await expect(retireAtlas(atlas)).to.be.eventually.rejected;
       });
 
