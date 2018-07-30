@@ -37,13 +37,13 @@ describe('Sheltering Contract', () => {
   const isSheltering = async (bundleId, shelterer) => sheltering.methods.isSheltering(bundleId, shelterer).call();
   const getShelteringData = async (bundleId, shelterer) => sheltering.methods.getShelteringData(bundleId, shelterer).call();
   const storeBundle = async (bundleId, uploader, storagePeriods, sender = hermes) => sheltering.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
-  const storeBundleWithBundleStore = async (bundleId, uploader, storagePeriods, sender = hermes) => bundleStore.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
   const addShelterer = async (bundleId, shelterer, amount, sender = hermes) => sheltering.methods.addShelterer(bundleId, shelterer, amount).send({from: sender});
   const removeShelterer = async (bundleId, shelterer, sender = hermes) => sheltering.methods.removeShelterer(bundleId, shelterer).send({from: sender});
-  const addSheltererWithBundleStore = async (bundleId, shelterer, storagePeriods, sender = hermes) => bundleStore.methods.addShelterer(bundleId, shelterer, storagePeriods).send({from: sender});
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
   const getStorageUsed = async (staker) => atlasStakeStore.methods.getStorageUsed(staker).call();
   const depositStake = async (staker, storageLimit, value, sender = hermes) => atlasStakeStore.methods.depositStake(staker, storageLimit).send({from: sender, value});
+  const injectBundleWithBundleStore = async (bundleId, uploader, storagePeriods, sender = hermes) => bundleStore.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
+  const injectSheltererWithBundleStore = async (bundleId, shelterer, storagePeriods, sender = hermes) => bundleStore.methods.addShelterer(bundleId, shelterer, storagePeriods).send({from: sender});
 
   beforeEach(async () => {
     web3 = await createWeb3();
@@ -67,14 +67,14 @@ describe('Sheltering Contract', () => {
 
     it(`returns false if account is not bundle's shelterer`, async () => {
       expect(await isSheltering(bundleId, hermes)).to.equal(false);
-      await storeBundleWithBundleStore(bundleId, hermes, storagePeriods);
+      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
       expect(await isSheltering(bundleId, hermes)).to.equal(false);
     });
 
     it(`returns true if account is bundle's shelterer`, async () => {
       expect(await isSheltering(bundleId, other)).to.equal(false);
-      await storeBundleWithBundleStore(bundleId, hermes, storagePeriods);
-      await addSheltererWithBundleStore(bundleId, other, totalReward);
+      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
+      await injectSheltererWithBundleStore(bundleId, other, totalReward);
       expect(await isSheltering(bundleId, other)).to.equal(true);
     });
   });
@@ -175,7 +175,7 @@ describe('Sheltering Contract', () => {
       await addShelterer(bundleId, other, totalReward);
     });
 
-    it('stores sheltering data', async () => {
+    it('gets data about the sheltering', async () => {
       const {startingDate, storagePeriods: storagePeriondsReturned, totalReward: totalRewardReturned} = await getShelteringData(bundleId, other);
       expect(startingDate).to.not.equal('0');
       expect(storagePeriondsReturned).to.equal(storagePeriods.toString());

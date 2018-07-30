@@ -37,7 +37,7 @@ describe('Upload Contract', () => {
   let fee;
   let atlas;
   let other;
-  let from;
+  let hermes;
 
   const expectedMinersFee = () => fee.div(new BN(4));
   const expectedBurnAmount = () => fee.mul(new BN(5)).div(new BN(100));
@@ -54,35 +54,35 @@ describe('Upload Contract', () => {
         config: true,
         bundleStore: true}
     }));
-    [from, atlas, other] = await web3.eth.getAccounts();
+    [hermes, atlas, other] = await web3.eth.getAccounts();
     fee = new BN(await fees.methods.getFeeForUpload(1).call());
     burnAddress = await config.methods.BURN_ADDRESS().call();
-    await rolesStore.methods.setRole(from, HERMES).send({from});
-    await rolesStore.methods.setRole(atlas, ATLAS).send({from});
+    await rolesStore.methods.setRole(hermes, HERMES).send({from: hermes});
+    await rolesStore.methods.setRole(atlas, ATLAS).send({from: hermes});
   });
 
   it('emits event on upload', async () => {
-    expect(await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee}))
+    expect(await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee}))
       .to.emitEvent('BundleUploaded')
       .withArgs({bundleId, storagePeriods: '1'});
   });
 
   it(`saves as uploader`, async () => {
     const emptyAddress = '0x0000000000000000000000000000000000000000';
-    expect(await bundleStore.methods.getUploader(bundleId).call({from})).to.equal(emptyAddress);
-    await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
-    expect(await bundleStore.methods.getUploader(bundleId).call({from})).to.equal(from);
+    expect(await bundleStore.methods.getUploader(bundleId).call({from: hermes})).to.equal(emptyAddress);
+    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
+    expect(await bundleStore.methods.getUploader(bundleId).call({from: hermes})).to.equal(hermes);
   });
 
   it(`fails if fee too high`, async () => {
     const value = fee.add(new BN(1));
-    await expect(uploads.methods.registerBundle(bundleId, 1).send({from, value}))
+    await expect(uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value}))
       .to.be.eventually.rejected;
   });
 
   it(`fails if fee to low`, async () => {
     const value = fee.sub(new BN(1));
-    await expect(uploads.methods.registerBundle(bundleId, 1).send({from, value}))
+    await expect(uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value}))
       .to.be.eventually.rejected;
   });
 
@@ -94,19 +94,19 @@ describe('Upload Contract', () => {
   });
 
   it(`fails if already uploaded (with the same endTime)`, async () => {
-    await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
-    const promise = uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
+    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
+    const promise = uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
     await expect(promise).to.be.eventually.rejected;
   });
 
   it(`fails if already uploaded (with different endTime)`, async () => {
-    await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
-    const promise = uploads.methods.registerBundle(bundleId, 2).send({from, value: fee});
+    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
+    const promise = uploads.methods.registerBundle(bundleId, 2).send({from: hermes, value: fee});
     await expect(promise).to.be.eventually.rejected;
   });
 
   it('Starts system challanges', async () => {
-    await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee});
+    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
     const events = await challenges.getPastEvents('ChallengeCreated');
     expect(events.length).to.eq(1);
     expect(events[0].returnValues).to.deep.include({
@@ -117,7 +117,7 @@ describe('Upload Contract', () => {
 
   it('Pay fee to miner', async () => {
     const balanceBefore = new BN(await web3.eth.getBalance(COINBASE));
-    await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee, gasPrice: '0'});
+    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee, gasPrice: '0'});
     const balanceAfter = new BN(await web3.eth.getBalance(COINBASE));
     const actualFee = balanceAfter.sub(balanceBefore).sub(BLOCK_REWARD);
     expect(actualFee.eq(expectedMinersFee())).to.be.true;
@@ -125,7 +125,7 @@ describe('Upload Contract', () => {
 
   it('Burn tokens', async () => {
     const balanceBefore = new BN(await web3.eth.getBalance(burnAddress));
-    await uploads.methods.registerBundle(bundleId, 1).send({from, value: fee, gasPrice: '0'});
+    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee, gasPrice: '0'});
     const balanceAfter = new BN(await web3.eth.getBalance(burnAddress));
     expect(balanceAfter.sub(balanceBefore).eq(expectedBurnAmount())).to.be.true;
   });
