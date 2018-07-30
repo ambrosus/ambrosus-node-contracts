@@ -37,7 +37,7 @@ describe('Payouts Contract', () => {
   const injectGrantRepeating = (beneficiary, firstPeriod, lastPeriod, value, from = validUser) => payoutsStore.methods.grantForPeriods(beneficiary, firstPeriod, lastPeriod).send({from, value});
   const setTimestamp = (timestamp, from = validUser) => time.methods.setCurrentTimestamp(timestamp).send({from});
   const getTimestamp = (from = validUser) => time.methods.currentTimestamp().call({from});
-  
+
   const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount);
 
   beforeEach(async () => {
@@ -54,7 +54,7 @@ describe('Payouts Contract', () => {
   });
 
   describe('Granting a sheltering reward', () => {
-    it('increases funds available for withdrawal (unaligned period)', async () => { 
+    it('increases funds available for withdrawal (unaligned period)', async () => {
       await grantShelteringReward(targetUser, 3, 100000);
 
       expect(await available(9, targetUser)).to.be.equal('0');

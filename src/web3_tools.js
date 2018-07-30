@@ -42,14 +42,14 @@ export function getDefaultGas() {
 }
 
 export async function createGanacheServer(secretKey) {
-  const Ganache = require('ganache-core');  
+  const Ganache = require('ganache-core');
   const server = Ganache.server(getDefaultGanacheOptions(secretKey));
   await server.listen(DEFAULT_PORT);
 }
 
 function createGanacheProvider(secretKey) {
   // import in code with purpose:D
-  const Ganache = require('ganache-core');  
+  const Ganache = require('ganache-core');
   return Ganache.provider(getDefaultGanacheOptions(secretKey));
 }
 
@@ -127,7 +127,7 @@ export async function deployContract(web3, json, args = [], options = {}) {
     });
 }
 
-export function link(contract, name, library) {    
+export function link(contract, name, library) {
   const address = library.options.address.replace('0x', '');
   const pattern = new RegExp(`_+${name}_+`, 'g');
   contract.bytecode = contract.bytecode.replace(pattern, address);

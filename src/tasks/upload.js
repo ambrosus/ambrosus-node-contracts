@@ -12,7 +12,7 @@ import {getDefaultAddress, getDefaultGas, createWeb3} from '../web3_tools';
 import Uploads from '../../build/contracts/Uploads';
 import Fees from '../../build/contracts/Fees';
 
-export default class UploadTask extends TaskBase {  
+export default class UploadTask extends TaskBase {
   async getFee(storagePeriods) {
     return this.getContract(Fees).methods.getFeeForUpload(storagePeriods).call();
   }
@@ -27,7 +27,7 @@ export default class UploadTask extends TaskBase {
     }
   }
 
-  async uploadBundle(bundleId, storagePeriods) {    
+  async uploadBundle(bundleId, storagePeriods) {
     this.web3 = await createWeb3();
     const from = getDefaultAddress(this.web3);
     const gas = getDefaultGas();

@@ -139,18 +139,18 @@ describe('Fees Contract', () => {
       expect(await getPenalty(10000, 0, 0)).to.deep.equal(['100', '1']);
     });
 
-    it('Each subsequent penalty should double', async () => {      
+    it('Each subsequent penalty should double', async () => {
       expect(await getPenalty(10000, 0, now)).to.deep.equal(['100', '1']);
       expect(await getPenalty(10000, 1, now)).to.deep.equal(['200', '2']);
       expect(await getPenalty(10000, 2, now)).to.deep.equal(['400', '3']);
       expect(await getPenalty(10000, 3, now)).to.deep.equal(['800', '4']);
       expect(await getPenalty(10000, 4, now)).to.deep.equal(['1600', '5']);
       expect(await getPenalty(10000, 5, now)).to.deep.equal(['3200', '6']);
-      expect(await getPenalty(10000, 6, now)).to.deep.equal(['6400', '7']);      
-      expect(await getPenalty(10000, 7, now)).to.deep.equal(['12800', '8']);      
+      expect(await getPenalty(10000, 6, now)).to.deep.equal(['6400', '7']);
+      expect(await getPenalty(10000, 7, now)).to.deep.equal(['12800', '8']);
     });
 
-    it('Each subsequent penalty should double up until 90 days', async () => {      
+    it('Each subsequent penalty should double up until 90 days', async () => {
       const dayMinus89 = now - (89 * DAY);
       expect(await getPenalty(10000, 0, dayMinus89)).to.deep.equal(['100', '1']);
       expect(await getPenalty(10000, 1, dayMinus89)).to.deep.equal(['200', '2']);
@@ -158,8 +158,8 @@ describe('Fees Contract', () => {
       expect(await getPenalty(10000, 3, dayMinus89)).to.deep.equal(['800', '4']);
       expect(await getPenalty(10000, 4, dayMinus89)).to.deep.equal(['1600', '5']);
       expect(await getPenalty(10000, 5, dayMinus89)).to.deep.equal(['3200', '6']);
-      expect(await getPenalty(10000, 6, dayMinus89)).to.deep.equal(['6400', '7']);      
-      expect(await getPenalty(10000, 7, dayMinus89)).to.deep.equal(['12800', '8']);      
+      expect(await getPenalty(10000, 6, dayMinus89)).to.deep.equal(['6400', '7']);
+      expect(await getPenalty(10000, 7, dayMinus89)).to.deep.equal(['12800', '8']);
     });
 
     it('Penalty doublation should expire after 90 days', async () => {
@@ -170,8 +170,8 @@ describe('Fees Contract', () => {
       expect(await getPenalty(10000, 3, dayMinus91)).to.deep.equal(['100', '1']);
       expect(await getPenalty(10000, 4, dayMinus91)).to.deep.equal(['100', '1']);
       expect(await getPenalty(10000, 5, dayMinus91)).to.deep.equal(['100', '1']);
-      expect(await getPenalty(10000, 6, dayMinus91)).to.deep.equal(['100', '1']);      
-      expect(await getPenalty(10000, 7, dayMinus91)).to.deep.equal(['100', '1']);      
-    });    
+      expect(await getPenalty(10000, 6, dayMinus91)).to.deep.equal(['100', '1']);
+      expect(await getPenalty(10000, 7, dayMinus91)).to.deep.equal(['100', '1']);
+    });
   });
 });

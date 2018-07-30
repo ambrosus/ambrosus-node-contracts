@@ -40,7 +40,7 @@ describe('Base Contract', () => {
     deployer.head = await deployContract(web3, HeadJson);
     const headAddress = deployer.head.options.address;
     contract2 = await deployContract(web3, Contract2Json, [headAddress]);
-    contract1 = await deployContract(web3, Contract1Json, [headAddress, contract2.options.address]);    
+    contract1 = await deployContract(web3, Contract1Json, [headAddress, contract2.options.address]);
     const constructorABI = ContextJson.abi.find((method) => method.type === 'constructor');
     const constructorArgumentCount = constructorABI.inputs.length;
     context = await deployer.setupContext(new Array(constructorArgumentCount).fill('0x0'),

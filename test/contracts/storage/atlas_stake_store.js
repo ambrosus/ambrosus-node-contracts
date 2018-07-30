@@ -49,7 +49,7 @@ describe('AtlasStakeStore Contract', () => {
     });
   });
 
-  describe('Deposit a stake', () => {    
+  describe('Deposit a stake', () => {
     it('can not stake if already staking', async () => {
       await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
       await expect(atlasStakeStore.methods.depositStake(from, 1).send({from, value: 2})).to.be.eventually.rejected;
@@ -75,7 +75,7 @@ describe('AtlasStakeStore Contract', () => {
     });
   });
 
-  describe('Increment storage used', () => {    
+  describe('Increment storage used', () => {
     beforeEach(async () => {
       await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
     });
@@ -92,13 +92,13 @@ describe('AtlasStakeStore Contract', () => {
       await expect(atlasStakeStore.methods.incrementStorageUsed(from).send({from: other})).to.be.eventually.rejected;
     });
 
-    it('reject if run out of limit reached', async () => { 
+    it('reject if run out of limit reached', async () => {
       await atlasStakeStore.methods.incrementStorageUsed(from).send({from});
       await expect(atlasStakeStore.methods.incrementStorageUsed(from).send({from})).to.be.eventually.rejected;
     });
   });
 
-  describe('Decrement storage used', () => {    
+  describe('Decrement storage used', () => {
     beforeEach(async () => {
       await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
       await atlasStakeStore.methods.incrementStorageUsed(from).send({from});
@@ -116,18 +116,18 @@ describe('AtlasStakeStore Contract', () => {
       await expect(atlasStakeStore.methods.decrementStorageUsed(from).send({from: other})).to.be.eventually.rejected;
     });
 
-    it('reject if nothing is stored', async () => { 
+    it('reject if nothing is stored', async () => {
       await atlasStakeStore.methods.decrementStorageUsed(from).send({from});
       await expect(atlasStakeStore.methods.decrementStorageUsed(from).send({from})).to.be.eventually.rejected;
     });
   });
 
-  describe('Release a stake', () => {    
+  describe('Release a stake', () => {
     beforeEach(async () => {
       await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
     });
-  
-    it('properly updates contract state', async () => { 
+
+    it('properly updates contract state', async () => {
       await atlasStakeStore.methods.releaseStake(from).send({from, gasPrice: 1});
       expect(await atlasStakeStore.methods.isStaking(from).call()).to.be.false;
       expect(await atlasStakeStore.methods.canStore(from).call()).to.be.false;
@@ -144,12 +144,12 @@ describe('AtlasStakeStore Contract', () => {
       expect(balanceAfter.eq(expected)).to.be.true;
     });
 
-    it('can not release a stake if not internal call', async () => {       
+    it('can not release a stake if not internal call', async () => {
       expect(await atlasStakeStore.methods.getStake(from).call()).to.be.eq('1');
       await expect(atlasStakeStore.methods.releaseStake(from).send({from: other})).to.be.eventually.rejected;
     });
 
-    it('can not release a stake if storing', async () => { 
+    it('can not release a stake if storing', async () => {
       await atlasStakeStore.methods.incrementStorageUsed(from).send({from});
       await expect(atlasStakeStore.methods.releaseStake(from).send({from})).to.be.eventually.rejected;
     });
@@ -165,35 +165,35 @@ describe('AtlasStakeStore Contract', () => {
     const secondPenalty = firstPenalty * 2;
     const thirdPenalty = secondPenalty * 2;
     const fourthPenalty = thirdPenalty * 2;
-    
+
     beforeEach(async () => {
       await atlasStakeStore.methods.depositStake(from, 10).send({from, value: stake});
     });
-    
+
     it('can not slash if not staking', async () => {
       await expect(atlasStakeStore.methods.slash(other, other).send({from})).to.be.eventually.rejected;
     });
 
-    it('reject slash if not context internal call', async () => {      
+    it('reject slash if not context internal call', async () => {
       await expect(atlasStakeStore.methods.slash(from, other).send({from: other})).to.be.eventually.rejected;
       expect(await atlasStakeStore.methods.getStake(from).call()).to.equal(stake.toString());
     });
 
     it('slashed stake goes to receiver', async () => {
-      const balanceBefore = new BN(await web3.eth.getBalance(other));      
+      const balanceBefore = new BN(await web3.eth.getBalance(other));
       await atlasStakeStore.methods.slash(from, other).send({from});
       const balanceAfter = new BN(await web3.eth.getBalance(other));
-      const expected = balanceBefore.add(new BN(firstPenalty));      
+      const expected = balanceBefore.add(new BN(firstPenalty));
       expect(balanceAfter.toString()).to.equal(expected.toString());
     });
 
     it('slashed stake is subtracted from contract balance', async () => {
       await atlasStakeStore.methods.slash(from, other).send({from});
       const contractBalance = new BN(await web3.eth.getBalance(atlasStakeStore.options.address));
-      expect(contractBalance.toString()).to.equal(new BN(stake - firstPenalty).toString());    
+      expect(contractBalance.toString()).to.equal(new BN(stake - firstPenalty).toString());
       const stakeAfterSlashing = await atlasStakeStore.methods.getStake(from).call();
-      expect(stakeAfterSlashing).to.equal(new BN(stake - firstPenalty).toString());   
-    });    
+      expect(stakeAfterSlashing).to.equal(new BN(stake - firstPenalty).toString());
+    });
 
     it('penalty rises exponentially', async () => {
       await atlasStakeStore.methods.slash(from, other).send({from});
