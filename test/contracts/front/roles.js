@@ -24,6 +24,8 @@ import {
   ATLAS3_STORAGE_LIMIT,
   HERMES
 } from '../../../src/consts';
+import AtlasStakeStoreMockJson from '../../../build/contracts/AtlasStakeStoreMock';
+import observeBalanceChange from '../../helpers/web3BalanceObserver';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -47,6 +49,9 @@ describe('Roles Contract', () => {
   const onboardAsAtlas = async (url, sender, value) => roles.methods.onboardAsAtlas(url).send({from: sender, value});
   const onboardAsHermes = async (url, sender) => roles.methods.onboardAsHermes(url).send({from: sender});
   const onboardAsApollo = async (sender, value) => roles.methods.onboardAsApollo().send({from: sender, value});
+  const retireAtlas = async (sender) => roles.methods.retireAtlas().send({from: sender, gasPrice: '0'});
+  const retireHermes = async (sender) => roles.methods.retireHermes().send({from: sender});
+  const retireApollo = async (sender) => roles.methods.retireApollo().send({from: sender, gasPrice: '0'});
   const canOnboardAsAtlas = async (address, value) => roles.methods.canOnboardAsAtlas(address, value).call();
   const canOnboardAsHermes = async (address) => roles.methods.canOnboardAsHermes(address).call();
   const canOnboardAsApollo = async (address, value) => roles.methods.canOnboardAsApollo(address, value).call();
@@ -58,11 +63,17 @@ describe('Roles Contract', () => {
 
   beforeEach(async () => {
     ({web3, roles, kycWhitelist, atlasStakeStore, rolesStore, apolloDepositStore} = await deploy({
-      roles: true,
-      kycWhitelist: true,
-      atlasStakeStore: true,
-      rolesStore: true,
-      apolloDepositStore: true
+      web3,
+      contracts: {
+        roles: true,
+        fees: true,
+        time: true,
+        config: true,
+        kycWhitelist: true,
+        atlasStakeStore: AtlasStakeStoreMockJson,
+        rolesStore: true,
+        apolloDepositStore: true
+      }
     }));
     [from, apollo, atlas, hermes] = await web3.eth.getAccounts();
     await addToWhitelist(apollo, APOLLO);
@@ -171,6 +182,67 @@ describe('Roles Contract', () => {
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT.sub(ONE))).to.be.eventually.rejected;
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(apollo)).to.equal('0');
+      });
+    });
+  });
+
+  describe('Retiring', () => {
+    const url = 'https://google.com';
+
+    beforeEach(async () => {
+      await onboardAsAtlas(url, atlas, ATLAS1_STAKE);
+      await onboardAsHermes(url, hermes);
+      await onboardAsApollo(apollo, APOLLO_DEPOSIT);
+    });
+
+    describe('Atlas', () => {
+      it('removes assigned role', async () => {
+        await retireAtlas(atlas);
+        expect(await getRole(atlas)).to.equal('0');
+      });
+
+      it('returns stake to the node', async () => {
+        const balanceChange = await observeBalanceChange(web3, atlas, () => retireAtlas(atlas));
+        expect(balanceChange.toString()).to.equal(ATLAS1_STAKE.toString());
+      });
+
+      it('throws if atlas is storing something', async () => {
+        await atlasStakeStore.methods.setStorageUsed(atlas, 10).send({from});
+        await expect(retireAtlas(atlas)).to.be.eventually.rejected;
+      });
+
+      it('throws if not an atlas', async () => {
+        await expect(retireAtlas(hermes)).to.be.eventually.rejected;
+        await expect(retireAtlas(apollo)).to.be.eventually.rejected;
+      });
+    });
+
+    describe('Apollo', () => {
+      it('removes assigned role', async () => {
+        await retireApollo(apollo);
+        expect(await getRole(apollo)).to.equal('0');
+      });
+
+      it('returns stake to the node', async () => {
+        const balanceChange = await observeBalanceChange(web3, apollo, () => retireApollo(apollo));
+        expect(balanceChange.toString()).to.equal(APOLLO_DEPOSIT.toString());
+      });
+
+      it('throws if not an apollo', async () => {
+        await expect(retireApollo(hermes)).to.be.eventually.rejected;
+        await expect(retireApollo(atlas)).to.be.eventually.rejected;
+      });
+    });
+
+    describe('Hermes', () => {
+      it('removes assigned role', async () => {
+        await retireHermes(hermes);
+        expect(await getRole(hermes)).to.equal('0');
+      });
+
+      it('throws if not a hermes', async () => {
+        await expect(retireHermes(atlas)).to.be.eventually.rejected;
+        await expect(retireHermes(apollo)).to.be.eventually.rejected;
       });
     });
   });

@@ -9,7 +9,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-import "../Storage/BundleRegistry.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Storage/BundleStore.sol";
 import "../Storage/KycWhitelist.sol";
@@ -33,7 +32,6 @@ import "../Front/Roles.sol";
 
 contract Context {
 
-    BundleRegistry public bundleRegistry;
     AtlasStakeStore public atlasStakeStore;
     BundleStore public bundleStore;
     KycWhitelist public kycWhitelist;
@@ -86,8 +84,7 @@ contract Context {
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
         // solium-disable-next-line operator-whitespace
-        return bundleRegistry == contractAddress ||
-            atlasStakeStore == contractAddress ||
+        return atlasStakeStore == contractAddress ||
             bundleStore == contractAddress ||
             kycWhitelist == contractAddress ||
             roles == contractAddress ||
