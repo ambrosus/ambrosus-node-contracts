@@ -30,8 +30,7 @@ contract AtlasStakeStore is Base {
 
     mapping (address => Stake) stakes;
 
-    constructor(Head _head) public Base(_head) {    
-    }
+    constructor(Head _head) public Base(_head) {}
 
     function isStaking(address node) public view returns (bool) {
         return stakes[node].amount > 0;
@@ -39,10 +38,6 @@ contract AtlasStakeStore is Base {
 
     function canStore(address node) public view returns (bool) {
         return stakes[node].storageUsed < stakes[node].storageLimit;
-    }
-
-    function isStoringAny(address node) public view returns (bool) {
-        return stakes[node].storageUsed > 0;
     }
 
     function getStorageUsed(address node) public view returns (uint) {
@@ -70,16 +65,17 @@ contract AtlasStakeStore is Base {
         stakes[_who] = Stake(msg.value, msg.value, _storageLimit, 0, 0, 0);
     }
 
-    function releaseStake(address node) public onlyContextInternalCalls {    
+    function releaseStake(address node, address refundAddress) public onlyContextInternalCalls returns(uint) {
         require(isStaking(node));
         require(!isShelteringAny(node));
         uint amount = stakes[node].amount;
         delete stakes[node];
-        node.transfer(amount);
+        refundAddress.transfer(amount);
+        return amount;
     }
 
     function decrementStorageUsed(address node) public onlyContextInternalCalls {
-        require(isStoringAny(node));
+        require(isShelteringAny(node));
         stakes[node].storageUsed = stakes[node].storageUsed.sub(1);
     }
 

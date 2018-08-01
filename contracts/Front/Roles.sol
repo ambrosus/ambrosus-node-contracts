@@ -21,6 +21,8 @@ contract Roles is Base {
 
     constructor(Head _head) public Base(_head) { }
 
+    function() public payable {}
+
     function onboardAsAtlas(string nodeUrl) public payable {
         require(canOnboardAsAtlas(msg.sender, msg.value));
 
@@ -51,6 +53,26 @@ contract Roles is Base {
         rolesStore.setUrl(msg.sender, nodeUrl);
     }
 
+    function retireAtlas() public {
+        retire(msg.sender, Config.NodeType.ATLAS);
+
+        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
+        uint amountToTransfer = atlasStakeStore.releaseStake(msg.sender, this);
+        msg.sender.transfer(amountToTransfer);
+    }
+
+    function retireApollo() public {
+        retire(msg.sender, Config.NodeType.APOLLO);
+
+        ApolloDepositStore apolloDepositStore = context().apolloDepositStore();
+        uint amountToTransfer = apolloDepositStore.releaseDeposit(msg.sender, this);
+        msg.sender.transfer(amountToTransfer);
+    }
+
+    function retireHermes() public {
+        retire(msg.sender, Config.NodeType.HERMES);
+    }
+
     function canOnboardAsAtlas(address node, uint amount) public view returns (bool) {
         KycWhitelist kycWhitelist = context().kycWhitelist();
 
@@ -79,6 +101,12 @@ contract Roles is Base {
             return config.ATLAS1_STORAGE_LIMIT();
         }
         return 0;
+    }
+
+    function retire(address node, Config.NodeType role) private {
+        RolesStore rolesStore = context().rolesStore();
+        require(rolesStore.getRole(node) == role);
+        rolesStore.setRole(node, Config.NodeType.NONE);
     }
 
     function validStakeAmountForAtlas(uint amount) view private returns(bool) {

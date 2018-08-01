@@ -13,6 +13,7 @@ import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import BN from 'bn.js';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
+import observeBalanceChange from '../../helpers/web3BalanceObserver';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -34,11 +35,6 @@ describe('AtlasStakeStore Contract', () => {
     [from, other] = await web3.eth.getAccounts();
     await setTimestamp(now);
   });
-
-  const transactionCost = async (tx) => {
-    const receipt = await web3.eth.getTransactionReceipt(tx.transactionHash);
-    return new BN(receipt.cumulativeGasUsed);
-  };
 
   describe('Deployment', () => {
     it('properly initialized', async () => {
@@ -123,12 +119,14 @@ describe('AtlasStakeStore Contract', () => {
   });
 
   describe('Release a stake', () => {
+    const stake = 100;
+
     beforeEach(async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
+      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: stake});
     });
 
     it('properly updates contract state', async () => {
-      await atlasStakeStore.methods.releaseStake(from).send({from, gasPrice: 1});
+      await atlasStakeStore.methods.releaseStake(from, other).send({from});
       expect(await atlasStakeStore.methods.isStaking(from).call()).to.be.false;
       expect(await atlasStakeStore.methods.canStore(from).call()).to.be.false;
       expect(await atlasStakeStore.methods.isShelteringAny(from).call()).to.be.false;
@@ -137,25 +135,23 @@ describe('AtlasStakeStore Contract', () => {
     });
 
     it('release stake and send it back', async () => {
-      const balanceBefore = new BN(await web3.eth.getBalance(from));
-      const tx = await atlasStakeStore.methods.releaseStake(from).send({from, gasPrice: 1});
-      const balanceAfter = new BN(await web3.eth.getBalance(from));
-      const expected = balanceBefore.add(new BN('1').sub(await transactionCost(tx)));
-      expect(balanceAfter.eq(expected)).to.be.true;
+      const balanceChange = await observeBalanceChange(web3, other,
+        () => atlasStakeStore.methods.releaseStake(from, other).send({from, gasPrice: '0'}));
+      expect(balanceChange.toString()).to.equal(stake.toString());
     });
 
     it('can not release a stake if not internal call', async () => {
-      expect(await atlasStakeStore.methods.getStake(from).call()).to.be.eq('1');
-      await expect(atlasStakeStore.methods.releaseStake(from).send({from: other})).to.be.eventually.rejected;
+      expect(await atlasStakeStore.methods.getStake(from).call()).to.be.eq(stake.toString());
+      await expect(atlasStakeStore.methods.releaseStake(from, other).send({from: other})).to.be.eventually.rejected;
     });
 
     it('can not release a stake if storing', async () => {
       await atlasStakeStore.methods.incrementStorageUsed(from).send({from});
-      await expect(atlasStakeStore.methods.releaseStake(from).send({from})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.releaseStake(from, other).send({from})).to.be.eventually.rejected;
     });
 
     it('can not release a stake if is not staking', async () => {
-      await expect(atlasStakeStore.methods.releaseStake(from).send({other})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.releaseStake(from, other).send({other})).to.be.eventually.rejected;
     });
   });
 
