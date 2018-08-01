@@ -54,9 +54,9 @@ describe('Roles Contract', () => {
   const canOnboardAsAtlas = async (address, value) => roles.methods.canOnboardAsAtlas(address, value).call();
   const canOnboardAsHermes = async (address) => roles.methods.canOnboardAsHermes(address).call();
   const canOnboardAsApollo = async (address, value) => roles.methods.canOnboardAsApollo(address, value).call();
-  const getUrl = async (address) => rolesStore.methods.getUrl(address).call();
-  const getRole = async (address) => rolesStore.methods.getRole(address).call();
+  const getRole = async (address) => roles.methods.getOnboardedRole(address).call();
   const getStorageLimitForAtlas = async (value) => roles.methods.getStorageLimitForAtlas(value).call();
+  const getUrl = async (address) => rolesStore.methods.getUrl(address).call();
   const getStake = async (address) => atlasStakeStore.methods.getStake(address).call();
   const isDepositing = async (address) => apolloDepositStore.methods.isDepositing(address).call();
 
