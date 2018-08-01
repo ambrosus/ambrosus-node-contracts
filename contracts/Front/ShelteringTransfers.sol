@@ -93,12 +93,12 @@ contract ShelteringTransfers is Base {
 
     function requireTransferPossible(address donorId, bytes32 bundleId) private view {
         Sheltering sheltering = context().sheltering();
-        require(sheltering.isSheltering(donorId, bundleId));
+        require(sheltering.isSheltering(bundleId, donorId));
         require(!transferIsInProgress(getTransferId(donorId, bundleId)));
     }
 
     function requireResolutionPossible(Sheltering sheltering, bytes32 transferId, bytes32 bundleId) private view {
-        require(!sheltering.isSheltering(msg.sender, bundleId));
+        require(!sheltering.isSheltering(bundleId, msg.sender));
         require(transferIsInProgress(transferId));
     }
 }

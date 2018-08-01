@@ -71,7 +71,7 @@ contract Challenges is Base {
         Challenge storage challenge = challenges[challengeId];
 
         Sheltering sheltering = context().sheltering();
-        require(!sheltering.isSheltering(msg.sender, challenge.bundleId));
+        require(!sheltering.isSheltering(challenge.bundleId, msg.sender));
 
         sheltering.addShelterer(challenge.bundleId, msg.sender, challenge.feePerChallenge);
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
@@ -153,7 +153,7 @@ contract Challenges is Base {
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
         require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId)));
         Sheltering sheltering = context().sheltering();
-        require(sheltering.isSheltering(sheltererId, bundleId));
+        require(sheltering.isSheltering(bundleId, sheltererId));
         BundleStore bundleStore = context().bundleStore();
         uint endTime = bundleStore.getShelteringExpirationDate(bundleId, sheltererId);
         Time time = context().time();

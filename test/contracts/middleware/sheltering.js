@@ -13,6 +13,7 @@ import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import utils from '../../helpers/utils';
 import deploy from '../../helpers/deploy';
+import {ATLAS, HERMES} from '../../../src/consts';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -24,104 +25,161 @@ const totalReward = 100;
 
 describe('Sheltering Contract', () => {
   let web3;
-  let from;
+  let hermes;
+  let atlas;
+  let apollo;
   let other;
   let bundleStore;
   let sheltering;
+  let rolesStore;
   let atlasStakeStore;
+
+  const isSheltering = async (bundleId, shelterer) => sheltering.methods.isSheltering(bundleId, shelterer).call();
+  const getShelteringData = async (bundleId, shelterer) => sheltering.methods.getShelteringData(bundleId, shelterer).call();
+  const storeBundle = async (bundleId, uploader, storagePeriods, sender = hermes) => sheltering.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
+  const addShelterer = async (bundleId, shelterer, amount, sender = hermes) => sheltering.methods.addShelterer(bundleId, shelterer, amount).send({from: sender});
+  const removeShelterer = async (bundleId, shelterer, sender = hermes) => sheltering.methods.removeShelterer(bundleId, shelterer).send({from: sender});
+  const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
+  const getStorageUsed = async (staker) => atlasStakeStore.methods.getStorageUsed(staker).call();
+  const depositStake = async (staker, storageLimit, value, sender = hermes) => atlasStakeStore.methods.depositStake(staker, storageLimit).send({from: sender, value});
+  const injectBundleWithBundleStore = async (bundleId, uploader, storagePeriods, sender = hermes) => bundleStore.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
+  const injectSheltererWithBundleStore = async (bundleId, shelterer, storagePeriods, sender = hermes) => bundleStore.methods.addShelterer(bundleId, shelterer, storagePeriods).send({from: sender});
 
   beforeEach(async () => {
     web3 = await createWeb3();
-    [from, other] = await web3.eth.getAccounts();
-    ({bundleStore, sheltering, atlasStakeStore} = await deploy({web3, contracts: {
+    [hermes, atlas, apollo, other] = await web3.eth.getAccounts();
+    ({bundleStore, sheltering, atlasStakeStore, rolesStore} = await deploy({web3, contracts: {
+      rolesStore: true,
       bundleStore: true,
       sheltering: true,
       atlasStakeStore: true,
       config: true,
       time: true
     }}));
+    await rolesStore.methods.setRole(hermes, HERMES).send({from: hermes});
+    await rolesStore.methods.setRole(atlas, ATLAS).send({from: hermes});
   });
 
   describe('isSheltering', () => {
     it(`returns false if account isn't bundle's shelterer`, async () => {
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
+      expect(await isSheltering(bundleId, hermes)).to.equal(false);
     });
 
     it(`returns false if account is not bundle's shelterer`, async () => {
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
-      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      expect(await sheltering.methods.isSheltering(from, bundleId).call()).to.equal(false);
+      expect(await isSheltering(bundleId, hermes)).to.equal(false);
+      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
+      expect(await isSheltering(bundleId, hermes)).to.equal(false);
     });
 
     it(`returns true if account is bundle's shelterer`, async () => {
-      expect(await sheltering.methods.isSheltering(other, bundleId).call()).to.equal(false);
-      await bundleStore.methods.store(bundleId, from, storagePeriods).send({from});
-      await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from});
-      expect(await sheltering.methods.isSheltering(other, bundleId).call()).to.equal(true);
+      expect(await isSheltering(bundleId, other)).to.equal(false);
+      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
+      await injectSheltererWithBundleStore(bundleId, other, totalReward);
+      expect(await isSheltering(bundleId, other)).to.equal(true);
     });
   });
 
   describe('Storing', () => {
-    beforeEach(async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
+    it('adds bundle to bundleStore', async () => {
+      await storeBundle(bundleId, hermes, storagePeriods);
+      expect(await bundleStore.methods.getUploader(bundleId).call()).to.equal(hermes);
+      expect(await bundleStore.methods.getStoragePeriodsCount(bundleId).call()).to.equal(storagePeriods.toString());
     });
 
     it(`fails if already stored`, async () => {
-      await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      await expect(sheltering.methods.store(bundleId, from, storagePeriods).send({from})).to.be.eventually.rejected;
+      await storeBundle(bundleId, hermes, storagePeriods);
+      await expect(storeBundle(bundleId, hermes, storagePeriods)).to.be.eventually.rejected;
     });
 
     it(`fails if already stored (different expiration date`, async () => {
-      await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      await expect(sheltering.methods.store(bundleId, from, 1800000000).send({from})).to.be.eventually.rejected;
+      await storeBundle(bundleId, hermes, storagePeriods);
+      await expect(storeBundle(bundleId, hermes, 1800000000)).to.be.eventually.rejected;
     });
 
-    it(`fails if already sheltered`, async () => {
-      await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      await bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from});
-      await expect(bundleStore.methods.addShelterer(bundleId, other, totalReward).send({from})).to.be.eventually.rejected;
+    it('fails if not a context internal call', async () => {
+      await expect(storeBundle(bundleId, hermes, storagePeriods, other)).to.be.eventually.rejected;
+    });
+
+    it('only hermes can upload a bundle', async () => {
+      await expect(storeBundle(bundleId, atlas, storagePeriods)).to.be.eventually.rejected;
+      await expect(storeBundle(bundleId, apollo, storagePeriods)).to.be.eventually.rejected;
+    });
+
+    it('is context internal', async () => {
+      await expect(storeBundle(bundleId, hermes, storagePeriods, other)).to.be.eventually.rejected;
     });
   });
 
   describe('Adding shelterer', () => {
     const exampleShelteringReward = 100;
+
     beforeEach(async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
-      await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      await atlasStakeStore.methods.depositStake(other, 1).send({from, value: 1});
+      await storeBundle(bundleId, hermes, storagePeriods);
+      await depositStake(atlas, 1, 1);
     });
 
     it(`adds store entry`, async () => {
-      expect(await bundleStore.methods.getShelterers(bundleId).call()).to.not.include(other);
-      await sheltering.methods.addShelterer(bundleId, other, exampleShelteringReward).send({from});
-      expect(await bundleStore.methods.getShelterers(bundleId).call()).to.include(other);
+      expect(await getShelterers(bundleId)).to.not.include(atlas);
+      await addShelterer(bundleId, atlas, exampleShelteringReward);
+      expect(await getShelterers(bundleId)).to.include(atlas);
+    });
+
+    it(`fails if already sheltered`, async () => {
+      await addShelterer(bundleId, atlas, exampleShelteringReward);
+      await expect(addShelterer(bundleId, atlas, exampleShelteringReward)).to.be.eventually.rejected;
     });
 
     it(`increments storage used`, async () => {
-      expect(await atlasStakeStore.methods.getStorageUsed(other).call()).to.equal('0');
-      await sheltering.methods.addShelterer(bundleId, other, exampleShelteringReward).send({from});
-      expect(await atlasStakeStore.methods.getStorageUsed(other).call()).to.equal('1');
+      expect(await getStorageUsed(atlas)).to.equal('0');
+      await addShelterer(bundleId, atlas, exampleShelteringReward);
+      expect(await getStorageUsed(atlas)).to.equal('1');
+    });
+
+    it('cannot shelter if the storage limit is 0', async () => {
+      await expect(addShelterer(bundleId, other, exampleShelteringReward)).to.be.eventually.rejected;
+    });
+
+    it('is context internal', async () => {
+      await expect(addShelterer(bundleId, atlas, exampleShelteringReward, other)).to.be.eventually.rejected;
     });
   });
 
   describe('Removing shelterer', () => {
     beforeEach(async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
-      await sheltering.methods.store(bundleId, from, storagePeriods).send({from});
-      await atlasStakeStore.methods.depositStake(other, 1).send({from, value: 1});
-      await sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
+      await storeBundle(bundleId, hermes, storagePeriods);
+      await depositStake(other, 1, 1);
+      await addShelterer(bundleId, other, totalReward);
     });
 
     it(`removes store entry`, async () => {
-      expect(await bundleStore.methods.getShelterers(bundleId).call()).to.include(other);
-      await sheltering.methods.removeShelterer(bundleId, other).send({from});
-      expect(await bundleStore.methods.getShelterers(bundleId).call()).to.not.include(other);
+      expect(await getShelterers(bundleId)).to.include(other);
+      await removeShelterer(bundleId, other);
+      expect(await getShelterers(bundleId)).to.not.include(other);
     });
 
     it(`decrements storage used`, async () => {
-      expect(await atlasStakeStore.methods.getStorageUsed(other).call()).to.equal('1');
-      await sheltering.methods.removeShelterer(bundleId, other).send({from});
-      expect(await atlasStakeStore.methods.getStorageUsed(other).call()).to.equal('0');
+      expect(await getStorageUsed(other)).to.equal('1');
+      await removeShelterer(bundleId, other);
+      expect(await getStorageUsed(other)).to.equal('0');
+    });
+
+    it('is context internal', async () => {
+      await expect(removeShelterer(bundleId, other, other)).to.be.eventually.rejected;
+    });
+  });
+
+  describe('getShelteringData', () => {
+    beforeEach(async () => {
+      await storeBundle(bundleId, hermes, storagePeriods);
+      await depositStake(other, 1, 1);
+      await addShelterer(bundleId, other, totalReward);
+    });
+
+    it('gets data about the sheltering', async () => {
+      const {startingDate, storagePeriods: storagePeriondsReturned, totalReward: totalRewardReturned} = await getShelteringData(bundleId, other);
+      expect(startingDate).to.not.equal('0');
+      expect(storagePeriondsReturned).to.equal(storagePeriods.toString());
+      expect(totalRewardReturned).to.equal(totalReward.toString());
     });
   });
 });
