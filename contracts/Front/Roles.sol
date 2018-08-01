@@ -73,6 +73,11 @@ contract Roles is Base {
         retire(msg.sender, Config.NodeType.HERMES);
     }
 
+    function getOnboardedRole(address node) public returns (Config.NodeType) {
+        RolesStore rolesStore = context().rolesStore();
+        return rolesStore.getRole(node);
+    }
+
     function canOnboardAsAtlas(address node, uint amount) public view returns (bool) {
         KycWhitelist kycWhitelist = context().kycWhitelist();
 
