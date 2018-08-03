@@ -38,7 +38,6 @@ describe('Roles Contract', () => {
   let kycWhitelist;
   let atlasStakeStore;
   let apolloDepositStore;
-  let rolesStore;
   let from;
   let apollo;
   let atlas;
@@ -56,12 +55,12 @@ describe('Roles Contract', () => {
   const canOnboardAsApollo = async (address, value) => roles.methods.canOnboardAsApollo(address, value).call();
   const getRole = async (address) => roles.methods.getOnboardedRole(address).call();
   const getStorageLimitForAtlas = async (value) => roles.methods.getStorageLimitForAtlas(value).call();
-  const getUrl = async (address) => rolesStore.methods.getUrl(address).call();
+  const getUrl = async (address) => roles.methods.getUrl(address).call();
   const getStake = async (address) => atlasStakeStore.methods.getStake(address).call();
   const isDepositing = async (address) => apolloDepositStore.methods.isDepositing(address).call();
 
   beforeEach(async () => {
-    ({web3, roles, kycWhitelist, atlasStakeStore, rolesStore, apolloDepositStore} = await deploy({
+    ({web3, roles, kycWhitelist, atlasStakeStore, apolloDepositStore} = await deploy({
       web3,
       contracts: {
         roles: true,
