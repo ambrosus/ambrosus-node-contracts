@@ -73,9 +73,14 @@ contract Roles is Base {
         retire(msg.sender, Config.NodeType.HERMES);
     }
 
-    function getOnboardedRole(address node) public returns (Config.NodeType) {
+    function getOnboardedRole(address node) public view returns (Config.NodeType) {
         RolesStore rolesStore = context().rolesStore();
         return rolesStore.getRole(node);
+    }
+
+    function getUrl(address node) public view returns (string) {
+        RolesStore rolesStore = context().rolesStore();
+        return rolesStore.getUrl(node);
     }
 
     function canOnboardAsAtlas(address node, uint amount) public view returns (bool) {
