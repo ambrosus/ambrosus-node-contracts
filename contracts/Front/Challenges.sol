@@ -66,12 +66,10 @@ contract Challenges is Base {
     }
 
     function resolve(bytes32 challengeId) public {
-        require(challengeIsInProgress(challengeId));
+        require(canResolve(msg.sender, challengeId));
 
         Challenge storage challenge = challenges[challengeId];
-
         Sheltering sheltering = context().sheltering();
-        require(!sheltering.isSheltering(challenge.bundleId, msg.sender));
 
         sheltering.addShelterer(challenge.bundleId, msg.sender, challenge.feePerChallenge);
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
@@ -106,6 +104,16 @@ contract Challenges is Base {
         emit ChallengeTimeout(challenge.sheltererId, challenge.bundleId, challengeId, penalty);
         delete challenges[challengeId];
         refundAddress.transfer(amountToReturn);
+    }
+
+    function canResolve(address resolverId, bytes32 challengeId) public view returns (bool) {
+        Challenge storage challenge = challenges[challengeId];
+        Sheltering sheltering = context().sheltering();
+        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
+        // solium-disable-next-line operator-whitespace
+        return challengeIsInProgress(challengeId) &&
+            !sheltering.isSheltering(challenge.bundleId, resolverId) &&
+            atlasStakeStore.canStore(resolverId);
     }
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns(bool) {
