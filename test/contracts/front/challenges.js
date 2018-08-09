@@ -277,6 +277,10 @@ describe('Challenges Contract', () => {
       ({challengeId} = challengeCreationEvent.returnValues);
     });
 
+    it('canResolve returns true if challenge can be resolved', async () => {
+      expect(await challenges.methods.canResolve(resolver, challengeId).call()).to.equal(true);
+    });
+
     it('Stores resolver as a new shelterer', async () => {
       await challenges.methods.resolve(challengeId).send({from: resolver});
       expect(await sheltering.methods.isSheltering(bundleId, resolver).call()).to.equal(true);
@@ -301,17 +305,20 @@ describe('Challenges Contract', () => {
 
     it('Fails if challenge does not exist', async () => {
       const fakeChallengeId = utils.keccak256('fakeChallengeId');
+      expect(await challenges.methods.canResolve(resolver, fakeChallengeId).call()).to.equal(false);
       await expect(challenges.methods.resolve(fakeChallengeId).send({from: resolver})).to.be.eventually.rejected;
     });
 
     it('Fails if resolver is already sheltering challenged bundle', async () => {
       await bundleStore.methods.addShelterer(bundleId, resolver, shelteringReward).send({from});
+      expect(await challenges.methods.canResolve(resolver, challengeId).call()).to.equal(false);
       await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
 
     it(`Fails if resolver can't store more bundles`, async () => {
       const allStorageUsed = ATLAS1_STORAGE_LIMIT;
       await atlasStakeStore.methods.setStorageUsed(resolver, allStorageUsed).send({from});
+      expect(await challenges.methods.canResolve(resolver, challengeId).call()).to.equal(false);
       await expect(challenges.methods.resolve(challengeId).send({from: resolver})).to.be.eventually.rejected;
     });
 
