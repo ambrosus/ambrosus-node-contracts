@@ -16,6 +16,7 @@ contract Config {
     uint constant public PENALTY_ESCALATION_TIMEOUT = 90 days;
     uint constant public FINISH_SHELTERING_REWARD_SPLIT = 22;
     uint constant public PENALTY_DIVIDER = 100;
+    uint constant public BUNDLE_SIZE_LIMIT = 16384;
     address constant public BURN_ADDRESS = 0x1000000000000000000000000000000000000000;
 
     uint constant public APOLLO_DEPOSIT = 250000 ether;
