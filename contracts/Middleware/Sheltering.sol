@@ -14,6 +14,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
+import "../Configuration/Time.sol";
 import "../Storage/BundleStore.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Storage/RolesStore.sol";
@@ -61,10 +62,11 @@ contract Sheltering is Base {
 
     function isSheltering(bytes32 bundleId, address sheltererId) public view returns(bool) {
         BundleStore bundleStore = context().bundleStore();
+        Time time = context().time();
         address[] memory shelterers = bundleStore.getShelterers(bundleId);
         for (uint i = 0; i < shelterers.length; i++) {
             if (shelterers[i] == sheltererId) {
-                return true;
+                return bundleStore.getShelteringExpirationDate(bundleId, sheltererId) > time.currentTimestamp();
             }
         }
         return false;

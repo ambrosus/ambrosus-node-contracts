@@ -14,6 +14,7 @@ import {createWeb3} from '../../../src/web3_tools';
 import utils from '../../helpers/utils';
 import deploy from '../../helpers/deploy';
 import {ATLAS, HERMES} from '../../../src/consts';
+import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -32,7 +33,9 @@ describe('Sheltering Contract', () => {
   let bundleStore;
   let sheltering;
   let rolesStore;
+  let time;
   let atlasStakeStore;
+  const now = 1500000000;
 
   const isSheltering = async (bundleId, shelterer) => sheltering.methods.isSheltering(bundleId, shelterer).call();
   const getShelteringData = async (bundleId, shelterer) => sheltering.methods.getShelteringData(bundleId, shelterer).call();
@@ -44,20 +47,22 @@ describe('Sheltering Contract', () => {
   const depositStake = async (staker, storageLimit, value, sender = hermes) => atlasStakeStore.methods.depositStake(staker, storageLimit).send({from: sender, value});
   const injectBundleWithBundleStore = async (bundleId, uploader, storagePeriods, sender = hermes) => bundleStore.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
   const injectSheltererWithBundleStore = async (bundleId, shelterer, storagePeriods, sender = hermes) => bundleStore.methods.addShelterer(bundleId, shelterer, storagePeriods).send({from: sender});
+  const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from: hermes});
 
   beforeEach(async () => {
     web3 = await createWeb3();
     [hermes, atlas, apollo, other] = await web3.eth.getAccounts();
-    ({bundleStore, sheltering, atlasStakeStore, rolesStore} = await deploy({web3, contracts: {
+    ({bundleStore, sheltering, atlasStakeStore, rolesStore, time} = await deploy({web3, contracts: {
       rolesStore: true,
       bundleStore: true,
       sheltering: true,
       atlasStakeStore: true,
       config: true,
-      time: true
+      time: TimeMockJson
     }}));
     await rolesStore.methods.setRole(hermes, HERMES).send({from: hermes});
     await rolesStore.methods.setRole(atlas, ATLAS).send({from: hermes});
+    await setTimestamp(now);
   });
 
   describe('isSheltering', () => {
@@ -76,6 +81,13 @@ describe('Sheltering Contract', () => {
       await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
       await injectSheltererWithBundleStore(bundleId, other, totalReward);
       expect(await isSheltering(bundleId, other)).to.equal(true);
+    });
+
+    it('returns false if sheltering has expired', async () => {
+      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
+      await injectSheltererWithBundleStore(bundleId, other, totalReward);
+      await setTimestamp('2500000000');
+      expect(await isSheltering(bundleId, other)).to.equal(false);
     });
   });
 
