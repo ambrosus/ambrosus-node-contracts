@@ -32,11 +32,14 @@ contract Challenges is Base {
         uint feePerChallenge;
         uint creationTime;
         uint8 activeCount;
+        uint sequenceNumber;
     }
 
     event ChallengeCreated(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint count);
     event ChallengeResolved(address sheltererId, bytes32 bundleId, bytes32 challengeId, address resolverId);
     event ChallengeTimeout(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint penalty);
+
+    uint public nextChallengeSequenceNumber;
 
     mapping(bytes32 => Challenge) public challenges;
 
@@ -48,9 +51,9 @@ contract Challenges is Base {
         validateChallenge(sheltererId, bundleId);
         validateFeeAmount(1, bundleId);
         Time time = context().time();
-        Challenge memory challenge = Challenge(sheltererId, bundleId, msg.sender, msg.value, time.currentTimestamp(), 1);
+        Challenge memory challenge = Challenge(sheltererId, bundleId, msg.sender, msg.value, time.currentTimestamp(), 1, nextChallengeSequenceNumber);
         bytes32 challengeId = storeChallenge(challenge);
-
+        nextChallengeSequenceNumber++;
         emit ChallengeCreated(sheltererId, bundleId, challengeId, 1);
     }
 
@@ -59,8 +62,10 @@ contract Challenges is Base {
         validateFeeAmount(challengesCount, bundleId);
 
         Time time = context().time();
-        Challenge memory challenge = Challenge(uploaderId, bundleId, 0x0, msg.value / challengesCount, time.currentTimestamp(), challengesCount);
+        Challenge memory challenge = Challenge(
+            uploaderId, bundleId, 0x0, msg.value / challengesCount, time.currentTimestamp(), challengesCount, nextChallengeSequenceNumber);
         bytes32 challengeId = storeChallenge(challenge);
+        nextChallengeSequenceNumber += challengesCount;
 
         emit ChallengeCreated(uploaderId, bundleId, challengeId, challengesCount);
     }
@@ -152,6 +157,10 @@ contract Challenges is Base {
 
     function getActiveChallengesCount(bytes32 challengeId) public view returns(uint) {
         return challenges[challengeId].activeCount;
+    }
+
+    function getChallengeSequenceNumber(bytes32 challengeId) public view returns(uint) {
+        return challenges[challengeId].sequenceNumber;
     }
 
     function challengeIsInProgress(bytes32 challengeId) public view returns (bool) {
