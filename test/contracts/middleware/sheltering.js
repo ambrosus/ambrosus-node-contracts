@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import {createWeb3} from '../../../src/web3_tools';
 import utils from '../../helpers/utils';
 import deploy from '../../helpers/deploy';
-import {ATLAS, HERMES} from '../../../src/consts';
+import {ATLAS, HERMES, STORAGE_PERIOD_UNIT} from '../../../src/consts';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
 chai.use(sinonChai);
@@ -21,7 +21,7 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 const bundleId = utils.asciiToHex('bundleId');
-const storagePeriods = 1;
+const storagePeriods = 3;
 const totalReward = 100;
 
 describe('Sheltering Contract', () => {
@@ -39,6 +39,7 @@ describe('Sheltering Contract', () => {
 
   const isSheltering = async (bundleId, shelterer) => sheltering.methods.isSheltering(bundleId, shelterer).call();
   const getShelteringData = async (bundleId, shelterer) => sheltering.methods.getShelteringData(bundleId, shelterer).call();
+  const shelteringExpirationDate = async (bundleId, shelterer) => sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
   const storeBundle = async (bundleId, uploader, storagePeriods, sender = hermes) => sheltering.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
   const addShelterer = async (bundleId, shelterer, amount, sender = hermes) => sheltering.methods.addShelterer(bundleId, shelterer, amount).send({from: sender});
   const removeShelterer = async (bundleId, shelterer, sender = hermes) => sheltering.methods.removeShelterer(bundleId, shelterer).send({from: sender});
@@ -192,6 +193,18 @@ describe('Sheltering Contract', () => {
       expect(startingDate).to.not.equal('0');
       expect(storagePeriondsReturned).to.equal(storagePeriods.toString());
       expect(totalRewardReturned).to.equal(totalReward.toString());
+    });
+  });
+
+  describe('getShelteringExpirationDate', () => {
+    beforeEach(async () => {
+      await storeBundle(bundleId, hermes, storagePeriods);
+      await depositStake(other, 1, 1);
+      await addShelterer(bundleId, other, totalReward);
+    });
+
+    it('returns expiration date', async () => {
+      expect(await shelteringExpirationDate(bundleId, other)).to.equal((now + (storagePeriods * STORAGE_PERIOD_UNIT)).toString());
     });
   });
 });

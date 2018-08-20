@@ -60,13 +60,18 @@ contract Sheltering is Base {
         bundleStore.removeShelterer(bundleId, shelterer);
     }
 
-    function isSheltering(bytes32 bundleId, address sheltererId) public view returns(bool) {
+    function getShelteringExpirationDate(bytes32 bundleId, address sheltererId) public view returns (uint) {
+        BundleStore bundleStore = context().bundleStore();
+        return bundleStore.getShelteringExpirationDate(bundleId, sheltererId);
+    }
+
+    function isSheltering(bytes32 bundleId, address sheltererId) public view returns (bool) {
         BundleStore bundleStore = context().bundleStore();
         Time time = context().time();
         address[] memory shelterers = bundleStore.getShelterers(bundleId);
         for (uint i = 0; i < shelterers.length; i++) {
             if (shelterers[i] == sheltererId) {
-                return bundleStore.getShelteringExpirationDate(bundleId, sheltererId) > time.currentTimestamp();
+                return getShelteringExpirationDate(bundleId, sheltererId) > time.currentTimestamp();
             }
         }
         return false;
