@@ -11,12 +11,39 @@ pragma solidity ^0.4.23;
 
 
 library SafeMathExtensions {
-    function safePow2(uint exponent) pure public returns (uint) {
+    /**
+     * @dev Casts to uint32, throws on overflow.
+     */
+    function castTo32(uint256 a) internal pure returns (uint32 c) {
+        c = uint32(a);
+        assert(a == c);
+        return c;
+    }
+
+    /**
+     * @dev Casts to uint64, throws on overflow.
+     */
+    function castTo64(uint256 a) internal pure returns (uint64 c) {
+        c = uint64(a);
+        assert(a == c);
+        return c;
+    }
+
+    /**
+     * @dev Casts to uint128, throws on overflow.
+     */
+    function castTo128(uint256 a) internal pure returns (uint128 c) {
+        c = uint128(a);
+        assert(a == c);
+        return c;
+    }
+
+    function safePow2(uint exponent) internal pure returns (uint256) {
         require(exponent < 256);
         return 2 ** exponent;        
     }
 
-    function mod(uint256 a, uint256 b) pure public returns (uint) {
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
         return a % b; //modulo is overflow safe   
     }
 }
