@@ -80,6 +80,7 @@ contract Challenges is Base {
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
         grantReward(msg.sender, challenge);
         removeChallengeOrDecreaseActiveCount(challengeId);
+        increaseChallengeSequenceNumberIfNecessary(challengeId);
     }
 
     function markAsExpired(bytes32 challengeId) public {
@@ -203,6 +204,12 @@ contract Challenges is Base {
             delete challenges[challengeId];
         } else {
             challenges[challengeId].activeCount--;
+        }
+    }
+
+    function increaseChallengeSequenceNumberIfNecessary(bytes32 challengeId) private {
+        if (challenges[challengeId].activeCount > 0) {
+            challenges[challengeId].sequenceNumber++;
         }
     }
 

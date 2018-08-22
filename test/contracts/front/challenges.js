@@ -303,14 +303,22 @@ describe('Challenges Contract', () => {
   describe('Resolving a challenge', () => {
     const url = 'url';
 
+    const onboardAsAtlas = async (address) => {
+      await kycWhitelist.methods.add(address, ATLAS).send({from});
+      await roles.methods.onboardAsAtlas(url).send({from: address, value: ATLAS1_STAKE, gasPrice: '0'});
+    };
+
+    const lastChallengeId = async () => {
+      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      return challengeCreationEvent.returnValues.challengeId;
+    };
+
     beforeEach(async () => {
-      await kycWhitelist.methods.add(resolver, ATLAS).send({from});
-      await roles.methods.onboardAsAtlas(url).send({from: resolver, value: ATLAS1_STAKE, gasPrice: '0'});
+      await onboardAsAtlas(resolver);
       await atlasStakeStore.methods.depositStake(other, ATLAS1_STORAGE_LIMIT).send({from, value: ATLAS1_STAKE});
       await sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
       await challenges.methods.start(other, bundleId).send({from, value: fee});
-      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
-      ({challengeId} = challengeCreationEvent.returnValues);
+      challengeId = await lastChallengeId();
     });
 
     it('canResolve returns true if challenge can be resolved', async () => {
@@ -339,6 +347,11 @@ describe('Challenges Contract', () => {
       expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
     });
 
+    it('Does not increase challenges sequence number if not a system challenge', async () => {
+      await challenges.methods.resolve(challengeId).send({from: resolver});
+      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('0');
+    });
+
     it('Fails if challenge does not exist', async () => {
       const fakeChallengeId = utils.keccak256('fakeChallengeId');
       expect(await challenges.methods.canResolve(resolver, fakeChallengeId).call()).to.equal(false);
@@ -361,16 +374,26 @@ describe('Challenges Contract', () => {
     it('Decreases active count', async () => {
       const systemFee = fee.mul(new BN('3'));
       await challenges.methods.startForSystem(from, bundleId, 3).send({from, value: systemFee});
-      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
-      ({challengeId} = challengeCreationEvent.returnValues);
+      challengeId = await lastChallengeId();
       await challenges.methods.resolve(challengeId).send({from: resolver});
       expect(await challenges.methods.getActiveChallengesCount(challengeId).call()).to.equal('2');
     });
 
+    it('Increases sequence number for all resolutions but last', async () => {
+      await onboardAsAtlas(totalStranger);
+      const systemFee = fee.mul(new BN('2'));
+      await challenges.methods.startForSystem(from, bundleId, 2).send({from, value: systemFee});
+      challengeId = await lastChallengeId();
+      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('1');
+      await challenges.methods.resolve(challengeId).send({from: resolver});
+      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('2');
+      await challenges.methods.resolve(challengeId).send({from: totalStranger});
+      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('0');
+    });
+
     it('Removes system challenge if active count was 1', async () => {
       await challenges.methods.startForSystem(from, bundleId, 1).send({from, value: fee});
-      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
-      ({challengeId} = challengeCreationEvent.returnValues);
+      challengeId = await lastChallengeId();
       await challenges.methods.resolve(challengeId).send({from: resolver});
       expect(await challenges.methods.challengeIsInProgress(challengeId).call()).to.equal(false);
     });
