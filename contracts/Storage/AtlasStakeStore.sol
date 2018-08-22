@@ -26,6 +26,7 @@ contract AtlasStakeStore is Base {
         uint storageUsed;
         uint lastPenaltyTime;
         uint penaltiesCount;
+        uint lastChallengeResolvedSequenceNumber;
     }
 
     mapping (address => Stake) stakes;
@@ -56,13 +57,23 @@ contract AtlasStakeStore is Base {
         return stakes[node].storageUsed > 0;
     }
     
+    function getLastChallengeResolvedSequenceNumber(address node) public view returns (uint) {
+        return stakes[node].lastChallengeResolvedSequenceNumber;
+    }
+    
     function getBasicStake(address node) public view returns (uint) {
         return stakes[node].initialAmount;
     }
 
     function depositStake(address _who, uint _storageLimit) public payable onlyContextInternalCalls {
         require(!isStaking(_who));
-        stakes[_who] = Stake(msg.value, msg.value, _storageLimit, 0, 0, 0);
+        stakes[_who] = Stake(msg.value, msg.value, _storageLimit, 0, 0, 0, 0);
+    }
+
+    function updateLastChallengeResolvedSequenceNumber(address node, uint updatedLastChallengeResolvedSequenceNumber) public onlyContextInternalCalls {
+        require(isStaking(node));
+        require(stakes[node].lastChallengeResolvedSequenceNumber <= updatedLastChallengeResolvedSequenceNumber);
+        stakes[node].lastChallengeResolvedSequenceNumber = updatedLastChallengeResolvedSequenceNumber;
     }
 
     function releaseStake(address node, address refundAddress) public onlyContextInternalCalls returns(uint) {

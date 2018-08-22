@@ -71,6 +71,31 @@ describe('AtlasStakeStore Contract', () => {
     });
   });
 
+  describe('Update last challenge resolved sequence number', () => {
+    it('can not update if not staking', async () => {
+      await expect(atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 1).send({from})).to.be.eventually.rejected;
+    });
+
+    it('reject if not context internal call', async () => {
+      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
+      await expect(atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 1).send({from: other})).to.be.eventually.rejected;
+    });
+
+    it('new value has to be not smaller than current one', async () => {
+      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
+      await atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 100).send({from});
+      await expect(atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 99).send({from})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 100).send({from})).to.be.eventually.fulfilled;
+      await expect(atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 101).send({from})).to.be.eventually.fulfilled;
+    });
+
+    it('updates last challenge resolved sequence number', async () => {
+      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
+      await atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 100).send({from});
+      expect(await atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(from).call()).to.equal('100');
+    });
+  });
+
   describe('Increment storage used', () => {
     beforeEach(async () => {
       await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});

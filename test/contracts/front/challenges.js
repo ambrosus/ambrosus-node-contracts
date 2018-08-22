@@ -336,6 +336,12 @@ describe('Challenges Contract', () => {
       expect(await payoutsStore.methods.available(resolver, currentPayoutPeriod + 5).call({from})).not.to.equal('0');
     });
 
+    it('Updates last resolved challenge sequence number', async () => {
+      const sequenceNumber = await challenges.methods.getChallengeSequenceNumber(challengeId).call();
+      await challenges.methods.resolve(challengeId).send({from: resolver});
+      expect(await atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(resolver).call()).to.equal(sequenceNumber);
+    });
+
     it('Emits an event', async () => {
       expect(await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'})).to
         .emitEvent('ChallengeResolved')
