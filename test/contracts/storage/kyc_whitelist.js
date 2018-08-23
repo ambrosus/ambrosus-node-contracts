@@ -12,7 +12,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract} from '../../../src/web3_tools';
 import KycWhitelistJson from '../../../build/contracts/KycWhitelist.json';
-import {APOLLO, ATLAS, HERMES} from '../../../src/consts';
+import {APOLLO, ATLAS, HERMES, APOLLO_DEPOSIT} from '../../../src/consts';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -28,7 +28,8 @@ describe('KYC Whitelist Contract', () => {
 
   const isWhitelisted = async (address) => kycWhitelist.methods.isWhitelisted(address).call();
   const hasRoleAssigned = async (address, role) => kycWhitelist.methods.hasRoleAssigned(address, role).call();
-  const addToWhitelist = async (address, role, sender = from) => kycWhitelist.methods.add(address, role).send({from: sender});
+  const getRequiredDeposit = async (address) => kycWhitelist.methods.getRequiredDeposit(address).call();
+  const addToWhitelist = async (address, role, deposit, sender = from) => kycWhitelist.methods.add(address, role, deposit).send({from: sender});
   const removeFromWhitelist = async (address, sender = from) => kycWhitelist.methods.remove(address).send({from: sender});
 
   beforeEach(async () => {
@@ -39,7 +40,7 @@ describe('KYC Whitelist Contract', () => {
 
   it(`adds and removes from whitelist, checks if address is whitelisted`, async () => {
     expect(await isWhitelisted(other)).to.equal(false);
-    await addToWhitelist(other, APOLLO);
+    await addToWhitelist(other, APOLLO, APOLLO_DEPOSIT);
     expect(await isWhitelisted(other)).to.equal(true);
     await removeFromWhitelist(other);
     expect(await isWhitelisted(other)).to.equal(false);
@@ -52,39 +53,44 @@ describe('KYC Whitelist Contract', () => {
   });
 
   it('assigns and unassigns a role to the address', async () => {
-    await addToWhitelist(other, APOLLO);
+    await addToWhitelist(other, APOLLO, APOLLO_DEPOSIT);
     expect(await hasRoleAssigned(other, APOLLO)).to.be.true;
     expect(await hasRoleAssigned(other, HERMES)).to.be.false;
     await removeFromWhitelist(other);
     expect(await hasRoleAssigned(other, APOLLO)).to.be.false;
   });
 
+  it('correctly stores required deposit', async () => {
+    await addToWhitelist(other, APOLLO, APOLLO_DEPOSIT);
+    expect(await getRequiredDeposit(other)).to.equal(APOLLO_DEPOSIT.toString());
+  });
+
   it('is possible to assign role after it was unassigned', async () => {
-    await addToWhitelist(other, APOLLO);
+    await addToWhitelist(other, APOLLO, APOLLO_DEPOSIT);
     await removeFromWhitelist(other);
-    await addToWhitelist(other, HERMES);
+    await addToWhitelist(other, HERMES, 0);
     expect(await hasRoleAssigned(other, APOLLO)).to.be.false;
     expect(await hasRoleAssigned(other, HERMES)).to.be.true;
   });
 
   it(`throws if non owner attempts to add`, async () => {
-    await expect(addToWhitelist(other, totalStranger)).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, totalStranger, APOLLO_DEPOSIT)).to.be.eventually.rejected;
     expect(await isWhitelisted(other)).to.equal(false);
   });
 
   it(`throws if non owner attempts to remove`, async () => {
-    await addToWhitelist(other, APOLLO);
+    await addToWhitelist(other, APOLLO, APOLLO_DEPOSIT);
     await expect(removeFromWhitelist(other, totalStranger)).to.be.eventually.rejected;
     expect(await isWhitelisted(other)).to.be.true;
   });
 
   it('throws on try to assign nonexisting role', async () => {
-    await expect(addToWhitelist(other, 0)).to.be.eventually.rejected;
-    await expect(addToWhitelist(other, 420)).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, 0, APOLLO_DEPOSIT)).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, 420, APOLLO_DEPOSIT)).to.be.eventually.rejected;
   });
 
   it('throws if whitelisting the address that is already whitelisted', async () => {
-    await addToWhitelist(other, APOLLO);
-    await expect(addToWhitelist(other, HERMES)).to.be.eventually.rejected;
+    await addToWhitelist(other, APOLLO, APOLLO_DEPOSIT);
+    await expect(addToWhitelist(other, HERMES, 0)).to.be.eventually.rejected;
   });
 });

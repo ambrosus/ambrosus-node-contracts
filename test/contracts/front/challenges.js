@@ -304,7 +304,7 @@ describe('Challenges Contract', () => {
     const url = 'url';
 
     const onboardAsAtlas = async (address) => {
-      await kycWhitelist.methods.add(address, ATLAS).send({from});
+      await kycWhitelist.methods.add(address, ATLAS, ATLAS1_STAKE).send({from});
       await roles.methods.onboardAsAtlas(url).send({from: address, value: ATLAS1_STAKE, gasPrice: '0'});
     };
 
@@ -503,7 +503,7 @@ describe('Challenges Contract', () => {
     });
 
     it(`Returns fee to creator (part of the fee if partially resolved)`, async () => {
-      await kycWhitelist.methods.add(resolver, ATLAS).send({from});
+      await kycWhitelist.methods.add(resolver, ATLAS, ATLAS1_STAKE).send({from});
       await roles.methods.onboardAsAtlas(url).send({from: resolver, value: ATLAS1_STAKE, gasPrice: '0'});
       await challenges.methods.resolve(challengeId).send({from: resolver});
 

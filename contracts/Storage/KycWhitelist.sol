@@ -15,25 +15,35 @@ import "../Configuration/Config.sol";
 
 contract KycWhitelist is Ownable {
 
-    mapping(address => Config.NodeType) whitelist;
+    struct Candidate {
+        Config.NodeType allowedRole;
+        uint requiredDeposit;
+    }
 
-    function add(address candidate, Config.NodeType role) public onlyOwner {
+    mapping(address => Candidate) whitelist;
+
+    function add(address candidate, Config.NodeType role, uint deposit) public onlyOwner {
         require(!isWhitelisted(candidate));
         require(role == Config.NodeType.ATLAS || role == Config.NodeType.HERMES || role == Config.NodeType.APOLLO);
 
-        whitelist[candidate] = role;
+        whitelist[candidate].allowedRole = role;
+        whitelist[candidate].requiredDeposit = deposit;
     }
 
     function remove(address candidate) public onlyOwner {
         require(isWhitelisted(candidate));
-        whitelist[candidate] = Config.NodeType.NONE;
+        delete whitelist[candidate];
     }
 
     function isWhitelisted(address candidate) public view returns(bool) {
-        return whitelist[candidate] != Config.NodeType.NONE;
+        return whitelist[candidate].allowedRole != Config.NodeType.NONE;
     }
 
     function hasRoleAssigned(address candidate, Config.NodeType role) public view returns(bool) {
-        return whitelist[candidate] == role;
+        return whitelist[candidate].allowedRole == role;
+    }
+
+    function getRequiredDeposit(address candidate) public view returns(uint) {
+        return whitelist[candidate].requiredDeposit;
     }
 }

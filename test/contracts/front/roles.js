@@ -40,10 +40,12 @@ describe('Roles Contract', () => {
   let apolloDepositStore;
   let from;
   let apollo;
-  let atlas;
+  let atlas1;
+  let atlas2;
+  let atlas3;
   let hermes;
 
-  const addToWhitelist = async (address, role) => kycWhitelist.methods.add(address, role).send({from});
+  const addToWhitelist = async (address, role, deposit) => kycWhitelist.methods.add(address, role, deposit).send({from});
   const onboardAsAtlas = async (url, sender, value) => roles.methods.onboardAsAtlas(url).send({from: sender, value});
   const onboardAsHermes = async (url, sender) => roles.methods.onboardAsHermes(url).send({from: sender});
   const onboardAsApollo = async (sender, value) => roles.methods.onboardAsApollo().send({from: sender, value});
@@ -73,31 +75,33 @@ describe('Roles Contract', () => {
         apolloDepositStore: true
       }
     }));
-    [from, apollo, atlas, hermes] = await web3.eth.getAccounts();
-    await addToWhitelist(apollo, APOLLO);
-    await addToWhitelist(atlas, ATLAS);
-    await addToWhitelist(hermes, HERMES);
+    [from, apollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
+    await addToWhitelist(apollo, APOLLO, APOLLO_DEPOSIT);
+    await addToWhitelist(atlas1, ATLAS, ATLAS1_STAKE);
+    await addToWhitelist(atlas2, ATLAS, ATLAS2_STAKE);
+    await addToWhitelist(atlas3, ATLAS, ATLAS3_STAKE);
+    await addToWhitelist(hermes, HERMES, 0);
   });
 
   describe('canOnboard', () => {
     it('Atlas 1', async () => {
-      expect(await canOnboardAsAtlas(atlas, 0)).to.be.false;
-      expect(await canOnboardAsAtlas(atlas, ATLAS1_STAKE.sub(ONE))).to.be.false;
-      expect(await canOnboardAsAtlas(atlas, ATLAS1_STAKE)).to.be.true;
-      expect(await canOnboardAsAtlas(atlas, ATLAS1_STAKE.add(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas1, 0)).to.be.false;
+      expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE.sub(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE)).to.be.true;
+      expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE.add(ONE))).to.be.false;
       expect(await canOnboardAsAtlas(hermes, ATLAS1_STAKE)).to.be.false;
     });
 
     it('Atlas 2', async () => {
-      expect(await canOnboardAsAtlas(atlas, ATLAS2_STAKE)).to.be.true;
-      expect(await canOnboardAsAtlas(atlas, ATLAS2_STAKE.sub(ONE))).to.be.false;
-      expect(await canOnboardAsAtlas(atlas, ATLAS2_STAKE.add(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas2, ATLAS2_STAKE)).to.be.true;
+      expect(await canOnboardAsAtlas(atlas2, ATLAS2_STAKE.sub(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas2, ATLAS2_STAKE.add(ONE))).to.be.false;
     });
 
     it('Atlas 3', async () => {
-      expect(await canOnboardAsAtlas(atlas, ATLAS3_STAKE)).to.be.true;
-      expect(await canOnboardAsAtlas(atlas, ATLAS3_STAKE.sub(ONE))).to.be.false;
-      expect(await canOnboardAsAtlas(atlas, ATLAS3_STAKE.add(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas3, ATLAS3_STAKE)).to.be.true;
+      expect(await canOnboardAsAtlas(atlas3, ATLAS3_STAKE.sub(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas3, ATLAS3_STAKE.add(ONE))).to.be.false;
     });
 
     it('Hermes', async () => {
@@ -110,7 +114,7 @@ describe('Roles Contract', () => {
       expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT.sub(ONE))).to.be.false;
       expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT)).to.be.true;
       expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT.add(ONE))).to.be.false;
-      expect(await canOnboardAsApollo(atlas, APOLLO_DEPOSIT)).to.be.false;
+      expect(await canOnboardAsApollo(atlas1, APOLLO_DEPOSIT)).to.be.false;
     });
   });
 
@@ -119,24 +123,24 @@ describe('Roles Contract', () => {
 
     describe('Atlas', () => {
       it('atlas 1', async () => {
-        await onboardAsAtlas(url, atlas, ATLAS1_STAKE);
-        expect(await getStake(atlas)).to.equal(ATLAS1_STAKE.toString());
-        expect(await getUrl(atlas)).to.equal(url);
-        expect(await getRole(atlas)).to.equal(ATLAS.toString());
+        await onboardAsAtlas(url, atlas1, ATLAS1_STAKE);
+        expect(await getStake(atlas1)).to.equal(ATLAS1_STAKE.toString());
+        expect(await getUrl(atlas1)).to.equal(url);
+        expect(await getRole(atlas1)).to.equal(ATLAS.toString());
       });
 
       it('atlas 2', async () => {
-        await onboardAsAtlas(url, atlas, ATLAS2_STAKE);
-        expect(await getStake(atlas)).to.equal(ATLAS2_STAKE.toString());
-        expect(await getUrl(atlas)).to.equal(url);
-        expect(await getRole(atlas)).to.equal(ATLAS.toString());
+        await onboardAsAtlas(url, atlas2, ATLAS2_STAKE);
+        expect(await getStake(atlas2)).to.equal(ATLAS2_STAKE.toString());
+        expect(await getUrl(atlas2)).to.equal(url);
+        expect(await getRole(atlas2)).to.equal(ATLAS.toString());
       });
 
       it('atlas 3', async () => {
-        await onboardAsAtlas(url, atlas, ATLAS3_STAKE);
-        expect(await getStake(atlas)).to.equal(ATLAS3_STAKE.toString());
-        expect(await getUrl(atlas)).to.equal(url);
-        expect(await getRole(atlas)).to.equal(ATLAS.toString());
+        await onboardAsAtlas(url, atlas3, ATLAS3_STAKE);
+        expect(await getStake(atlas3)).to.equal(ATLAS3_STAKE.toString());
+        expect(await getUrl(atlas3)).to.equal(url);
+        expect(await getRole(atlas3)).to.equal(ATLAS.toString());
       });
 
       it('throws if address has not been whitelisted for atlas role', async () => {
@@ -145,8 +149,8 @@ describe('Roles Contract', () => {
       });
 
       it('throws if value sent does not equal any of atlas stakes', async () => {
-        await expect(onboardAsAtlas(url, atlas, ATLAS3_STAKE.sub(ONE))).to.be.eventually.rejected;
-        expect(await getRole(atlas)).to.equal('0');
+        await expect(onboardAsAtlas(url, atlas3, ATLAS3_STAKE.sub(ONE))).to.be.eventually.rejected;
+        expect(await getRole(atlas3)).to.equal('0');
       });
     });
 
@@ -159,8 +163,8 @@ describe('Roles Contract', () => {
       });
 
       it('throws if address has not been whitelisted for hermes role', async () => {
-        await expect(onboardAsHermes(url, atlas)).to.be.eventually.rejected;
-        expect(await getRole(atlas)).to.equal('0');
+        await expect(onboardAsHermes(url, atlas1)).to.be.eventually.rejected;
+        expect(await getRole(atlas1)).to.equal('0');
       });
     });
 
@@ -172,8 +176,8 @@ describe('Roles Contract', () => {
       });
 
       it('throws if address has not been whitelisted for apollo role', async () => {
-        await expect(onboardAsApollo(atlas, APOLLO_DEPOSIT)).to.be.eventually.rejected;
-        expect(await getRole(atlas)).to.equal('0');
+        await expect(onboardAsApollo(atlas1, APOLLO_DEPOSIT)).to.be.eventually.rejected;
+        expect(await getRole(atlas1)).to.equal('0');
       });
 
       it('throws if value sent does not equal any of atlas stakes', async () => {
@@ -188,25 +192,25 @@ describe('Roles Contract', () => {
     const url = 'https://google.com';
 
     beforeEach(async () => {
-      await onboardAsAtlas(url, atlas, ATLAS1_STAKE);
+      await onboardAsAtlas(url, atlas1, ATLAS1_STAKE);
       await onboardAsHermes(url, hermes);
       await onboardAsApollo(apollo, APOLLO_DEPOSIT);
     });
 
     describe('Atlas', () => {
       it('removes assigned role', async () => {
-        await retireAtlas(atlas);
-        expect(await getRole(atlas)).to.equal('0');
+        await retireAtlas(atlas1);
+        expect(await getRole(atlas1)).to.equal('0');
       });
 
       it('returns stake to the node', async () => {
-        const balanceChange = await observeBalanceChange(web3, atlas, () => retireAtlas(atlas));
+        const balanceChange = await observeBalanceChange(web3, atlas1, () => retireAtlas(atlas1));
         expect(balanceChange.toString()).to.equal(ATLAS1_STAKE.toString());
       });
 
       it('throws if atlas is storing something', async () => {
-        await atlasStakeStore.methods.incrementStorageUsed(atlas).send({from});
-        await expect(retireAtlas(atlas)).to.be.eventually.rejected;
+        await atlasStakeStore.methods.incrementStorageUsed(atlas1).send({from});
+        await expect(retireAtlas(atlas1)).to.be.eventually.rejected;
       });
 
       it('throws if not an atlas', async () => {
@@ -228,7 +232,7 @@ describe('Roles Contract', () => {
 
       it('throws if not an apollo', async () => {
         await expect(retireApollo(hermes)).to.be.eventually.rejected;
-        await expect(retireApollo(atlas)).to.be.eventually.rejected;
+        await expect(retireApollo(atlas1)).to.be.eventually.rejected;
       });
     });
 
@@ -239,7 +243,7 @@ describe('Roles Contract', () => {
       });
 
       it('throws if not a hermes', async () => {
-        await expect(retireHermes(atlas)).to.be.eventually.rejected;
+        await expect(retireHermes(atlas1)).to.be.eventually.rejected;
         await expect(retireHermes(apollo)).to.be.eventually.rejected;
       });
     });
