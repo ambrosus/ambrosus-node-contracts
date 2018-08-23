@@ -21,13 +21,16 @@ contract BundleStore is Base {
 
     uint constant MAX_EXPIRATION_DATE = 32503680000; // year 3000
 
+    struct Sheltering {
+        uint64 shelteringStartDate;
+        uint totalShelteringReward;
+    }
+
     struct Bundle {
         address uploader;
         uint uploadTimestamp;
         address[] shelterers;
-        // TODO Make as mapping to struct
-        mapping(address => uint) shelteringStartDates;
-        mapping(address => uint) totalShelteringReward;
+        mapping(address => Sheltering) shelterings;
         uint64 storagePeriods;
     }
 
@@ -61,12 +64,8 @@ contract BundleStore is Base {
         return bundles[bundleId].shelterers;
     }
 
-    function getShelteringStartDate(bytes32 bundleId, address shelterer) view public returns (uint) {
-        return bundles[bundleId].shelteringStartDates[shelterer];
-    }
-
-    function getGrantedAmount(bytes32 bundleId, address shelterer) view public returns (uint) {
-        return bundles[bundleId].totalShelteringReward[shelterer];
+    function getShelteringStartDate(bytes32 bundleId, address shelterer) view public returns (uint64) {
+        return bundles[bundleId].shelterings[shelterer].shelteringStartDate;
     }
 
     function getStoragePeriodsCount(bytes32 bundleId) view public returns (uint64) {
@@ -74,7 +73,7 @@ contract BundleStore is Base {
     }
 
     function getTotalShelteringReward(bytes32 bundleId, address shelterer) view public returns (uint) {
-        return bundles[bundleId].totalShelteringReward[shelterer];
+        return bundles[bundleId].shelterings[shelterer].totalShelteringReward;
     }
 
     function getShelteringExpirationDate(bytes32 bundleId, address shelterer) view public returns (uint) {
@@ -101,8 +100,8 @@ contract BundleStore is Base {
         }
         Time time = context().time();
         bundles[bundleId].shelterers.push(shelterer);
-        bundles[bundleId].shelteringStartDates[shelterer] = time.currentTimestamp();
-        bundles[bundleId].totalShelteringReward[shelterer] = totalReward;
+        bundles[bundleId].shelterings[shelterer].shelteringStartDate = time.currentTimestamp();
+        bundles[bundleId].shelterings[shelterer].totalShelteringReward = totalReward;
         emit SheltererAdded(bundleId, shelterer);
     }
 
@@ -110,8 +109,7 @@ contract BundleStore is Base {
         require(bundleExists(bundleId));
         require(bundles[bundleId].shelterers.length > index);
 
-        delete bundles[bundleId].shelteringStartDates[bundles[bundleId].shelterers[index]];
-        delete bundles[bundleId].totalShelteringReward[bundles[bundleId].shelterers[index]];
+        delete bundles[bundleId].shelterings[bundles[bundleId].shelterers[index]];
         bundles[bundleId].shelterers[index] = bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
         delete bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
         bundles[bundleId].shelterers.length -= 1;

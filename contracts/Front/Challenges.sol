@@ -19,11 +19,14 @@ import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Storage/BundleStore.sol";
+import "../Lib/SafeMathExtensions.sol";
 
 
 contract Challenges is Base {
 
     using SafeMath for uint;
+    using SafeMath for uint64;
+    using SafeMathExtensions for uint;
 
     struct Challenge {
         address sheltererId;
@@ -224,16 +227,16 @@ contract Challenges is Base {
         uint64 storagePeriods = bundleStore.getStoragePeriodsCount(challenge.bundleId);
 
         Payouts payouts = context().payouts();
-        uint64 payoutPeriods = storagePeriods * 13;
+        uint64 payoutPeriods = storagePeriods.mul(13).castTo64();
         payouts.grantShelteringReward.value(challenge.feePerChallenge)(newSheltererId, payoutPeriods);
     }
 
     function revokeReward(Challenge challenge) private returns(uint) {
         Sheltering sheltering = context().sheltering();
-        (uint beginTimestamp, uint64 storagePeriods, uint rewardToRevoke) = sheltering.getShelteringData(challenge.bundleId, challenge.sheltererId);
+        (uint64 beginTimestamp, uint64 storagePeriods, uint rewardToRevoke) = sheltering.getShelteringData(challenge.bundleId, challenge.sheltererId);
         
         Payouts payouts = context().payouts();
-        uint64 payoutPeriods = storagePeriods * 13;
+        uint64 payoutPeriods = storagePeriods.mul(13).castTo64();
         payouts.revokeShelteringReward(challenge.sheltererId, beginTimestamp, payoutPeriods, rewardToRevoke, address(this));
 
         return rewardToRevoke;

@@ -11,9 +11,16 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
 import "openzeppelin-solidity/contracts/math/Math.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../Lib/SafeMathExtensions.sol";
 
 
 contract PayoutsStore is Base {
+
+    using SafeMath for uint;
+    using SafeMath for uint64;
+    using SafeMathExtensions for uint;
+
     struct GrantPeriodChange {
         uint increase;
         uint decrease;
@@ -30,13 +37,13 @@ contract PayoutsStore is Base {
         uint accumulator = 0;
         for (uint period = 0; period <= toPeriod; ++period) {
             GrantPeriodChange storage grant = grantPeriodChanges[beneficiaryId][period];
-            accumulator += grant.increase;
+            accumulator = accumulator.add(grant.increase);
             if (period >= nextWithdrawPeriod[beneficiaryId]) {
-                payoutSum += accumulator;
+                payoutSum = payoutSum.add(accumulator);
             }
-            accumulator -= grant.decrease; 
+            accumulator = accumulator.sub(grant.decrease);
         }
-        nextWithdrawPeriod[beneficiaryId] = toPeriod + 1;
+        nextWithdrawPeriod[beneficiaryId] = toPeriod.add(1).castTo64();
 
         beneficiaryId.transfer(payoutSum);
     }
@@ -49,11 +56,11 @@ contract PayoutsStore is Base {
         uint accumulator = 0;
         for (uint i = 0; i <= payoutPeriod; ++i) {
             GrantPeriodChange storage grant = grantPeriodChanges[beneficiaryId][i];
-            accumulator += grant.increase;
+            accumulator = accumulator.add(grant.increase);
             if (i == payoutPeriod) {
                 return accumulator;
             }
-            accumulator -= grant.decrease; 
+            accumulator = accumulator.sub(grant.decrease);
         }
     }
 
@@ -63,16 +70,16 @@ contract PayoutsStore is Base {
         uint payoutPerPeriod = calculatePayoutPerPeriod(firstPeriod, lastPeriod, msg.value);
 
         bytes32 periodId = calculatePeriodHash(firstPeriod, lastPeriod);
-        grantSums[beneficiaryId][periodId] += msg.value;
+        grantSums[beneficiaryId][periodId] = grantSums[beneficiaryId][periodId].add(msg.value);
 
         GrantPeriodChange storage grantChangeBegin = grantPeriodChanges[beneficiaryId][firstPeriod];
-        grantChangeBegin.increase += payoutPerPeriod;
+        grantChangeBegin.increase = grantChangeBegin.increase.add(payoutPerPeriod);
 
         GrantPeriodChange storage grantChangeEnd = grantPeriodChanges[beneficiaryId][lastPeriod];
-        grantChangeEnd.decrease += payoutPerPeriod;
+        grantChangeEnd.decrease = grantChangeEnd.decrease.add(payoutPerPeriod);
     }
 
-    function revokeForPeriods(address beneficiaryId, uint64 firstPeriod, uint64 lastPeriod, uint totalPayout, address refundAddress) 
+    function revokeForPeriods(address beneficiaryId, uint64 firstPeriod, uint64 lastPeriod, uint totalPayout, address refundAddress)
         public onlyContextInternalCalls 
     {
         require(lastPeriod >= firstPeriod);
@@ -81,13 +88,13 @@ contract PayoutsStore is Base {
 
         bytes32 periodId = calculatePeriodHash(firstPeriod, lastPeriod);
         require(grantSums[beneficiaryId][periodId] >= totalPayout);
-        grantSums[beneficiaryId][periodId] -= totalPayout;
+        grantSums[beneficiaryId][periodId] = grantSums[beneficiaryId][periodId].sub(totalPayout);
 
         GrantPeriodChange storage grantChangeBegin = grantPeriodChanges[beneficiaryId][firstPeriod];
-        grantChangeBegin.increase -= payoutPerPeriod;
+        grantChangeBegin.increase = grantChangeBegin.increase.sub(payoutPerPeriod);
 
         GrantPeriodChange storage grantChangeEnd = grantPeriodChanges[beneficiaryId][lastPeriod];
-        grantChangeEnd.decrease -= payoutPerPeriod;
+        grantChangeEnd.decrease = grantChangeEnd.decrease.sub(payoutPerPeriod);
 
         refundAddress.transfer(payoutPerPeriod * calculateNumberOfPeriodsToRefund(nextWithdrawPeriod[beneficiaryId], firstPeriod, lastPeriod));
     }
@@ -97,10 +104,10 @@ contract PayoutsStore is Base {
     }
 
     function calculatePayoutPerPeriod(uint64 firstPeriod, uint64 lastPeriod, uint totalPayout) private pure returns (uint) {
-        uint periodCount = lastPeriod - firstPeriod + 1;
-        require(totalPayout % periodCount == 0);
+        uint periodCount = lastPeriod.sub(firstPeriod).add(1);
+        require(totalPayout.mod(periodCount) == 0);
 
-        return totalPayout / periodCount;
+        return totalPayout.div(periodCount);
     }
 
     function calculateNumberOfPeriodsToRefund(uint64 _nextWithdrawPeriod, uint64 _firstPeriod, uint64 _lastPeriod) private pure returns (uint) {
@@ -109,7 +116,7 @@ contract PayoutsStore is Base {
         uint64 lowPeriod = Math.max64(_firstPeriod, _nextWithdrawPeriod);
         
         if (_lastPeriod >= lowPeriod) {
-            return _lastPeriod - lowPeriod + 1;
+            return _lastPeriod.sub(lowPeriod).add(1);
         } else {
             return 0;
         }

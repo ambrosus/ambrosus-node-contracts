@@ -10,30 +10,32 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../Lib/SafeMathExtensions.sol";
 
 
 contract Time {
-    using SafeMath for uint;
+    using SafeMath for uint64;
+    using SafeMathExtensions for uint;
 
-    uint constant public PAYOUT_PERIOD_DURATION = 28 days;
+    uint64 constant public PAYOUT_PERIOD_DURATION = 28 days;
 
-    function currentTimestamp() public view returns(uint) {
-        return now;
+    function currentTimestamp() public view returns(uint64) {
+        return now.castTo64();
     }
 
     function currentPayoutPeriod() public view returns (uint64) {
         return payoutPeriod(currentTimestamp());
     }
 
-    function payoutPeriod(uint timestamp) public pure returns(uint64) {
-        return (uint64)(timestamp.div(PAYOUT_PERIOD_DURATION));
+    function payoutPeriod(uint64 timestamp) public pure returns(uint64) {
+        return timestamp.div(PAYOUT_PERIOD_DURATION).castTo64();
     }
 
-    function payoutPeriodStart(uint64 period) public pure returns(uint) {
-        return (uint)(period).mul(PAYOUT_PERIOD_DURATION);
+    function payoutPeriodStart(uint64 period) public pure returns(uint64) {
+        return period.mul(PAYOUT_PERIOD_DURATION).castTo64();
     }
 
-    function payoutPeriodOffset(uint timestamp) public pure returns(uint) {
-        return timestamp.sub(payoutPeriodStart(payoutPeriod(timestamp)));
+    function payoutPeriodOffset(uint64 timestamp) public pure returns(uint64) {
+        return timestamp.sub(payoutPeriodStart(payoutPeriod(timestamp))).castTo64();
     }
 }
