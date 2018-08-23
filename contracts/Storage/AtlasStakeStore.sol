@@ -72,7 +72,6 @@ contract AtlasStakeStore is Base {
 
     function updateLastChallengeResolvedSequenceNumber(address node, uint updatedLastChallengeResolvedSequenceNumber) public onlyContextInternalCalls {
         require(isStaking(node));
-        require(stakes[node].lastChallengeResolvedSequenceNumber <= updatedLastChallengeResolvedSequenceNumber);
         stakes[node].lastChallengeResolvedSequenceNumber = updatedLastChallengeResolvedSequenceNumber;
     }
 

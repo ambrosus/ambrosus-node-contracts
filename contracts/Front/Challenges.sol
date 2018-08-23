@@ -43,7 +43,9 @@ contract Challenges is Base {
 
     mapping(bytes32 => Challenge) public challenges;
 
-    constructor(Head _head) public Base(_head) { }
+    constructor(Head _head) public Base(_head) {
+        nextChallengeSequenceNumber = 1;
+    }
 
     function() public payable {}
 
