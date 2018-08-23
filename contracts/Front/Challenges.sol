@@ -43,7 +43,9 @@ contract Challenges is Base {
 
     mapping(bytes32 => Challenge) public challenges;
 
-    constructor(Head _head) public Base(_head) { }
+    constructor(Head _head) public Base(_head) {
+        nextChallengeSequenceNumber = 1;
+    }
 
     function() public payable {}
 
@@ -74,9 +76,13 @@ contract Challenges is Base {
         require(canResolve(msg.sender, challengeId));
 
         Challenge storage challenge = challenges[challengeId];
-        Sheltering sheltering = context().sheltering();
 
+        Sheltering sheltering = context().sheltering();
         sheltering.addShelterer(challenge.bundleId, msg.sender, challenge.feePerChallenge);
+
+        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
+        atlasStakeStore.updateLastChallengeResolvedSequenceNumber(msg.sender, challenge.sequenceNumber);
+
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
         grantReward(msg.sender, challenge);
         removeChallengeOrDecreaseActiveCount(challengeId);

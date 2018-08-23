@@ -87,8 +87,8 @@ describe('Challenges Contract', () => {
     systemFee = fee.mul(new BN(SYSTEM_CHALLENGES_COUNT));
   });
 
-  it('nextChallengeSequenceNumber = 0 after deployment', async () => {
-    expect(await challenges.methods.nextChallengeSequenceNumber().call()).to.equal('0');
+  it('nextChallengeSequenceNumber = 1 after deployment', async () => {
+    expect(await challenges.methods.nextChallengeSequenceNumber().call()).to.equal('1');
   });
 
   describe('Starting system challenges', () => {
@@ -108,20 +108,20 @@ describe('Challenges Contract', () => {
 
     it(`Should increase nextChallengeSequenceNumber by challengesCount`, async () => {
       await challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee});
-      expect(await challenges.methods.nextChallengeSequenceNumber().call()).to.equal(SYSTEM_CHALLENGES_COUNT.toString());
+      expect(await challenges.methods.nextChallengeSequenceNumber().call()).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
       await bundleStore.methods.store(otherBundleId, from, storagePeriods).send({from});
       await challenges.methods.startForSystem(from, otherBundleId, 100).send({from, value: fee.mul(new BN('100'))});
-      expect(await challenges.methods.nextChallengeSequenceNumber().call()).to.equal((SYSTEM_CHALLENGES_COUNT + 100).toString());
+      expect(await challenges.methods.nextChallengeSequenceNumber().call()).to.equal((SYSTEM_CHALLENGES_COUNT + 101).toString());
     });
 
     it('sets challenge sequence number to nextChallengeSequenceNumber', async () => {
       await challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee});
-      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('0');
+      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('1');
 
       await bundleStore.methods.store(otherBundleId, from, storagePeriods).send({from});
       await challenges.methods.startForSystem(from, otherBundleId, 100).send({from, value: fee.mul(new BN('100'))});
       const otherChallengeId = await challenges.methods.getChallengeId(from, otherBundleId).call();
-      expect(await challenges.methods.getChallengeSequenceNumber(otherChallengeId).call()).to.equal(SYSTEM_CHALLENGES_COUNT.toString());
+      expect(await challenges.methods.getChallengeSequenceNumber(otherChallengeId).call()).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
     });
 
     it('Stores challengerId as 0x0', async () => {
@@ -218,14 +218,14 @@ describe('Challenges Contract', () => {
       await challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee});
 
       await challenges.methods.start(other, bundleId).send({from, value: fee});
-      expect(await challenges.methods.nextChallengeSequenceNumber().call()).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
+      expect(await challenges.methods.nextChallengeSequenceNumber().call()).to.equal((SYSTEM_CHALLENGES_COUNT + 2).toString());
     });
 
     it('sets challenge sequence number to nextChallengeSequenceNumber', async () => {
       await challenges.methods.startForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT).send({from, value: systemFee});
 
       await challenges.methods.start(other, bundleId).send({from, value: fee});
-      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal(SYSTEM_CHALLENGES_COUNT.toString());
+      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
     });
 
     it('Fails if bundle is not being sheltered by provided account', async () => {
@@ -336,6 +336,12 @@ describe('Challenges Contract', () => {
       expect(await payoutsStore.methods.available(resolver, currentPayoutPeriod + 5).call({from})).not.to.equal('0');
     });
 
+    it('Updates last resolved challenge sequence number', async () => {
+      const sequenceNumber = await challenges.methods.getChallengeSequenceNumber(challengeId).call();
+      await challenges.methods.resolve(challengeId).send({from: resolver});
+      expect(await atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(resolver).call()).to.equal(sequenceNumber);
+    });
+
     it('Emits an event', async () => {
       expect(await challenges.methods.resolve(challengeId).send({from: resolver, gasPrice: '0'})).to
         .emitEvent('ChallengeResolved')
@@ -384,9 +390,9 @@ describe('Challenges Contract', () => {
       const systemFee = fee.mul(new BN('2'));
       await challenges.methods.startForSystem(from, bundleId, 2).send({from, value: systemFee});
       challengeId = await lastChallengeId();
-      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('1');
-      await challenges.methods.resolve(challengeId).send({from: resolver});
       expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('2');
+      await challenges.methods.resolve(challengeId).send({from: resolver});
+      expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('3');
       await challenges.methods.resolve(challengeId).send({from: totalStranger});
       expect(await challenges.methods.getChallengeSequenceNumber(challengeId).call()).to.equal('0');
     });
