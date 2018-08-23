@@ -24,7 +24,7 @@ contract Roles is Base {
     function() public payable {}
 
     function onboardAsAtlas(string nodeUrl) public payable {
-        require(canOnboardAsAtlas(msg.sender, msg.value));
+        require(canOnboard(msg.sender, Config.NodeType.ATLAS, msg.value));
 
         AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         uint storageLimit = getStorageLimitForAtlas(msg.value);
@@ -36,7 +36,7 @@ contract Roles is Base {
     }
 
     function onboardAsApollo() public payable {
-        require(canOnboardAsApollo(msg.sender, msg.value));
+        require(canOnboard(msg.sender, Config.NodeType.APOLLO, msg.value));
 
         ApolloDepositStore apolloDepositStore = context().apolloDepositStore();
         apolloDepositStore.storeDeposit.value(msg.value)(msg.sender);
@@ -46,7 +46,7 @@ contract Roles is Base {
     }
 
     function onboardAsHermes(string nodeUrl) public {
-        require(canOnboardAsHermes(msg.sender));
+        require(canOnboard(msg.sender, Config.NodeType.HERMES, 0));
 
         RolesStore rolesStore = context().rolesStore();
         rolesStore.setRole(msg.sender, Config.NodeType.HERMES);
@@ -83,22 +83,9 @@ contract Roles is Base {
         return rolesStore.getUrl(node);
     }
 
-    function canOnboardAsAtlas(address node, uint amount) public view returns (bool) {
+    function canOnboard(address node, Config.NodeType role, uint amount) public view returns (bool) {
         KycWhitelist kycWhitelist = context().kycWhitelist();
-
-        return kycWhitelist.hasRoleAssigned(node, Config.NodeType.ATLAS) && validStakeAmountForAtlas(amount);
-    }
-
-    function canOnboardAsApollo(address node, uint amount) public view returns (bool) {
-        KycWhitelist kycWhitelist = context().kycWhitelist();
-        Config config = context().config();
-
-        return kycWhitelist.hasRoleAssigned(node, Config.NodeType.APOLLO) && amount == config.APOLLO_DEPOSIT();
-    }
-
-    function canOnboardAsHermes(address node) public view returns (bool) {
-        KycWhitelist kycWhitelist = context().kycWhitelist();
-        return kycWhitelist.hasRoleAssigned(node, Config.NodeType.HERMES);
+        return kycWhitelist.hasRoleAssigned(node, role) && amount == kycWhitelist.getRequiredDeposit(node);
     }
 
     function getStorageLimitForAtlas(uint amount) public view returns (uint) {
@@ -117,10 +104,5 @@ contract Roles is Base {
         RolesStore rolesStore = context().rolesStore();
         require(rolesStore.getRole(node) == role);
         rolesStore.setRole(node, Config.NodeType.NONE);
-    }
-
-    function validStakeAmountForAtlas(uint amount) view private returns(bool) {
-        Config config = context().config();
-        return amount == config.ATLAS1_STAKE() || amount == config.ATLAS2_STAKE() || amount == config.ATLAS3_STAKE();
     }
 }

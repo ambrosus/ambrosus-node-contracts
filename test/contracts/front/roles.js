@@ -52,9 +52,9 @@ describe('Roles Contract', () => {
   const retireAtlas = async (sender) => roles.methods.retireAtlas().send({from: sender, gasPrice: '0'});
   const retireHermes = async (sender) => roles.methods.retireHermes().send({from: sender});
   const retireApollo = async (sender) => roles.methods.retireApollo().send({from: sender, gasPrice: '0'});
-  const canOnboardAsAtlas = async (address, value) => roles.methods.canOnboardAsAtlas(address, value).call();
-  const canOnboardAsHermes = async (address) => roles.methods.canOnboardAsHermes(address).call();
-  const canOnboardAsApollo = async (address, value) => roles.methods.canOnboardAsApollo(address, value).call();
+  const canOnboardAsAtlas = async (address, value) => roles.methods.canOnboard(address, ATLAS, value).call();
+  const canOnboardAsHermes = async (address, value) => roles.methods.canOnboard(address, HERMES, value).call();
+  const canOnboardAsApollo = async (address, value) => roles.methods.canOnboard(address, APOLLO, value).call();
   const getRole = async (address) => roles.methods.getOnboardedRole(address).call();
   const getStorageLimitForAtlas = async (value) => roles.methods.getStorageLimitForAtlas(value).call();
   const getUrl = async (address) => roles.methods.getUrl(address).call();
@@ -89,24 +89,27 @@ describe('Roles Contract', () => {
       expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE.sub(ONE))).to.be.false;
       expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE)).to.be.true;
       expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE.add(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas1, ATLAS2_STAKE)).to.be.false;
+      expect(await canOnboardAsAtlas(atlas1, ATLAS3_STAKE)).to.be.false;
       expect(await canOnboardAsAtlas(hermes, ATLAS1_STAKE)).to.be.false;
     });
 
     it('Atlas 2', async () => {
       expect(await canOnboardAsAtlas(atlas2, ATLAS2_STAKE)).to.be.true;
-      expect(await canOnboardAsAtlas(atlas2, ATLAS2_STAKE.sub(ONE))).to.be.false;
-      expect(await canOnboardAsAtlas(atlas2, ATLAS2_STAKE.add(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas2, ATLAS1_STAKE)).to.be.false;
+      expect(await canOnboardAsAtlas(atlas2, ATLAS3_STAKE)).to.be.false;
     });
 
     it('Atlas 3', async () => {
       expect(await canOnboardAsAtlas(atlas3, ATLAS3_STAKE)).to.be.true;
-      expect(await canOnboardAsAtlas(atlas3, ATLAS3_STAKE.sub(ONE))).to.be.false;
-      expect(await canOnboardAsAtlas(atlas3, ATLAS3_STAKE.add(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas3, ATLAS1_STAKE)).to.be.false;
+      expect(await canOnboardAsAtlas(atlas3, ATLAS2_STAKE)).to.be.false;
     });
 
     it('Hermes', async () => {
-      expect(await canOnboardAsHermes(hermes)).to.be.true;
-      expect(await canOnboardAsHermes(apollo)).to.be.false;
+      expect(await canOnboardAsHermes(hermes, 0)).to.be.true;
+      expect(await canOnboardAsHermes(hermes, 1)).to.be.false;
+      expect(await canOnboardAsHermes(apollo, 0)).to.be.false;
     });
 
     it('Apollo', async () => {
@@ -148,8 +151,8 @@ describe('Roles Contract', () => {
         expect(await getRole(apollo)).to.equal('0');
       });
 
-      it('throws if value sent does not equal any of atlas stakes', async () => {
-        await expect(onboardAsAtlas(url, atlas3, ATLAS3_STAKE.sub(ONE))).to.be.eventually.rejected;
+      it('throws if value sent does not equal the stake specified during kyc', async () => {
+        await expect(onboardAsAtlas(url, atlas3, ATLAS3_STAKE.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(atlas3)).to.equal('0');
       });
     });
@@ -180,7 +183,7 @@ describe('Roles Contract', () => {
         expect(await getRole(atlas1)).to.equal('0');
       });
 
-      it('throws if value sent does not equal any of atlas stakes', async () => {
+      it('throws if value sent does not equal the stake required during kyc', async () => {
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT.sub(ONE))).to.be.eventually.rejected;
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(apollo)).to.equal('0');
