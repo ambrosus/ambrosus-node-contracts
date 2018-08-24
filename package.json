@@ -14,7 +14,8 @@
     "testall": "yarn build && yarn test",
     "dev:lint": "eslint src test config && solium -d contracts/",
     "dev:lint:fix": "eslint src test config --fix && solium -d contracts/ --fix",
-    "task": "babel-node src/tasks/run.js"
+    "task": "babel-node src/tasks/run.js",
+    "gas_benchmark" : "export NODE_ENV=test && babel-node src/tools/gas_benchmark.js" 
   },
   "engines": {
     "node": ">=9.0",
