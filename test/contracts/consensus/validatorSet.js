@@ -17,7 +17,7 @@ const {expect} = chai;
 chai.use(chaiAsPromised);
 chai.use(chaiEmitEvents);
 
-describe.only('Validator set contract', () => {
+describe('Validator set contract', () => {
   const standardOptions = {
     gas: 1000000
   };
