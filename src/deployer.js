@@ -26,7 +26,7 @@ import ConfigJson from '../build/contracts/Config.json';
 import UploadsJson from '../build/contracts/Uploads.json';
 import ApolloDepositStoreJson from '../build/contracts/ApolloDepositStore.json';
 
-import {DEFAULT_GAS, deployContract, getDefaultAddress, link} from './web3_tools';
+import {DEFAULT_GAS, deployContract, loadContract, getDefaultAddress, link} from './web3_tools';
 
 const DEFAULT_CONTRACT_JSONS = {
   time: TimeJson,
@@ -62,8 +62,14 @@ export default class Deployer {
     }
   }
 
-  async setupContext(adresses) {
-    const context = await deployContract(this.web3, ContextJson, adresses, {from: this.from});
+  getDefaultArgs() {
+    const pairs = Object.entries(DEFAULT_CONTRACT_JSONS)
+      .map(([contractName]) => ({[contractName]: true}));
+    return Object.assign(...pairs);
+  }
+
+  async setupContext(addresses) {
+    const context = await deployContract(this.web3, ContextJson, addresses, {from: this.from});
     await this.head.methods.setContext(context.options.address).send({
       gas: this.gas,
       from: this.from
@@ -91,12 +97,6 @@ export default class Deployer {
     return deployContract(this.web3, contractJson, constructorArgs, {from: this.from});
   }
 
-  getDefaultArgs() {
-    const pairs = Object.entries(DEFAULT_CONTRACT_JSONS)
-      .map(([contractName]) => ({[contractName]: true}));
-    return Object.assign(...pairs);
-  }
-
   async deployLibs() {
     this.libs = {SafeMathExtensions: await deployContract(this.web3, SafeMathExtensionsJson, [], {from: this.from})};
   }
@@ -110,11 +110,21 @@ export default class Deployer {
     return result;
   }
 
+  async loadHead(headAddress) {
+    this.head = await loadContract(this.web3, HeadJson.abi, headAddress);
+  }
+
+  async deployHead() {
+    this.head = await deployContract(this.web3, HeadJson, [this.from], {from: this.from});
+  }
+
   async deploy(contractJsonsOrBooleans = this.getDefaultArgs()) {
     const contractToAddress = (contract) => (contract ? contract.options.address : '0x0');
     const prepareArgs = (contractMap) => this.contextConstructorParams.map((key) => contractToAddress(contractMap[key]));
     await this.deployLibs();
-    this.head = await deployContract(this.web3, HeadJson, [], {from: this.from});
+    if (!this.head) {
+      await this.deployHead();
+    }
     const contractMap = await this.deployCustom(contractJsonsOrBooleans);
     const context = await this.setupContext(prepareArgs(contractMap));
     return {head: this.head, context, ...contractMap};

@@ -19,9 +19,13 @@ export default class DeployTask extends TaskBase {
     this.web3 = await createWeb3();
     await this.printAccountInfo();
     const deployer = new Deployer(this.web3);
+    if (args.indexOf('--head') !== -1) {
+      const headAddress = args[args.indexOf('--head') + 1];
+      await deployer.loadHead(headAddress);
+    }
     const addresses = await deployer.deploy();
     const config = this.addressesToConfig(addresses);
-    if (args[0] === '--save-config') {
+    if (args.indexOf('--save-config') !== -1) {
       this.saveConfiguration(config);
     } else {
       this.printSummary(config);

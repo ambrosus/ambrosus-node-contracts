@@ -12,7 +12,7 @@ import TaskBase from './base/task_base';
 import {getDefaultAddress, getDefaultGas, createWeb3} from '../web3_tools';
 import Roles from '../../build/contracts/Roles';
 import Whitelist from '../../build/contracts/KycWhitelist';
-import {ATLAS, HERMES, APOLLO, ATLAS1_STAKE, ATLAS2_STAKE, ATLAS3_STAKE, APOLLO_DEPOSIT} from '../consts';
+import {ATLAS, HERMES, APOLLO, ROLE_CODES, ATLAS1_STAKE, ATLAS2_STAKE, ATLAS3_STAKE, APOLLO_DEPOSIT} from '../consts';
 
 export default class OnboardingTask extends TaskBase {
   async execute([role, ...options]) {
@@ -83,9 +83,8 @@ export default class OnboardingTask extends TaskBase {
   }
 
   async validateOnWhitelist(from, role) {
-    const roleCodes = {ATLAS, HERMES, APOLLO};
     const whitelist = this.getContract(Whitelist);
-    const result = await whitelist.methods.hasRoleAssigned(from, roleCodes[role]).call({from});
+    const result = await whitelist.methods.hasRoleAssigned(from, ROLE_CODES[role]).call({from});
     if (result) {
       console.log(`Address ${from} is on whitelist as ${role}. Onboarding.`);
     } else {

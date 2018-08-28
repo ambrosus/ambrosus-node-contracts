@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract} from '../../../src/web3_tools';
+import {createWeb3, deployContract, getDefaultAddress} from '../../../src/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 
 import Contract1Json from '../../../build/contracts/Contract1.json';
@@ -37,7 +37,7 @@ describe('Base Contract', () => {
   beforeEach(async () => {
     web3 = await createWeb3();
     deployer = new MockContextDeployer(web3);
-    deployer.head = await deployContract(web3, HeadJson);
+    deployer.head = await deployContract(web3, HeadJson, [getDefaultAddress(web3)]);
     const headAddress = deployer.head.options.address;
     contract2 = await deployContract(web3, Contract2Json, [headAddress]);
     contract1 = await deployContract(web3, Contract1Json, [headAddress, contract2.options.address]);
