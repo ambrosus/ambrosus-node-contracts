@@ -8,7 +8,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {getConfig} from '../../config';
-import lowercaseFirstLetter from '../../utils';
+
+const lowercaseFirstLetter = (string) => string.charAt(0).toLowerCase() + string.slice(1);
 
 export default class TaskBase {
   getContract(contractJson) {

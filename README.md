@@ -61,3 +61,9 @@ yarn testall
 ```
 
 ## Production and deployment
+
+Before distributing the compiled contract files you should strip away unnecessary fields: 
+
+```sh
+yarn strip
+```

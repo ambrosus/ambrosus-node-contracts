@@ -11,7 +11,7 @@ import TaskBase from './base/task_base';
 import Deployer from '../deployer';
 import {createWeb3} from '../web3_tools';
 import {getConfig, getConfigFilePath, getConfigFilePathFromRoot} from '../config';
-import fs from 'fs';
+import {writeFile} from '../utils/file';
 
 export default class DeployTask extends TaskBase {
   async execute(args) {
@@ -41,15 +41,14 @@ export default class DeployTask extends TaskBase {
     }
   }
 
-  saveConfiguration(config) {
+  async saveConfiguration(config) {
     const filePath = getConfigFilePathFromRoot();
-    fs.writeFile(filePath, JSON.stringify(config, null, 2), (error) => {
-      if (error) {
-        console.error(`Unable to save configuration: ${error}`);
-      } else {
-        console.log(`Contracts deployed, configuration saved to ${filePath}.`);
-      }
-    });
+    try {
+      await writeFile(filePath, JSON.stringify(config, null, 2));
+      console.log(`Contracts deployed, configuration saved to ${filePath}.`);
+    } catch (err) {
+      console.error(`Unable to save configuration: ${err}`);
+    }
   }
 
   printSummary(config) {
