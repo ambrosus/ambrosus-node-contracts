@@ -8,6 +8,7 @@
   "license": "UNLICENCED",
   "scripts": {
     "build": "truffle compile",
+    "strip": "babel-node src/strip_contracts.js build/contracts",
     "clean": "rm -fr ./build/contracts/*",
     "test": "export NODE_ENV=test && mocha --require babel-register --timeout 10000 --recursive --no-warnings",
     "testall": "yarn build && yarn test",
