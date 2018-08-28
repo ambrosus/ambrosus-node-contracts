@@ -2,7 +2,8 @@ pragma solidity ^0.4.22;
 
 import "../Lib/SafeMathExtensions.sol";
 
-contract SafeMathExtensionAdapter {
+
+contract SafeMathExtensionsAdapter {
     function mod(uint256 a, uint256 b) public pure returns (uint256) {
         return SafeMathExtensions.mod(a, b);
     }
