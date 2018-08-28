@@ -37,7 +37,7 @@ contract ValidatorSet is ValidatorSetBase {
     @notice Constructor
     @param _owner the owner of this contract.
     @param _initialValidators the initial set of validator addresses.
-    @param _super_user SUPER_USER address value injectable for test purpouses. Under normal operation it should be set to 2^160-2 as defined in EIP96 
+    @param _superUser SUPER_USER address value injectable for test purpouses. Under normal operation it should be set to 2^160-2 as defined in EIP96 
     */
     constructor(address _owner, address[] _initialValidators, address _superUser) public {
         owner = _owner;
