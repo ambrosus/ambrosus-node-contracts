@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import Deployer from '../deployer';
-import {createWeb3} from '../web3_tools';
+import {createWeb3} from '../utils/web3_tools';
 import {getConfig, getConfigFilePath, getConfigFilePathFromRoot} from '../config';
 import {writeFile} from '../utils/file';
 

@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import TaskBase from './base/task_base';
-import {createGanacheServer} from '../web3_tools';
+import {createGanacheServer} from '../utils/web3_tools';
 import {getConfig} from '../config';
 import fs from 'fs';
 

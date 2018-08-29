@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract, getDefaultAddress} from '../../../src/web3_tools';
+import {createWeb3, deployContract, getDefaultAddress} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 
 import Contract1Json from '../../../build/contracts/Contract1.json';

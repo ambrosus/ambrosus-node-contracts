@@ -26,7 +26,7 @@ import ConfigJson from '../build/contracts/Config.json';
 import UploadsJson from '../build/contracts/Uploads.json';
 import ApolloDepositStoreJson from '../build/contracts/ApolloDepositStore.json';
 
-import {DEFAULT_GAS, deployContract, loadContract, getDefaultAddress, link} from './web3_tools';
+import {DEFAULT_GAS, deployContract, loadContract, getDefaultAddress, link} from './utils/web3_tools';
 
 const DEFAULT_CONTRACT_JSONS = {
   time: TimeJson,
