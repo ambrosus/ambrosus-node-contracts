@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import deploy from '../../helpers/deploy';
-import {createWeb3} from '../../../src/web3_tools';
+import {createWeb3} from '../../../src/utils/web3_tools';
 import utils from '../../helpers/utils';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import AtlasStakeStoreMockJson from '../../../build/contracts/AtlasStakeStoreMock.json';

@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/web3_tools';
+import {createWeb3} from '../../../src/utils/web3_tools';
 import utils from '../../helpers/utils';
 import deploy from '../../helpers/deploy';
 import {ATLAS, HERMES, STORAGE_PERIOD_UNIT} from '../../../src/consts';

@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import MockContextJson from '../../build/contracts/MockContext.json';
 import Deployer from '../../src/deployer';
 import {addToWhitelist} from './whitelist.js';
-import {createWeb3, deployContract, getDefaultAddress} from '../../src/web3_tools';
+import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
 
 export class MockContextDeployer extends Deployer {
   getWhitelisted() {

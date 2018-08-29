@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import TaskBase from './base/task_base';
-import {getDefaultAddress, getDefaultGas, createWeb3} from '../web3_tools';
+import {getDefaultAddress, getDefaultGas, createWeb3} from '../utils/web3_tools';
 import KycWhitelist from '../../build/contracts/KycWhitelist';
 import {ROLE_CODES} from '../consts';
 

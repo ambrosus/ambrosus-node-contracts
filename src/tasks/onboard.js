@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import BN from 'bn.js';
 import TaskBase from './base/task_base';
-import {getDefaultAddress, getDefaultGas, createWeb3} from '../web3_tools';
+import {getDefaultAddress, getDefaultGas, createWeb3} from '../utils/web3_tools';
 import Roles from '../../build/contracts/Roles';
 import Whitelist from '../../build/contracts/KycWhitelist';
 import {ATLAS, HERMES, APOLLO, ROLE_CODES, ATLAS1_STAKE, ATLAS2_STAKE, ATLAS3_STAKE, APOLLO_DEPOSIT} from '../consts';

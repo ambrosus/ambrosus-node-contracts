@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract} from '../../../src/web3_tools';
+import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
 import HeadJson from '../../../build/contracts/Head.json';
 
 chai.use(sinonChai);
