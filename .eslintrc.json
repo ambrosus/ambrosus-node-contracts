@@ -85,11 +85,12 @@
     "object-curly-spacing": 2,
     "comma-style": 2,
     "comma-dangle": 2,
+    "comma-spacing": ["error", { "before": false, "after": true }],
     "radix": 2,
     "no-new-wrappers": 2,
     "id-length": 2,
     "camelcase": 2,
-    "new-cap": [2, {"capIsNew": false}],
+    "new-cap": 2,
     "no-underscore-dangle": 2,
     "no-restricted-globals": 2,
     "semi": [
@@ -98,7 +99,6 @@
     ],
     "semi-spacing": 2,
     "no-unexpected-multiline": 2,
-    "no-trailing-spaces": 2,
     "quotes": [
       "error",
       "single",
@@ -106,6 +106,7 @@
         "allowTemplateLiterals": true
       }
     ],
+    "no-trailing-spaces": 2,
     "no-console": "off",
     "import/no-unresolved": "error",
     "curly": [
@@ -115,9 +116,7 @@
     "header/header": [
       2,
       "block",
-      {
-        "pattern": "^\nCopyright: Ambrosus Technologies GmbH\nEmail: tech@ambrosus.com\n\nThis Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.\n\nThis Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.\n$"
-      }
+       "\nCopyright: Ambrosus Technologies GmbH\nEmail: tech@ambrosus.com\n\nThis Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.\n\nThis Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.\n"
     ]
   }
 }
