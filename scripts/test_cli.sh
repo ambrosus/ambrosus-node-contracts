@@ -1,8 +1,10 @@
 #!/bin/bash
 yarn build
+source scripts/test_cli.env
 yarn task ganache&
 sleep 3
-yarn task deploy --save-config && \
+yarn task deploy --save scripts/test_cli_head.env && \
+source scripts/test_cli_head.env && \
 yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 HERMES 0 && \
 yarn task whitelist check 0xEbDEAC82424a053DFf79397862BD122F76798bC5 && \
 yarn task whitelist remove 0xEbDEAC82424a053DFf79397862BD122F76798bC5 && \

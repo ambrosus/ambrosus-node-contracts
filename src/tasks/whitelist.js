@@ -8,13 +8,16 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import TaskBase from './base/task_base';
-import {getDefaultAddress, getDefaultGas, createWeb3} from '../utils/web3_tools';
-import KycWhitelist from '../../build/contracts/KycWhitelist';
 import {ROLE_CODES} from '../consts';
 
 export default class WhitelistTask extends TaskBase {
+  constructor(web3, contractManager) {
+    super();
+    this.web3 = web3;
+    this.contractManager = contractManager;
+  }
+
   async execute(args) {
-    this.web3 = await createWeb3();
     const [command] = args;
     if (command === 'add') {
       await this.add(args[1], args[2], args[3]);
@@ -35,25 +38,20 @@ export default class WhitelistTask extends TaskBase {
 
   async add(address, role, requiredDeposit) {
     this.validateAddress(address);
-    const whitelist = this.getContract(KycWhitelist);
-    const from = getDefaultAddress(this.web3);
-    const gas = getDefaultGas();
-    await whitelist.methods.add(address, ROLE_CODES[role], requiredDeposit).send({from, gas});
+    const {kycWhitelistWrapper} = this.contractManager;
+    await kycWhitelistWrapper.add(address, ROLE_CODES[role], requiredDeposit);
   }
 
   async remove(address) {
     this.validateAddress(address);
-    const whitelist = this.getContract(KycWhitelist);
-    const from = getDefaultAddress(this.web3);
-    const gas = getDefaultGas();
-    await whitelist.methods.remove(address).send({from, gas});
+    const {kycWhitelistWrapper} = this.contractManager;
+    await kycWhitelistWrapper.remove(address);
   }
 
   async show(address) {
     this.validateAddress(address);
-    const whitelist = this.getContract(KycWhitelist);
-    const from = getDefaultAddress(this.web3);
-    const result = await whitelist.methods.isWhitelisted(address).call({from});
+    const {kycWhitelistWrapper} = this.contractManager;
+    const result = await kycWhitelistWrapper.isWhitelisted(address);
     console.log(result);
   }
 

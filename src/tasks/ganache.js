@@ -9,13 +9,18 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import {createGanacheServer} from '../utils/web3_tools';
-import {getConfig} from '../config';
+import config from '../../config/config';
 import fs from 'fs';
 
 export default class GanacheTask extends TaskBase {
+  constructor(conf = config) {
+    super();
+    this.config = conf;
+  }
+
   async execute() {
     this.savePidFile();
-    await createGanacheServer(getConfig().web3.nodePrivateKey);
+    await createGanacheServer(this.config.nodePrivateKey);
   }
 
   savePidFile() {

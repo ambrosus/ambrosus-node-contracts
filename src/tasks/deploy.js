@@ -9,61 +9,48 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import Deployer from '../deployer';
-import {createWeb3} from '../utils/web3_tools';
-import {getConfig, getConfigFilePath, getConfigFilePathFromRoot} from '../config';
 import {writeFile} from '../utils/file';
 
 export default class DeployTask extends TaskBase {
+  constructor(web3) {
+    super();
+    this.web3 = web3;
+  }
+
   async execute(args) {
     console.log('Deploying contracts. This may take some time...');
-    this.web3 = await createWeb3();
-    await this.printAccountInfo();
     const deployer = new Deployer(this.web3);
     if (args.indexOf('--head') !== -1) {
       const headAddress = args[args.indexOf('--head') + 1];
+      console.log('Reusing already deployed head.');
       await deployer.loadHead(headAddress);
     }
     const addresses = await deployer.deploy();
-    const config = this.addressesToConfig(addresses);
-    if (args.indexOf('--save-config') !== -1) {
-      this.saveConfiguration(config);
+    const envFile = this.addressesToEnvFile(addresses);
+    if (args.indexOf('--save') !== -1) {
+      const envFilePath = args[args.indexOf('--save') + 1];
+      this.saveEnvfile(envFilePath, envFile);
     } else {
-      this.printSummary(config);
+      this.printSummary(envFile);
     }
   }
 
-  async printAccountInfo() {
-    const accounts = await this.web3.eth.getAccounts();
-    for (const account of accounts) {
-      const balance = await this.web3.eth.getBalance(account);
-      const balanceInEth = this.web3.utils.fromWei(balance);
-      console.log(`${account}: ${balanceInEth} ETH`);
-    }
-  }
-
-  async saveConfiguration(config) {
-    const filePath = getConfigFilePathFromRoot();
+  async saveEnvfile(envFilePath, envFile) {
     try {
-      await writeFile(filePath, JSON.stringify(config, null, 2));
-      console.log(`Contracts deployed, configuration saved to ${filePath}.`);
+      await writeFile(envFilePath, envFile);
+      console.log(`Contracts deployed, env saved to ${envFilePath}.`);
     } catch (err) {
       console.error(`Unable to save configuration: ${err}`);
     }
   }
 
-  printSummary(config) {
-    console.log(`Contracts deployed, save following configuration to ${getConfigFilePath()} to start using them:`);
-    console.log(config);
+  printSummary(envFile) {
+    console.log(`Contracts deployed, save following environment configuration directives to start using them:`);
+    console.log(envFile);
   }
 
-  addressesToConfig(addresses) {
-    const contracts = Object.keys(addresses)
-      .map((key) => [key, addresses[key].options.address])
-      .reduce((object, [key, value]) => {
-        object[key] = value;
-        return object;
-      }, {});
-    return {...getConfig(), contracts};
+  addressesToEnvFile(addresses) {
+    return `export HEAD_CONTRACT_ADDRESS="${addresses.head.options.address}"`;
   }
 
   description() {

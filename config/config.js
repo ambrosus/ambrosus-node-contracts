@@ -7,12 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export default class TaskBase {
-  description() {
-    return '';
-  }
-
-  async execute() {
-    throw Error('The execute method is abstract');
-  }
-}
+module.exports = Object.freeze({
+  web3Rpc: process.env.WEB3_RPC,
+  nodePrivateKey: process.env.WEB3_NODEPRIVATEKEY,
+  headContractAddress: process.env.HEAD_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000f10'
+});
