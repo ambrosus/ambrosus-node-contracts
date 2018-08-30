@@ -120,7 +120,7 @@ describe('KYC Whitelist Wrapper', () => {
               call: hasRoleAssignedCallStub.resolves(1)
             })
           }
-        }) 
+        })
       };
       kycWhitelistWrapper = new KycWhitelistWrapper(contractManagerMock);
     });
