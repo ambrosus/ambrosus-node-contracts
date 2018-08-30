@@ -34,7 +34,7 @@ contract Sheltering is Base {
     }
 
     function getShelteringData(bytes32 bundleId, address shelterer) public view onlyContextInternalCalls
-    returns (uint startingDate, uint64 storagePeriods, uint totalReward)
+    returns (uint64 startingDate, uint64 storagePeriods, uint totalReward)
     {
         BundleStore bundleStore = context().bundleStore();
         return (

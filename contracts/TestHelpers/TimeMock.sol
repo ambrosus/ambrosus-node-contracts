@@ -9,20 +9,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Configuration/Time.sol";
 
 
 contract TimeMock is Time {
-    using SafeMath for uint;
+    uint64 public mockedTimestamp = 0;
 
-    uint public mockedTimestamp = 0;
-
-    function setCurrentTimestamp(uint _mockedTimestamp) public {
+    function setCurrentTimestamp(uint64 _mockedTimestamp) public {
         mockedTimestamp = _mockedTimestamp;
     }
 
-    function currentTimestamp() public view returns(uint) {
+    function currentTimestamp() public view returns(uint64) {
         return mockedTimestamp;
     }
 }

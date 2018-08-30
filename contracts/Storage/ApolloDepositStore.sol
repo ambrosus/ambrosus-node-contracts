@@ -31,7 +31,7 @@ contract ApolloDepositStore is Base {
         return amountToTransfer;
     }
 
-    function isDepositing(address apollo) public returns(bool) {
+    function isDepositing(address apollo) public view returns(bool) {
         return deposits[apollo] > 0;
     }
 }
