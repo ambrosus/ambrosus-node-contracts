@@ -24,18 +24,26 @@ export default class RolesWrapper extends ContractWrapper {
     return contract.methods.getUrl(address).call();
   }
 
-  async onboardAsAtlas(address, stake, url) {
+  async onboardAsApollo(deposit) {
+    const contract = await this.contract();
+    return contract.methods.onboardAsApollo().send({
+      from: this.contractManager.defaultAddress(),
+      value: deposit
+    });
+  }
+
+  async onboardAsAtlas(stake, url) {
     const contract = await this.contract();
     return contract.methods.onboardAsAtlas(url).send({
-      from: address,
+      from: this.contractManager.defaultAddress(),
       value: stake
     });
   }
 
-  async onboardAsHermes(address, url) {
+  async onboardAsHermes(url) {
     const contract = await this.contract();
     return contract.methods.onboardAsHermes(url).send({
-      from: address
+      from: this.contractManager.defaultAddress()
     });
   }
 }

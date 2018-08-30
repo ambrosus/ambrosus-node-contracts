@@ -7,14 +7,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-export const getEnvironment = () =>
-  process.env.NODE_ENV || 'development';
-
-export const getConfigFilePath = () =>
-  `../config/${getEnvironment()}.json`;
-
-export const getConfigFilePathFromRoot = () =>
-  `./config/${getEnvironment()}.json`;
-
-export const getConfig = () =>
-  require(getConfigFilePath());
+process.env.NODE_ENV = 'test';
+process.env.WEB3_RPC = 'ganache';
+process.env.WEB3_NODEPRIVATEKEY = '0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696';

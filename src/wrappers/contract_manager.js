@@ -16,25 +16,34 @@ import UploadsWrapper from './uploads_wrapper';
 import FeesWrapper from './fees_wrapper';
 import ChallengesWrapper from './challenges_wrapper';
 import ShelteringWrapper from './sheltering_wrapper';
+import KycWhitelistWrapper from './kyc_whitelist_wrapper';
 
 export default class ContractManager {
   constructor(web3, headContractAddress) {
     this.web3 = web3;
-    if (headContractAddress) {
-      this.head = loadContract(web3, serviceContractsJsons.head.abi, headContractAddress);
-    } else {
-      throw new Error('Head contract address is not configured');
-    }
+    this.headContractAddress = headContractAddress;
     this.rolesWrapper = new RolesWrapper(this);
     this.configWrapper = new ConfigWrapper(this);
     this.uploadsWrapper = new UploadsWrapper(this);
     this.feesWrapper = new FeesWrapper(this);
     this.challengesWrapper = new ChallengesWrapper(this);
     this.shelteringWrapper = new ShelteringWrapper(this);
+    this.kycWhitelistWrapper = new KycWhitelistWrapper(this);
   }
 
   defaultAddress() {
     return getDefaultAddress(this.web3);
+  }
+
+  get head() {
+    if (!this.cachedHead) {
+      if (this.headContractAddress) {
+        this.cachedHead = loadContract(this.web3, serviceContractsJsons.head.abi, this.headContractAddress);
+      } else {
+        throw new Error('Head contract address is not configured');
+      }
+    }
+    return this.cachedHead;
   }
 
   async contractByKey(contractName) {

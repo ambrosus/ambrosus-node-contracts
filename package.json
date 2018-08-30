@@ -10,7 +10,7 @@
     "build": "truffle compile",
     "strip": "babel-node src/tools/strip_contracts.js build/contracts",
     "clean": "rm -fr ./build/contracts/*",
-    "test": "export NODE_ENV=test && mocha --require babel-register --timeout 10000 --recursive --no-warnings",
+    "test": "mocha",
     "testall": "yarn build && yarn test",
     "dev:lint": "eslint src test config && solium -d contracts/",
     "dev:lint:fix": "eslint src test config --fix && solium -d contracts/ --fix",

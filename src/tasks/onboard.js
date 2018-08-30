@@ -9,14 +9,16 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import BN from 'bn.js';
 import TaskBase from './base/task_base';
-import {getDefaultAddress, getDefaultGas, createWeb3} from '../utils/web3_tools';
-import Roles from '../../build/contracts/Roles';
-import Whitelist from '../../build/contracts/KycWhitelist';
 import {ATLAS, HERMES, APOLLO, ROLE_CODES, ATLAS1_STAKE, ATLAS2_STAKE, ATLAS3_STAKE, APOLLO_DEPOSIT} from '../consts';
 
 export default class OnboardingTask extends TaskBase {
+  constructor(web3, contractManager) {
+    super();
+    this.web3 = web3;
+    this.contractManager = contractManager;
+  }
+
   async execute([role, ...options]) {
-    this.web3 = await createWeb3();
     switch (role) {
       case 'ATLAS':
         await this.onboardAtlas(options);
@@ -48,12 +50,10 @@ export default class OnboardingTask extends TaskBase {
       this.printUsage();
       return;
     }
+    await this.validateOnWhitelist('ATLAS');
     const value = this.web3.utils.toWei(new BN(amount));
-    const roles = this.getContract(Roles);
-    const from = getDefaultAddress(this.web3);
-    await this.validateOnWhitelist(from, 'ATLAS');
-    const gas = getDefaultGas();
-    await roles.methods.onboardAsAtlas(url).send({from, gas, value});
+    const {rolesWrapper} = this.contractManager;
+    await rolesWrapper.onboardAsAtlas(url, value);
   }
 
   async onboardHermes([url]) {
@@ -62,11 +62,9 @@ export default class OnboardingTask extends TaskBase {
       this.printUsage();
       return;
     }
-    const roles = this.getContract(Roles);
-    const from = getDefaultAddress(this.web3);
-    await this.validateOnWhitelist(from, 'HERMES');
-    const gas = getDefaultGas();
-    await roles.methods.onboardAsHermes(url).send({from, gas});
+    await this.validateOnWhitelist('HERMES');
+    const {rolesWrapper} = this.contractManager;
+    await rolesWrapper.onboardAsHermes(url);
   }
 
   async onboardApollo([value]) {
@@ -75,20 +73,19 @@ export default class OnboardingTask extends TaskBase {
       this.printUsage();
       return;
     }
-    const roles = this.getContract(Roles);
-    const from = getDefaultAddress(this.web3);
-    await this.validateOnWhitelist(from, 'APOLLO');
-    const gas = getDefaultGas();
-    await roles.methods.onboardAsApollo().send({from, gas, value});
+    await this.validateOnWhitelist('APOLLO');
+    const {rolesWrapper} = this.contractManager;
+    await rolesWrapper.onboardAsApollo(value);
   }
 
-  async validateOnWhitelist(from, role) {
-    const whitelist = this.getContract(Whitelist);
-    const result = await whitelist.methods.hasRoleAssigned(from, ROLE_CODES[role]).call({from});
+  async validateOnWhitelist(role) {
+    const address = this.contractManager.defaultAddress();
+    const {kycWhitelistWrapper} = this.contractManager;
+    const result = await kycWhitelistWrapper.hasRoleAssigned(address, ROLE_CODES[role]);
     if (result) {
-      console.log(`Address ${from} is on whitelist as ${role}. Onboarding.`);
+      console.log(`Address ${address} is on whitelist as ${role}. Onboarding.`);
     } else {
-      console.error(`Address ${from} is not on whitelist or does not have ${role} role assigned.`);
+      console.error(`Address ${address} is not on whitelist or does not have ${role} role assigned.`);
       throw 'Your address needs to be white listed before you can stake.';
     }
   }

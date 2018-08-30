@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import Web3 from 'web3';
-import {getConfig} from '../config';
+import config from '../../config/config';
 
 export const DEFAULT_GAS = 4700000;
 const DEFAULT_PORT = 8545;
@@ -37,10 +37,6 @@ function getDefaultGanacheOptions(secretKey) {
   };
 }
 
-export function getDefaultGas() {
-  return getConfig().web3.gas || DEFAULT_GAS;
-}
-
 export async function createGanacheServer(secretKey) {
   const Ganache = require('ganache-core');
   const server = Ganache.server(getDefaultGanacheOptions(secretKey));
@@ -59,13 +55,13 @@ async function ganacheTopUpDefaultAccount(web3) {
     from: firstGanacheMasterAccount,
     to: getDefaultAddress(web3),
     value: web3.utils.toWei('10', 'ether'),
-    gas: getDefaultGas()
+    gas: DEFAULT_GAS
   });
 }
 
-function importPrivateKey(web3) {
+function importPrivateKey(web3, conf) {
   try {
-    const {nodePrivateKey} = getConfig().web3;
+    const {nodePrivateKey} = conf;
     const account = web3.eth.accounts.privateKeyToAccount(nodePrivateKey);
     web3.eth.accounts.wallet.add(account);
     web3.eth.defaultAccount = account.address;
@@ -75,11 +71,11 @@ function importPrivateKey(web3) {
   }
 }
 
-export async function createWeb3() {
+export async function createWeb3(conf = config) {
   const web3 = new Web3();
 
-  const {rpc} = getConfig().web3;
-  const account = importPrivateKey(web3);
+  const rpc = conf.web3Rpc;
+  const account = importPrivateKey(web3, conf);
 
   if (isValidRPCAddress(rpc)) {
     web3.setProvider(rpc);
@@ -109,7 +105,7 @@ export function getDefaultPrivateKey(web3) {
 
 export function loadContract(web3, abi, address) {
   return new web3.eth.Contract(abi, address, {
-    gas: getDefaultGas(),
+    gas: DEFAULT_GAS,
     gasPrice: web3.utils.toWei('5', 'gwei')
   });
 }
@@ -117,12 +113,12 @@ export function loadContract(web3, abi, address) {
 export async function deployContract(web3, json, args = [], options = {}) {
   const defaultAddress = getDefaultAddress(web3);
   return new web3.eth.Contract(json.abi, undefined, {
-    gas: getDefaultGas(),
+    gas: DEFAULT_GAS,
     gasPrice: web3.utils.toWei('5', 'gwei')
   }).deploy({data: json.bytecode, arguments: args})
     .send({
       from: defaultAddress,
-      gas: getDefaultGas(),
+      gas: DEFAULT_GAS,
       ...options
     });
 }

@@ -24,16 +24,10 @@ export default class TaskList {
     console.log();
   }
 
-  run(name, args) {
+  async run(name, args) {
     const task = this.tasks[name];
     if (task) {
-      task.execute(args)
-        .then(() => {
-          console.log('Done.');
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+      await task.execute(args);
     } else {
       console.error(`Error: Could not find and execute task '${name}'.\n`);
       this.printAvailableTasks();
