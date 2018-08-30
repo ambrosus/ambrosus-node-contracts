@@ -14,7 +14,7 @@ To run test RPC mock, with properly predefined accounts for development and test
 yarn task ganache
 ```
 
-Then deploy contracts and save outcome to a environment file
+Then deploy contracts and save outcome to an environment file
 ```
 yarn task deploy --save <path to file>
 ```

@@ -35,7 +35,7 @@ export default class ContractManager {
     return getDefaultAddress(this.web3);
   }
 
-  get head () {
+  get head() {
     if (!this.cachedHead) {
       if (this.headContractAddress) {
         this.cachedHead = loadContract(this.web3, serviceContractsJsons.head.abi, this.headContractAddress);
