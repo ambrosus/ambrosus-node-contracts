@@ -15,6 +15,7 @@ contract ValidatorSetBase {
     event InitiateChange(bytes32 indexed parentHash, address[] newSet);
 
     function getValidators() public view returns (address[]); 
+    // Called by the `SUPER_USER` in response of to a InitiateChange event.    
     function finalizeChange() public;
 }
 
@@ -26,8 +27,7 @@ contract ValidatorSetBase {
 */
 contract ValidatorSet is ValidatorSetBase {
     address public owner;
-    // the SUPER_USER address as defined by EIP96. During normal operation should be 2**160 - 2
-    address private superUser;
+    address private superUser; // the SUPER_USER address as defined by EIP96. During normal operation should be 2**160 - 2
     address[] public validators;
     address[] public pendingValidators;
 
@@ -35,7 +35,7 @@ contract ValidatorSet is ValidatorSetBase {
 
     /**
     @notice Constructor
-    @param _owner the owner of this contract.
+    @param _owner the owner of this contract, that can add/remove validators.
     @param _initialValidators the initial set of validator addresses.
     @param _superUser SUPER_USER address value injectable for test purpouses. Under normal operation it should be set to 2^160-2 as defined in EIP96 
     */

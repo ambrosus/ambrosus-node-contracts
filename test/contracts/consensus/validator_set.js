@@ -24,12 +24,12 @@ describe('Validator set contract', () => {
 
   const deploy = async (web3, sender, initialValidators, superUser) => deployContract(web3, ValidatorSetJson, [sender, initialValidators, superUser], {from: sender});
   const getOwner = async (contract) => contract.methods.owner().call();
+  const transferOwnership = async (contract, sender, newOwner) => contract.methods.transferOwnership(newOwner).send({...standardOptions, from: sender});
   const addValidator = async (contract, sender, validator) => contract.methods.addValidator(validator).send({...standardOptions, from: sender});
   const removeValidator = async (contract, sender, validator) => contract.methods.removeValidator(validator).send({...standardOptions, from: sender});
   const getValidators = async (contract) => contract.methods.getValidators().call();
   const getPendingValidators = async (contract) => contract.methods.getPendingValidators().call();
   const finalizeChange = async (contract, sender) => contract.methods.finalizeChange().send({...standardOptions, from: sender});
-  const transferOwnership = async (contract, sender, newOwner) => contract.methods.transferOwnership(newOwner).send({...standardOptions, from: sender});
 
   let web3;
   let owner;
