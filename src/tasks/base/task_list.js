@@ -16,11 +16,26 @@ export default class TaskList {
     this.tasks[name] = task;
   }
 
-  printAvailableTasks() {
+  printHelp() {
     console.log('Available tasks:');
-    for (const [name, task] of Object.entries(this.tasks)) {
-      console.log(` ${name} ${task.description()}`);
-    }
+    const prepared = Object.entries(this.tasks).reduce(
+      (acc, [name, task]) => {
+        const help = task.help();
+        const leftColumn = name + (help.options ? ` ${help.options}` : '');
+        if (leftColumn.length > acc.leftColumnMax) {
+          acc.leftColumnMax = leftColumn.length;
+        }
+        acc.entries.push([leftColumn, help.description]);
+        return acc;
+      },
+      {
+        leftColumnMax: 0,
+        entries: []
+      }
+    );
+    prepared.entries.forEach(([leftColumn, rightColumn]) => {
+      console.log(` ${leftColumn.padEnd(prepared.leftColumnMax)}  - ${rightColumn}`);
+    });
     console.log();
   }
 
@@ -30,7 +45,7 @@ export default class TaskList {
       await task.execute(args);
     } else {
       console.error(`Error: Could not find and execute task '${name}'.\n`);
-      this.printAvailableTasks();
+      this.printHelp();
     }
   }
 }

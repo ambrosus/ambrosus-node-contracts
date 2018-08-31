@@ -55,7 +55,10 @@ export default class WhitelistTask extends TaskBase {
     console.log(result);
   }
 
-  description() {
-    return '[add/remove/check] [address]    - manages list of whitelisted stakers';
+  help() {
+    return {
+      options: '[add/remove/check] [address]',
+      desciption: 'manages list of whitelisted node candidates'
+    };
   }
 }

@@ -53,7 +53,9 @@ export default class DeployTask extends TaskBase {
     return `export HEAD_CONTRACT_ADDRESS="${addresses.head.options.address}"`;
   }
 
-  description() {
-    return '                                   - deploys all contracts';
+  help() {
+    return {
+      description: 'deploys all contracts'
+    };
   }
 }

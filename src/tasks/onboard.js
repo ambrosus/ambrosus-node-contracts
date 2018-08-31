@@ -90,7 +90,10 @@ export default class OnboardingTask extends TaskBase {
     }
   }
 
-  description() {
-    return '[amount] [url]    - manages stake';
+  help() {
+    return {
+      options: '[amount] [url]',
+      description: 'manages stake'
+    };
   }
 }
