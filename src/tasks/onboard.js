@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import BN from 'bn.js';
 import TaskBase from './base/task_base';
-import {ATLAS, HERMES, APOLLO, ROLE_CODES, ATLAS1_STAKE, ATLAS2_STAKE, ATLAS3_STAKE, APOLLO_DEPOSIT} from '../consts';
+import {ATLAS, HERMES, APOLLO, ROLE_CODES} from '../consts';
 
 export default class OnboardingTask extends TaskBase {
   constructor(web3, contractManager) {
@@ -36,12 +36,11 @@ export default class OnboardingTask extends TaskBase {
   }
 
   printUsage() {
-    const {fromWei} = this.web3.utils;
     console.log('\nUsage: yarn task onboard [role] [amount] [url]');
     console.log('Available roles are:');
-    console.log(`${ATLAS} - ATLAS  (stakes: ${fromWei(ATLAS1_STAKE)}, ${fromWei(ATLAS2_STAKE)}, ${fromWei(ATLAS3_STAKE)} AMB; url: required)`);
+    console.log(`${ATLAS} - ATLAS  (stakes: required in AMB, url: required)`);
     console.log(`${HERMES} - HERMES (no stakes; url required)`);
-    console.log(`${APOLLO} - APOLLO (stakes: ${fromWei(APOLLO_DEPOSIT)} AMB; no url)`);
+    console.log(`${APOLLO} - APOLLO (stakes: required in AMB; no url)`);
   }
 
   async onboardAtlas([amount, url]) {
