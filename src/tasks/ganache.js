@@ -32,7 +32,9 @@ export default class GanacheTask extends TaskBase {
     });
   }
 
-  description() {
-    return '                                  - run test RPC mock, with properly predefined accounts for development and testing';
+  help() {
+    return {
+      description: 'run test RPC mock, with properly predefined accounts for development and testing'
+    };
   }
 }

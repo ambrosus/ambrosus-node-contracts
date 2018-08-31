@@ -36,7 +36,10 @@ export default class UploadTask extends TaskBase {
     console.log('\nUsage: \nyarn task upload [bundleId] [storagePeriod]');
   }
 
-  description() {
-    return '[bundleId] [storagePeriods]        - uploads empty bundle (for testing purposes mainly)';
+  help() {
+    return {
+      options: '[bundleId] [storagePeriods]',
+      description: 'uploads empty bundle (for testing purposes mainly)'
+    };
   }
 }
