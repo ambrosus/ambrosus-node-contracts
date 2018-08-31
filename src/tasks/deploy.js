@@ -48,8 +48,6 @@ export default class DeployTask extends TaskBase {
       ],
       {argv: args, partial: true});
 
-    console.log(options);
-
     // eslint-disable-next-line no-underscore-dangle
     const unknownOptions = options._unknown;
     if (unknownOptions && unknownOptions.length > 0) {
