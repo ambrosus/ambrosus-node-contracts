@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import Deployer from '../deployer';
+import commandLineArgs from 'command-line-args';
 import {writeFile} from '../utils/file';
 
 export default class DeployTask extends TaskBase {
@@ -20,19 +21,51 @@ export default class DeployTask extends TaskBase {
   async execute(args) {
     console.log('Deploying contracts. This may take some time...');
     const deployer = new Deployer(this.web3);
-    if (args.indexOf('--head') !== -1) {
-      const headAddress = args[args.indexOf('--head') + 1];
+
+    const options = this.parseOptions(args);
+    if (options === null) {
+      return;
+    }
+
+    if (options.head) {
       console.log('Reusing already deployed head.');
-      await deployer.loadHead(headAddress);
+      await deployer.loadHead(options.head);
     }
     const addresses = await deployer.deploy();
     const envFile = this.addressesToEnvFile(addresses);
-    if (args.indexOf('--save') !== -1) {
-      const envFilePath = args[args.indexOf('--save') + 1];
-      this.saveEnvfile(envFilePath, envFile);
+    if (options.save) {
+      this.saveEnvfile(options.save, envFile);
     } else {
       this.printSummary(envFile);
     }
+  }
+
+  parseOptions(args) {
+    const options = commandLineArgs(
+      [
+        {name: 'head', type: String},
+        {name: 'save', type: String}
+      ],
+      {argv: args, partial: true});
+
+    // eslint-disable-next-line no-underscore-dangle
+    const unknownOptions = options._unknown;
+    if (unknownOptions && unknownOptions.length > 0) {
+      console.error(`Unknown options: ${unknownOptions.join(', ')}`);
+      return null;
+    }
+
+    if (options.head === null) {
+      console.error(`You should provide a value for the head parameter.`);
+      return null;
+    }
+
+    if (options.save === null) {
+      console.error(`You should provide a value for the save parameter.`);
+      return null;
+    }
+
+    return options;
   }
 
   async saveEnvfile(envFilePath, envFile) {
