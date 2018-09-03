@@ -66,6 +66,10 @@ describe('ConstructorOwnable base contract', () => {
       expect(await transferOwnership(contract, owner, newOwner)).to.emitEvent('OwnershipTransferred');
     });
 
+    it(`to 0x0 address is not allowed`, async () => {
+      await expect(transferOwnership(contract, owner, '0x0')).to.be.rejected;
+    });
+
     it(`can't be invoked by non-owner`, async () => {
       await expect(transferOwnership(contract, otherUser, newOwner)).to.be.rejected;
     });
