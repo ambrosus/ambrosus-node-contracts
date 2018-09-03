@@ -9,6 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.22;
 
+import "./ConstructorOwnable.sol";
+
 
 // From: https://wiki.parity.io/Validator-Set.html
 contract ValidatorSetBase {
@@ -25,13 +27,10 @@ contract ValidatorSetBase {
 - simple add/remove methods
 - only owner (set explicitly in constructor and transferable) can perform mutating functions
 */
-contract ValidatorSet is ValidatorSetBase {
-    address public owner;
+contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
     address private superUser; // the SUPER_USER address as defined by EIP96. During normal operation should be 2**160 - 2
     address[] public validators;
     address[] public pendingValidators;
-
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
     @notice Constructor
@@ -39,16 +38,10 @@ contract ValidatorSet is ValidatorSetBase {
     @param _initialValidators the initial set of validator addresses.
     @param _superUser SUPER_USER address value injectable for test purpouses. Under normal operation it should be set to 2^160-2 as defined in EIP96 
     */
-    constructor(address _owner, address[] _initialValidators, address _superUser) public {
-        owner = _owner;
+    constructor(address _owner, address[] _initialValidators, address _superUser) public ConstructorOwnable(_owner) {
         superUser = _superUser;
         validators = _initialValidators;
         pendingValidators = _initialValidators;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "sender must be owner");
-        _;
     }
 
     modifier inArray(address _subject, address[] _array, string _message) {
@@ -59,12 +52,6 @@ contract ValidatorSet is ValidatorSetBase {
     modifier notInArray(address _subject, address[] _array, string _message) {
         require(!checkInArray(_subject, _array), _message);
         _;
-    }
-
-    function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "New owner must not be 0x0");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
     }
 
     function getValidators() public view returns (address[]) {
