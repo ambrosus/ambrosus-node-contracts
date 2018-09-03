@@ -9,6 +9,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.22;
 
+
+import "./ConstructorOwnable.sol";
+
+
 // From: https://wiki.parity.io/Block-Reward-Contract
 contract BlockRewardsBase {
     // produce rewards for the given benefactors, with corresponding reward codes.
@@ -16,36 +20,22 @@ contract BlockRewardsBase {
     function reward(address[] benefactors, uint16[] kind) external returns (address[], uint256[]);
 }
 
+
 /**
 @title Implementation of Parities Block Reward contract with:
 - rewards given only to registered validator 
 - rewards amount proportional to `share` assigned to each validator
 */
-contract BlockRewards is BlockRewardsBase {
-    address public owner;
+contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
     address private superUser; // the SUPER_USER address as defined by EIP96. During normal operation should be 2**160 - 2
-
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
     @notice Constructor
     @param _owner the owner of this contract, that can add/remove valiators and their share.
     @param _superUser SUPER_USER address value injectable for test purpouses. Under normal operation it should be set to 2^160-2 as defined in EIP96 
     */
-    constructor(address _owner, address _superUser) public {
-        owner = _owner;
+    constructor(address _owner, address _superUser) public ConstructorOwnable(_owner) {
         superUser = _superUser;
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "sender must be owner");
-        _;
-    }
-
-    function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "New owner must not be 0x0");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
     }
 
     function reward(address[] benefactors, uint16[] kind) external returns (address[], uint256[]) {

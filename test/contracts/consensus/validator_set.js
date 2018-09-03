@@ -22,7 +22,7 @@ describe('Validator set contract', () => {
     gas: 1000000
   };
 
-  const deploy = async (web3, sender, initialValidators, superUser) => deployContract(web3, ValidatorSetJson, [sender, initialValidators, superUser], {from: sender});
+  const deploy = async (web3, sender, owner, initialValidators, superUser) => deployContract(web3, ValidatorSetJson, [owner, initialValidators, superUser], {from: sender});
   const getOwner = async (contract) => contract.methods.owner().call();
   const transferOwnership = async (contract, sender, newOwner) => contract.methods.transferOwnership(newOwner).send({...standardOptions, from: sender});
   const addValidator = async (contract, sender, validator) => contract.methods.addValidator(validator).send({...standardOptions, from: sender});
@@ -32,6 +32,7 @@ describe('Validator set contract', () => {
   const finalizeChange = async (contract, sender) => contract.methods.finalizeChange().send({...standardOptions, from: sender});
 
   let web3;
+  let deployer;
   let owner;
   let otherUser;
   let superUser;
@@ -40,7 +41,7 @@ describe('Validator set contract', () => {
 
   before(async () => {
     web3 = await createWeb3();
-    [owner, otherUser, superUser, newOwner] = await web3.eth.getAccounts();
+    [deployer, owner, otherUser, superUser, newOwner] = await web3.eth.getAccounts();
     exampleValidatorAddresses = Array(3)
       .fill(null)
       .map(() => web3.eth.accounts.create().address);
@@ -50,7 +51,7 @@ describe('Validator set contract', () => {
     let contract;
 
     before(async () => {
-      contract = await deploy(web3, owner, exampleValidatorAddresses, superUser);
+      contract = await deploy(web3, deployer, owner, exampleValidatorAddresses, superUser);
     });
 
     it('sets the initial validators from the parameter', async () => {
@@ -69,7 +70,7 @@ describe('Validator set contract', () => {
     let validator;
 
     beforeEach(async () => {
-      contract = await deploy(web3, owner, [], superUser);
+      contract = await deploy(web3, deployer, owner, [], superUser);
       [validator] = exampleValidatorAddresses;
     });
 
@@ -109,7 +110,7 @@ describe('Validator set contract', () => {
     beforeEach(async () => {
       [initialValidator, nonValidator] = exampleValidatorAddresses;
       initialValidators = [initialValidator];
-      contract = await deploy(web3, owner, initialValidators, superUser);
+      contract = await deploy(web3, deployer, owner, initialValidators, superUser);
     });
 
     it('removes the validator from the pendingValidators list', async () => {
@@ -144,7 +145,7 @@ describe('Validator set contract', () => {
     let contract;
 
     before(async () => {
-      contract = await deploy(web3, owner, [], superUser);
+      contract = await deploy(web3, deployer, owner, [], superUser);
     });
 
     // Note: according to spec the finalizeChange method is called internally by Parity using the special SUPER_USER address.
@@ -169,7 +170,7 @@ describe('Validator set contract', () => {
     let contract;
 
     beforeEach(async () => {
-      contract = await deploy(web3, owner, [], superUser);
+      contract = await deploy(web3, deployer, owner, [], superUser);
     });
 
     it('sets the new owner', async () => {
@@ -179,6 +180,10 @@ describe('Validator set contract', () => {
 
     it('emits a OwnershipTransferred event', async () => {
       expect(await transferOwnership(contract, owner, newOwner)).to.emitEvent('OwnershipTransferred');
+    });
+
+    it(`to 0x0 address is not allowed`, async () => {
+      await expect(transferOwnership(contract, owner, '0x0')).to.be.rejected;
     });
 
     it(`can't be invoked by non-owner`, async () => {
