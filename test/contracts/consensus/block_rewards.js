@@ -22,7 +22,7 @@ describe('Block rewards contract', () => {
     gas: 1000000
   };
 
-  const deploy = async (web3, sender, owner, superUser) => deployContract(web3, BlockRewardsJson, [owner, superUser], {from: sender});
+  const deploy = async (web3, sender, owner, baseReward, superUser) => deployContract(web3, BlockRewardsJson, [owner, baseReward, superUser], {from: sender});
   const getOwner = async (contract) => contract.methods.owner().call();
   const transferOwnership = async (contract, sender, newOwner) => contract.methods.transferOwnership(newOwner).send({...standardOptions, from: sender});
   const addBeneficiary = async (contract, sender, beneficiary, share) => contract.methods.addBeneficiary(beneficiary, share).send({from: sender});
@@ -31,7 +31,17 @@ describe('Block rewards contract', () => {
   const beneficiaryShare = async (contract, sender, beneficiary) => contract.methods.beneficiaryShare(beneficiary).call({from: sender});
   const beneficiaryCount = async (contract, sender) => contract.methods.beneficiaryCount().call({from: sender});
   const totalShares = async (contract, sender) => contract.methods.totalShares().call({from: sender});
+  const baseReward = async (contract, sender) => contract.methods.baseReward().call({from: sender});
   const reward = async (contract, sender, beneficiaries, kind) => contract.methods.reward(beneficiaries, kind).call({from: sender});
+  const reformatRewards = (rewards) => {
+    const {0: rewardedAddresses, 1: rewardedValues} = rewards;
+    return rewardedAddresses.reduce(
+      (acc, value, index) => {
+        acc[value] = rewardedValues[index];
+        return acc;
+      },
+      {});
+  };
 
   let web3;
   let deployer;
@@ -40,6 +50,7 @@ describe('Block rewards contract', () => {
   let superUser;
   let newOwner;
   let exampleBeneficiaries;
+  const exampleBaseReward = '2000000000000000000';
 
   before(async () => {
     web3 = await createWeb3();
@@ -53,7 +64,7 @@ describe('Block rewards contract', () => {
     let contract;
 
     before(async () => {
-      contract = await deploy(web3, deployer, owner, superUser);
+      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
     });
 
     it('sets the owner', async () => {
@@ -65,8 +76,12 @@ describe('Block rewards contract', () => {
       expect(await totalShares(contract, owner)).to.equal('0');
     });
 
-    it('starts with no beneficieries', async () => {
+    it('starts with no beneficiaries', async () => {
       expect(await beneficiaryCount(contract, owner)).to.equal('0');
+    });
+
+    it('stores the base reward value', async () => {
+      expect(await baseReward(contract, owner)).to.equal(exampleBaseReward);
     });
   });
 
@@ -74,7 +89,7 @@ describe('Block rewards contract', () => {
     let contract;
 
     beforeEach(async () => {
-      contract = await deploy(web3, deployer, owner, superUser);
+      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
     });
 
     it('sets the new owner', async () => {
@@ -99,7 +114,7 @@ describe('Block rewards contract', () => {
     let contract;
 
     beforeEach(async () => {
-      contract = await deploy(web3, deployer, owner, superUser);
+      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
     });
 
     it('creates an entry with the address and share of the beneficiary', async () => {
@@ -142,7 +157,7 @@ describe('Block rewards contract', () => {
     let contract;
 
     beforeEach(async () => {
-      contract = await deploy(web3, deployer, owner, superUser);
+      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
       await addBeneficiary(contract, owner, exampleBeneficiaries[0], '1021');
       await addBeneficiary(contract, owner, exampleBeneficiaries[1], '5007');
     });
@@ -179,23 +194,42 @@ describe('Block rewards contract', () => {
   describe('reward', () => {
     let contract;
     let kinds;
-    let oneEther;
 
     beforeEach(async () => {
-      contract = await deploy(web3, deployer, owner, superUser);
+      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
+      await addBeneficiary(contract, owner, exampleBeneficiaries[0], '1021');
+      await addBeneficiary(contract, owner, exampleBeneficiaries[1], '5007');
+      await addBeneficiary(contract, owner, exampleBeneficiaries[2], '4821');
       kinds = Array(exampleBeneficiaries.length).fill(0);
-      oneEther = web3.utils.toWei('1', 'ether');
     });
 
-    it('assigns a reward of 1 ether to every address provided in the parameters', async () => {
-      const rewards = await reward(contract, superUser, exampleBeneficiaries, kinds);
-      const {0: rewardedAddresses, 1: rewardedValues} = rewards;
-      expect(rewardedAddresses).to.have.members(exampleBeneficiaries);
-      expect(rewardedValues).to.deep.equal(Array(exampleBeneficiaries.length).fill(oneEther));
+    it('assigns a reward proportional to the number of shares of a beneficiary in all shares', async () => {
+      const rewards = reformatRewards(await reward(contract, superUser, exampleBeneficiaries, kinds));
+      expect(rewards[exampleBeneficiaries[0]]).to.equal('564660337358281869');
+      expect(rewards[exampleBeneficiaries[1]]).to.equal('2769103143146833809');
+      expect(rewards[exampleBeneficiaries[2]]).to.equal('2666236519494884321');
+    });
+
+    it('assigns rewards of equal value for normal and empty blocks', async () => {
+      const [subject] = exampleBeneficiaries;
+      const rewards1 = reformatRewards(await reward(contract, superUser, [subject], ['0']));
+      const rewards2 = reformatRewards(await reward(contract, superUser, [subject], ['2']));
+      expect(rewards1[subject]).to.equal(rewards2[subject]);
+    });
+
+    it('assigns rewards only for normal and empty blocks, silently ignoring the rest', async () => {
+      const rewards = reformatRewards(await reward(contract, superUser, exampleBeneficiaries, ['0', '1', '2']));
+      expect(rewards).to.have.all.keys(exampleBeneficiaries[0], exampleBeneficiaries[2]);
+    });
+
+    it('assigns rewards only to registered beneficiaries, silently ignoring the rest', async () => {
+      const rewards = reformatRewards(await reward(contract, superUser, [...exampleBeneficiaries, otherUser], ['0', '0', '0', '0']));
+      expect(rewards).to.have.all.keys(exampleBeneficiaries);
     });
 
     it('fails if a different number of beneficiaries and reward kinds is provided', async () => {
       await expect(reward(contract, superUser, exampleBeneficiaries, kinds.slice(1))).to.be.rejected;
+      await expect(reward(contract, superUser, exampleBeneficiaries.slice(1), kinds)).to.be.rejected;
     });
 
     it('fails for non-SUPER_USER', async () => {
