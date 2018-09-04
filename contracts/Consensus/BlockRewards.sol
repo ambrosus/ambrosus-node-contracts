@@ -28,6 +28,9 @@ contract BlockRewardsBase {
 */
 contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
     address private superUser; // the SUPER_USER address as defined by EIP96. During normal operation should be 2**160 - 2
+    uint256 public totalShares;
+    uint256 public beneficiaryCount;
+    mapping(address => uint) public shares;
 
     /**
     @notice Constructor
@@ -36,6 +39,7 @@ contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
     */
     constructor(address _owner, address _superUser) public ConstructorOwnable(_owner) {
         superUser = _superUser;
+        totalShares = 0;
     }
 
     function reward(address[] benefactors, uint16[] kind) external returns (address[], uint256[]) {
@@ -51,5 +55,28 @@ contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
         }
 
         return (retAddresses, retAmounts);
+    }
+
+    function addBeneficiary(address beneficiary, uint256 share) public onlyOwner {
+        require(share > 0, "Share must be non-zero");
+        require(!isBeneficiary(beneficiary), "Is already a beneficiary");
+        totalShares += share;
+        beneficiaryCount += 1;
+        shares[beneficiary] = share;
+    }
+
+    function removeBeneficiary(address beneficiary) public onlyOwner {
+        require(isBeneficiary(beneficiary), "Is not a beneficiary");
+        totalShares -= shares[beneficiary];
+        beneficiaryCount -= 1;
+        delete shares[beneficiary];
+    }
+
+    function isBeneficiary(address beneficiary) public view returns(bool) {
+        return shares[beneficiary] > 0;
+    }
+
+    function beneficiaryShare(address beneficiary) public onlyOwner returns (uint256) {
+        return shares[beneficiary];
     }
 }
