@@ -46,7 +46,11 @@ export async function createGanacheServer(secretKey) {
 function createGanacheProvider(secretKey) {
   // import in code with purpose:D
   const Ganache = require('ganache-core');
-  return Ganache.provider(getDefaultGanacheOptions(secretKey));
+  const memdown = require('memdown');
+  return Ganache.provider({
+    ...getDefaultGanacheOptions(secretKey),
+    db: memdown()
+  });
 }
 
 async function ganacheTopUpDefaultAccount(web3) {
