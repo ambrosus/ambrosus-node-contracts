@@ -55,7 +55,7 @@ contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
         uint16 j = 0;
 
         uint16 numValid = 0;
-        for(i = 0; i < kind.length; i++) {
+        for (i = 0; i < kind.length; i++) {
             if (!isSupportedKind(kind[i]) || !isBeneficiary(beneficiaries[i])) {
                 continue;
             }
