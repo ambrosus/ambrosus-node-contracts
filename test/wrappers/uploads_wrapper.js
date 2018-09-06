@@ -38,7 +38,7 @@ describe('Uploads Wrapper', () => {
             registerBundle: registerBundleStub
           }
         }),
-        defaultAddress: () => defaultAccount
+        defaultAddress: defaultAccount
       };
       registerBundleStub.returns({
         send: registerBundleSendStub

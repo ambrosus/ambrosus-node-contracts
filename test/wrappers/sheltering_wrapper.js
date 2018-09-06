@@ -38,7 +38,7 @@ describe('Sheltering Wrapper', () => {
             })
           }
         }),
-        defaultAddress: () => defaultAddress
+        defaultAddress
       };
       shelteringWrapper = new ShelteringWrapper(contractManagerMock);
     });
@@ -68,7 +68,7 @@ describe('Sheltering Wrapper', () => {
             })
           }
         }),
-        defaultAddress: () => defaultAddress
+        defaultAddress
       };
       shelteringWrapper = new ShelteringWrapper(contractManagerMock);
     });
