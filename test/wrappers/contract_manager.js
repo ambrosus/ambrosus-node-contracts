@@ -95,8 +95,4 @@ describe('Contract Manager', () => {
       expect((await contractManager.configContract()).options.address).to.equal(deployedMockContracts.config);
     });
   });
-
-  it('defaultAddress returns web3 defaultAccount', async () => {
-    expect(contractManager.defaultAddress()).to.equal(web3.eth.defaultAccount);
-  });
 });
