@@ -47,7 +47,7 @@ describe('Contract Manager', () => {
       from: ownerAddress
     });
 
-    contractManager = new ContractManager(web3, head.options.address);
+    contractManager = new ContractManager(web3, head.options.address, ownerAddress);
   });
 
   it('does not allow to get nonexistent contract address', async () => {
