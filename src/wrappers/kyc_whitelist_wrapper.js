@@ -10,18 +10,18 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import ContractWrapper from './contract_wrapper';
 
 export default class KycWhitelistWrapper extends ContractWrapper {
-  async contract() {
-    return this.contractManager.kycWhitelistContract();
+  get getContractName() {
+    return 'kycWhitelist';
   }
 
   async add(address, role, requiredDeposit) {
     const contract = await this.contract();
-    await contract.methods.add(address, role, requiredDeposit).send({from: this.contractManager.defaultAddress});
+    await contract.methods.add(address, role, requiredDeposit).send({from: this.defaultAddress});
   }
 
   async remove(address) {
     const contract = await this.contract();
-    await contract.methods.remove(address).send({from: this.contractManager.defaultAddress});
+    await contract.methods.remove(address).send({from: this.defaultAddress});
   }
 
   async isWhitelisted(address) {
@@ -32,5 +32,10 @@ export default class KycWhitelistWrapper extends ContractWrapper {
   async hasRoleAssigned(address, role) {
     const contract = await this.contract();
     return contract.methods.hasRoleAssigned(address, role).call();
+  }
+
+  async selfHasRoleAssigned(role) {
+    const contract = await this.contract();
+    return contract.methods.hasRoleAssigned(this.defaultAddress, role).call();
   }
 }

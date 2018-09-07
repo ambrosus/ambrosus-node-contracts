@@ -9,19 +9,19 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import ContractManager from '../../src/wrappers/contract_manager';
 import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
 import {contractsJsons, serviceContractsJsons} from '../../src/wrappers/contracts_consts';
+import HeadWrapper from '../../src/wrappers/head_wrapper';
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe('Contract Manager', () => {
+describe('Head Wrapper', () => {
   let web3;
   let ownerAddress;
   let head;
   let context;
-  let contractManager;
+  let headWrapper;
   const deployedMockContracts = {};
 
   const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor');
@@ -47,52 +47,52 @@ describe('Contract Manager', () => {
       from: ownerAddress
     });
 
-    contractManager = new ContractManager(web3, head.options.address, ownerAddress);
+    headWrapper = new HeadWrapper(head.options.address, web3, ownerAddress);
   });
 
   it('does not allow to get nonexistent contract address', async () => {
-    await expect(contractManager.contractAddressFromContext('fakeContract')).to.be.eventually.rejectedWith(Error);
+    await expect(headWrapper.contractAddressByName('fakeContract')).to.be.eventually.rejectedWith(Error);
   });
 
   it('does not allow to get internal contract address', async () => {
-    await expect(contractManager.contractAddressFromContext('bundleStore')).to.be.eventually.rejectedWith(Error);
+    await expect(headWrapper.contractAddressByName('bundleStore')).to.be.eventually.rejectedWith(Error);
   });
 
-  describe('Gets contracts', () => {
+  describe('Gets available contracts addresses', () => {
     it('kycWhitelist', async () => {
-      expect((await contractManager.kycWhitelistContract()).options.address).to.equal(deployedMockContracts.kycWhitelist);
+      expect(await headWrapper.contractAddressByName('kycWhitelist')).to.equal(deployedMockContracts.kycWhitelist);
     });
 
     it('roles', async () => {
-      expect((await contractManager.rolesContract()).options.address).to.equal(deployedMockContracts.roles);
+      expect(await headWrapper.contractAddressByName('roles')).to.equal(deployedMockContracts.roles);
     });
 
     it('fees', async () => {
-      expect((await contractManager.feesContract()).options.address).to.equal(deployedMockContracts.fees);
+      expect(await headWrapper.contractAddressByName('fees')).to.equal(deployedMockContracts.fees);
     });
 
     it('challenges', async () => {
-      expect((await contractManager.challengesContract()).options.address).to.equal(deployedMockContracts.challenges);
+      expect(await headWrapper.contractAddressByName('challenges')).to.equal(deployedMockContracts.challenges);
     });
 
     it('payouts', async () => {
-      expect((await contractManager.payoutsContract()).options.address).to.equal(deployedMockContracts.payouts);
+      expect(await headWrapper.contractAddressByName('payouts')).to.equal(deployedMockContracts.payouts);
     });
 
     it('shelteringTransfers', async () => {
-      expect((await contractManager.shelteringTransfersContract()).options.address).to.equal(deployedMockContracts.shelteringTransfers);
+      expect(await headWrapper.contractAddressByName('shelteringTransfers')).to.equal(deployedMockContracts.shelteringTransfers);
     });
 
     it('sheltering', async () => {
-      expect((await contractManager.shelteringContract()).options.address).to.equal(deployedMockContracts.sheltering);
+      expect(await headWrapper.contractAddressByName('sheltering')).to.equal(deployedMockContracts.sheltering);
     });
 
     it('uploads', async () => {
-      expect((await contractManager.uploadsContract()).options.address).to.equal(deployedMockContracts.uploads);
+      expect(await headWrapper.contractAddressByName('uploads')).to.equal(deployedMockContracts.uploads);
     });
 
     it('config', async () => {
-      expect((await contractManager.configContract()).options.address).to.equal(deployedMockContracts.config);
+      expect(await headWrapper.contractAddressByName('config')).to.equal(deployedMockContracts.config);
     });
   });
 });

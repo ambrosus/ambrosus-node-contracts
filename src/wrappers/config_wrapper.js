@@ -11,8 +11,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import ContractWrapper from './contract_wrapper';
 
 export default class ConfigWrapper extends ContractWrapper {
-  async contract() {
-    return this.contractManager.configContract();
+  get getContractName() {
+    return 'config';
   }
 
   async atlas1Stake() {
