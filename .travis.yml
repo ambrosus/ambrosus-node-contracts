@@ -1,11 +1,24 @@
 dist: trusty
 language: node_js
-cache: yarn
+cache: 
+  yarn: true
+  directories:
+  - node_modules
 node_js:
   - '9'
 install:
   - yarn install
-script:
-  - yarn testall
-  - ./scripts/test_cli.sh  
-  - yarn dev:lint
+jobs:
+  include:
+    - stage: test
+      script: 
+        - yarn build
+        - yarn dev:lint
+    - stage: test
+      script:
+        - yarn build
+        - yarn test
+    - stage: test
+      script:
+        - yarn build
+        - ./scripts/test_cli.sh
