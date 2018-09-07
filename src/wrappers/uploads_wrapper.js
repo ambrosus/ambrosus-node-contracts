@@ -19,6 +19,6 @@ export default class UploadsWrapper extends ContractWrapper {
     return contract
       .methods
       .registerBundle(bundleId, storagePeriods)
-      .send({from: this.contractManager.defaultAddress(), value: fee});
+      .send({from: this.contractManager.defaultAddress, value: fee});
   }
 }

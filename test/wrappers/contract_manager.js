@@ -47,7 +47,7 @@ describe('Contract Manager', () => {
       from: ownerAddress
     });
 
-    contractManager = new ContractManager(web3, head.options.address);
+    contractManager = new ContractManager(web3, head.options.address, ownerAddress);
   });
 
   it('does not allow to get nonexistent contract address', async () => {
@@ -94,9 +94,5 @@ describe('Contract Manager', () => {
     it('config', async () => {
       expect((await contractManager.configContract()).options.address).to.equal(deployedMockContracts.config);
     });
-  });
-
-  it('defaultAddress returns web3 defaultAccount', async () => {
-    expect(contractManager.defaultAddress()).to.equal(web3.eth.defaultAccount);
   });
 });

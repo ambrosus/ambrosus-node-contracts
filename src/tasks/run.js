@@ -19,7 +19,8 @@ import config from '../../config/config';
 
 const runTask = async () => {
   const web3 = await createWeb3();
-  const contractManager = new ContractManager(web3, config.headContractAddress);
+  const nodeAddress = web3.eth.accounts.privateKeyToAccount(config.nodePrivateKey).address;
+  const contractManager = new ContractManager(web3, config.headContractAddress, nodeAddress);
   const list = new TaskList();
   const args = process.argv.slice(2);
   list.add('ganache', new GanacheTask());

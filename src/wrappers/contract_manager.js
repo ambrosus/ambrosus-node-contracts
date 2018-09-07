@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {getDefaultAddress, loadContract} from '../utils/web3_tools';
+import {loadContract} from '../utils/web3_tools';
 
 import {contractsJsons, serviceContractsJsons} from './contracts_consts';
 import RolesWrapper from './roles_wrapper';
@@ -19,8 +19,9 @@ import ShelteringWrapper from './sheltering_wrapper';
 import KycWhitelistWrapper from './kyc_whitelist_wrapper';
 
 export default class ContractManager {
-  constructor(web3, headContractAddress) {
+  constructor(web3, headContractAddress, defaultAddress) {
     this.web3 = web3;
+    this.defaultAddress = defaultAddress;
     this.headContractAddress = headContractAddress;
     this.rolesWrapper = new RolesWrapper(this);
     this.configWrapper = new ConfigWrapper(this);
@@ -29,10 +30,6 @@ export default class ContractManager {
     this.challengesWrapper = new ChallengesWrapper(this);
     this.shelteringWrapper = new ShelteringWrapper(this);
     this.kycWhitelistWrapper = new KycWhitelistWrapper(this);
-  }
-
-  defaultAddress() {
-    return getDefaultAddress(this.web3);
   }
 
   get head() {
@@ -69,12 +66,12 @@ export default class ContractManager {
     }
 
     const context = await this.context();
-    const from  = this.defaultAddress();
+    const from  = this.defaultAddress;
     return context.methods[`${contractName}()`]().call({from});
   }
 
   async context() {
-    const from = getDefaultAddress(this.web3);
+    const from = this.defaultAddress;
     const contextAddress = await this.head
       .methods
       .context()

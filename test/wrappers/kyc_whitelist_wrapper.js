@@ -40,7 +40,7 @@ describe('KYC Whitelist Wrapper', () => {
             })
           }
         }),
-        defaultAddress: () => defaultAddress
+        defaultAddress
       };
       kycWhitelistWrapper = new KycWhitelistWrapper(contractManagerMock);
     });
@@ -67,7 +67,7 @@ describe('KYC Whitelist Wrapper', () => {
             })
           }
         }),
-        defaultAddress: () => defaultAddress
+        defaultAddress
       };
       kycWhitelistWrapper = new KycWhitelistWrapper(contractManagerMock);
     });

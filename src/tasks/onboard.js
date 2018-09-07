@@ -78,7 +78,7 @@ export default class OnboardingTask extends TaskBase {
   }
 
   async validateOnWhitelist(role) {
-    const address = this.contractManager.defaultAddress();
+    const address = this.contractManager.defaultAddress;
     const {kycWhitelistWrapper} = this.contractManager;
     const result = await kycWhitelistWrapper.hasRoleAssigned(address, ROLE_CODES[role]);
     if (result) {

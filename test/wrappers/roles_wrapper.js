@@ -94,7 +94,7 @@ describe('Roles Wrapper', () => {
             })
           }
         }),
-        defaultAddress: () => defaultAddress
+        defaultAddress
       };
       rolesWrapper = new RolesWrapper(contractManagerMock);
     });
@@ -126,7 +126,7 @@ describe('Roles Wrapper', () => {
             })
           }
         }),
-        defaultAddress: () => defaultAddress
+        defaultAddress
       };
       rolesWrapper = new RolesWrapper(contractManagerMock);
     });
@@ -157,7 +157,7 @@ describe('Roles Wrapper', () => {
             })
           }
         }),
-        defaultAddress: () => defaultAddress
+        defaultAddress
       };
       rolesWrapper = new RolesWrapper(contractManagerMock);
     });

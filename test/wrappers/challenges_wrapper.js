@@ -126,7 +126,7 @@ describe('Challenges Wrapper', () => {
             resolve: resolveChallengeStub
           }
         }),
-        defaultAddress: () => defaultAccount
+        defaultAddress: defaultAccount
       };
       resolveChallengeStub.returns({
         send: resolveChallengeSendStub
@@ -157,7 +157,7 @@ describe('Challenges Wrapper', () => {
             canResolve: canResolveStub
           }
         }),
-        defaultAddress: () => defaultAccount
+        defaultAddress: defaultAccount
       };
       canResolveStub.returns({
         call: canResolveCallStub
