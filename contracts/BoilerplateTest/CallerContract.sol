@@ -7,13 +7,20 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-pragma solidity ^0.4.23 ;
+pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
+import "./CalledContract.sol";
 
 
-contract Contract2 is Base {
-    constructor(Head _head) Base(_head) public { }
+contract CallerContract is Base {
+    CalledContract otherContract;
 
-    function contextInternalMethod() view onlyContextInternalCalls public { }
+    constructor(Head _head, CalledContract _otherContract) Base(_head) public{
+        otherContract = _otherContract;
+    }
+
+    function callOtherContract() view public {
+        otherContract.contextInternalMethod();
+    }
 }

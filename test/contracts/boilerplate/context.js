@@ -28,11 +28,11 @@ describe('Context Contract', () => {
     accounts = await web3.eth.getAccounts();
   });
 
-  it('canCall returns true if address is known', async () => {
+  it('isInternalToContext returns true if address is known', async () => {
     expect(await context.methods.isInternalToContext(fees.options.address).call()).to.equal(true);
   });
 
-  it('canCall returns false only if such address is unknown', async () => {
+  it('isInternalToContext returns false only if such address is unknown', async () => {
     expect(await context.methods.isInternalToContext(accounts[1]).call()).to.equal(false);
   });
 });
