@@ -10,15 +10,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract, getDefaultAddress} from '../../../src/utils/web3_tools';
+import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 
-import Contract1Json from '../../../build/contracts/Contract1.json';
-import Contract2Json from '../../../build/contracts/Contract2.json';
+import CallerContractJson from '../../../build/contracts/CallerContract.json';
+import CalledContractJson from '../../../build/contracts/CalledContract.json';
 import HeadJson from '../../../build/contracts/Head.json';
 import ContextJson from '../../../build/contracts/Context.json';
-import {removeFromWhitelist} from '../../helpers/whitelist';
-import {MockContextDeployer} from '../../helpers/deploy';
 
 chai.use(chaiEmitEvents);
 
@@ -29,27 +27,36 @@ const {expect} = chai;
 
 describe('Base Contract', () => {
   let web3;
-  let contract1;
-  let contract2;
+  let head;
+  let callerContract;
+  let calledContract;
   let context;
   let deployer;
 
-  beforeEach(async () => {
+  before(async () => {
     web3 = await createWeb3();
-    deployer = new MockContextDeployer(web3);
-    deployer.head = await deployContract(web3, HeadJson, [getDefaultAddress(web3)]);
-    const headAddress = deployer.head.options.address;
-    contract2 = await deployContract(web3, Contract2Json, [headAddress]);
-    contract1 = await deployContract(web3, Contract1Json, [headAddress, contract2.options.address]);
-    const constructorABI = ContextJson.abi.find((method) => method.type === 'constructor');
-    const constructorArgumentCount = constructorABI.inputs.length;
-    context = await deployer.setupContext(new Array(constructorArgumentCount).fill('0x0'),
-      [contract1.options.address, contract2.options.address]);
+    [deployer] = await web3.eth.getAccounts();
+
+    head = await deployContract(web3, HeadJson, [deployer], {from: deployer});
+    calledContract = await deployContract(web3, CalledContractJson, [head.options.address], {from: deployer});
+    callerContract = await deployContract(web3, CallerContractJson, [head.options.address, calledContract.options.address], {from: deployer});
   });
 
-  it('onlyContextInternalCalls should allow calling methods by whitelisted contracts', async () => {
-    await expect(contract1.methods.callOtherContract().call()).to.be.eventually.fulfilled;
-    await removeFromWhitelist(web3, context, [contract1.options.address]);
-    await expect(contract1.methods.callOtherContract().call()).to.be.eventually.rejected;
+  const deployContext = async (web3, sender, head, injected) => {
+    const constructorABI = ContextJson.abi.find((method) => method.type === 'constructor');
+    const constructorArguments = [...new Array(constructorABI.inputs.length - injected.length).fill('0x0'), ...injected];
+    context = await deployContract(web3, ContextJson, constructorArguments, {from: sender});
+    await head.methods.setContext(context.options.address).send({from: sender});
+    return context;
+  };
+
+  it('onlyContextInternalCalls decorated methods can be called by contracts that are part of the context', async () => {
+    await deployContext(web3, deployer, head, [callerContract.options.address, calledContract.options.address]);
+    await expect(callerContract.methods.callOtherContract().call()).to.be.eventually.fulfilled;
+  });
+
+  it('onlyContextInternalCalls decorated methods can not be called by contracts that are not part of the context', async () => {
+    await deployContext(web3, deployer, head, [calledContract.options.address]);
+    await expect(callerContract.methods.callOtherContract().call()).to.be.eventually.rejected;
   });
 });
