@@ -21,13 +21,13 @@ import "../Configuration/Time.sol";
 import "../Configuration/Config.sol";
 
 import "../Middleware/Sheltering.sol";
+import "../Middleware/ValidatorProxy.sol";
 
 import "../Front/Challenges.sol";
 import "../Front/Payouts.sol";
 import "../Front/ShelteringTransfers.sol";
 import "../Front/Uploads.sol";
 import "../Front/Roles.sol";
-
 
 
 contract Context {
@@ -47,6 +47,7 @@ contract Context {
     Uploads public uploads;
     RolesStore public rolesStore;
     ApolloDepositStore public apolloDepositStore;
+    ValidatorProxy public validatorProxy;
 
     constructor(
         Time _time,
@@ -63,7 +64,8 @@ contract Context {
         Config _config,
         Uploads _uploads,
         RolesStore _rolesStore,
-        ApolloDepositStore _apolloDepositStore
+        ApolloDepositStore _apolloDepositStore,
+        ValidatorProxy _validatorProxy
     ) public {
         time = _time;
         atlasStakeStore = _atlasStakeStore;
@@ -80,6 +82,7 @@ contract Context {
         uploads = _uploads;
         rolesStore = _rolesStore;
         apolloDepositStore = _apolloDepositStore;
+        validatorProxy = _validatorProxy;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
@@ -98,6 +101,7 @@ contract Context {
             uploads == contractAddress ||            
             payouts == contractAddress ||            
             rolesStore == contractAddress ||
-            apolloDepositStore == contractAddress;
+            apolloDepositStore == contractAddress ||
+            validatorProxy == contractAddress;
     }
 }

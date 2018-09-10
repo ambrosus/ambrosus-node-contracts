@@ -9,31 +9,40 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import MockContextJson from '../../build/contracts/MockContext.json';
 import Deployer from '../../src/deployer';
-import {addToWhitelist} from './whitelist.js';
-import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
-
-export class MockContextDeployer extends Deployer {
-  getWhitelisted() {
-    return this.whitelisted || [this.from];
-  }
-
-  async setupContext(contracts, whitelistedAddreses = this.getWhitelisted()) {
-    const context = await deployContract(this.web3, MockContextJson, contracts, {from: this.from});
-    await addToWhitelist(this.web3, context, whitelistedAddreses, this.from);
-    await this.head.methods.setContext(context.options.address).send({
-      gas: this.gas,
-      from: this.from
-    });
-    return context;
-  }
-}
+import DEFAULT_CONTRACT_JSONS from '../../src/contract_jsons';
+import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';
 
 const deploy = async (options = {}) => {
   const web3 = options.web3 || await createWeb3();
-  const from = options.from || getDefaultAddress(web3);
-  const {contracts} = options;
-  const deployer = new MockContextDeployer(web3, from);
-  return {web3, ...await deployer.deploy(contracts)};
+  const sender = options.sender || getDefaultAddress(web3);
+  const skipDeployment = [];
+  const alreadyDeployed = {};
+  const jsons = {};
+  const requestedContracts = {head: true, context: MockContextJson, ...options.contracts};
+  const params = {
+    head: {
+      owner: sender
+    },
+    ...(options.params || {})
+  };
+
+  for (const [key, json] of Object.entries(DEFAULT_CONTRACT_JSONS)) {
+    if (requestedContracts[key] === undefined) {
+      jsons[key] = json;
+      skipDeployment.push(key);
+    } else if (requestedContracts[key] === true) {
+      jsons[key] = json;
+    } else {
+      jsons[key] = requestedContracts[key];
+    }
+  }
+
+  const deployer = new Deployer(web3, sender);
+  const contracts = await deployer.deploy(jsons, alreadyDeployed, skipDeployment, params);
+
+  await contracts.context.methods.addToWhitelist([sender]).send({from: sender});
+
+  return {web3, ...contracts};
 };
 
 export default deploy;

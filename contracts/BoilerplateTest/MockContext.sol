@@ -30,7 +30,8 @@ contract MockContext is Context {
         Config _config,
         Uploads _uploads,
         RolesStore _rolesStore,
-        ApolloDepositStore _apolloDepositStore
+        ApolloDepositStore _apolloDepositStore,
+        ValidatorProxy _validatorProxy
     ) Context(
         _time,
         _atlasStakeStore,
@@ -46,7 +47,8 @@ contract MockContext is Context {
         _config,
         _uploads,
         _rolesStore,
-        _apolloDepositStore
+        _apolloDepositStore,
+        _validatorProxy
     ) public {        
     }
 
