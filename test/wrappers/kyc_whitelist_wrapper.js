@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('KYC Whitelist Wrapper', () => {
-  let contractManagerMock;
+  let getContractStub;
   let kycWhitelistWrapper;
   const defaultAddress = '0x6789';
   const exampleAddress = '0x1234';
@@ -32,17 +32,19 @@ describe('KYC Whitelist Wrapper', () => {
     before(async () => {
       addStub = sinon.stub();
       addSendStub = sinon.stub();
-      contractManagerMock = {
-        kycWhitelistContract: async () => ({
-          methods: {
-            add: addStub.returns({
-              send: addSendStub.resolves()
-            })
-          }
-        }),
-        defaultAddress
+      const contractMock = {
+        methods: {
+          add: addStub.returns({
+            send: addSendStub.resolves()
+          })
+        }
       };
-      kycWhitelistWrapper = new KycWhitelistWrapper(contractManagerMock);
+      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress);
+      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    after(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -59,17 +61,19 @@ describe('KYC Whitelist Wrapper', () => {
     before(async () => {
       removeStub = sinon.stub();
       removeSendStub = sinon.stub();
-      contractManagerMock = {
-        kycWhitelistContract: async () => ({
-          methods: {
-            remove: removeStub.returns({
-              send: removeSendStub.resolves()
-            })
-          }
-        }),
-        defaultAddress
+      const contractMock = {
+        methods: {
+          remove: removeStub.returns({
+            send: removeSendStub.resolves()
+          })
+        }
       };
-      kycWhitelistWrapper = new KycWhitelistWrapper(contractManagerMock);
+      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress);
+      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    after(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -86,16 +90,19 @@ describe('KYC Whitelist Wrapper', () => {
     before(async () => {
       isWhitelistedStub = sinon.stub();
       isWhitelistedCallStub = sinon.stub();
-      contractManagerMock = {
-        kycWhitelistContract: async () => ({
-          methods: {
-            isWhitelisted: isWhitelistedStub.returns({
-              call: isWhitelistedCallStub.resolves(1)
-            })
-          }
-        })
+      const contractMock = {
+        methods: {
+          isWhitelisted: isWhitelistedStub.returns({
+            call: isWhitelistedCallStub.resolves(1)
+          })
+        }
       };
-      kycWhitelistWrapper = new KycWhitelistWrapper(contractManagerMock);
+      kycWhitelistWrapper = new KycWhitelistWrapper();
+      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    after(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -113,16 +120,19 @@ describe('KYC Whitelist Wrapper', () => {
     before(async () => {
       hasRoleAssignedStub = sinon.stub();
       hasRoleAssignedCallStub = sinon.stub();
-      contractManagerMock = {
-        kycWhitelistContract: async () => ({
-          methods: {
-            hasRoleAssigned: hasRoleAssignedStub.returns({
-              call: hasRoleAssignedCallStub.resolves(1)
-            })
-          }
-        })
+      const contractMock = {
+        methods: {
+          hasRoleAssigned: hasRoleAssignedStub.returns({
+            call: hasRoleAssignedCallStub.resolves(1)
+          })
+        }
       };
-      kycWhitelistWrapper = new KycWhitelistWrapper(contractManagerMock);
+      kycWhitelistWrapper = new KycWhitelistWrapper();
+      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    after(async () => {
+      getContractStub.restore();
     });
 
     it('calls contract method with correct arguments', async () => {

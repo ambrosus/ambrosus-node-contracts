@@ -78,13 +78,13 @@ export default class OnboardingTask extends TaskBase {
   }
 
   async validateOnWhitelist(role) {
-    const address = this.contractManager.defaultAddress;
     const {kycWhitelistWrapper} = this.contractManager;
-    const result = await kycWhitelistWrapper.hasRoleAssigned(address, ROLE_CODES[role]);
+    const result = await kycWhitelistWrapper.selfHasRoleAssigned(ROLE_CODES[role]);
+    const {defaultAddress} = kycWhitelistWrapper;
     if (result) {
-      console.log(`Address ${address} is on whitelist as ${role}. Onboarding.`);
+      console.log(`Address ${defaultAddress} is on whitelist as ${role}. Onboarding.`);
     } else {
-      console.error(`Address ${address} is not on whitelist or does not have ${role} role assigned.`);
+      console.error(`Address ${defaultAddress} is not on whitelist or does not have ${role} role assigned.`);
       throw 'Your address needs to be white listed before you can stake.';
     }
   }
