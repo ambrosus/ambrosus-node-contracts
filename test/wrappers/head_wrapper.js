@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
-import {contractsJsons, serviceContractsJsons} from '../../src/wrappers/contracts_consts';
+import contractJsons from '../../src/contract_jsons';
 import HeadWrapper from '../../src/wrappers/head_wrapper';
 
 chai.use(chaiAsPromised);
@@ -30,19 +30,19 @@ describe('Head Wrapper', () => {
   before(async () => {
     web3 = await createWeb3();
     ownerAddress = getDefaultAddress(web3);
-    head = await deployContract(web3, serviceContractsJsons.head, [ownerAddress]);
+    head = await deployContract(web3, contractJsons.head, [ownerAddress]);
 
-    for (const contractName in contractsJsons) {
-      deployedMockContracts[contractName] = generateAddress();
-    }
-
-    const contextConstructorParams = getContractConstructor(serviceContractsJsons.context)
+    const contextConstructorParams = getContractConstructor(contractJsons.context)
       .inputs
       .map((input) => input.name.slice(1));
 
-    const addressesForContextConstructor = contextConstructorParams.map((key) => deployedMockContracts[key]);
+    for (const paramName of contextConstructorParams) {
+      deployedMockContracts[paramName] = generateAddress();
+    }
 
-    context = await deployContract(web3, serviceContractsJsons.context, addressesForContextConstructor);
+    const addressesForContextConstructor = contextConstructorParams.map((paramName) => deployedMockContracts[paramName]);
+
+    context = await deployContract(web3, contractJsons.context, addressesForContextConstructor);
     await head.methods.setContext(context.options.address).send({
       from: ownerAddress
     });

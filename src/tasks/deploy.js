@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import Deployer from '../deployer';
-import DEFAULT_CONTRACT_JSONS from '../contract_jsons';
+import contractJsons from '../contract_jsons';
 import commandLineArgs from 'command-line-args';
 import {writeFile} from '../utils/file';
 
@@ -62,7 +62,7 @@ export default class DeployTask extends TaskBase {
       };
     }
 
-    const contracts = await deployer.deploy(DEFAULT_CONTRACT_JSONS, predeployed, [], params);
+    const contracts = await deployer.deploy(contractJsons, predeployed, [], params);
 
     console.log(`Contracts deployed: `);
     Object.entries(contracts).forEach(([key, contract]) => console.log(`\t${key} -> ${contract.options.address}`));

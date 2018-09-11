@@ -28,7 +28,7 @@ import UploadsJson from '../build/contracts/Uploads.json';
 import ApolloDepositStoreJson from '../build/contracts/ApolloDepositStore.json';
 import ValidatorProxyJson from '../build/contracts/ValidatorProxy.json';
 
-const DEFAULT_CONTRACT_JSONS = {
+const contractJsons = {
   head: HeadJson,
   context: ContextJson,
   validatorSet: ValidatorSetJson,
@@ -51,4 +51,4 @@ const DEFAULT_CONTRACT_JSONS = {
   validatorProxy: ValidatorProxyJson
 };
 
-export default DEFAULT_CONTRACT_JSONS;
+export default contractJsons;

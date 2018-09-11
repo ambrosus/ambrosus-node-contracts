@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 
 import {loadContract} from '../utils/web3_tools';
-import {serviceContractsJsons} from './contracts_consts';
+import contractJsons from '../contract_jsons';
 
 export default class HeadWrapper {
   constructor(headContractAddress, web3, defaultAddress) {
@@ -19,7 +19,7 @@ export default class HeadWrapper {
 
     this.web3 = web3;
     this.defaultAddress = defaultAddress;
-    this.head = loadContract(this.web3, serviceContractsJsons.head.abi, headContractAddress);
+    this.head = loadContract(this.web3, contractJsons.head.abi, headContractAddress);
   }
 
   setDefaultAddress(defaultAddress) {
@@ -52,6 +52,6 @@ export default class HeadWrapper {
       .methods
       .context()
       .call({from: this.defaultAddress});
-    return loadContract(this.web3, serviceContractsJsons.context.abi, contextAddress);
+    return loadContract(this.web3, contractJsons.context.abi, contextAddress);
   }
 }

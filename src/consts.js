@@ -10,6 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import utils from '../test/helpers/utils';
 import BN from 'bn.js';
 
+export const MIN_BLOCK_TIME = 5;
+
 export const ATLAS = 1;
 export const HERMES = 2;
 export const APOLLO = 3;

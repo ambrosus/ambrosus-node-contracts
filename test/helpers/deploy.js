@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import MockContextJson from '../../build/contracts/MockContext.json';
 import Deployer from '../../src/deployer';
-import DEFAULT_CONTRACT_JSONS from '../../src/contract_jsons';
+import contractJsons from '../../src/contract_jsons';
 import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';
 
 const deploy = async (options = {}) => {
@@ -26,7 +26,7 @@ const deploy = async (options = {}) => {
     ...(options.params || {})
   };
 
-  for (const [key, json] of Object.entries(DEFAULT_CONTRACT_JSONS)) {
+  for (const [key, json] of Object.entries(contractJsons)) {
     if (requestedContracts[key] === undefined) {
       jsons[key] = json;
       skipDeployment.push(key);
