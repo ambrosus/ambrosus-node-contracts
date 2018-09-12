@@ -48,7 +48,7 @@ describe('ConstructorOwnable base contract', () => {
     await restoreSnapshot(web3, snapshotId);
   });
 
-  describe('constructor', () => {    
+  describe('constructor', () => {
     it('sets the owner', async () => {
       const storedOwner = await getOwner(contract);
       expect(storedOwner).to.equal(owner);
