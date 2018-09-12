@@ -8,9 +8,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 
-const KycWhitelistWrapper = require('./dist/wrappers/kyc_whitelist_wrapper');
-const RolesWrapper = require('./dist/wrappers/roles_wrapper');
-const ConfigWrapper = require('./dist/wrappers/config_wrapper');
+const KycWhitelistWrapper = require('./dist/wrappers/kyc_whitelist_wrapper').default;
+const RolesWrapper = require('./dist/wrappers/roles_wrapper').default;
+const ConfigWrapper = require('./dist/wrappers/config_wrapper').default;
 
 module.exports = {
   KycWhitelistWrapper,
