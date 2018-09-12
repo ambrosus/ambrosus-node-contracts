@@ -63,6 +63,26 @@ async function ganacheTopUpDefaultAccount(web3) {
   });
 }
 
+function augmentWithSnapshotMethods(web3) {
+  web3.eth.extend({
+    methods: [
+      {
+        name: 'makeSnapshot',
+        call: 'evm_snapshot',
+        params: 0,
+        inputFormatter: [],
+        outputFormatter: web3.utils.hexToNumberString
+      },
+      {
+        name: 'restoreSnapshot',
+        call: 'evm_revert',
+        params: 1,
+        inputFormatter: [web3.utils.numberToHex]
+      }
+    ]
+  });
+}
+
 function importPrivateKey(web3, conf) {
   try {
     const {nodePrivateKey} = conf;
@@ -86,10 +106,19 @@ export async function createWeb3(conf = config) {
   } else if (isUsingGanache(rpc)) {
     web3.setProvider(createGanacheProvider(account.privateKey));
     await ganacheTopUpDefaultAccount(web3);
+    augmentWithSnapshotMethods(web3);
   } else {
     throw new Error('A configuration value for web3 rpc server is missing');
   }
   return web3;
+}
+
+export async function makeSnapshot(web3) {
+  return web3.eth.makeSnapshot();
+}
+
+export async function restoreSnapshot(web3, snapshotId) {
+  return web3.eth.restoreSnapshot(snapshotId);
 }
 
 export function getDefaultAddress(web3) {
