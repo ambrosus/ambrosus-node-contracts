@@ -9,18 +9,22 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import Deployer from '../deployer';
+import contractJsons from '../contract_jsons';
 import commandLineArgs from 'command-line-args';
 import {writeFile} from '../utils/file';
 
 export default class DeployTask extends TaskBase {
-  constructor(web3) {
+  constructor(web3, sender) {
     super();
     this.web3 = web3;
+    this.sender = sender;
   }
 
   async execute(args) {
     console.log('Deploying contracts. This may take some time...');
-    const deployer = new Deployer(this.web3);
+    const deployer = new Deployer(this.web3, this.sender);
+    const predeployed = {};
+    const params = {};
 
     const options = this.parseOptions(args);
     if (options === null) {
@@ -28,11 +32,42 @@ export default class DeployTask extends TaskBase {
     }
 
     if (options.head) {
-      console.log('Reusing already deployed head.');
-      await deployer.loadHead(options.head);
+      console.log('Reusing already deployed head contract.');
+      predeployed.head = options.head;
+    } else {
+      params.head = {
+        owner: this.sender
+      };
     }
-    const addresses = await deployer.deploy();
-    const envFile = this.addressesToEnvFile(addresses);
+
+    if (options.validatorSet) {
+      console.log('Reusing already deployed validator set contract.');
+      predeployed.validatorSet = options.validatorSet;
+    } else {
+      params.validatorSet = {
+        owner: this.sender,
+        initialValidators : [],
+        superUser: this.sender
+      };
+    }
+
+    if (options.blockRewards) {
+      console.log('Reusing already deployed block rewards contract.');
+      predeployed.blockRewards = options.blockRewards;
+    } else {
+      params.blockRewards = {
+        owner: this.sender,
+        baseReward: '2000000000000000000',
+        superUser: this.sender
+      };
+    }
+
+    const contracts = await deployer.deploy(contractJsons, predeployed, [], params);
+
+    console.log(`Contracts deployed: `);
+    Object.entries(contracts).forEach(([key, contract]) => console.log(`\t${key} -> ${contract.options.address}`));
+
+    const envFile = this.contractsToEnvFile(contracts);
     if (options.save) {
       this.saveEnvfile(options.save, envFile);
     } else {
@@ -44,9 +79,12 @@ export default class DeployTask extends TaskBase {
     const options = commandLineArgs(
       [
         {name: 'head', type: String},
+        {name: 'validatorSet', type: String},
+        {name: 'blockRewards', type: String},
         {name: 'save', type: String}
       ],
-      {argv: args, partial: true});
+      {argv: args, partial: true}
+    );
 
     // eslint-disable-next-line no-underscore-dangle
     const unknownOptions = options._unknown;
@@ -57,6 +95,16 @@ export default class DeployTask extends TaskBase {
 
     if (options.head === null) {
       console.error(`You should provide a value for the head parameter.`);
+      return null;
+    }
+
+    if (options.validatorSet === null) {
+      console.error(`You should provide a value for the validatorSet parameter.`);
+      return null;
+    }
+
+    if (options.blockRewards === null) {
+      console.error(`You should provide a value for the blockRewards parameter.`);
       return null;
     }
 
@@ -82,7 +130,7 @@ export default class DeployTask extends TaskBase {
     console.log(envFile);
   }
 
-  addressesToEnvFile(addresses) {
+  contractsToEnvFile(addresses) {
     return `export HEAD_CONTRACT_ADDRESS="${addresses.head.options.address}"`;
   }
 

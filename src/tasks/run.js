@@ -24,7 +24,7 @@ const runTask = async () => {
   const list = new TaskList();
   const args = process.argv.slice(2);
   list.add('ganache', new GanacheTask());
-  list.add('deploy', new DeployTask(web3));
+  list.add('deploy', new DeployTask(web3, nodeAddress));
   list.add('onboard', new OnboardingTask(web3, contractManager));
   list.add('whitelist', new WhitelistTask(web3, contractManager));
   list.add('upload', new UploadTask(contractManager));

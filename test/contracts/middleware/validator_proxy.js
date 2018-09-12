@@ -9,11 +9,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
+import {createWeb3} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
-import ValidatorProxy from '../../../build/contracts/ValidatorProxy.json';
-import BlockRewardsJson from '../../../build/contracts/BlockRewards.json';
-import ValidatorSetJson from '../../../build/contracts/ValidatorSet.json';
+import deploy from '../../helpers/deploy';
 
 const {expect} = chai;
 chai.use(chaiAsPromised);
@@ -24,17 +22,32 @@ describe('ValidatorProxy', () => {
     gas: 1000000
   };
 
-  const deployValidatorSet = async (web3, sender, owner, initialValidators, superUser) => deployContract(web3, ValidatorSetJson, [owner, initialValidators, superUser], {from: sender});
-  const deployBlockRewards = async (web3, sender, owner, baseReward, superUser) => deployContract(web3, BlockRewardsJson, [owner, baseReward, superUser], {from: sender});
-  const deployValidatorProxy = async (web3, sender, validatorSet, blockRewards) => deployContract(web3, ValidatorProxy, [validatorSet, blockRewards], {from: sender});
-  const deploy = async (web3, sender, initialValidators, initialBeneficiaries) => {
+  const deployContracts = async (web3, sender, initialValidators, initialBeneficiaries) => {
     const superUser = '0x0000000000000000000000000000000000000000';
-    const blockRewards = await deployBlockRewards(web3, sender, sender, '2000000000000000000', superUser);
+    ({validatorProxy, validatorSet, blockRewards} = await deploy({
+      web3,
+      contracts: {
+        validatorSet: true,
+        blockRewards: true,
+        validatorProxy: true
+      },
+      params: {
+        validatorSet: {
+          owner: sender,
+          initialValidators,
+          superUser
+        },
+        blockRewards: {
+          owner: sender,
+          baseReward: '2000000000000000000',
+          superUser
+        }
+      }
+    }));
+
     for (const [key, value] of Object.entries(initialBeneficiaries)) {
       await blockRewards.methods.addBeneficiary(key, value).send({...standardOptions, from: sender});
     }
-    const validatorSet = await deployValidatorSet(web3, sender, sender, initialValidators, superUser);
-    const validatorProxy = await deployValidatorProxy(web3, sender, validatorSet.options.address, blockRewards.options.address);
     await transferOwnership(blockRewards, sender, validatorProxy.options.address);
     await transferOwnership(validatorSet, sender, validatorProxy.options.address);
     return {
@@ -88,7 +101,7 @@ describe('ValidatorProxy', () => {
 
   describe('constructor', () => {
     before(async () => {
-      ({validatorProxy, blockRewards, validatorSet} = await deploy(web3, owner, initialValidators, initialBeneficiaries));
+      ({validatorProxy, blockRewards, validatorSet} = await deployContracts(web3, owner, initialValidators, initialBeneficiaries));
     });
 
     it('sets the owner', async () => {
@@ -109,7 +122,7 @@ describe('ValidatorProxy', () => {
 
   describe('transferring ownership', () => {
     beforeEach(async () => {
-      ({validatorProxy, blockRewards, validatorSet} = await deploy(web3, owner, initialValidators, initialBeneficiaries));
+      ({validatorProxy, blockRewards, validatorSet} = await deployContracts(web3, owner, initialValidators, initialBeneficiaries));
     });
 
     describe('for self', () => {
@@ -159,7 +172,7 @@ describe('ValidatorProxy', () => {
 
   describe('addValidator', () => {
     beforeEach(async () => {
-      ({validatorProxy, blockRewards, validatorSet} = await deploy(web3, owner, initialValidators, initialBeneficiaries));
+      ({validatorProxy, blockRewards, validatorSet} = await deployContracts(web3, owner, initialValidators, initialBeneficiaries));
     });
 
     it('adds the address to the validator set (pending list)', async () => {
@@ -197,7 +210,7 @@ describe('ValidatorProxy', () => {
       await expect(addValidator(validatorProxy, owner, beneficiary, '90')).to.eventually.be.rejected;
     });
 
-    it(`can't be invoked by non-owner`, async () => {
+    it(`is a contextInternalCall`, async () => {
       await expect(addValidator(validatorProxy, otherUser, newValidator, '1')).to.eventually.be.rejected;
     });
   });
@@ -229,7 +242,7 @@ describe('ValidatorProxy', () => {
       await expect(removeValidator(validatorProxy, owner, notValidator)).to.eventually.be.fulfilled;
     });
 
-    it(`can't be invoked by non-owner`, async () => {
+    it(`is a contextInternalCall`, async () => {
       await expect(removeValidator(validatorProxy, otherUser, newValidator)).to.eventually.be.rejected;
     });
   });

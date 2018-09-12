@@ -8,125 +8,134 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import SafeMathExtensionsJson from '../build/contracts/SafeMathExtensions.json';
-import AtlasStakeStoreJson from '../build/contracts/AtlasStakeStore.json';
-import BundleStoreJson from '../build/contracts/BundleStore.json';
-import HeadJson from '../build/contracts/Head.json';
-import RolesJson from '../build/contracts/Roles.json';
-import ContextJson from '../build/contracts/Context.json';
-import KycWhitelistJson from '../build/contracts/KycWhitelist.json';
-import FeesJson from '../build/contracts/Fees.json';
-import ChallengesJson from '../build/contracts/Challenges.json';
-import ShelteringJson from '../build/contracts/Sheltering.json';
-import PayoutsStoreJson from '../build/contracts/PayoutsStore.json';
-import RolesStoreJson from '../build/contracts/RolesStore.json';
-import PayoutsJson from '../build/contracts/Payouts.json';
-import ShelteringTransfersJson from '../build/contracts/ShelteringTransfers.json';
-import TimeJson from '../build/contracts/Time.json';
-import ConfigJson from '../build/contracts/Config.json';
-import UploadsJson from '../build/contracts/Uploads.json';
-import ApolloDepositStoreJson from '../build/contracts/ApolloDepositStore.json';
 
-import {DEFAULT_GAS, deployContract, loadContract, getDefaultAddress, link} from './utils/web3_tools';
-
-const DEFAULT_CONTRACT_JSONS = {
-  time: TimeJson,
-  atlasStakeStore: AtlasStakeStoreJson,
-  roles: RolesJson,
-  bundleStore: BundleStoreJson,
-  kycWhitelist: KycWhitelistJson,
-  sheltering: ShelteringJson,
-  fees: FeesJson,
-  challenges: ChallengesJson,
-  payoutsStore: PayoutsStoreJson,
-  payouts: PayoutsJson,
-  shelteringTransfers: ShelteringTransfersJson,
-  config: ConfigJson,
-  uploads: UploadsJson,
-  rolesStore: RolesStoreJson,
-  apolloDepositStore: ApolloDepositStoreJson
-};
+import {DEFAULT_GAS, deployContract, loadContract, link} from './utils/web3_tools';
 
 const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor');
 
 export default class Deployer {
-  constructor(web3, from = getDefaultAddress(web3), gas = DEFAULT_GAS) {
+  constructor(web3, sender, gas = DEFAULT_GAS) {
     this.web3 = web3;
-    this.from = from;
+    this.sender = sender;
     this.gas = gas;
-    this.contextConstructorParams = getContractConstructor(ContextJson)
-      .inputs
-      .map((input) => input.name.slice(1));
-
-    if (!this.contextConstructorParams.every((key) => DEFAULT_CONTRACT_JSONS[key] !== undefined)) {
-      throw 'DEFAULT_CONTRACT_JSONS is missing a key for a context parameter';
-    }
-  }
-
-  getDefaultArgs() {
-    const pairs = Object.entries(DEFAULT_CONTRACT_JSONS)
-      .map(([contractName]) => ({[contractName]: true}));
-    return Object.assign(...pairs);
-  }
-
-  async setupContext(addresses) {
-    const context = await deployContract(this.web3, ContextJson, addresses, {from: this.from});
-    await this.head.methods.setContext(context.options.address).send({
-      gas: this.gas,
-      from: this.from
-    });
-    return context;
-  }
-
-  async deployOne(customContractJson, defaultJson) {
-    if (!customContractJson) {
-      return;
-    }
-    const contractJson = customContractJson === true ? defaultJson : customContractJson;
-    for (const lib of Object.entries(this.libs)) {
-      const [libName, libContract] = lib;
-      link(contractJson, libName, libContract);
-    }
-
-    // Detect Base based contracts, and provide the _head address as a parameter
-    const constructorArgs = [];
-    const constructor = getContractConstructor(contractJson);
-    if (constructor !== undefined && constructor.inputs.find((input) => input.name === '_head' && input.type === 'address') !== undefined) {
-      constructorArgs.push(this.head.options.address);
-    }
-
-    return deployContract(this.web3, contractJson, constructorArgs, {from: this.from});
   }
 
   async deployLibs() {
-    this.libs = {SafeMathExtensions: await deployContract(this.web3, SafeMathExtensionsJson, [], {from: this.from})};
+    return {
+      SafeMathExtensions: await deployContract(this.web3, SafeMathExtensionsJson, [], {from: this.sender})
+    };
   }
 
-  async deployCustom(contractJsonsOrBooleans) {
-    const defaults = DEFAULT_CONTRACT_JSONS;
-    const result = {};
-    for (const [contractName, jsonOrBoolean] of Object.entries(contractJsonsOrBooleans)) {
-      result[contractName] = await this.deployOne(jsonOrBoolean, defaults[contractName]);
+  async deployOrLoadContracts(jsons, alreadyDeployed, skipDeployment, libs, params) {
+    const contracts = {};
+
+    // first load already deployed contracts
+    for (const [contractName, address] of Object.entries(alreadyDeployed)) {
+      contracts[contractName] = await this.loadContract(jsons[contractName], address);
     }
-    return result;
-  }
 
-  async loadHead(headAddress) {
-    this.head = await loadContract(this.web3, HeadJson.abi, headAddress);
-  }
+    const generateConstructorParameterList = (jsons, params) => Object.entries(jsons)
+      .map(([contractName, json]) => {
+        const constructorMethod = getContractConstructor(json);
+        const constructorParams = constructorMethod !== undefined ? constructorMethod.inputs.map((input) => ({paramName: input.name.slice(1), paramType: input.type})) : [];
+        const resolvedParams = constructorParams.reduce(
+          (acc, {paramName}) => {
+            if (params[contractName] !== undefined && params[contractName][paramName] !== undefined) {
+              acc[paramName] = params[contractName][paramName];
+            }
+            return acc;
+          },
+          {}
+        );
+        return {
+          contractName,
+          constructorParams,
+          resolvedParams
+        };
+      });
 
-  async deployHead() {
-    this.head = await deployContract(this.web3, HeadJson, [this.from], {from: this.from});
-  }
+    // prepare constructor parameter list. Filter out skipped and already deployed contracts.
+    let waiting = generateConstructorParameterList(jsons, params)
+      .filter(({contractName}) => alreadyDeployed[contractName] === undefined)
+      .filter(({contractName}) => skipDeployment.indexOf(contractName) === -1);
 
-  async deploy(contractJsonsOrBooleans = this.getDefaultArgs()) {
-    const contractToAddress = (contract) => (contract ? contract.options.address : '0x0');
-    const prepareArgs = (contractMap) => this.contextConstructorParams.map((key) => contractToAddress(contractMap[key]));
-    await this.deployLibs();
-    if (!this.head) {
-      await this.deployHead();
+    const resolveConstructorParameters = (list, params) => list.map((entry) => {
+      entry.constructorParams.forEach(({paramName, paramType}) => {
+        if (entry.resolvedParams[paramName] !== undefined) {
+          return;
+        }
+        if (paramType === 'address' && params[paramName] !== undefined) {
+          entry.resolvedParams[paramName] = params[paramName];
+        }
+      });
+      return entry;
+    });
+
+    // resolve deployed contracts
+    waiting = resolveConstructorParameters(
+      waiting,
+      alreadyDeployed
+    );
+
+    // resolve skipped contracts
+    waiting = resolveConstructorParameters(
+      waiting,
+      skipDeployment.reduce(
+        (acc, key) => {
+          acc[key] = '0x0';
+          return acc;
+        },
+        {}
+      )
+    );
+
+    // iteratively deploy the waiting contracts
+    const unresolvedParametersCount = (entry) => entry.constructorParams.length - Object.keys(entry.resolvedParams).length;
+    while (waiting.length > 0) {
+      waiting.sort((left, right) => unresolvedParametersCount(left) - unresolvedParametersCount(right));
+      const entry = waiting.shift();
+      if (unresolvedParametersCount(entry) > 0) {
+        const unresolvedParameters = entry.constructorParams.map(({paramName}) => paramName).filter((paramName) => entry.resolvedParams[paramName] === undefined);
+        throw `Failed to satisfy dependencies (${unresolvedParameters}) to deploy: ${entry.contractName}`;
+      }
+      const contract = await this.deployContract(
+        jsons[entry.contractName],
+        entry.constructorParams.map(({paramName}) => entry.resolvedParams[paramName]),
+        libs
+      );
+      contracts[entry.contractName] = contract;
+      waiting = resolveConstructorParameters(waiting, {[entry.contractName]: contract.options.address});
     }
-    const contractMap = await this.deployCustom(contractJsonsOrBooleans);
-    const context = await this.setupContext(prepareArgs(contractMap));
-    return {head: this.head, context, ...contractMap};
+
+    return contracts;
+  }
+
+  async loadContract(json, address) {
+    return loadContract(this.web3, json.abi, address);
+  }
+
+  async deployContract(json, params, libs) {
+    // link with libraries
+    for (const [libName, libContract] of Object.entries(libs)) {
+      link(json, libName, libContract);
+    }
+
+    // deploy
+    return deployContract(this.web3, json, params, {from: this.sender});
+  }
+
+  async updateContextPointer(contracts) {
+    await contracts.head.methods.setContext(contracts.context.options.address).send({
+      gas: this.gas,
+      from: this.sender
+    });
+  }
+
+  async deploy(jsons, alreadyDeployed, skipDeployment = [], params = {}) {
+    const libs = await this.deployLibs();
+    const contracts = await this.deployOrLoadContracts(jsons, alreadyDeployed, skipDeployment, libs, params);
+    await this.updateContextPointer(contracts);
+
+    return contracts;
   }
 }

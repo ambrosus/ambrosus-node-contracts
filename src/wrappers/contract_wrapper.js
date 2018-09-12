@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {loadContract} from '../utils/web3_tools';
-import {contractsJsons} from './contracts_consts';
+import contractJsons from '../contract_jsons';
 
 /** @abstract */
 export default class ContractWrapper {
@@ -20,7 +20,7 @@ export default class ContractWrapper {
 
   async contract() {
     const contractAddress = await this.headWrapper.contractAddressByName(this.getContractName);
-    return loadContract(this.web3, contractsJsons[this.getContractName].abi, contractAddress);
+    return loadContract(this.web3, contractJsons[this.getContractName].abi, contractAddress);
   }
 
   get getContractName() {

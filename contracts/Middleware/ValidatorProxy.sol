@@ -9,24 +9,21 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.22;
 
-import "./BlockRewards.sol";
-import "./ValidatorSet.sol";
+import "../Consensus/BlockRewards.sol";
+import "../Consensus/ValidatorSet.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../Boilerplate/Head.sol";
 
 
 /**
 @title Proxy for ValidtorSet and BlockRewards contracts. Providing a unified api and single point of interaction.
 */
-contract ValidatorProxy is Ownable {
+contract ValidatorProxy is Ownable, Base {
 
     ValidatorSet public validatorSet;
     BlockRewards public blockRewards;
 
-    /**
-    @notice Constructor
-    
-    */
-    constructor(ValidatorSet _validatorSet, BlockRewards _blockRewards) public Ownable(){
+    constructor(Head _head, ValidatorSet _validatorSet, BlockRewards _blockRewards) public Base(_head) Ownable(){
         validatorSet = _validatorSet;
         blockRewards = _blockRewards;
     }
@@ -39,7 +36,7 @@ contract ValidatorProxy is Ownable {
         blockRewards.transferOwnership(newOwner);
     }
 
-    function addValidator(address validator, uint256 deposit) public onlyOwner {
+    function addValidator(address validator, uint256 deposit) public onlyContextInternalCalls {
         address[] memory registeredValidators = validatorSet.getPendingValidators();
         if (!checkInArray(validator, registeredValidators)) {
             validatorSet.addValidator(validator);
@@ -52,7 +49,7 @@ contract ValidatorProxy is Ownable {
         }
     }
 
-    function removeValidator(address validator) public onlyOwner {
+    function removeValidator(address validator) public onlyContextInternalCalls {
         address[] memory registeredValidators = validatorSet.getPendingValidators();
         if (checkInArray(validator, registeredValidators)) {
             validatorSet.removeValidator(validator);
