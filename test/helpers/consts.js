@@ -8,7 +8,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import utils from './utils';
+import {utils} from '../../src/utils/web3_tools';
 import BN from 'bn.js';
 
 export const COINBASE = '0x0000000000000000000000000000000000000000';
