@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/utils/web3_tools';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import BN from 'bn.js';
 import {
@@ -52,6 +52,7 @@ describe('Challenges Contract', () => {
   let payoutsStore;
   let challengeId;
   let systemFee;
+  let snapshotId;
   const bundleId = utils.keccak256('someBundleId');
   const now = 1500000000;
   const shelteringReward = 130000;
@@ -93,7 +94,7 @@ describe('Challenges Contract', () => {
   const getLastChallengeResolvedSequenceNumber = async (nodeId) => atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(nodeId).call();
   const getStake = async (nodeId) => atlasStakeStore.methods.getStake(nodeId).call();
 
-  beforeEach(async () => {
+  before(async () => {
     web3 = await createWeb3();
     [from, other, resolver, totalStranger] = await web3.eth.getAccounts();
     ({challenges, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, payouts, payoutsStore, roles} = await deploy({
@@ -115,9 +116,17 @@ describe('Challenges Contract', () => {
       }}));
     await setTimestamp(now);
     await storeBundle(bundleId, from, storagePeriods);
-    challengeId = await getChallengeId(from, bundleId);
     fee = new BN(await getFeeForChallenge(storagePeriods));
     systemFee = fee.mul(new BN(SYSTEM_CHALLENGES_COUNT));
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+    challengeId = await getChallengeId(from, bundleId);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   it('nextChallengeSequenceNumber = 1 after deployment', async () => {
@@ -536,7 +545,7 @@ describe('Challenges Contract', () => {
     it(`Returns fee to creator (part of the fee if partially resolved)`, async () => {
       await addToKycWhitelist(resolver, ATLAS, ATLAS1_STAKE);
       await onboardAsAtlas(url, resolver, ATLAS1_STAKE);
-      await resolveChallenge(challengeId, resolver);
+      await resolveChallenge(systemChallengeId, resolver);
 
       await setTimestamp(now + challengeTimeout + 1);
       const balanceBefore = new BN(await web3.eth.getBalance(from));

@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
+import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import ConstructorOwnableJson from '../../../build/contracts/ConstructorOwnable.json';
 
@@ -31,19 +31,24 @@ describe('ConstructorOwnable base contract', () => {
   let deployer;
   let otherUser;
   let newOwner;
+  let contract;
+  let snapshotId;
 
   before(async () => {
     web3 = await createWeb3();
     [deployer, owner, otherUser, newOwner] = await web3.eth.getAccounts();
+    contract = await deploy(web3, deployer, owner);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('constructor', () => {
-    let contract;
-
-    before(async () => {
-      contract = await deploy(web3, deployer, owner);
-    });
-
     it('sets the owner', async () => {
       const storedOwner = await getOwner(contract);
       expect(storedOwner).to.equal(owner);

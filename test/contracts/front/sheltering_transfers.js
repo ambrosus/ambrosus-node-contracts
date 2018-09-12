@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import deploy from '../../helpers/deploy';
-import {createWeb3} from '../../../src/utils/web3_tools';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import utils from '../../helpers/utils';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import AtlasStakeStoreMockJson from '../../../build/contracts/AtlasStakeStoreMock.json';
@@ -35,6 +35,7 @@ describe('ShelteringTransfers Contract', () => {
   const bundleId = utils.keccak256('bundleId');
   const expirationDate = 1600000000;
   const totalReward = 100;
+  let snapshotId;
 
   const store = async (bundleId, from, expirationDate) => bundleStore.methods.store(bundleId, from, expirationDate).send({from});
   const isSheltering = async (from, bundleId) => sheltering.methods.isSheltering(from, bundleId).call();
@@ -49,8 +50,7 @@ describe('ShelteringTransfers Contract', () => {
   const getTransferredBundle = async (transferId) => shelteringTransfers.methods.getTransferredBundle(transferId).call();
   const getTransferId = async (from, bundleId) => shelteringTransfers.methods.getTransferId(from, bundleId).call();
 
-
-  beforeEach(async () => {
+  before(async () => {
     web3 = await createWeb3();
     [from, other, notSheltering, notStaking] = await web3.eth.getAccounts();
     ({shelteringTransfers, bundleStore, atlasStakeStore, sheltering} = await deploy({
@@ -69,6 +69,14 @@ describe('ShelteringTransfers Contract', () => {
     transferId = await getTransferId(other, bundleId);
     await depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
     await addShelterer(bundleId, other, totalReward);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('Starting transfer', () => {

@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
+import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import KycWhitelistJson from '../../../build/contracts/KycWhitelist.json';
 import {APOLLO, ATLAS, HERMES, APOLLO_DEPOSIT} from '../../../src/consts';
 
@@ -25,6 +25,7 @@ describe('KYC Whitelist Contract', () => {
   let other;
   let totalStranger;
   let kycWhitelist;
+  let snapshotId;
 
   const isWhitelisted = async (address) => kycWhitelist.methods.isWhitelisted(address).call();
   const hasRoleAssigned = async (address, role) => kycWhitelist.methods.hasRoleAssigned(address, role).call();
@@ -32,10 +33,18 @@ describe('KYC Whitelist Contract', () => {
   const addToWhitelist = async (address, role, deposit, sender = from) => kycWhitelist.methods.add(address, role, deposit).send({from: sender});
   const removeFromWhitelist = async (address, sender = from) => kycWhitelist.methods.remove(address).send({from: sender});
 
-  beforeEach(async () => {
+  before(async () => {
     web3 = await createWeb3();
     [from, other, totalStranger] = await web3.eth.getAccounts();
     kycWhitelist = await deployContract(web3, KycWhitelistJson);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   it(`adds and removes from whitelist, checks if address is whitelisted`, async () => {

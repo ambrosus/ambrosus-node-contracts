@@ -16,6 +16,7 @@ import {TWO} from '../../helpers/consts';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 import BN from 'bn.js';
 import utils from '../../helpers/utils';
+import {makeSnapshot, restoreSnapshot, createWeb3} from '../../../src/utils/web3_tools';
 
 const {expect} = chai;
 
@@ -30,6 +31,7 @@ describe('Fees Contract', () => {
   let basicFee;
   let from;
   let other;
+  let snapshotId;
 
   const getPenalty = async (nominalStake, penaltiesCount, lastPenaltyTime) => {
     const result = await fees.methods.getPenalty(nominalStake, penaltiesCount, lastPenaltyTime).call();
@@ -42,10 +44,26 @@ describe('Fees Contract', () => {
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
   const getFeeForUpload = async (storagePeriods) => fees.methods.getFeeForUpload(storagePeriods).call();
 
-  beforeEach(async () => {
-    ({fees, web3, time} = await deploy({contracts: {fees: true, config: true, time: TimeMockJson}}));
+  before(async () => {
+    web3 = await createWeb3();
     [from, other] = await web3.eth.getAccounts();
+    ({fees, time} = await deploy({
+      web3,
+      contracts: {
+        fees: true,
+        config: true,
+        time: TimeMockJson
+      }
+    }));
     basicFee = await fees.methods.baseUploadFee().call();
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   it('Basic fee challenge to be positive', () => {

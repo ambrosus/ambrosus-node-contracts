@@ -15,6 +15,7 @@ import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
 import {STORAGE_PERIOD_UNIT} from '../../../src/consts';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 
 chai.use(chaiEmitEvents);
 chai.use(sinonChai);
@@ -29,14 +30,31 @@ describe('BundleStore Contract', () => {
   let bundleStore;
   let time;
   let bundleId;
+  let snapshotId;
   const storagePeriods = 3;
   const now = 1500000000;
 
-  beforeEach(async () => {
-    ({web3, bundleStore, time} = await deploy({contracts: {bundleStore: true, config: true, time: TimeMockJson}}));
+  before(async () => {
+    web3 = await createWeb3();
     [from, other] = await web3.eth.getAccounts();
+    ({bundleStore, time} = await deploy({
+      web3,
+      contracts: {
+        bundleStore: true,
+        config: true,
+        time: TimeMockJson
+      }
+    }));
     bundleId = utils.keccak256('bundleId');
     await time.methods.setCurrentTimestamp(now).send({from});
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('Storing a bundle', () => {

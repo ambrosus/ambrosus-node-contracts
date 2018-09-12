@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
+import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import BlockRewardsJson from '../../../build/contracts/BlockRewards.json';
 
@@ -51,6 +51,8 @@ describe('Block rewards contract', () => {
   let newOwner;
   let exampleBeneficiaries;
   const exampleBaseReward = '2000000000000000000';
+  let contract;
+  let snapshotId;
 
   before(async () => {
     web3 = await createWeb3();
@@ -58,15 +60,18 @@ describe('Block rewards contract', () => {
     exampleBeneficiaries = Array(3)
       .fill(null)
       .map(() => web3.eth.accounts.create().address);
+    contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('constructor', () => {
-    let contract;
-
-    before(async () => {
-      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
-    });
-
     it('sets the owner', async () => {
       const storedOwner = await getOwner(contract);
       expect(storedOwner).to.equal(owner);
@@ -86,12 +91,6 @@ describe('Block rewards contract', () => {
   });
 
   describe('transferring ownership', () => {
-    let contract;
-
-    beforeEach(async () => {
-      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
-    });
-
     it('sets the new owner', async () => {
       await expect(transferOwnership(contract, owner, newOwner)).to.be.fulfilled;
       expect(await getOwner(contract)).to.equal(newOwner);
@@ -111,12 +110,6 @@ describe('Block rewards contract', () => {
   });
 
   describe('addBeneficiary', () => {
-    let contract;
-
-    beforeEach(async () => {
-      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
-    });
-
     it('creates an entry with the address and share of the beneficiary', async () => {
       await expect(addBeneficiary(contract, owner, exampleBeneficiaries[0], '1002')).to.be.eventually.fulfilled;
 
@@ -154,10 +147,7 @@ describe('Block rewards contract', () => {
   });
 
   describe('removeBeneficiary', () => {
-    let contract;
-
     beforeEach(async () => {
-      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
       await addBeneficiary(contract, owner, exampleBeneficiaries[0], '1021');
       await addBeneficiary(contract, owner, exampleBeneficiaries[1], '5007');
     });
@@ -192,11 +182,9 @@ describe('Block rewards contract', () => {
   });
 
   describe('reward', () => {
-    let contract;
     let kinds;
 
     beforeEach(async () => {
-      contract = await deploy(web3, deployer, owner, exampleBaseReward, superUser);
       await addBeneficiary(contract, owner, exampleBeneficiaries[0], '1021');
       await addBeneficiary(contract, owner, exampleBeneficiaries[1], '5007');
       await addBeneficiary(contract, owner, exampleBeneficiaries[2], '4821');

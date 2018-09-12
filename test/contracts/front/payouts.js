@@ -13,6 +13,7 @@ import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import {PAYOUT_PERIOD_IN_SECONDS} from '../../../src/consts';
 
 chai.use(sinonChai);
@@ -28,6 +29,7 @@ describe('Payouts Contract', () => {
   let payoutsStore;
   let payouts;
   let time;
+  let snapshotId;
 
   const grantShelteringReward = (beneficiary, numberOfPeriods, value, from = validUser) => payouts.methods.grantShelteringReward(beneficiary, numberOfPeriods).send({from, value});
   const revokeShelteringReward = (beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress, from = validUser) => payouts.methods.revokeShelteringReward(beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress).send({from});
@@ -40,8 +42,11 @@ describe('Payouts Contract', () => {
 
   const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount);
 
-  beforeEach(async () => {
-    ({web3, payoutsStore, payouts, time} = await deploy({
+  before(async () => {
+    web3 = await createWeb3();
+    [validUser, targetUser, otherUser] = await web3.eth.getAccounts();
+    ({payoutsStore, payouts, time} = await deploy({
+      web3,
       contracts: {
         payoutsStore: true,
         payouts: true,
@@ -49,8 +54,15 @@ describe('Payouts Contract', () => {
         config: true
       }
     }));
-    [validUser, targetUser, otherUser] = await web3.eth.getAccounts();
     await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 10.4);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('Granting a sheltering reward', () => {

@@ -14,6 +14,7 @@ import deploy from '../../helpers/deploy';
 import BN from 'bn.js';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -26,14 +27,32 @@ describe('AtlasStakeStore Contract', () => {
   let other;
   let atlasStakeStore;
   let time;
+  let snapshotId;
   const now = 1500000000;
 
   const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from});
 
-  beforeEach(async () => {
-    ({web3, atlasStakeStore, time} = await deploy({web3, contracts: {atlasStakeStore: true, fees: true, config: true, time: TimeMockJson}}));
+  before(async () => {
+    web3 = await createWeb3();
     [from, other] = await web3.eth.getAccounts();
+    ({atlasStakeStore, time} = await deploy({
+      web3,
+      contracts: {
+        atlasStakeStore: true,
+        fees: true,
+        config: true,
+        time: TimeMockJson
+      }
+    }));
     await setTimestamp(now);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('Deployment', () => {
@@ -246,7 +265,7 @@ describe('AtlasStakeStore Contract', () => {
 
       await setTimestamp(now + 2);
       await atlasStakeStore.methods.slash(from, other).send({from});
-      blockTime =  now + 2;
+      blockTime = now + 2;
       expect(await atlasStakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
         lastPenaltyTime: blockTime.toString(),
         penaltiesCount: '3'

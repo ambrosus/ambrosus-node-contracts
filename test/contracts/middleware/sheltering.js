@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/utils/web3_tools';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import utils from '../../helpers/utils';
 import deploy from '../../helpers/deploy';
 import {ATLAS, HERMES, STORAGE_PERIOD_UNIT} from '../../../src/consts';
@@ -35,6 +35,7 @@ describe('Sheltering Contract', () => {
   let rolesStore;
   let time;
   let atlasStakeStore;
+  let snapshotId;
   const now = 1500000000;
 
   const isSheltering = async (bundleId, shelterer) => sheltering.methods.isSheltering(bundleId, shelterer).call();
@@ -50,20 +51,31 @@ describe('Sheltering Contract', () => {
   const injectSheltererWithBundleStore = async (bundleId, shelterer, storagePeriods, sender = hermes) => bundleStore.methods.addShelterer(bundleId, shelterer, storagePeriods).send({from: sender});
   const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from: hermes});
 
-  beforeEach(async () => {
+  before(async () => {
     web3 = await createWeb3();
     [hermes, atlas, apollo, other] = await web3.eth.getAccounts();
-    ({bundleStore, sheltering, atlasStakeStore, rolesStore, time} = await deploy({web3, contracts: {
-      rolesStore: true,
-      bundleStore: true,
-      sheltering: true,
-      atlasStakeStore: true,
-      config: true,
-      time: TimeMockJson
-    }}));
+    ({bundleStore, sheltering, atlasStakeStore, rolesStore, time} = await deploy({
+      web3,
+      contracts: {
+        rolesStore: true,
+        bundleStore: true,
+        sheltering: true,
+        atlasStakeStore: true,
+        config: true,
+        time: TimeMockJson
+      }
+    }));
     await rolesStore.methods.setRole(hermes, HERMES).send({from: hermes});
     await rolesStore.methods.setRole(atlas, ATLAS).send({from: hermes});
     await setTimestamp(now);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('isSheltering', () => {

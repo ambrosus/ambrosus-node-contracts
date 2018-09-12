@@ -11,6 +11,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -23,6 +24,7 @@ describe('Time Contract', () => {
   let web3;
   let validUser;
   let time;
+  let snapshotId;
 
   const currentTimestamp = (senderAddress = validUser) => time.methods.currentTimestamp().call({from: senderAddress});
   const currentPayoutPeriod = (senderAddress = validUser) => time.methods.currentPayoutPeriod().call({from: senderAddress});
@@ -30,13 +32,23 @@ describe('Time Contract', () => {
   const payoutPeriodStart = (period, senderAddress = validUser) => time.methods.payoutPeriodStart(period).call({from: senderAddress});
   const payoutPeriodOffset = (timestamp, senderAddress = validUser) => time.methods.payoutPeriodOffset(timestamp).call({from: senderAddress});
 
-  beforeEach(async () => {
-    ({web3, time} = await deploy({
+  before(async () => {
+    web3 = await createWeb3();
+    [validUser] = await web3.eth.getAccounts();
+    ({time} = await deploy({
+      web3,
       contracts: {
         time: true
       }
     }));
-    [validUser] = await web3.eth.getAccounts();
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   it('Current timestamp proxies current block time', async () => {

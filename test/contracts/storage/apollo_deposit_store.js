@@ -11,6 +11,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 
 chai.use(sinonChai);
@@ -23,15 +24,30 @@ describe('Apollo Deposit Contract', () => {
   let from;
   let other;
   let apolloDepositStore;
+  let snapshotId;
   const deposit = '100';
 
   const depositFunds = (apollo = from, sender = from, value = deposit) => apolloDepositStore.methods.storeDeposit(apollo).send({from: sender, value, gasPrice: '0'});
   const releaseDeposit = (apollo = from, refundAddress = other, sender = from) => apolloDepositStore.methods.releaseDeposit(apollo, refundAddress).send({from: sender, gasPrice: '0'});
   const isDepositing = (apollo = from) => apolloDepositStore.methods.isDepositing(apollo).call();
 
-  beforeEach(async () => {
-    ({web3, apolloDepositStore} = await deploy({web3, contracts: {apolloDepositStore: true}}));
+  before(async () => {
+    web3 = await createWeb3();
     [from, other] = await web3.eth.getAccounts();
+    ({apolloDepositStore} = await deploy({
+      web3,
+      contracts: {
+        apolloDepositStore: true
+      }
+    }));
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   it('Deposits the funds', async () => {
