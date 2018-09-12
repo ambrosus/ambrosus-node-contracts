@@ -78,7 +78,6 @@ function augmentWithSnapshotMethods(web3) {
         call: 'evm_revert',
         params: 1,
         inputFormatter: [web3.utils.numberToHex]
-        // outputFormatter: web3.utils.hexToNumberString
       }
     ]
   });
