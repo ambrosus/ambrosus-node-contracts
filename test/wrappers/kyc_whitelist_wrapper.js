@@ -141,4 +141,91 @@ describe('KYC Whitelist Wrapper', () => {
       expect(hasRoleAssignedCallStub).to.be.calledOnce;
     });
   });
+
+  describe('selfHasRoleAssigned', () => {
+    let selfHasRoleAssignedStub;
+    let selfHasRoleAssignedCallStub;
+
+    before(async () => {
+      selfHasRoleAssignedStub = sinon.stub();
+      selfHasRoleAssignedCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          hasRoleAssigned: selfHasRoleAssignedStub.returns({
+            call: selfHasRoleAssignedCallStub.resolves(1)
+          })
+        }
+      };
+      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, exampleAddress);
+      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    after(async () => {
+      getContractStub.restore();
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await kycWhitelistWrapper.selfHasRoleAssigned(exampleRole);
+      expect(selfHasRoleAssignedStub).to.be.calledWith(exampleAddress, exampleRole);
+      expect(selfHasRoleAssignedCallStub).to.be.calledOnce;
+    });
+  });
+
+  describe('getRequiredDeposit', () => {
+    let getRequiredDepositStub;
+    let getRequiredDepositCallStub;
+
+    before(async () => {
+      getRequiredDepositStub = sinon.stub();
+      getRequiredDepositCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getRequiredDeposit: getRequiredDepositStub.returns({
+            call: getRequiredDepositCallStub.resolves(exampleRequiredDeposit)
+          })
+        }
+      };
+      kycWhitelistWrapper = new KycWhitelistWrapper();
+      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    after(async () => {
+      getContractStub.restore();
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await kycWhitelistWrapper.getRequiredDeposit(exampleAddress);
+      expect(getRequiredDepositStub).to.be.calledWith(exampleAddress);
+      expect(getRequiredDepositCallStub).to.be.calledOnce;
+    });
+  });
+
+  describe('selfGetRequiredDeposit', () => {
+    let selfGetRequiredDepositStub;
+    let selfGetRequiredDepositCallStub;
+
+    before(async () => {
+      selfGetRequiredDepositStub = sinon.stub();
+      selfGetRequiredDepositCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getRequiredDeposit: selfGetRequiredDepositStub.returns({
+            call: selfGetRequiredDepositCallStub.resolves(exampleRequiredDeposit)
+          })
+        }
+      };
+      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, exampleAddress);
+      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    after(async () => {
+      getContractStub.restore();
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await kycWhitelistWrapper.selfGetRequiredDeposit();
+      expect(selfGetRequiredDepositStub).to.be.calledWith(exampleAddress);
+      expect(selfGetRequiredDepositCallStub).to.be.calledOnce;
+    });
+  });
 });

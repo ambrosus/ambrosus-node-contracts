@@ -38,4 +38,14 @@ export default class KycWhitelistWrapper extends ContractWrapper {
     const contract = await this.contract();
     return contract.methods.hasRoleAssigned(this.defaultAddress, role).call();
   }
+
+  async getRequiredDeposit(address) {
+    const contract = await this.contract();
+    return contract.methods.getRequiredDeposit(address).call();
+  }
+
+  async selfGetRequiredDeposit() {
+    const contract = await this.contract();
+    return contract.methods.getRequiredDeposit(this.defaultAddress).call();
+  }
 }
