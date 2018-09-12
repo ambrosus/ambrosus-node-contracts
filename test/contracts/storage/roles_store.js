@@ -12,6 +12,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import {APOLLO, ATLAS, HERMES} from '../../../src/consts';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -26,15 +27,31 @@ describe('RolesStore Contract', () => {
   let apollo;
   let other;
   let rolesStore;
+  let snapshotId;
 
   const setRole = async (node, role, sender = from) => rolesStore.methods.setRole(node, role).send({from: sender});
   const setUrl = async (node, url, sender = from) => rolesStore.methods.setUrl(node, url).send({from: sender});
   const getRole = async (node) => rolesStore.methods.getRole(node).call();
   const getUrl = async (node) => rolesStore.methods.getUrl(node).call();
 
-  beforeEach(async () => {
-    ({web3, rolesStore} = await deploy({web3, contracts: {rolesStore: true, config: true}}));
+  before(async () => {
+    web3 = await createWeb3();
     [from, atlas, hermes, apollo, other] = await web3.eth.getAccounts();
+    ({rolesStore} = await deploy({
+      web3,
+      contracts: {
+        rolesStore: true,
+        config: true
+      }
+    }));
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('Roles', () => {

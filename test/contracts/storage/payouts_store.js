@@ -12,6 +12,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -24,6 +25,7 @@ describe('PayoutsStore Contract', () => {
   let targetUser;
   let otherUser;
   let payoutsStore;
+  let snapshotId;
 
   const grantForPeriods = (beneficiary, firstPeriod, lastPeriod, value, from = validUser) => payoutsStore.methods.grantForPeriods(beneficiary, firstPeriod, lastPeriod).send({from, value});
   const revokeForPeriods = (beneficiary, firstPeriod, lastPeriod, totalPayout, refundAddress, from = validUser) => payoutsStore.methods.revokeForPeriods(beneficiary, firstPeriod, lastPeriod, totalPayout, refundAddress).send({from});
@@ -32,9 +34,23 @@ describe('PayoutsStore Contract', () => {
 
   const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount);
 
-  beforeEach(async () => {
-    ({web3, payoutsStore} = await deploy({contracts: {payoutsStore: true}}));
+  before(async () => {
+    web3 = await createWeb3();
     [validUser, targetUser, otherUser] = await web3.eth.getAccounts();
+    ({payoutsStore} = await deploy({
+      web3,
+      contracts: {
+        payoutsStore: true
+      }
+    }));
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('Granting repeated payouts', () => {

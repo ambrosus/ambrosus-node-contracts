@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3} from '../../../src/utils/web3_tools';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
 
@@ -83,6 +83,8 @@ describe('ValidatorProxy', () => {
   let blockRewards;
   let validatorSet;
 
+  let snapshotId;
+
   before(async () => {
     web3 = await createWeb3();
     [owner, otherUser, newOwner] = await web3.eth.getAccounts();
@@ -96,13 +98,19 @@ describe('ValidatorProxy', () => {
     };
     newValidator = web3.eth.accounts.create().address;
     notValidator = web3.eth.accounts.create().address;
+
+    ({validatorProxy, blockRewards, validatorSet} = await deployContracts(web3, owner, initialValidators, initialBeneficiaries));
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('constructor', () => {
-    before(async () => {
-      ({validatorProxy, blockRewards, validatorSet} = await deployContracts(web3, owner, initialValidators, initialBeneficiaries));
-    });
-
     it('sets the owner', async () => {
       const storedOwner = await getOwner(validatorProxy);
       expect(storedOwner).to.equal(owner);
@@ -120,10 +128,6 @@ describe('ValidatorProxy', () => {
   });
 
   describe('transferring ownership', () => {
-    beforeEach(async () => {
-      ({validatorProxy, blockRewards, validatorSet} = await deployContracts(web3, owner, initialValidators, initialBeneficiaries));
-    });
-
     describe('for self', () => {
       it('sets the new owner', async () => {
         expect(await getOwner(validatorProxy)).to.equal(owner);
@@ -170,10 +174,6 @@ describe('ValidatorProxy', () => {
   });
 
   describe('addValidator', () => {
-    beforeEach(async () => {
-      ({validatorProxy, blockRewards, validatorSet} = await deployContracts(web3, owner, initialValidators, initialBeneficiaries));
-    });
-
     it('adds the address to the validator set (pending list)', async () => {
       const validatorsBefore = await getPendingValidators(validatorSet);
       await expect(addValidator(validatorProxy, owner, newValidator, '1')).to.eventually.be.fulfilled;

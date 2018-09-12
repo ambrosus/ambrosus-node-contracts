@@ -72,7 +72,7 @@ describe('Roles Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [owner, apollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
-    ({web3, roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards} = await deploy({
+    ({roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards} = await deploy({
       web3,
       sender : owner,
       contracts: {

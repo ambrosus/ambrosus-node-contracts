@@ -17,6 +17,7 @@ import deploy from '../../helpers/deploy';
 import utils from '../../helpers/utils';
 import {ATLAS, HERMES, SYSTEM_CHALLENGES_COUNT} from '../../../src/consts';
 import {BLOCK_REWARD, COINBASE} from '../../helpers/consts';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import BN from 'bn.js';
 
 chai.use(chaiEmitEvents);
@@ -40,12 +41,15 @@ describe('Upload Contract', () => {
   let atlas;
   let other;
   let hermes;
+  let snapshotId;
 
   const expectedMinersFee = () => fee.div(new BN(4));
   const expectedBurnAmount = () => fee.mul(new BN(5)).div(new BN(100));
 
-  beforeEach(async () => {
-    ({uploads, fees, config, web3, challenges, bundleStore, rolesStore} = await deploy({
+  before(async () => {
+    web3 = await createWeb3();
+    ({uploads, fees, config, challenges, bundleStore, rolesStore} = await deploy({
+      web3,
       contracts: {
         rolesStore: true,
         challenges: true,
@@ -61,6 +65,14 @@ describe('Upload Contract', () => {
     burnAddress = await config.methods.BURN_ADDRESS().call();
     await rolesStore.methods.setRole(hermes, HERMES).send({from: hermes});
     await rolesStore.methods.setRole(atlas, ATLAS).send({from: hermes});
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   it('emits event on upload', async () => {
