@@ -15,6 +15,7 @@ import "../Storage/AtlasStakeStore.sol";
 import "../Storage/KycWhitelist.sol";
 import "../Storage/RolesStore.sol";
 import "../Storage/ApolloDepositStore.sol";
+import "../Middleware/ValidatorProxy.sol";
 
 
 contract Roles is Base {
@@ -43,6 +44,9 @@ contract Roles is Base {
 
         RolesStore rolesStore = context().rolesStore();
         rolesStore.setRole(msg.sender, Config.NodeType.APOLLO);
+
+        ValidatorProxy validatorProxy = context().validatorProxy();
+        validatorProxy.addValidator(msg.sender, msg.value);
     }
 
     function onboardAsHermes(string nodeUrl) public {

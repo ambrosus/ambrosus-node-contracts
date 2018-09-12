@@ -44,12 +44,11 @@ describe('ValidatorProxy', () => {
         }
       }
     }));
-
+    await transferOwnershipForBlockRewards(validatorProxy, sender, sender);
     for (const [key, value] of Object.entries(initialBeneficiaries)) {
       await blockRewards.methods.addBeneficiary(key, value).send({...standardOptions, from: sender});
     }
     await transferOwnership(blockRewards, sender, validatorProxy.options.address);
-    await transferOwnership(validatorSet, sender, validatorProxy.options.address);
     return {
       validatorProxy,
       validatorSet,
