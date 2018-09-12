@@ -131,10 +131,35 @@ export default class Deployer {
     });
   }
 
+  async transferOwnerships(contracts) {
+    const {validatorSet, blockRewards, validatorProxy} = contracts;
+    if (validatorSet !== undefined && validatorProxy !== undefined) {
+      const validatorSetOwner = await validatorSet.methods.owner().call();
+      if (validatorSetOwner === validatorProxy.options.address) {
+        // nothing to do
+      } else if (validatorSetOwner === this.sender) {
+        await validatorSet.methods.transferOwnership(validatorProxy.options.address).send({from: this.sender});
+      } else {
+        throw `Failed to transfer ownership for validator set contract to validator proxy. The current owner ${validatorSetOwner} remains`;
+      }
+    }
+    if (blockRewards !== undefined && validatorProxy !== undefined) {
+      const blockRewardsOwner = await blockRewards.methods.owner().call();
+      if (blockRewardsOwner === validatorProxy.options.address) {
+        // nothing to do
+      } else if (blockRewardsOwner === this.sender) {
+        await contracts.blockRewards.methods.transferOwnership(validatorProxy.options.address).send({from: this.sender});
+      } else {
+        throw `Failed to transfer ownership for block rewards contract to validator proxy. The current owner ${blockRewardsOwner} remains`;
+      }
+    }
+  }
+
   async deploy(jsons, alreadyDeployed, skipDeployment = [], params = {}) {
     const libs = await this.deployLibs();
     const contracts = await this.deployOrLoadContracts(jsons, alreadyDeployed, skipDeployment, libs, params);
     await this.updateContextPointer(contracts);
+    await this.transferOwnerships(contracts);
 
     return contracts;
   }

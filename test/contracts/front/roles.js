@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
+import {createWeb3} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
 import {ONE} from '../../helpers/consts';
 import {
@@ -38,14 +39,16 @@ describe('Roles Contract', () => {
   let kycWhitelist;
   let atlasStakeStore;
   let apolloDepositStore;
-  let from;
+  let validatorSet;
+  let blockRewards;
+  let owner;
   let apollo;
   let atlas1;
   let atlas2;
   let atlas3;
   let hermes;
 
-  const addToWhitelist = async (address, role, deposit) => kycWhitelist.methods.add(address, role, deposit).send({from});
+  const addToWhitelist = async (sender, address, role, deposit) => kycWhitelist.methods.add(address, role, deposit).send({from: sender});
   const onboardAsAtlas = async (url, sender, value) => roles.methods.onboardAsAtlas(url).send({from: sender, value});
   const onboardAsHermes = async (url, sender) => roles.methods.onboardAsHermes(url).send({from: sender});
   const onboardAsApollo = async (sender, value) => roles.methods.onboardAsApollo().send({from: sender, value});
@@ -60,10 +63,19 @@ describe('Roles Contract', () => {
   const getUrl = async (address) => roles.methods.getUrl(address).call();
   const getStake = async (address) => atlasStakeStore.methods.getStake(address).call();
   const isDepositing = async (address) => apolloDepositStore.methods.isDepositing(address).call();
+  const getValidators = async () => validatorSet.methods.getPendingValidators().call();
+  const isBeneficiary = async (address) => blockRewards.methods.isBeneficiary(address).call();
+  const beneficiaryShare = async (address) => blockRewards.methods.beneficiaryShare(address).call();
+
+  before(async () => {
+    web3 = await createWeb3();
+    [owner, apollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
+  });
 
   beforeEach(async () => {
-    ({web3, roles, kycWhitelist, atlasStakeStore, apolloDepositStore} = await deploy({
+    ({web3, roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards} = await deploy({
       web3,
+      sender : owner,
       contracts: {
         roles: true,
         fees: true,
@@ -72,15 +84,29 @@ describe('Roles Contract', () => {
         kycWhitelist: true,
         atlasStakeStore: true,
         rolesStore: true,
-        apolloDepositStore: true
+        apolloDepositStore: true,
+        validatorProxy: true,
+        validatorSet: true,
+        blockRewards: true
+      },
+      params: {
+        validatorSet: {
+          owner,
+          initialValidators : [],
+          superUser: owner
+        },
+        blockRewards: {
+          owner,
+          baseReward: '2000000000000000000',
+          superUser: owner
+        }
       }
     }));
-    [from, apollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
-    await addToWhitelist(apollo, APOLLO, APOLLO_DEPOSIT);
-    await addToWhitelist(atlas1, ATLAS, ATLAS1_STAKE);
-    await addToWhitelist(atlas2, ATLAS, ATLAS2_STAKE);
-    await addToWhitelist(atlas3, ATLAS, ATLAS3_STAKE);
-    await addToWhitelist(hermes, HERMES, 0);
+    await addToWhitelist(owner, apollo, APOLLO, APOLLO_DEPOSIT);
+    await addToWhitelist(owner, atlas1, ATLAS, ATLAS1_STAKE);
+    await addToWhitelist(owner, atlas2, ATLAS, ATLAS2_STAKE);
+    await addToWhitelist(owner, atlas3, ATLAS, ATLAS3_STAKE);
+    await addToWhitelist(owner, hermes, HERMES, 0);
   });
 
   describe('canOnboard', () => {
@@ -126,21 +152,21 @@ describe('Roles Contract', () => {
 
     describe('Atlas', () => {
       it('atlas 1', async () => {
-        await onboardAsAtlas(url, atlas1, ATLAS1_STAKE);
+        await expect(onboardAsAtlas(url, atlas1, ATLAS1_STAKE)).to.eventually.be.fulfilled;
         expect(await getStake(atlas1)).to.equal(ATLAS1_STAKE.toString());
         expect(await getUrl(atlas1)).to.equal(url);
         expect(await getRole(atlas1)).to.equal(ATLAS.toString());
       });
 
       it('atlas 2', async () => {
-        await onboardAsAtlas(url, atlas2, ATLAS2_STAKE);
+        await expect(onboardAsAtlas(url, atlas2, ATLAS2_STAKE)).to.eventually.be.fulfilled;
         expect(await getStake(atlas2)).to.equal(ATLAS2_STAKE.toString());
         expect(await getUrl(atlas2)).to.equal(url);
         expect(await getRole(atlas2)).to.equal(ATLAS.toString());
       });
 
       it('atlas 3', async () => {
-        await onboardAsAtlas(url, atlas3, ATLAS3_STAKE);
+        await expect(onboardAsAtlas(url, atlas3, ATLAS3_STAKE)).to.eventually.be.fulfilled;
         expect(await getStake(atlas3)).to.equal(ATLAS3_STAKE.toString());
         expect(await getUrl(atlas3)).to.equal(url);
         expect(await getRole(atlas3)).to.equal(ATLAS.toString());
@@ -158,8 +184,8 @@ describe('Roles Contract', () => {
     });
 
     describe('Hermes', () => {
-      it('hermes', async () => {
-        await onboardAsHermes(url, hermes);
+      it('works if preconditions are met', async () => {
+        await expect(onboardAsHermes(url, hermes)).to.eventually.be.fulfilled;
         expect(await getStake(hermes)).to.equal('0');
         expect(await getUrl(hermes)).to.equal(url);
         expect(await getRole(hermes)).to.equal(HERMES.toString());
@@ -172,10 +198,17 @@ describe('Roles Contract', () => {
     });
 
     describe('Apollo', () => {
-      it('apollo', async () => {
-        await onboardAsApollo(apollo, APOLLO_DEPOSIT);
+      it('stores the role and deposit', async () => {
+        await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT)).to.eventually.be.fulfilled;
         expect(await isDepositing(apollo)).to.be.true;
         expect(await getRole(apollo)).to.equal(APOLLO.toString());
+      });
+
+      it('adds node to validator set and block rewards', async () => {
+        await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT)).to.eventually.be.fulfilled;
+        expect(await getValidators()).to.include(apollo);
+        expect(await isBeneficiary(apollo)).to.be.true;
+        expect(await beneficiaryShare(apollo)).to.equal(APOLLO_DEPOSIT.toString());
       });
 
       it('throws if address has not been whitelisted for apollo role', async () => {
@@ -212,7 +245,7 @@ describe('Roles Contract', () => {
       });
 
       it('throws if atlas is storing something', async () => {
-        await atlasStakeStore.methods.incrementStorageUsed(atlas1).send({from});
+        await atlasStakeStore.methods.incrementStorageUsed(atlas1).send({from: owner});
         await expect(retireAtlas(atlas1)).to.be.eventually.rejected;
       });
 
