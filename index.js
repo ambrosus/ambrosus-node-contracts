@@ -8,12 +8,22 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 
+const ChallengesWrapper = require('./dist/wrappers/challenges_wrapper').default;
+const ConfigWrapper = require('./dist/wrappers/config_wrapper').default;
+const FeesWrapper = require('./dist/wrappers/fees_wrapper').default;
+const HeadWrapper = require('./dist/wrappers/head_wrapper').default;
 const KycWhitelistWrapper = require('./dist/wrappers/kyc_whitelist_wrapper').default;
 const RolesWrapper = require('./dist/wrappers/roles_wrapper').default;
-const ConfigWrapper = require('./dist/wrappers/config_wrapper').default;
+const ShelteringWrapper = require('./dist/wrappers/sheltering_wrapper').default;
+const UploadsWrapper = require('./dist/wrappers/uploads_wrapper').default;
 
 module.exports = {
+  ChallengesWrapper,
+  ConfigWrapper,
+  FeesWrapper,
+  HeadWrapper,
   KycWhitelistWrapper,
   RolesWrapper,
-  ConfigWrapper
+  ShelteringWrapper,
+  UploadsWrapper
 };
