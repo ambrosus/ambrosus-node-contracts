@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3} from '../../../src/utils/web3_tools';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
 import {ONE} from '../../helpers/consts';
 import {
@@ -67,12 +67,11 @@ describe('Roles Contract', () => {
   const isBeneficiary = async (address) => blockRewards.methods.isBeneficiary(address).call();
   const beneficiaryShare = async (address) => blockRewards.methods.beneficiaryShare(address).call();
 
+  let snapshotId;
+
   before(async () => {
     web3 = await createWeb3();
     [owner, apollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
-  });
-
-  beforeEach(async () => {
     ({web3, roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards} = await deploy({
       web3,
       sender : owner,
@@ -102,11 +101,20 @@ describe('Roles Contract', () => {
         }
       }
     }));
+
     await addToWhitelist(owner, apollo, APOLLO, APOLLO_DEPOSIT);
     await addToWhitelist(owner, atlas1, ATLAS, ATLAS1_STAKE);
     await addToWhitelist(owner, atlas2, ATLAS, ATLAS2_STAKE);
     await addToWhitelist(owner, atlas3, ATLAS, ATLAS3_STAKE);
     await addToWhitelist(owner, hermes, HERMES, 0);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('canOnboard', () => {
