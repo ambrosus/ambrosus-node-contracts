@@ -13,8 +13,7 @@ import config from '../../config/config';
 export const DEFAULT_GAS = 4700000;
 const DEFAULT_PORT = 8545;
 
-const web3 = new Web3();
-export const {utils} = web3;
+export const {utils} = new Web3();
 
 function isValidRPCAddress(rpc) {
   return /^((?:http)|(?:ws)):\/\//g.test(rpc);
