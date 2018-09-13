@@ -46,4 +46,8 @@ contract KycWhitelist is Ownable {
     function getRequiredDeposit(address candidate) public view returns(uint) {
         return whitelist[candidate].requiredDeposit;
     }
+
+    function getRoleAssigned(address candidate) public view returns(Config.NodeType role) {
+        return whitelist[candidate].allowedRole;
+    }
 }

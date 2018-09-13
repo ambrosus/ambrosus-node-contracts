@@ -35,8 +35,7 @@ export default class KycWhitelistWrapper extends ContractWrapper {
   }
 
   async selfHasRoleAssigned(role) {
-    const contract = await this.contract();
-    return contract.methods.hasRoleAssigned(this.defaultAddress, role).call();
+    return this.hasRoleAssigned(this.defaultAddress, role);
   }
 
   async getRequiredDeposit(address) {
@@ -45,7 +44,15 @@ export default class KycWhitelistWrapper extends ContractWrapper {
   }
 
   async selfGetRequiredDeposit() {
+    return this.getRequiredDeposit(this.defaultAddress);
+  }
+
+  async getRoleAssigned(address) {
     const contract = await this.contract();
-    return contract.methods.getRequiredDeposit(this.defaultAddress).call();
+    return contract.methods.getRoleAssigned(address).call();
+  }
+
+  async selfGetRoleAssigned() {
+    return this.getRoleAssigned(this.defaultAddress);
   }
 }

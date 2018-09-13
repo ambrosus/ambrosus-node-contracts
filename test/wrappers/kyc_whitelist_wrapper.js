@@ -228,4 +228,62 @@ describe('KYC Whitelist Wrapper', () => {
       expect(selfGetRequiredDepositCallStub).to.be.calledOnce;
     });
   });
+
+  describe('getRoleAssigned', () => {
+    let getRoleAssignedStub;
+    let getRoleAssignedCallStub;
+
+    before(async () => {
+      getRoleAssignedStub = sinon.stub();
+      getRoleAssignedCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getRoleAssigned: getRoleAssignedStub.returns({
+            call: getRoleAssignedCallStub.resolves(exampleRole)
+          })
+        }
+      };
+      kycWhitelistWrapper = new KycWhitelistWrapper();
+      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    after(async () => {
+      getContractStub.restore();
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await kycWhitelistWrapper.getRoleAssigned(exampleAddress);
+      expect(getRoleAssignedStub).to.be.calledWith(exampleAddress);
+      expect(getRoleAssignedCallStub).to.be.calledOnce;
+    });
+  });
+
+  describe('selfGetRoleAssigned', () => {
+    let selfGetRoleAssignedStub;
+    let selfGetRoleAssignedCallStub;
+
+    before(async () => {
+      selfGetRoleAssignedStub = sinon.stub();
+      selfGetRoleAssignedCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getRoleAssigned: selfGetRoleAssignedStub.returns({
+            call: selfGetRoleAssignedCallStub.resolves(exampleRole)
+          })
+        }
+      };
+      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, exampleAddress);
+      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    after(async () => {
+      getContractStub.restore();
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await kycWhitelistWrapper.selfGetRoleAssigned();
+      expect(selfGetRoleAssignedStub).to.be.calledWith(exampleAddress);
+      expect(selfGetRoleAssignedCallStub).to.be.calledOnce;
+    });
+  });
 });
