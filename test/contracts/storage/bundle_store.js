@@ -12,10 +12,9 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
-import {utils} from '../../../src/utils/web3_tools';
 import {STORAGE_PERIOD_UNIT} from '../../../src/consts';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
-import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 
 chai.use(chaiEmitEvents);
 chai.use(sinonChai);
