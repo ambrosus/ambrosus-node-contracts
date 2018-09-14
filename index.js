@@ -16,6 +16,7 @@ const KycWhitelistWrapper = require('./dist/wrappers/kyc_whitelist_wrapper').def
 const RolesWrapper = require('./dist/wrappers/roles_wrapper').default;
 const ShelteringWrapper = require('./dist/wrappers/sheltering_wrapper').default;
 const UploadsWrapper = require('./dist/wrappers/uploads_wrapper').default;
+const constants = require('./dist/consts');
 
 module.exports = {
   ChallengesWrapper,
@@ -25,5 +26,6 @@ module.exports = {
   KycWhitelistWrapper,
   RolesWrapper,
   ShelteringWrapper,
-  UploadsWrapper
+  UploadsWrapper,
+  constants
 };

@@ -32,6 +32,7 @@ describe('KYC Whitelist Contract', () => {
   const getRequiredDeposit = async (address) => kycWhitelist.methods.getRequiredDeposit(address).call();
   const addToWhitelist = async (address, role, deposit, sender = from) => kycWhitelist.methods.add(address, role, deposit).send({from: sender});
   const removeFromWhitelist = async (address, sender = from) => kycWhitelist.methods.remove(address).send({from: sender});
+  const getRoleAssigned = async (address) => kycWhitelist.methods.getRoleAssigned(address).call();
 
   before(async () => {
     web3 = await createWeb3();
@@ -56,6 +57,7 @@ describe('KYC Whitelist Contract', () => {
   });
 
   it('has no role permitted before whitelisting', async () => {
+    expect(await getRoleAssigned(other)).to.equal('0');
     expect(await hasRoleAssigned(other, ATLAS)).to.be.false;
     expect(await hasRoleAssigned(other, HERMES)).to.be.false;
     expect(await hasRoleAssigned(other, APOLLO)).to.be.false;
@@ -63,6 +65,7 @@ describe('KYC Whitelist Contract', () => {
 
   it('assigns and unassigns a role to the address', async () => {
     await addToWhitelist(other, APOLLO, APOLLO_DEPOSIT);
+    expect(await getRoleAssigned(other)).to.equal('3');
     expect(await hasRoleAssigned(other, APOLLO)).to.be.true;
     expect(await hasRoleAssigned(other, HERMES)).to.be.false;
     await removeFromWhitelist(other);
