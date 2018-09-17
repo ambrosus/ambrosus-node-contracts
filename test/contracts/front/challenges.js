@@ -155,7 +155,7 @@ describe('Challenges Contract', () => {
       expect(await nextChallengeSequenceNumber()).to.equal((SYSTEM_CHALLENGES_COUNT + 101).toString());
     });
 
-    it('sets challenge sequence number to nextChallengeSequenceNumber', async () => {
+    it('Sets challenge sequence number to nextChallengeSequenceNumber', async () => {
       await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemFee);
       expect(await getChallengeSequenceNumber(challengeId)).to.equal('1');
 
@@ -261,7 +261,7 @@ describe('Challenges Contract', () => {
       expect(await nextChallengeSequenceNumber()).to.equal((SYSTEM_CHALLENGES_COUNT + 2).toString());
     });
 
-    it('sets challenge sequence number to nextChallengeSequenceNumber', async () => {
+    it('Sets challenge sequence number to nextChallengeSequenceNumber', async () => {
       await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemFee);
 
       await startChallenge(other, bundleId, from, fee);
@@ -284,9 +284,9 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails if the challenge was added after bundle has expired', async () => {
-      const expirationTime = await getShelteringExpirationDate(bundleId, from);
+      const expirationTime = await getShelteringExpirationDate(bundleId, other);
       await setTimestamp(expirationTime + 1);
-      await expect(startChallenge(from, bundleId, other, fee)).to.be.eventually.rejected;
+      await expect(startChallenge(other, bundleId, from, fee)).to.be.eventually.rejected;
     });
 
     it('Fails if added same challenge twice', async () => {
@@ -300,7 +300,7 @@ describe('Challenges Contract', () => {
       let challengeId;
 
       beforeEach(async () => {
-        await startChallenge(other, bundleId, other, fee);
+        await startChallenge(other, bundleId, from, fee);
         challengeBlockTimestamp = now;
         [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
         ({challengeId} = challengeCreationEvent.returnValues);
@@ -319,7 +319,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Challenger id', async () => {
-        expect(await getChallenger(challengeId)).to.equal(other);
+        expect(await getChallenger(challengeId)).to.equal(from);
       });
 
       it('Challenge fee', async () => {

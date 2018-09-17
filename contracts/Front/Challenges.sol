@@ -181,10 +181,6 @@ contract Challenges is Base {
         require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId)));
         Sheltering sheltering = context().sheltering();
         require(sheltering.isSheltering(bundleId, sheltererId));
-        BundleStore bundleStore = context().bundleStore();
-        uint endTime = bundleStore.getShelteringExpirationDate(bundleId, sheltererId);
-        Time time = context().time();
-        require(endTime > time.currentTimestamp());
     }
 
     function validateSystemChallenge(address uploaderId, bytes32 bundleId) private view {
