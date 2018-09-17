@@ -70,6 +70,10 @@ contract Roles is Base {
 
         ApolloDepositStore apolloDepositStore = context().apolloDepositStore();
         uint amountToTransfer = apolloDepositStore.releaseDeposit(msg.sender, this);
+
+        ValidatorProxy validatorProxy = context().validatorProxy();
+        validatorProxy.removeValidator(msg.sender);
+
         msg.sender.transfer(amountToTransfer);
     }
 
