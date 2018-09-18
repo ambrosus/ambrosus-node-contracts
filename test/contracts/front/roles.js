@@ -274,6 +274,13 @@ describe('Roles Contract', () => {
         expect(balanceChange.toString()).to.equal(APOLLO_DEPOSIT.toString());
       });
 
+      it('removes node from validator set and block rewards', async () => {
+        await retireApollo(apollo);
+        expect(await getValidators()).to.not.include(apollo);
+        expect(await isBeneficiary(apollo)).to.be.false;
+        expect(await beneficiaryShare(apollo)).to.equal('0');
+      });
+
       it('throws if not an apollo', async () => {
         await expect(retireApollo(hermes)).to.be.eventually.rejected;
         await expect(retireApollo(atlas1)).to.be.eventually.rejected;
