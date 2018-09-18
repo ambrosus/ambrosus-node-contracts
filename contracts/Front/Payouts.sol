@@ -59,7 +59,7 @@ contract Payouts is Base {
     }
 
     function revokeShelteringReward(address beneficiary, uint64 beginTimestamp, uint64 numberOfPeriods, uint amount, address refundAddress)
-        public onlyContextInternalCalls
+        public onlyContextInternalCalls returns (uint refund)
     {
         Time time = context().time();
         PayoutsStore payoutsStore = context().payoutsStore();
@@ -69,7 +69,7 @@ contract Payouts is Base {
         uint64 firstPeriod = time.payoutPeriod(beginTimestamp).add(1).castTo64();
         uint64 lastPeriod = firstPeriod.add(numberOfPeriods).sub(1).castTo64();
 
-        payoutsStore.revokeForPeriods(
+        refund = payoutsStore.revokeForPeriods(
             beneficiary,
             firstPeriod,
             lastPeriod,
@@ -77,17 +77,15 @@ contract Payouts is Base {
             refundAddress
         );
 
-        payoutsStore.revokeForPeriods(
+        refund = refund.add(payoutsStore.revokeForPeriods(
             beneficiary,
             lastPeriod,
             lastPeriod,
             rewardBonus,
             refundAddress
-        );
-    }
+        ));
 
-    function transferShelteringReward(address donor, address recipient, uint beginTimestamp, uint64 numberOfPeriods, uint amount) public {
-        // TODO Unimplemented
+        return refund;
     }
 
     function calculateRewards(uint64 numberOfPeriods, uint amount)

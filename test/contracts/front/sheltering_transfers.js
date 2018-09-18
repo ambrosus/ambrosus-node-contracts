@@ -38,7 +38,7 @@ describe('ShelteringTransfers Contract', () => {
 
   const store = async (bundleId, from, expirationDate) => bundleStore.methods.store(bundleId, from, expirationDate).send({from});
   const isSheltering = async (from, bundleId) => sheltering.methods.isSheltering(from, bundleId).call();
-  const addShelterer = async (bundleId, other, totalReward) => sheltering.methods.addShelterer(bundleId, other, totalReward).send({from});
+  const addShelterer = async (bundleId, other, totalReward) => sheltering.methods.addShelterer(bundleId, other).send({from, value: totalReward});
   const setStorageUsed = async (from, storageUsed) => atlasStakeStore.methods.setStorageUsed(from, storageUsed).send({from});
   const depositStake = async (other, storageLimit, value) => atlasStakeStore.methods.depositStake(other, storageLimit).send({from, value});
   const startTransfer = async (bundleId, other) => shelteringTransfers.methods.start(bundleId).send({from: other});

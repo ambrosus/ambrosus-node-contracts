@@ -11,9 +11,6 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
-import "../Configuration/Fees.sol";
-import "../Storage/BundleStore.sol";
-import "./Payouts.sol";
 
 
 contract ShelteringTransfers is Base {
@@ -31,6 +28,8 @@ contract ShelteringTransfers is Base {
 
     constructor(Head _head) public Base(_head) { }
 
+    function() public payable {}
+
     function start(bytes32 bundleId) public {
         requireTransferPossible(msg.sender, bundleId);
         bytes32 transferId = store(Transfer(msg.sender, bundleId));
@@ -42,9 +41,9 @@ contract ShelteringTransfers is Base {
         Sheltering sheltering = context().sheltering();
         requireResolutionPossible(sheltering, transferId, transfer.bundleId);
 
-        uint totalReward = transferGrant(sheltering, transfer.donorId, msg.sender, transfer.bundleId);
-        sheltering.addShelterer(transfer.bundleId, msg.sender, totalReward);
-        sheltering.removeShelterer(transfer.bundleId, transfer.donorId);
+        uint reward = sheltering.removeShelterer(transfer.bundleId, transfer.donorId, this);
+        sheltering.addShelterer.value(reward)(transfer.bundleId, msg.sender);
+        
         emit TransferResolved(transfer.donorId, msg.sender, transfer.bundleId);
         delete transfers[transferId];
     }
@@ -76,19 +75,6 @@ contract ShelteringTransfers is Base {
         bytes32 transferId = getTransferId(transfer.donorId, transfer.bundleId);
         transfers[transferId] = transfer;
         return transferId;
-    }
-
-    function transferGrant(Sheltering sheltering, address donor, address recipient, bytes32 bundleId) private returns (uint) {
-        Payouts payouts = context().payouts();
-        (uint startDate, uint storagePeriods, uint totalReward) = sheltering.getShelteringData(bundleId, donor);
-        payouts.transferShelteringReward(
-            donor,
-            recipient,
-            startDate,
-            (uint64)(storagePeriods),
-            totalReward);
-
-        return totalReward;
     }
 
     function requireTransferPossible(address donorId, bytes32 bundleId) private view {

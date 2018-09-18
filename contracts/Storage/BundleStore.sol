@@ -48,10 +48,6 @@ contract BundleStore is Base {
         return getStoragePeriodsCount(bundleId) > 0;
     }
 
-    function isUploader(address nodeId, bytes32 bundleId) view public returns (bool) {
-        return bundles[bundleId].uploader == nodeId;
-    }
-
     function getUploader(bytes32 bundleId) view public returns (address) {
         return bundles[bundleId].uploader;
     }

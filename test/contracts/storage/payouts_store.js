@@ -29,6 +29,7 @@ describe('PayoutsStore Contract', () => {
 
   const grantForPeriods = (beneficiary, firstPeriod, lastPeriod, value, from = validUser) => payoutsStore.methods.grantForPeriods(beneficiary, firstPeriod, lastPeriod).send({from, value});
   const revokeForPeriods = (beneficiary, firstPeriod, lastPeriod, totalPayout, refundAddress, from = validUser) => payoutsStore.methods.revokeForPeriods(beneficiary, firstPeriod, lastPeriod, totalPayout, refundAddress).send({from});
+  const revokeForPeriodsCall = (beneficiary, firstPeriod, lastPeriod, totalPayout, refundAddress, from = validUser) => payoutsStore.methods.revokeForPeriods(beneficiary, firstPeriod, lastPeriod, totalPayout, refundAddress).call({from});
   const available = (beneficiary, period, from = validUser) => payoutsStore.methods.available(beneficiary, period).call({from});
   const withdraw = (beneficiary, toPeriod, from = validUser) => payoutsStore.methods.withdraw(beneficiary, toPeriod).send({from});
 
@@ -144,6 +145,17 @@ describe('PayoutsStore Contract', () => {
       await grantForPeriods(targetUser, 10, 14, 50);
       await expectBalanceChange(targetUser, '30', async () => withdraw(targetUser, 12));
       await expectBalanceChange(otherUser, '20', async () => revokeForPeriods(targetUser, 10, 14, 50, otherUser));
+    });
+
+    it('returns the refunded amount', async () => {
+      await grantForPeriods(targetUser, 10, 14, 50);
+      expect(await revokeForPeriodsCall(targetUser, 10, 14, 50, otherUser)).to.equal('50');
+    });
+
+    it('returns the refunded amount and takes withdrawals into account', async () => {
+      await grantForPeriods(targetUser, 10, 14, 50);
+      await withdraw(targetUser, 12);
+      expect(await revokeForPeriodsCall(targetUser, 10, 14, 50, otherUser)).to.equal('20');
     });
 
     it('fails if totalPayout in not evenly divided by period count', async () => {

@@ -18,46 +18,69 @@ import "../Configuration/Time.sol";
 import "../Storage/BundleStore.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Storage/RolesStore.sol";
+import "../Front/Payouts.sol";
+import "../Lib/SafeMathExtensions.sol";
 
 
 contract Sheltering is Base {
 
     using SafeMath for uint;
+    using SafeMath for uint64;
+    using SafeMathExtensions for uint;
 
     constructor(Head _head) public Base(_head) { }
 
-    function store(bytes32 bundleId, address creator, uint64 storagePeriods) public onlyContextInternalCalls {
+    function() public payable {}
+
+    function storeBundle(bytes32 bundleId, address creator, uint64 storagePeriods) public onlyContextInternalCalls {
         RolesStore rolesStore = context().rolesStore();
         require(rolesStore.getRole(creator) == Config.NodeType.HERMES);
         BundleStore bundleStore = context().bundleStore();
         bundleStore.store(bundleId, creator, storagePeriods);
     }
 
-    function getShelteringData(bytes32 bundleId, address shelterer) public view onlyContextInternalCalls
-    returns (uint64 startingDate, uint64 storagePeriods, uint totalReward)
-    {
-        BundleStore bundleStore = context().bundleStore();
-        return (
-            bundleStore.getShelteringStartDate(bundleId, shelterer),
-            bundleStore.getStoragePeriodsCount(bundleId),
-            bundleStore.getTotalShelteringReward(bundleId, shelterer)
-        );
+    function getBundleUploader(bytes32 bundleId) public view returns (address) {
+        BundleStore bundleStore = context().bundleStore();        
+        return bundleStore.getUploader(bundleId);
     }
 
-    function addShelterer(bytes32 bundleId, address shelterer, uint amount) public onlyContextInternalCalls {
+    function getBundleStoragePeriodsCount(bytes32 bundleId) public view returns (uint64) {
+        BundleStore bundleStore = context().bundleStore();        
+        return bundleStore.getStoragePeriodsCount(bundleId);
+    }
+
+    function addShelterer(bytes32 bundleId, address shelterer) public payable onlyContextInternalCalls {
         AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         BundleStore bundleStore = context().bundleStore();
 
         atlasStakeStore.incrementStorageUsed(shelterer);
-        bundleStore.addShelterer(bundleId, shelterer, amount);
+        bundleStore.addShelterer(bundleId, shelterer, msg.value);
+
+        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
+
+        Payouts payouts = context().payouts();
+        uint64 payoutPeriods = storagePeriods.mul(13).castTo64();
+        payouts.grantShelteringReward.value(msg.value)(shelterer, payoutPeriods);
     }
 
-    function removeShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {              
+    function removeShelterer(bytes32 bundleId, address shelterer, address refundAddress) public onlyContextInternalCalls returns (uint) {
         AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         BundleStore bundleStore = context().bundleStore();
 
+        uint64 beginTimestamp = bundleStore.getShelteringStartDate(bundleId, shelterer);
+        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
+        uint totalReward = bundleStore.getTotalShelteringReward(bundleId, shelterer);
+
         atlasStakeStore.decrementStorageUsed(shelterer);
         bundleStore.removeShelterer(bundleId, shelterer);
+
+        Payouts payouts = context().payouts();
+        uint64 payoutPeriods = storagePeriods.mul(13).castTo64();
+        uint refundValue = payouts.revokeShelteringReward(shelterer, beginTimestamp, payoutPeriods, totalReward, address(this));
+
+        refundAddress.transfer(refundValue);
+
+        return refundValue;
     }
 
     function getShelteringExpirationDate(bytes32 bundleId, address sheltererId) public view returns (uint) {
