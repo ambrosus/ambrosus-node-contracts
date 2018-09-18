@@ -12,13 +12,11 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "../Boilerplate/Head.sol";
-import "../Front/Payouts.sol";
 import "../Middleware/Sheltering.sol";
 import "../Configuration/Fees.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 import "../Storage/AtlasStakeStore.sol";
-import "../Storage/BundleStore.sol";
 import "../Lib/SafeMathExtensions.sol";
 
 
@@ -81,13 +79,13 @@ contract Challenges is Base {
         Challenge storage challenge = challenges[challengeId];
 
         Sheltering sheltering = context().sheltering();
-        sheltering.addShelterer(challenge.bundleId, msg.sender, challenge.feePerChallenge);
+        sheltering.addShelterer.value(challenge.feePerChallenge)(challenge.bundleId, msg.sender);
 
         AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         atlasStakeStore.updateLastChallengeResolvedSequenceNumber(msg.sender, challenge.sequenceNumber);
 
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
-        grantReward(msg.sender, challenge);
+
         removeChallengeOrDecreaseActiveCount(challengeId);
         increaseChallengeSequenceNumberIfNecessary(challengeId);
     }
@@ -107,10 +105,9 @@ contract Challenges is Base {
         } else {
             AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
             penalty = atlasStakeStore.slash(challenge.sheltererId, this);
-            revokedReward = revokeReward(challenge);
 
             Sheltering sheltering = context().sheltering();
-            sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId);
+            revokedReward = sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId, this);
 
             refundAddress = challenge.challengerId;
         }
@@ -185,13 +182,13 @@ contract Challenges is Base {
 
     function validateSystemChallenge(address uploaderId, bytes32 bundleId) private view {
         require(!challengeIsInProgress(getChallengeId(uploaderId, bundleId)));
-        BundleStore bundleStore = context().bundleStore();
-        require(bundleStore.isUploader(uploaderId, bundleId));
+        Sheltering sheltering = context().sheltering();
+        require(sheltering.getBundleUploader(bundleId) == uploaderId);
     }
 
     function validateFeeAmount(uint8 challengesCount, bytes32 bundleId) private view {
-        BundleStore bundleStore = context().bundleStore();
-        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
+        Sheltering sheltering = context().sheltering();
+        uint64 storagePeriods = sheltering.getBundleStoragePeriodsCount(bundleId);
         Fees fees = context().fees();
         uint fee = fees.getFeeForChallenge(storagePeriods);
         require(msg.value == fee * challengesCount);
@@ -216,25 +213,5 @@ contract Challenges is Base {
         if (challenges[challengeId].activeCount > 0) {
             challenges[challengeId].sequenceNumber++;
         }
-    }
-
-    function grantReward(address newSheltererId, Challenge challenge) private {
-        BundleStore bundleStore = context().bundleStore();
-        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(challenge.bundleId);
-
-        Payouts payouts = context().payouts();
-        uint64 payoutPeriods = storagePeriods.mul(13).castTo64();
-        payouts.grantShelteringReward.value(challenge.feePerChallenge)(newSheltererId, payoutPeriods);
-    }
-
-    function revokeReward(Challenge challenge) private returns(uint) {
-        Sheltering sheltering = context().sheltering();
-        (uint64 beginTimestamp, uint64 storagePeriods, uint rewardToRevoke) = sheltering.getShelteringData(challenge.bundleId, challenge.sheltererId);
-        
-        Payouts payouts = context().payouts();
-        uint64 payoutPeriods = storagePeriods.mul(13).castTo64();
-        payouts.revokeShelteringReward(challenge.sheltererId, beginTimestamp, payoutPeriods, rewardToRevoke, address(this));
-
-        return rewardToRevoke;
     }
 }

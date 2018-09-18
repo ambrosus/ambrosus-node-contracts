@@ -33,6 +33,7 @@ describe('Payouts Contract', () => {
 
   const grantShelteringReward = (beneficiary, numberOfPeriods, value, from = validUser) => payouts.methods.grantShelteringReward(beneficiary, numberOfPeriods).send({from, value});
   const revokeShelteringReward = (beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress, from = validUser) => payouts.methods.revokeShelteringReward(beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress).send({from});
+  const revokeShelteringRewardCall = (beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress, from = validUser) => payouts.methods.revokeShelteringReward(beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress).call({from});
   const available = (period, from = validUser) => payouts.methods.available(period).call({from});
   const withdraw = (from = validUser) => payouts.methods.withdraw().send({from, gasPrice: '0'});
 
@@ -141,6 +142,21 @@ describe('Payouts Contract', () => {
       await expectBalanceChange(targetUser, '26000', async () => withdraw(targetUser));
 
       await expectBalanceChange(otherUser, '74000', async () => revokeShelteringReward(targetUser, PAYOUT_PERIOD_IN_SECONDS * 10.4, 3, 100000, otherUser));
+    });
+
+    it('returns the refunded amount', async () => {
+      await grantShelteringReward(targetUser, 3, 100000);
+      expect(await revokeShelteringRewardCall(targetUser, await getTimestamp(), 3, 100000, otherUser)).to.equal('100000');
+    });
+
+    it('returns the refunded amount and takes withdrawals into account', async () => {
+      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 10.4);
+      await grantShelteringReward(targetUser, 3, 100000);
+
+      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 12.4);
+      await withdraw(targetUser);
+
+      expect(await revokeShelteringRewardCall(targetUser, PAYOUT_PERIOD_IN_SECONDS * 10.4, 3, 100000, otherUser)).to.equal('74000');
     });
 
     it(`is a contextInternalCall`, async () => {
