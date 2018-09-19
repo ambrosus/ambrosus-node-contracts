@@ -36,7 +36,6 @@ describe('BundleStore Contract', () => {
 
   const store = async (bundleId, uploader, storagePeriods, sender = deployer) => bundleStore.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
   const getUploader = async (bundleId) => bundleStore.methods.getUploader(bundleId).call();
-  const isUploader = async (user, bundleId) => bundleStore.methods.isUploader(user, bundleId).call();
   const getUploadTimestamp = async (bundleId) => bundleStore.methods.getUploadTimestamp(bundleId).call();
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
   const getStoragePeriodsCount = async (bundleId) => bundleStore.methods.getStoragePeriodsCount(bundleId).call();
@@ -77,7 +76,6 @@ describe('BundleStore Contract', () => {
 
       it('creator is saved as uploader', async () => {
         expect(await getUploader(bundleId)).to.deep.equal(targetUser);
-        expect(await isUploader(targetUser, bundleId)).to.deep.equal(true);
       });
 
       it('stores upload timestamp', async () => {

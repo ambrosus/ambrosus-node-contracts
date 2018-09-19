@@ -32,7 +32,7 @@ contract Uploads is Base {
         require(storagePeriods > 0);
         require(msg.value == fee);
 
-        context().sheltering().store(bundleId, msg.sender, storagePeriods);
+        context().sheltering().storeBundle(bundleId, msg.sender, storagePeriods);
         (uint challengeFee, uint validatorsFee, uint burnFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
         config.BURN_ADDRESS().transfer(burnFee);

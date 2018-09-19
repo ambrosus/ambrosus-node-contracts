@@ -80,7 +80,7 @@ contract PayoutsStore is Base {
     }
 
     function revokeForPeriods(address beneficiaryId, uint64 firstPeriod, uint64 lastPeriod, uint totalPayout, address refundAddress)
-        public onlyContextInternalCalls 
+        public onlyContextInternalCalls returns (uint refund)
     {
         require(lastPeriod >= firstPeriod);
 
@@ -96,7 +96,8 @@ contract PayoutsStore is Base {
         GrantPeriodChange storage grantChangeEnd = grantPeriodChanges[beneficiaryId][lastPeriod];
         grantChangeEnd.decrease = grantChangeEnd.decrease.sub(payoutPerPeriod);
 
-        refundAddress.transfer(payoutPerPeriod * calculateNumberOfPeriodsToRefund(nextWithdrawPeriod[beneficiaryId], firstPeriod, lastPeriod));
+        refund = payoutPerPeriod * calculateNumberOfPeriodsToRefund(nextWithdrawPeriod[beneficiaryId], firstPeriod, lastPeriod);
+        refundAddress.transfer(refund);
     }
 
     function calculatePeriodHash(uint64 firstPeriod, uint64 lastPeriod) private pure returns (bytes32) {
