@@ -17,7 +17,7 @@ jobs:
     - stage: test
       script:
         - yarn build
-        - yarn test
+        - yarn test:units
     - stage: test
       script:
         - yarn build

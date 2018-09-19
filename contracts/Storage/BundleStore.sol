@@ -23,12 +23,13 @@ contract BundleStore is Base {
 
     struct Sheltering {
         uint64 shelteringStartDate;
+        uint64 shelteringPayoutPeriodsReduction;
         uint totalShelteringReward;
     }
 
     struct Bundle {
         address uploader;
-        uint uploadTimestamp;
+        uint64 uploadTimestamp;
         address[] shelterers;
         mapping(address => Sheltering) shelterings;
         uint64 storagePeriods;
@@ -52,8 +53,12 @@ contract BundleStore is Base {
         return bundles[bundleId].uploader;
     }
 
-    function getUploadTimestamp(bytes32 bundleId) view public returns (uint) {
+    function getUploadTimestamp(bytes32 bundleId) view public returns (uint64) {
         return bundles[bundleId].uploadTimestamp;
+    }
+
+    function getStoragePeriodsCount(bytes32 bundleId) view public returns (uint64) {
+        return bundles[bundleId].storagePeriods;
     }
 
     function getShelterers(bytes32 bundleId) view public returns (address[]) {
@@ -64,20 +69,15 @@ contract BundleStore is Base {
         return bundles[bundleId].shelterings[shelterer].shelteringStartDate;
     }
 
-    function getStoragePeriodsCount(bytes32 bundleId) view public returns (uint64) {
-        return bundles[bundleId].storagePeriods;
-    }
-
     function getTotalShelteringReward(bytes32 bundleId, address shelterer) view public returns (uint) {
         return bundles[bundleId].shelterings[shelterer].totalShelteringReward;
     }
 
-    function getShelteringExpirationDate(bytes32 bundleId, address shelterer) view public returns (uint) {
-        Config config = context().config();
+    function getShelteringPayoutPeriodsReduction(bytes32 bundleId, address shelterer) view public returns (uint64) { 
         if (getShelteringStartDate(bundleId, shelterer) == 0) {
             return 0;
         }
-        return getShelteringStartDate(bundleId, shelterer) + (getStoragePeriodsCount(bundleId) * config.STORAGE_PERIOD_UNIT());
+        return bundles[bundleId].shelterings[shelterer].shelteringPayoutPeriodsReduction;
     }
 
     function store(bytes32 bundleId, address uploader, uint64 storagePeriods) public onlyContextInternalCalls {
@@ -88,7 +88,7 @@ contract BundleStore is Base {
         emit BundleStored(bundleId, uploader);
     }
 
-    function addShelterer(bytes32 bundleId, address shelterer, uint totalReward) public onlyContextInternalCalls {
+    function addShelterer(bytes32 bundleId, address shelterer, uint totalReward, uint64 payoutPeriodsReduction) public onlyContextInternalCalls {
         require(bundleExists(bundleId));
 
         for (uint i = 0; i < bundles[bundleId].shelterers.length; i++) {
@@ -98,6 +98,7 @@ contract BundleStore is Base {
         bundles[bundleId].shelterers.push(shelterer);
         bundles[bundleId].shelterings[shelterer].shelteringStartDate = time.currentTimestamp();
         bundles[bundleId].shelterings[shelterer].totalShelteringReward = totalReward;
+        bundles[bundleId].shelterings[shelterer].shelteringPayoutPeriodsReduction = payoutPeriodsReduction;
         emit SheltererAdded(bundleId, shelterer);
     }
 

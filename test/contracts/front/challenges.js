@@ -76,13 +76,13 @@ describe('Challenges Contract', () => {
   const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from});
   const addToKycWhitelist = async(candidate, role, requiredDeposit) => kycWhitelist.methods.add(candidate, role, requiredDeposit).send({from});
   const storeBundle = async (bundleId, sheltererId, storagePeriods) => bundleStore.methods.store(bundleId, sheltererId, storagePeriods).send({from});
-  const addSheltererToBundle = async (bundleId, sheltererId, shelteringReward) => bundleStore.methods.addShelterer(bundleId, sheltererId, shelteringReward).send({from});
+  const addSheltererToBundle = async (bundleId, sheltererId, shelteringReward, payoutPeriodsReduction) => bundleStore.methods.addShelterer(bundleId, sheltererId, shelteringReward, payoutPeriodsReduction).send({from});
   const depositStake = async(stakerId, storageLimit, stakeValue) => atlasStakeStore.methods.depositStake(stakerId, storageLimit).send({from, value: stakeValue});
   const setStorageUsed = async (nodeId, storageUsed) => atlasStakeStore.methods.setStorageUsed(nodeId, storageUsed).send({from});
   const addShelterer = async(bundleId, sheltererId, shelteringReward) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from, value: shelteringReward});
   const onboardAsAtlas = async(nodeUrl, nodeAddress, depositValue) => roles.methods.onboardAsAtlas(nodeUrl).send({from: nodeAddress, value: depositValue, gasPrice: '0'});
 
-  const getShelteringExpirationDate = async(bundleId, sheltererId) => bundleStore.methods.getShelteringExpirationDate(bundleId, sheltererId).call();
+  const getShelteringExpirationDate = async(bundleId, sheltererId) => sheltering.methods.getShelteringExpirationDate(bundleId, sheltererId).call();
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
   const isSheltering = async (bundleId, sheltererId) => sheltering.methods.isSheltering(bundleId, sheltererId).call();
   const getLastChallengeResolvedSequenceNumber = async (nodeId) => atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(nodeId).call();
@@ -394,7 +394,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails if resolver is already sheltering challenged bundle', async () => {
-      await addSheltererToBundle(bundleId, resolver, shelteringReward);
+      await addSheltererToBundle(bundleId, resolver, shelteringReward, 0);
       expect(await canResolve(resolver, challengeId)).to.equal(false);
       await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.rejected;
     });

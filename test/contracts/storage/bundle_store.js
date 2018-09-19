@@ -12,7 +12,6 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
-import {STORAGE_PERIOD_UNIT} from '../../../src/consts';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 
@@ -40,9 +39,9 @@ describe('BundleStore Contract', () => {
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
   const getStoragePeriodsCount = async (bundleId) => bundleStore.methods.getStoragePeriodsCount(bundleId).call();
   const getShelteringStartDate = async (bundleId) => bundleStore.methods.getShelteringStartDate(bundleId, otherUser).call();
-  const getTotalShelteringReward = async (bundleId, sender) => bundleStore.methods.getTotalShelteringReward(bundleId, sender).call();
-  const getShelteringExpirationDate = async (bundleId, shelterer) => bundleStore.methods.getShelteringExpirationDate(bundleId, shelterer).call();
-  const addShelterer = async (bundleId, shelterer, totalReward, sender = deployer) => bundleStore.methods.addShelterer(bundleId, shelterer, totalReward).send({from: sender});
+  const getTotalShelteringReward = async (bundleId, shelterer) => bundleStore.methods.getTotalShelteringReward(bundleId, shelterer).call();
+  const addShelterer = async (bundleId, shelterer, totalReward, payoutPeriodsReduction, sender = deployer) => bundleStore.methods.addShelterer(bundleId, shelterer, totalReward, payoutPeriodsReduction).send({from: sender});
+  const getShelteringPayoutPeriodsReduction = async (bundleId, shelterer) => bundleStore.methods.getShelteringPayoutPeriodsReduction(bundleId, shelterer).call();
   const removeShelterer = async (bundleId, shelterer, sender = deployer) => bundleStore.methods.removeShelterer(bundleId, shelterer).send({from: sender});
 
   before(async () => {
@@ -113,14 +112,15 @@ describe('BundleStore Contract', () => {
 
   describe('Add and remove shelterers', () => {
     const totalReward = 100;
+    const payoutPeriodsReduction = 16;
 
     beforeEach(async () => {
       await store(bundleId, targetUser, storagePeriods);
-      await addShelterer(bundleId, otherUser, totalReward);
+      await addShelterer(bundleId, otherUser, totalReward, payoutPeriodsReduction);
     });
 
     it('should emit event when the shelterer was added', async () => {
-      expect(await addShelterer(bundleId, targetUser, totalReward)).to.emitEvent('SheltererAdded')
+      expect(await addShelterer(bundleId, targetUser, totalReward, 0)).to.emitEvent('SheltererAdded')
         .withArgs({bundleId, shelterer: targetUser});
       expect(await getShelterers(bundleId)).to.deep.equal([otherUser, targetUser]);
     });
@@ -129,18 +129,6 @@ describe('BundleStore Contract', () => {
       expect(await removeShelterer(bundleId, otherUser)).to.emitEvent('SheltererRemoved')
         .withArgs({bundleId, shelterer: otherUser});
       expect(await getShelterers(bundleId)).to.deep.equal([]);
-    });
-
-    it('adds sheltering expiration dates', async () => {
-      const actualExpirationDate = await getShelteringExpirationDate(bundleId, otherUser);
-      const expectedExpirationDate = now + (storagePeriods * STORAGE_PERIOD_UNIT);
-      expect(actualExpirationDate).to.equal(expectedExpirationDate.toString());
-    });
-
-    it('removes sheltering expiration dates', async () => {
-      await removeShelterer(bundleId, otherUser);
-      const deletedExpirationDate = await getShelteringExpirationDate(bundleId, otherUser);
-      expect(deletedExpirationDate).to.equal('0');
     });
 
     it('adds sheltering start dates', async () => {
@@ -165,6 +153,17 @@ describe('BundleStore Contract', () => {
       expect(actualTotalReward).to.equal('0');
     });
 
+    it('adds sheltering payout periods reduction', async () => {
+      const actualPayoutPeriodsReduction = await getShelteringPayoutPeriodsReduction(bundleId, otherUser);
+      expect(actualPayoutPeriodsReduction).to.equal(payoutPeriodsReduction.toString());
+    });
+
+    it('removes sheltering payout periods reduction', async () => {
+      await removeShelterer(bundleId, otherUser);
+      const actualPayoutPeriodsReduction = await getShelteringPayoutPeriodsReduction(bundleId, otherUser);
+      expect(actualPayoutPeriodsReduction).to.equal('0');
+    });
+
     it('should do nothing if removing address who is not a shelterer', async () => {
       const tx = await removeShelterer(bundleId, targetUser);
       expect(tx.events).to.deep.equal({});
@@ -173,11 +172,11 @@ describe('BundleStore Contract', () => {
 
     it('rejects if add shelterer to non-existing bundle', async () => {
       const unknownBundleId = utils.asciiToHex('unknownBundleId');
-      await expect(addShelterer(unknownBundleId, otherUser, totalReward)).to.be.eventually.rejected;
+      await expect(addShelterer(unknownBundleId, otherUser, totalReward, 0)).to.be.eventually.rejected;
     });
 
     it('rejects if add same shelterer twice', async () => {
-      await expect(addShelterer(bundleId, otherUser, totalReward)).to.be.eventually.rejected;
+      await expect(addShelterer(bundleId, otherUser, totalReward, 0)).to.be.eventually.rejected;
     });
 
     it('cannot put new bundle with same id when all shelterers are removed', async () => {

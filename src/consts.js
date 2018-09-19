@@ -32,5 +32,6 @@ export const ONE = new BN(1);
 export const DAY = 60 * 60 * 24;
 
 export const STORAGE_PERIOD_UNIT = 364 * DAY;
+export const PAYOUT_PERIOD_UNIT = 28 * DAY;
 
 export const SYSTEM_CHALLENGES_COUNT = 7;

@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
-import {ATLAS, HERMES, STORAGE_PERIOD_UNIT} from '../../../src/consts';
+import {ATLAS, HERMES, STORAGE_PERIOD_UNIT, PAYOUT_PERIOD_UNIT} from '../../../src/consts';
 import TimeMockJson from '../../../build/contracts/TimeMock.json';
 
 chai.use(sinonChai);
@@ -21,45 +21,54 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 const bundleId = utils.asciiToHex('bundleId');
-const storagePeriods = 3;
+const storagePeriods = 1;
 const totalReward = 100000;
 
 describe('Sheltering Contract', () => {
   let web3;
+  let deployer;
   let hermes;
   let atlas;
-  let apollo;
+  let atlas2;
   let other;
   let bundleStore;
   let sheltering;
   let rolesStore;
   let time;
+  let payouts;
   let payoutsStore;
   let atlasStakeStore;
   let snapshotId;
-  const now = 1500000000;
+  const bundleUploadTimestamp = PAYOUT_PERIOD_UNIT * 34.2;
 
   const isSheltering = async (bundleId, shelterer) => sheltering.methods.isSheltering(bundleId, shelterer).call();
   const shelteringExpirationDate = async (bundleId, shelterer) => sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
-  const storeBundle = async (bundleId, uploader, storagePeriods, sender = hermes) => sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
-  const addShelterer = async (bundleId, shelterer, amount, sender = hermes) => sheltering.methods.addShelterer(bundleId, shelterer).send({from: sender, value: amount});
-  const removeShelterer = async (bundleId, shelterer, refundAddress, sender = hermes) => sheltering.methods.removeShelterer(bundleId, shelterer, refundAddress).send({from: sender});
+  const storeBundle = async (bundleId, uploader, storagePeriods, sender = deployer) => sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
+  const addShelterer = async (bundleId, shelterer, amount, sender = deployer) => sheltering.methods.addShelterer(bundleId, shelterer).send({from: sender, value: amount});
+  const removeShelterer = async (bundleId, shelterer, refundAddress, sender = deployer) => sheltering.methods.removeShelterer(bundleId, shelterer, refundAddress).send({from: sender});
+  const transferSheltering = async (bundleId, donorId, recipientId, sender = deployer) => sheltering.methods.transferSheltering(bundleId, donorId, recipientId).send({from: sender});
+
+  const setRole = async (targetId, role, sender = deployer) => rolesStore.methods.setRole(targetId, role).send({from: sender});
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
   const getStorageUsed = async (staker) => atlasStakeStore.methods.getStorageUsed(staker).call();
-  const depositStake = async (staker, storageLimit, value, sender = hermes) => atlasStakeStore.methods.depositStake(staker, storageLimit).send({from: sender, value});
-  const injectBundleWithBundleStore = async (bundleId, uploader, storagePeriods, sender = hermes) => bundleStore.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
-  const injectSheltererWithBundleStore = async (bundleId, shelterer, storagePeriods, sender = hermes) => bundleStore.methods.addShelterer(bundleId, shelterer, storagePeriods).send({from: sender});
-  const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
-  const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from: hermes});
+  const depositStake = async (staker, storageLimit, value, sender = deployer) => atlasStakeStore.methods.depositStake(staker, storageLimit).send({from: sender, value});
+  const injectBundleWithBundleStore = async (bundleId, uploader, storagePeriods, sender = deployer) => bundleStore.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
+  const injectSheltererWithBundleStore = async (bundleId, shelterer, reward, payoutPeriodsReduction, sender = deployer) => bundleStore.methods.addShelterer(bundleId, shelterer, reward, payoutPeriodsReduction).send({from: sender});
   const getCurrentPayoutPeriod = async () => time.methods.currentPayoutPeriod().call();
+  const withdrawPayout = async (targetUser) => payouts.methods.withdraw().send({from: targetUser, gasPrice: '0'});
+  const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
+  const setTimestamp = async (timestamp, sender = deployer) => time.methods.setCurrentTimestamp(timestamp).send({from: sender});
+
 
   const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount);
+  const timestampToPayoutPeriod = (timestamp) => Math.floor(timestamp / PAYOUT_PERIOD_UNIT);
 
   before(async () => {
     web3 = await createWeb3();
-    [hermes, atlas, apollo, other] = await web3.eth.getAccounts();
-    ({bundleStore, sheltering, atlasStakeStore, rolesStore, payoutsStore, time} = await deploy({
+    [deployer, hermes, atlas, atlas2, other] = await web3.eth.getAccounts();
+    ({bundleStore, sheltering, atlasStakeStore, rolesStore, payouts, payoutsStore, time} = await deploy({
       web3,
+      sender: deployer,
       contracts: {
         rolesStore: true,
         bundleStore: true,
@@ -71,9 +80,11 @@ describe('Sheltering Contract', () => {
         time: TimeMockJson
       }
     }));
-    await rolesStore.methods.setRole(hermes, HERMES).send({from: hermes});
-    await rolesStore.methods.setRole(atlas, ATLAS).send({from: hermes});
-    await setTimestamp(now);
+    await setRole(hermes, HERMES);
+    await setRole(atlas, ATLAS);
+    await setTimestamp(bundleUploadTimestamp);
+    await depositStake(atlas, 1, 1);
+    await depositStake(atlas2, 1, 1);
   });
 
   beforeEach(async () => {
@@ -98,13 +109,13 @@ describe('Sheltering Contract', () => {
     it(`returns true if account is bundle's shelterer`, async () => {
       expect(await isSheltering(bundleId, other)).to.equal(false);
       await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
-      await injectSheltererWithBundleStore(bundleId, other, totalReward);
+      await injectSheltererWithBundleStore(bundleId, other, totalReward, 0);
       expect(await isSheltering(bundleId, other)).to.equal(true);
     });
 
     it('returns false if sheltering has expired', async () => {
       await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
-      await injectSheltererWithBundleStore(bundleId, other, totalReward);
+      await injectSheltererWithBundleStore(bundleId, other, totalReward, 0);
       await setTimestamp('2500000000');
       expect(await isSheltering(bundleId, other)).to.equal(false);
     });
@@ -133,18 +144,17 @@ describe('Sheltering Contract', () => {
 
     it('only hermes can upload a bundle', async () => {
       await expect(storeBundle(bundleId, atlas, storagePeriods)).to.be.eventually.rejected;
-      await expect(storeBundle(bundleId, apollo, storagePeriods)).to.be.eventually.rejected;
     });
 
     it('is context internal', async () => {
       await expect(storeBundle(bundleId, hermes, storagePeriods, other)).to.be.eventually.rejected;
+      await expect(storeBundle(bundleId, hermes, storagePeriods, deployer)).to.be.eventually.fulfilled;
     });
   });
 
   describe('Adding shelterer', () => {
     beforeEach(async () => {
       await storeBundle(bundleId, hermes, storagePeriods);
-      await depositStake(atlas, 1, 1);
     });
 
     it(`adds store entry`, async () => {
@@ -157,12 +167,16 @@ describe('Sheltering Contract', () => {
       const currentPayoutPeriod = parseInt(await getCurrentPayoutPeriod(), 10);
       expect(await availablePayout(atlas, currentPayoutPeriod + 2)).to.equal('0');
       await addShelterer(bundleId, atlas, totalReward);
-      expect(await availablePayout(atlas, currentPayoutPeriod + 2)).to.equal('2000'); // 100000 * 0.78 / 36 = 2000
+      expect(await availablePayout(atlas, currentPayoutPeriod + 2)).to.equal('6000'); // 100000 * 0.78 / 13 = 6000
     });
 
     it(`fails if already sheltered`, async () => {
       await addShelterer(bundleId, atlas, totalReward);
       await expect(addShelterer(bundleId, atlas, totalReward)).to.be.eventually.rejected;
+    });
+
+    it('fails if not a atlas', async () => {
+      await expect(addShelterer(bundleId, other, totalReward)).to.be.eventually.rejected;
     });
 
     it(`increments storage used`, async () => {
@@ -183,43 +197,125 @@ describe('Sheltering Contract', () => {
   describe('Removing shelterer', () => {
     beforeEach(async () => {
       await storeBundle(bundleId, hermes, storagePeriods);
-      await depositStake(other, 1, 1);
-      await addShelterer(bundleId, other, totalReward);
+      await addShelterer(bundleId, atlas, totalReward);
+    });
+
+    it('fails if not a shelterer of a bundle', async () => {
+      await expect(removeShelterer(bundleId, other, other)).to.eventually.be.rejected;
+      await expect(removeShelterer(bundleId, atlas, other)).to.eventually.be.fulfilled;
     });
 
     it(`removes store entry`, async () => {
-      expect(await getShelterers(bundleId)).to.include(other);
-      await removeShelterer(bundleId, other, other);
-      expect(await getShelterers(bundleId)).to.not.include(other);
+      expect(await getShelterers(bundleId)).to.include(atlas);
+      await removeShelterer(bundleId, atlas, atlas);
+      expect(await getShelterers(bundleId)).to.not.include(atlas);
     });
 
     it(`decrements storage used`, async () => {
-      expect(await getStorageUsed(other)).to.equal('1');
-      await removeShelterer(bundleId, other, other);
-      expect(await getStorageUsed(other)).to.equal('0');
+      expect(await getStorageUsed(atlas)).to.equal('1');
+      await removeShelterer(bundleId, atlas, atlas);
+      expect(await getStorageUsed(atlas)).to.equal('0');
     });
 
     it('removes grant and returns funds to provided address', async () => {
       const currentPayoutPeriod = parseInt(await getCurrentPayoutPeriod(), 10);
-      expect(await availablePayout(other, currentPayoutPeriod + 2)).to.equal('2000'); // 100000 * 0.78 / 36 = 2000
-      await expectBalanceChange(other, totalReward.toString(), async () => removeShelterer(bundleId, other, other));
-      expect(await availablePayout(other, currentPayoutPeriod + 2)).to.equal('0');
+      expect(await availablePayout(atlas, currentPayoutPeriod + 2)).to.equal('6000'); // 100000 * 0.78 / 13 = 6000
+      await expectBalanceChange(atlas, totalReward.toString(), async () => removeShelterer(bundleId, atlas, atlas));
+      expect(await availablePayout(atlas, currentPayoutPeriod + 2)).to.equal('0');
     });
 
     it('is context internal', async () => {
-      await expect(removeShelterer(bundleId, other, other, other)).to.be.eventually.rejected;
+      await expect(removeShelterer(bundleId, atlas, atlas, atlas)).to.be.eventually.rejected;
+    });
+  });
+
+  describe('Transferring sheltering', async () => {
+    const transferTimestamp = bundleUploadTimestamp + (PAYOUT_PERIOD_UNIT * 2.3); // 34.2 + 2.3 = 36.5
+
+    beforeEach(async () => {
+      await storeBundle(bundleId, hermes, storagePeriods);
+      await addShelterer(bundleId, atlas, totalReward);
+      await setTimestamp(transferTimestamp);
+      await withdrawPayout(atlas);
+    });
+
+    describe('if successful', () => {
+      it('removes donor from shelterers of the bundle', async () => {
+        expect(await isSheltering(bundleId, atlas)).to.be.true;
+        await transferSheltering(bundleId, atlas, atlas2);
+        expect(await isSheltering(bundleId, atlas)).to.be.false;
+      });
+
+      it('adds recipient to shelterers of the bundle', async () => {
+        expect(await isSheltering(bundleId, atlas2)).to.be.false;
+        await transferSheltering(bundleId, atlas, atlas2);
+        expect(await isSheltering(bundleId, atlas2)).to.be.true;
+      });
+
+      it('keeps a similar expiration date', async () => {
+        // similar -> in the same payout period, but can have different timestamp
+        const before = timestampToPayoutPeriod(await shelteringExpirationDate(bundleId, atlas));
+        await transferSheltering(bundleId, atlas, atlas2);
+        const after = timestampToPayoutPeriod(await shelteringExpirationDate(bundleId, atlas2));
+        expect(before).to.equal(after);
+      });
+
+      it('transfers reward (not yet paid-out) to recipient', async () => {
+        const firstPeriodToCheck = timestampToPayoutPeriod(transferTimestamp);
+        const lastPeriodToCheck = timestampToPayoutPeriod(await shelteringExpirationDate(bundleId, atlas));
+
+        expect(await availablePayout(atlas2, firstPeriodToCheck - 1)).to.equal('0');
+        expect(await availablePayout(atlas, firstPeriodToCheck)).to.not.equal('0');
+        expect(await availablePayout(atlas2, firstPeriodToCheck)).to.equal('0');
+
+        await transferSheltering(bundleId, atlas, atlas2);
+
+        expect(await availablePayout(atlas, lastPeriodToCheck)).to.equal('0');
+        expect(await availablePayout(atlas2, lastPeriodToCheck)).to.not.equal('0');
+        expect(await availablePayout(atlas2, lastPeriodToCheck + 1)).to.equal('0');
+      });
+    });
+
+    describe('fails', () => {
+      it('if donor is not a shelterer', async () => {
+        await expect(transferSheltering(bundleId, other, atlas2)).to.eventually.be.rejected;
+      });
+
+      it('if donor and recipient are the same', async () => {
+        await expect(transferSheltering(bundleId, atlas, atlas)).to.eventually.be.rejected;
+      });
+
+      it('if recipient is already a shelterer of the bundle', async () => {
+        await addShelterer(bundleId, atlas2, totalReward);
+        await expect(transferSheltering(bundleId, atlas, atlas2)).to.eventually.be.rejected;
+      });
+
+      it('if sheltering is expired', async () => {
+        await setTimestamp(await shelteringExpirationDate(bundleId, atlas) + 1);
+        await expect(transferSheltering(bundleId, atlas, atlas2)).to.eventually.be.rejected;
+      });
+    });
+
+    it('is context internal', async () => {
+      await expect(transferSheltering(bundleId, atlas, atlas2, other)).to.be.eventually.rejected;
+      await expect(transferSheltering(bundleId, atlas, atlas2, deployer)).to.be.eventually.fulfilled;
     });
   });
 
   describe('getShelteringExpirationDate', () => {
+    const payoutPeriodsReduction = 5;
     beforeEach(async () => {
       await storeBundle(bundleId, hermes, storagePeriods);
-      await depositStake(other, 1, 1);
-      await addShelterer(bundleId, other, totalReward);
+      await injectSheltererWithBundleStore(bundleId, atlas, totalReward, payoutPeriodsReduction);
     });
 
-    it('returns expiration date', async () => {
-      expect(await shelteringExpirationDate(bundleId, other)).to.equal((now + (storagePeriods * STORAGE_PERIOD_UNIT)).toString());
+    it('returns expiration date for a shelterer', async () => {
+      const expectedExpirationDate = bundleUploadTimestamp + (storagePeriods * STORAGE_PERIOD_UNIT) - (payoutPeriodsReduction * PAYOUT_PERIOD_UNIT);
+      expect(await shelteringExpirationDate(bundleId, atlas)).to.equal(expectedExpirationDate.toString());
+    });
+
+    it('returns 0 for non shelterers', async () => {
+      expect(await shelteringExpirationDate(bundleId, atlas2)).to.equal('0');
     });
   });
 });

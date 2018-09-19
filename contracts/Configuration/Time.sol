@@ -18,6 +18,8 @@ contract Time {
     using SafeMathExtensions for uint;
 
     uint64 constant public PAYOUT_PERIOD_DURATION = 28 days;
+    uint64 constant public PAYOUT_TO_STORAGE_PERIOD_MULTIPLIER = 13;
+    uint64 constant public STORAGE_PERIOD_DURATION = 364 days;
 
     function currentTimestamp() public view returns(uint64) {
         return now.castTo64();
