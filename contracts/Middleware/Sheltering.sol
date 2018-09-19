@@ -85,7 +85,7 @@ contract Sheltering is Base {
         uint64 currentPeriod = time.currentPayoutPeriod();
 
         uint refund = this.removeShelterer(bundleId, donorId, this);
-        addSheltererInternal(bundleId, recipientId, refund, currentPeriod - donorBeginPeriod);
+        addSheltererInternal(bundleId, recipientId, refund, currentPeriod.sub(donorBeginPeriod).castTo64());
     }
 
     function getShelteringExpirationDate(bytes32 bundleId, address sheltererId) public view returns (uint64) {

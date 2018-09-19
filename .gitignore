@@ -8,3 +8,4 @@ nodePrivateKey.json
 registryContractAddress.json
 /config/dev.json
 ganache.pid
+test_cli_head.env
