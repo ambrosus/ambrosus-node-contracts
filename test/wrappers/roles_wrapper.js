@@ -108,10 +108,10 @@ describe('Roles Wrapper', () => {
     });
 
     it('calls contract method with correct arguments', async () => {
-      await rolesWrapper.onboardAsApollo(deposit);
+      await rolesWrapper.onboardAsApollo(exampleAddress, deposit);
       expect(onboardAsApolloStub).to.be.calledOnce;
       expect(onboardAsApolloSendStub).to.be.calledWith({
-        from: defaultAddress,
+        from: exampleAddress,
         value: deposit
       });
     });
@@ -142,10 +142,10 @@ describe('Roles Wrapper', () => {
     });
 
     it('calls contract method with correct arguments', async () => {
-      await rolesWrapper.onboardAsAtlas(stake, url);
+      await rolesWrapper.onboardAsAtlas(exampleAddress, stake, url);
       expect(onboardAsAtlasStub).to.be.calledWith(url);
       expect(onboardAsAtlasSendStub).to.be.calledWith({
-        from: defaultAddress,
+        from: exampleAddress,
         value: stake
       });
     });
@@ -175,11 +175,38 @@ describe('Roles Wrapper', () => {
     });
 
     it('calls contract method with correct arguments', async () => {
-      await rolesWrapper.onboardAsHermes(url);
+      await rolesWrapper.onboardAsHermes(exampleAddress, url);
       expect(onboardAsHermesStub).to.be.calledWith(url);
       expect(onboardAsHermesSendStub).to.be.calledWith({
-        from: defaultAddress
+        from: exampleAddress
       });
+    });
+  });
+
+  describe('selfOnboardAs...', () => {
+    const stake = '100';
+    const url = 'url';
+
+    beforeEach(() => {
+      rolesWrapper = new RolesWrapper({}, {}, defaultAddress);
+    });
+
+    it('selfOnboardAsAtlas calls onboardAsAtlas with default address', async () => {
+      const onboardAsAtlasStub = sinon.stub(rolesWrapper, 'onboardAsAtlas');
+      await rolesWrapper.selfOnboardAsAtlas(stake, url);
+      expect(onboardAsAtlasStub).to.be.calledOnceWith(defaultAddress, stake, url);
+    });
+
+    it('selfOnboardAsApollo calls onboardAsApollo with default address', async () => {
+      const onboardAsApolloStub = sinon.stub(rolesWrapper, 'onboardAsApollo');
+      await rolesWrapper.selfOnboardAsApollo(stake);
+      expect(onboardAsApolloStub).to.be.calledOnceWith(defaultAddress, stake);
+    });
+
+    it('selfOnboardAsHermes calls onboardAsHermes with default address', async () => {
+      const onboardAsHermesStub = sinon.stub(rolesWrapper, 'onboardAsHermes');
+      await rolesWrapper.selfOnboardAsHermes(url);
+      expect(onboardAsHermesStub).to.be.calledOnceWith(defaultAddress, url);
     });
   });
 });

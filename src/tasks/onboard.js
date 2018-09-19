@@ -52,7 +52,7 @@ export default class OnboardingTask extends TaskBase {
     await this.validateOnWhitelist('ATLAS');
     const value = this.web3.utils.toWei(new BN(amount));
     const {rolesWrapper} = this.contractManager;
-    await rolesWrapper.onboardAsAtlas(url, value);
+    await rolesWrapper.selfOnboardAsAtlas(url, value);
   }
 
   async onboardHermes([url]) {
@@ -63,7 +63,7 @@ export default class OnboardingTask extends TaskBase {
     }
     await this.validateOnWhitelist('HERMES');
     const {rolesWrapper} = this.contractManager;
-    await rolesWrapper.onboardAsHermes(url);
+    await rolesWrapper.selfOnboardAsHermes(url);
   }
 
   async onboardApollo([value]) {
@@ -74,7 +74,7 @@ export default class OnboardingTask extends TaskBase {
     }
     await this.validateOnWhitelist('APOLLO');
     const {rolesWrapper} = this.contractManager;
-    await rolesWrapper.onboardAsApollo(value);
+    await rolesWrapper.selfOnboardAsApollo(value);
   }
 
   async validateOnWhitelist(role) {
