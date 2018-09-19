@@ -166,10 +166,6 @@ describe('Payouts Contract', () => {
     });
   });
 
-  describe.skip('Transfer sheltering reward', () => {
-
-  });
-
   describe('Withdrawing', () => {
     it(`transfers available funds for past periods only`, async () => {
       await injectGrantRepeating(targetUser, 7, 12, 18); // 3 per period

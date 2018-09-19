@@ -13,7 +13,7 @@ import deploy from '../../helpers/deploy';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import AtlasStakeStoreMockJson from '../../../build/contracts/AtlasStakeStoreMock.json';
-import {ATLAS1_STAKE, ATLAS1_STORAGE_LIMIT} from '../../../src/consts';
+import {ATLAS1_STAKE, HERMES, ATLAS} from '../../../src/consts';
 
 chai.use(chaiAsPromised);
 chai.use(chaiEmitEvents);
@@ -23,37 +23,46 @@ const {expect} = chai;
 describe('ShelteringTransfers Contract', () => {
   let web3;
   let shelteringTransfers;
-  let bundleStore;
   let sheltering;
-  let from;
-  let other;
-  let notStaking;
-  let notSheltering;
+  let rolesStore;
   let atlasStakeStore;
+  let payoutsStore;
+  let time;
+  let deployer;
+  let hermes;
+  let atlas;
+  let notSheltering;
+  let notStaking;
   let transferId;
   const bundleId = utils.keccak256('bundleId');
-  const expirationDate = 1600000000;
-  const totalReward = 100;
+  const storagePeriods = 1;
+  const storageLimit = 10;
+  const totalReward = 1000000;
   let snapshotId;
 
-  const store = async (bundleId, from, expirationDate) => bundleStore.methods.store(bundleId, from, expirationDate).send({from});
-  const isSheltering = async (from, bundleId) => sheltering.methods.isSheltering(from, bundleId).call();
-  const addShelterer = async (bundleId, other, totalReward) => sheltering.methods.addShelterer(bundleId, other).send({from, value: totalReward});
-  const setStorageUsed = async (from, storageUsed) => atlasStakeStore.methods.setStorageUsed(from, storageUsed).send({from});
-  const depositStake = async (other, storageLimit, value) => atlasStakeStore.methods.depositStake(other, storageLimit).send({from, value});
-  const startTransfer = async (bundleId, other) => shelteringTransfers.methods.start(bundleId).send({from: other});
-  const resolveTransfer = async (transferId, from) => shelteringTransfers.methods.resolve(transferId).send({from});
-  const cancelTransfer = async (transferId, from) => shelteringTransfers.methods.cancel(transferId).send({from});
+  const startTransfer = async (bundleId, sender) => shelteringTransfers.methods.start(bundleId).send({from: sender});
+  const resolveTransfer = async (transferId, sender) => shelteringTransfers.methods.resolve(transferId).send({from: sender});
+  const cancelTransfer = async (transferId, sender) => shelteringTransfers.methods.cancel(transferId).send({from: sender});
   const transferIsInProgress = async (transferId) => shelteringTransfers.methods.transferIsInProgress(transferId).call();
   const getDonor = async (transferId) => shelteringTransfers.methods.getDonor(transferId).call();
   const getTransferredBundle = async (transferId) => shelteringTransfers.methods.getTransferredBundle(transferId).call();
-  const getTransferId = async (from, bundleId) => shelteringTransfers.methods.getTransferId(from, bundleId).call();
+  const getTransferId = async (donor, bundleId) => shelteringTransfers.methods.getTransferId(donor, bundleId).call();
+
+  const setRole = async (targetId, role, sender = deployer) => rolesStore.methods.setRole(targetId, role).send({from: sender});
+  const addShelterer = async (bundleId, sheltererId, totalReward, sender = deployer) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from: sender, value: totalReward});
+  const isSheltering = async (sheltererId, bundleId) => sheltering.methods.isSheltering(sheltererId, bundleId).call();
+  const storeBundle = async (bundleId, uploader, storagePeriods, sender = deployer) => sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
+  const setStorageUsed = async (sheltererId, storageUsed, sender = deployer) => atlasStakeStore.methods.setStorageUsed(sheltererId, storageUsed).send({from: sender});
+  const depositStake = async (atlasId, storageLimit, value, sender = deployer) => atlasStakeStore.methods.depositStake(atlasId, storageLimit).send({from: sender, value});
+  const currentPayoutPeriod = async () => time.methods.currentPayoutPeriod().call();
+  const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
 
   before(async () => {
     web3 = await createWeb3();
-    [from, other, notSheltering, notStaking] = await web3.eth.getAccounts();
-    ({shelteringTransfers, bundleStore, atlasStakeStore, sheltering} = await deploy({
+    [deployer, hermes, atlas, notSheltering, notStaking] = await web3.eth.getAccounts();
+    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore} = await deploy({
       web3,
+      sender: deployer,
       contracts: {
         shelteringTransfers: true,
         bundleStore: true,
@@ -62,12 +71,18 @@ describe('ShelteringTransfers Contract', () => {
         time: true,
         atlasStakeStore: AtlasStakeStoreMockJson,
         payouts: true,
-        payoutsStore: true
-      }}));
-    await store(bundleId, from, expirationDate);
-    transferId = await getTransferId(other, bundleId);
-    await depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
-    await addShelterer(bundleId, other, totalReward);
+        payoutsStore: true,
+        rolesStore: true
+      }
+    }));
+    await setRole(hermes, HERMES);
+    await setRole(atlas, ATLAS);
+    await setRole(notSheltering, ATLAS);
+    await depositStake(atlas, storageLimit, ATLAS1_STAKE);
+    await depositStake(notSheltering, storageLimit, ATLAS1_STAKE);
+    await storeBundle(bundleId, hermes, storagePeriods);
+    await addShelterer(bundleId, atlas, totalReward);
+    transferId = await getTransferId(atlas, bundleId);
   });
 
   beforeEach(async () => {
@@ -81,22 +96,25 @@ describe('ShelteringTransfers Contract', () => {
   describe('Starting transfer', () => {
     it('Fails if sender is not sheltering specified bundle', async () => {
       const otherBundleId = utils.keccak256('otherBundleId');
-      await expect(startTransfer(otherBundleId, other)).to.be.eventually.rejected;
+      await expect(startTransfer(otherBundleId, atlas)).to.be.eventually.rejected;
     });
 
     it('Fails if identical transfer already exists', async () => {
-      await expect(startTransfer(bundleId, other)).to.be.fulfilled;
-      await expect(startTransfer(bundleId, other)).to.be.eventually.rejected;
+      await expect(startTransfer(bundleId, atlas)).to.be.fulfilled;
+      await expect(startTransfer(bundleId, atlas)).to.be.eventually.rejected;
     });
 
     it('Initializes transfer and emits an event', async () => {
-      expect(await startTransfer(bundleId, other)).to.emitEvent('TransferStarted').withArgs({
-        transferId, donorId: other, bundleId
-      });
+      expect(await startTransfer(bundleId, atlas)).to.emitEvent('TransferStarted').withArgs(
+        {
+          transferId,
+          donorId: atlas,
+          bundleId
+        });
     });
 
     it('Transfer is in progress after successfully started', async () => {
-      await startTransfer(bundleId, other);
+      await startTransfer(bundleId, atlas);
       expect(await transferIsInProgress(transferId)).to.equal(true);
     });
 
@@ -106,11 +124,11 @@ describe('ShelteringTransfers Contract', () => {
 
     describe('Stores transfer correctly', () => {
       beforeEach(async () => {
-        await startTransfer(bundleId, other);
+        await startTransfer(bundleId, atlas);
       });
 
       it('Donor id', async () => {
-        expect(await getDonor(transferId)).to.equal(other);
+        expect(await getDonor(transferId)).to.equal(atlas);
       });
 
       it('Bundle id', async () => {
@@ -119,20 +137,18 @@ describe('ShelteringTransfers Contract', () => {
     });
 
     describe('Resolving a transfer', () => {
-      const storageLimit = 10;
       const storageUsed = 1;
 
       beforeEach(async () => {
-        await startTransfer(bundleId, other);
         await setStorageUsed(notSheltering, storageUsed);
-        await depositStake(notSheltering, storageLimit, ATLAS1_STAKE);
+        await startTransfer(bundleId, atlas);
       });
 
       it('Fails if the transfer does not exist', async () => {
         await expect(resolveTransfer(utils.keccak256('nonExistingTransferId'), notSheltering)).to.be.eventually.rejected;
       });
 
-      it('Fails to resolve if recipient is sheltering this bundle', async () => {
+      it('Fails to resolve if recipient is already sheltering this bundle', async () => {
         await addShelterer(bundleId, notSheltering, totalReward);
         await expect(resolveTransfer(transferId, notSheltering)).to.be.eventually.rejected;
       });
@@ -148,16 +164,16 @@ describe('ShelteringTransfers Contract', () => {
 
       it('Emits ShelteringTransferred event', async () => {
         expect(await resolveTransfer(transferId, notSheltering)).to.emitEvent('TransferResolved').withArgs({
-          donorId: other,
+          donorId: atlas,
           recipientId: notSheltering,
           bundleId
         });
       });
 
       it('Removes donor from shelterers of the bundle', async () => {
-        expect(await isSheltering(bundleId, other)).to.be.true;
+        expect(await isSheltering(bundleId, atlas)).to.be.true;
         await resolveTransfer(transferId, notSheltering);
-        expect(await isSheltering(bundleId, other)).to.be.false;
+        expect(await isSheltering(bundleId, atlas)).to.be.false;
       });
 
       it('Adds recipient to shelterers of the bundle', async () => {
@@ -173,38 +189,39 @@ describe('ShelteringTransfers Contract', () => {
         expect(await transferIsInProgress(transferId)).to.be.false;
       });
 
-      it.skip('Revokes reward grant on the donor', async () => {
-
-      });
-
-      it.skip('Grants reward to the recipient', async () => {
-
+      it('Transfers granted reward from donor to recipient', async () => {
+        const periodToCheck = parseInt(await currentPayoutPeriod(), 10) + 1;
+        expect(await availablePayout(atlas, periodToCheck)).to.not.equal('0');
+        expect(await availablePayout(notSheltering, periodToCheck)).to.equal('0');
+        await resolveTransfer(transferId, notSheltering);
+        expect(await availablePayout(atlas, periodToCheck)).to.equal('0');
+        expect(await availablePayout(notSheltering, periodToCheck)).to.not.equal('0');
       });
     });
   });
 
   describe('Cancelling a transfer', () => {
     beforeEach(async () => {
-      await startTransfer(bundleId, other);
+      await startTransfer(bundleId, atlas);
     });
 
     it('Removes transfer', async () => {
-      await cancelTransfer(transferId, other);
+      await cancelTransfer(transferId, atlas);
       expect(await transferIsInProgress(transferId)).to.be.false;
       expect(await getDonor(transferId)).to.equal('0x0000000000000000000000000000000000000000');
       expect(utils.hexToUtf8(await getTransferredBundle(transferId))).to.equal('');
     });
 
     it('Emits TransferCancelled event', async () => {
-      expect(await cancelTransfer(transferId, other)).to.emitEvent('TransferCancelled').withArgs({
+      expect(await cancelTransfer(transferId, atlas)).to.emitEvent('TransferCancelled').withArgs({
         transferId,
-        donorId: other,
+        donorId: atlas,
         bundleId
       });
     });
 
     it('Fails if the transfer does not exist', async () => {
-      await expect(cancelTransfer(utils.keccak256('nonExistingTransferId'), other)).to.be.eventually.rejected;
+      await expect(cancelTransfer(utils.keccak256('nonExistingTransferId'), atlas)).to.be.eventually.rejected;
     });
 
     it('Only transfer creator can cancel', async () => {
