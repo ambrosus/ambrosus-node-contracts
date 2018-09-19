@@ -9,11 +9,12 @@
   "license": "UNLICENCED",
   "scripts": {
     "build": "yarn build:js && yarn build:sol",
-    "build:js" : "babel ./src -d ./dist --copy-files",
-    "build:sol" : "truffle compile",
+    "build:js": "babel ./src -d ./dist --copy-files",
+    "build:sol": "truffle compile",
     "strip": "babel-node src/tools/strip_contracts.js build/contracts",
     "clean": "rm -fr ./build/contracts/* ./dist/*",
     "test": "mocha",
+    "test:tasks": "node test/cli/test_cli.js",
     "testall": "yarn build:sol && yarn test",
     "dev:lint": "eslint src test config && solium -d contracts/",
     "dev:lint:fix": "eslint src test config --fix && solium -d contracts/ --fix",
@@ -26,6 +27,7 @@
   },
   "dependencies": {
     "command-line-args": "^5.0.2",
+    "dotenv": "^6.0.0",
     "openzeppelin-solidity": "^1.10.0",
     "web3": "^1.0.0-beta.34"
   },

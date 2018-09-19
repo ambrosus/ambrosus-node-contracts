@@ -63,13 +63,12 @@ export default class DeployTask extends TaskBase {
     }
 
     const contracts = await deployer.deploy(contractJsons, predeployed, [], params);
-
     console.log(`Contracts deployed: `);
     Object.entries(contracts).forEach(([key, contract]) => console.log(`\t${key} -> ${contract.options.address}`));
 
     const envFile = this.contractsToEnvFile(contracts);
     if (options.save) {
-      this.saveEnvfile(options.save, envFile);
+      await this.saveEnvfile(options.save, envFile);
     } else {
       this.printSummary(envFile);
     }
@@ -85,7 +84,6 @@ export default class DeployTask extends TaskBase {
       ],
       {argv: args, partial: true}
     );
-
     // eslint-disable-next-line no-underscore-dangle
     const unknownOptions = options._unknown;
     if (unknownOptions && unknownOptions.length > 0) {
@@ -131,7 +129,7 @@ export default class DeployTask extends TaskBase {
   }
 
   contractsToEnvFile(addresses) {
-    return `export HEAD_CONTRACT_ADDRESS="${addresses.head.options.address}"`;
+    return `HEAD_CONTRACT_ADDRESS="${addresses.head.options.address}"`;
   }
 
   help() {

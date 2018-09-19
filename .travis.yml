@@ -1,6 +1,6 @@
 dist: trusty
 language: node_js
-cache: 
+cache:
   yarn: true
   directories:
   - node_modules
@@ -11,7 +11,7 @@ install:
 jobs:
   include:
     - stage: test
-      script: 
+      script:
         - yarn build
         - yarn dev:lint
     - stage: test
@@ -21,4 +21,4 @@ jobs:
     - stage: test
       script:
         - yarn build
-        - ./scripts/test_cli.sh
+        - yarn test:tasks
