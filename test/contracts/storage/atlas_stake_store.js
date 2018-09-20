@@ -203,24 +203,24 @@ describe('AtlasStakeStore Contract', () => {
     });
 
     it('can not slash if not staking', async () => {
-      await expect(atlasStakeStore.methods.slash(other, other).send({from})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.slash(other, other, now).send({from})).to.be.eventually.rejected;
     });
 
     it('reject slash if not context internal call', async () => {
-      await expect(atlasStakeStore.methods.slash(from, other).send({from: other})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.slash(from, other, now).send({from: other})).to.be.eventually.rejected;
       expect(await atlasStakeStore.methods.getStake(from).call()).to.equal(stake.toString());
     });
 
     it('slashed stake goes to receiver', async () => {
       const balanceBefore = new BN(await web3.eth.getBalance(other));
-      await atlasStakeStore.methods.slash(from, other).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
       const balanceAfter = new BN(await web3.eth.getBalance(other));
       const expected = balanceBefore.add(new BN(firstPenalty));
       expect(balanceAfter.toString()).to.equal(expected.toString());
     });
 
     it('slashed stake is subtracted from contract balance', async () => {
-      await atlasStakeStore.methods.slash(from, other).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
       const contractBalance = new BN(await web3.eth.getBalance(atlasStakeStore.options.address));
       expect(contractBalance.toString()).to.equal(new BN(stake - firstPenalty).toString());
       const stakeAfterSlashing = await atlasStakeStore.methods.getStake(from).call();
@@ -228,44 +228,44 @@ describe('AtlasStakeStore Contract', () => {
     });
 
     it('penalty rises exponentially', async () => {
-      await atlasStakeStore.methods.slash(from, other).send({from});
-      await atlasStakeStore.methods.slash(from, other).send({from});
-      await atlasStakeStore.methods.slash(from, other).send({from});
-      await atlasStakeStore.methods.slash(from, other).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
       const cumulatedPenalty = firstPenalty + secondPenalty + thirdPenalty + fourthPenalty;
       expect(await atlasStakeStore.methods.getStake(from).call()).to.eq((stake - cumulatedPenalty).toString());
     });
 
     it('can not have negative stake', async () => {
-      await atlasStakeStore.methods.slash(from, other).send({from});
-      await atlasStakeStore.methods.slash(from, other).send({from});
-      await atlasStakeStore.methods.slash(from, other).send({from});
-      await atlasStakeStore.methods.slash(from, other).send({from});
-      await atlasStakeStore.methods.slash(from, other).send({from});
-      await atlasStakeStore.methods.slash(from, other).send({from});
-      await atlasStakeStore.methods.slash(from, other).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
       expect(await atlasStakeStore.methods.getStake(from).call()).to.eq('0');
     });
 
     it('penalties updated after slashing', async () => {
-      await atlasStakeStore.methods.slash(from, other).send({from});
+      await atlasStakeStore.methods.slash(from, other, now).send({from});
       let blockTime = now;
       expect(await atlasStakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
         lastPenaltyTime: blockTime.toString(),
         penaltiesCount: '1'
       });
 
-      await setTimestamp(now + 1);
-      await atlasStakeStore.methods.slash(from, other).send({from});
       blockTime = now + 1;
+      await setTimestamp(blockTime);
+      await atlasStakeStore.methods.slash(from, other, blockTime).send({from});
       expect(await atlasStakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
         lastPenaltyTime: blockTime.toString(),
         penaltiesCount: '2'
       });
 
-      await setTimestamp(now + 2);
-      await atlasStakeStore.methods.slash(from, other).send({from});
       blockTime = now + 2;
+      await setTimestamp(blockTime);
+      await atlasStakeStore.methods.slash(from, other, blockTime).send({from});
       expect(await atlasStakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
         lastPenaltyTime: blockTime.toString(),
         penaltiesCount: '3'

@@ -10,7 +10,7 @@
   "scripts": {
     "build": "yarn build:js && yarn build:sol",
     "build:js": "babel ./src -d ./dist --copy-files",
-    "build:sol": "truffle compile",
+    "build:sol": "truffle compile all",
     "strip": "babel-node src/tools/strip_contracts.js build/contracts",
     "clean": "rm -fr ./build/contracts/* ./dist/*",
     "test:units": "mocha",

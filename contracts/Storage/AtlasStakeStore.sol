@@ -12,11 +12,10 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
 import "../Configuration/Fees.sol";
-import "../Configuration/Time.sol";
 
 
 contract AtlasStakeStore is Base {
-  
+
     using SafeMath for uint;
 
     struct Stake {
@@ -24,7 +23,7 @@ contract AtlasStakeStore is Base {
         uint amount;
         uint storageLimit;
         uint storageUsed;
-        uint lastPenaltyTime;
+        uint64 lastPenaltyTime;
         uint penaltiesCount;
         uint lastChallengeResolvedSequenceNumber;
     }
@@ -51,16 +50,16 @@ contract AtlasStakeStore is Base {
 
     function getStake(address node) public view returns (uint) {
         return stakes[node].amount;
-    }  
+    }
 
     function isShelteringAny(address node) public view returns (bool) {
         return stakes[node].storageUsed > 0;
     }
-    
+
     function getLastChallengeResolvedSequenceNumber(address node) public view returns (uint) {
         return stakes[node].lastChallengeResolvedSequenceNumber;
     }
-    
+
     function getBasicStake(address node) public view returns (uint) {
         return stakes[node].initialAmount;
     }
@@ -94,15 +93,15 @@ contract AtlasStakeStore is Base {
         stakes[node].storageUsed = stakes[node].storageUsed.add(1);
     }
 
-    function slash(address shelterer, address refundAddress) public onlyContextInternalCalls returns(uint) {
+    function slash(address shelterer, address refundAddress, uint64 currentTimestamp) public onlyContextInternalCalls returns(uint) {
         require(isStaking(shelterer));
 
-        (uint penaltiesCount, uint lastPenaltyTime) = getPenaltiesHistory(shelterer);
+        (uint penaltiesCount, uint64 lastPenaltyTime) = getPenaltiesHistory(shelterer);
 
         Fees fees = context().fees();
         (uint amount, uint newPenaltiesCount) = fees.getPenalty(stakes[shelterer].initialAmount, penaltiesCount, lastPenaltyTime);
-        
-        setPenaltyHistory(shelterer, newPenaltiesCount);
+
+        setPenaltyHistory(shelterer, newPenaltiesCount, currentTimestamp);
 
         uint slashedAmount;
         if (amount > stakes[shelterer].amount) {
@@ -115,14 +114,13 @@ contract AtlasStakeStore is Base {
         return slashedAmount;
     }
 
-    function getPenaltiesHistory(address node) public view returns (uint penaltiesCount, uint lastPenaltyTime) {
+    function getPenaltiesHistory(address node) public view returns (uint penaltiesCount, uint64 lastPenaltyTime) {
         penaltiesCount = stakes[node].penaltiesCount;
         lastPenaltyTime = stakes[node].lastPenaltyTime;
     }
 
-    function setPenaltyHistory(address shelterer, uint penaltiesCount) private {
+    function setPenaltyHistory(address shelterer, uint penaltiesCount, uint64 currentTimestamp) private {
         stakes[shelterer].penaltiesCount = penaltiesCount;
-        Time time = context().time();
-        stakes[shelterer].lastPenaltyTime = time.currentTimestamp();
+        stakes[shelterer].lastPenaltyTime = currentTimestamp;
     }
 }

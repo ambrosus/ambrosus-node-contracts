@@ -35,16 +35,17 @@ contract Sheltering is Base {
         RolesStore rolesStore = context().rolesStore();
         require(rolesStore.getRole(creator) == Config.NodeType.HERMES);
         BundleStore bundleStore = context().bundleStore();
-        bundleStore.store(bundleId, creator, storagePeriods);
+        Time time = context().time();
+        bundleStore.store(bundleId, creator, storagePeriods, time.currentTimestamp());
     }
 
     function getBundleUploader(bytes32 bundleId) public view returns (address) {
-        BundleStore bundleStore = context().bundleStore();        
+        BundleStore bundleStore = context().bundleStore();
         return bundleStore.getUploader(bundleId);
     }
 
     function getBundleStoragePeriodsCount(bytes32 bundleId) public view returns (uint64) {
-        BundleStore bundleStore = context().bundleStore();        
+        BundleStore bundleStore = context().bundleStore();
         return bundleStore.getStoragePeriodsCount(bundleId);
     }
 
@@ -91,12 +92,12 @@ contract Sheltering is Base {
     function getShelteringExpirationDate(bytes32 bundleId, address sheltererId) public view returns (uint64) {
         Time time = context().time();
         BundleStore bundleStore = context().bundleStore();
-        
+
         uint64 startDate = bundleStore.getShelteringStartDate(bundleId, sheltererId);
         if (startDate == 0) {
             return 0;
         }
-        
+
         uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
         uint64 payoutPeriodsReduction = bundleStore.getShelteringPayoutPeriodsReduction(bundleId, sheltererId);
 
@@ -124,7 +125,7 @@ contract Sheltering is Base {
         Time time = context().time();
 
         atlasStakeStore.incrementStorageUsed(shelterer);
-        bundleStore.addShelterer(bundleId, shelterer, reward, payoutPeriodReduction);
+        bundleStore.addShelterer(bundleId, shelterer, reward, payoutPeriodReduction, time.currentTimestamp());
 
         uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
 
