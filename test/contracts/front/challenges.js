@@ -61,7 +61,7 @@ describe('Challenges Contract', () => {
   const resolveChallenge = async (challengeId, resolverId) => challenges.methods.resolve(challengeId).send({from: resolverId});
   const markChallengeAsExpired = async (challengeId, marker) => challenges.methods.markAsExpired(challengeId).send({from: marker, gasPrice: '0'});
 
-  const getChallengeId = async (challengerId, bundleId) => challenges.methods.getChallengeId(challengerId, bundleId).call();
+  const getChallengeId = async (sheltererId, bundleId) => challenges.methods.getChallengeId(sheltererId, bundleId).call();
   const nextChallengeSequenceNumber = async () => challenges.methods.nextChallengeSequenceNumber().call();
   const getChallengeSequenceNumber = async (challengeId) => challenges.methods.getChallengeSequenceNumber(challengeId).call();
   const getChallengeCreationTime = async (challengeId) => challenges.methods.getChallengeCreationTime(challengeId).call();
@@ -477,7 +477,7 @@ describe('Challenges Contract', () => {
 
     it(`Penalized shelterer stops being shelterer`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      markChallengeAsExpired(challengeId, from);
+      await markChallengeAsExpired(challengeId, from);
       expect(await isSheltering(bundleId, resolver)).to.equal(false);
     });
 

@@ -12,7 +12,6 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import BN from 'bn.js';
-import TimeMockJson from '../../../build/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 
@@ -23,28 +22,21 @@ const {expect} = chai;
 
 describe('AtlasStakeStore Contract', () => {
   let web3;
-  let from;
-  let other;
+  let shelterer;
+  let otherAddress;
   let atlasStakeStore;
-  let time;
   let snapshotId;
-  const now = 1500000000;
-
-  const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from});
 
   before(async () => {
     web3 = await createWeb3();
-    [from, other] = await web3.eth.getAccounts();
-    ({atlasStakeStore, time} = await deploy({
+    [shelterer, otherAddress] = await web3.eth.getAccounts();
+    ({atlasStakeStore} = await deploy({
       web3,
       contracts: {
         atlasStakeStore: true,
-        fees: true,
-        config: true,
-        time: TimeMockJson
+        config: true
       }
     }));
-    await setTimestamp(now);
   });
 
   beforeEach(async () => {
@@ -57,32 +49,32 @@ describe('AtlasStakeStore Contract', () => {
 
   describe('Deployment', () => {
     it('properly initialized', async () => {
-      expect(await atlasStakeStore.methods.isStaking(from).call()).to.be.false;
-      expect(await atlasStakeStore.methods.canStore(from).call()).to.be.false;
-      expect(await atlasStakeStore.methods.isShelteringAny(from).call()).to.be.false;
-      expect(await atlasStakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
+      expect(await atlasStakeStore.methods.isStaking(shelterer).call()).to.be.false;
+      expect(await atlasStakeStore.methods.canStore(shelterer).call()).to.be.false;
+      expect(await atlasStakeStore.methods.isShelteringAny(shelterer).call()).to.be.false;
+      expect(await atlasStakeStore.methods.getStorageUsed(shelterer).call()).to.be.eq('0');
     });
   });
 
   describe('Deposit a stake', () => {
     it('can not stake if already staking', async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
-      await expect(atlasStakeStore.methods.depositStake(from, 1).send({from, value: 2})).to.be.eventually.rejected;
-      await expect(await atlasStakeStore.methods.getStake(from).call()).to.eq('1');
+      await atlasStakeStore.methods.depositStake(shelterer, 1).send({from: shelterer, value: 1});
+      await expect(atlasStakeStore.methods.depositStake(shelterer, 1).send({from: shelterer, value: 2})).to.be.eventually.rejected;
+      await expect(await atlasStakeStore.methods.getStake(shelterer).call()).to.eq('1');
     });
 
     it('reject if not context internal call', async () => {
-      await expect(atlasStakeStore.methods.depositStake(from, 1).send({from: other, value: 1})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.depositStake(shelterer, 1).send({from: otherAddress, value: 1})).to.be.eventually.rejected;
     });
 
     it('initiate stake', async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 2});
-      expect(await atlasStakeStore.methods.isStaking(from).call()).to.be.true;
-      expect(await atlasStakeStore.methods.canStore(from).call()).to.be.true;
-      expect(await atlasStakeStore.methods.isShelteringAny(from).call()).to.be.false;
-      expect(await atlasStakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
-      expect(await atlasStakeStore.methods.getStorageLimit(from).call()).to.eq('1');
-      expect(await atlasStakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
+      await atlasStakeStore.methods.depositStake(shelterer, 1).send({from: shelterer, value: 2});
+      expect(await atlasStakeStore.methods.isStaking(shelterer).call()).to.be.true;
+      expect(await atlasStakeStore.methods.canStore(shelterer).call()).to.be.true;
+      expect(await atlasStakeStore.methods.isShelteringAny(shelterer).call()).to.be.false;
+      expect(await atlasStakeStore.methods.getStorageUsed(shelterer).call()).to.be.eq('0');
+      expect(await atlasStakeStore.methods.getStorageLimit(shelterer).call()).to.eq('1');
+      expect(await atlasStakeStore.methods.getPenaltiesHistory(shelterer).call()).to.deep.include({
         lastPenaltyTime: '0',
         penaltiesCount: '0'
       });
@@ -92,65 +84,65 @@ describe('AtlasStakeStore Contract', () => {
 
   describe('Update last challenge resolved sequence number', () => {
     it('can not update if not staking', async () => {
-      await expect(atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 1).send({from})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(shelterer, 1).send({from: shelterer})).to.be.eventually.rejected;
     });
 
     it('reject if not context internal call', async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
-      await expect(atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 1).send({from: other})).to.be.eventually.rejected;
+      await atlasStakeStore.methods.depositStake(shelterer, 1).send({from: shelterer, value: 1});
+      await expect(atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(shelterer, 1).send({from: otherAddress})).to.be.eventually.rejected;
     });
 
     it('updates last challenge resolved sequence number', async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
-      await atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(from, 100).send({from});
-      expect(await atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(from).call()).to.equal('100');
+      await atlasStakeStore.methods.depositStake(shelterer, 1).send({from: shelterer, value: 1});
+      await atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(shelterer, 100).send({from: shelterer});
+      expect(await atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(shelterer).call()).to.equal('100');
     });
   });
 
   describe('Increment storage used', () => {
     beforeEach(async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
+      await atlasStakeStore.methods.depositStake(shelterer, 1).send({from: shelterer, value: 1});
     });
 
     it('properly updates contract state', async () => {
-      await atlasStakeStore.methods.incrementStorageUsed(from).send({from});
-      expect(await atlasStakeStore.methods.isStaking(from).call()).to.be.true;
-      expect(await atlasStakeStore.methods.canStore(from).call()).to.be.false;
-      expect(await atlasStakeStore.methods.isShelteringAny(from).call()).to.be.true;
-      expect(await atlasStakeStore.methods.getStorageUsed(from).call()).to.be.eq('1');
+      await atlasStakeStore.methods.incrementStorageUsed(shelterer).send({from: shelterer});
+      expect(await atlasStakeStore.methods.isStaking(shelterer).call()).to.be.true;
+      expect(await atlasStakeStore.methods.canStore(shelterer).call()).to.be.false;
+      expect(await atlasStakeStore.methods.isShelteringAny(shelterer).call()).to.be.true;
+      expect(await atlasStakeStore.methods.getStorageUsed(shelterer).call()).to.be.eq('1');
     });
 
     it('reject if not context internal call', async () => {
-      await expect(atlasStakeStore.methods.incrementStorageUsed(from).send({from: other})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.incrementStorageUsed(shelterer).send({from: otherAddress})).to.be.eventually.rejected;
     });
 
     it('reject if run out of limit reached', async () => {
-      await atlasStakeStore.methods.incrementStorageUsed(from).send({from});
-      await expect(atlasStakeStore.methods.incrementStorageUsed(from).send({from})).to.be.eventually.rejected;
+      await atlasStakeStore.methods.incrementStorageUsed(shelterer).send({from: shelterer});
+      await expect(atlasStakeStore.methods.incrementStorageUsed(shelterer).send({from: shelterer})).to.be.eventually.rejected;
     });
   });
 
   describe('Decrement storage used', () => {
     beforeEach(async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: 1});
-      await atlasStakeStore.methods.incrementStorageUsed(from).send({from});
+      await atlasStakeStore.methods.depositStake(shelterer, 1).send({from: shelterer, value: 1});
+      await atlasStakeStore.methods.incrementStorageUsed(shelterer).send({from: shelterer});
     });
 
     it('properly updates contract state', async () => {
-      await atlasStakeStore.methods.decrementStorageUsed(from).send({from});
-      expect(await atlasStakeStore.methods.isStaking(from).call()).to.be.true;
-      expect(await atlasStakeStore.methods.canStore(from).call()).to.be.true;
-      expect(await atlasStakeStore.methods.isShelteringAny(from).call()).to.be.false;
-      expect(await atlasStakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
+      await atlasStakeStore.methods.decrementStorageUsed(shelterer).send({from: shelterer});
+      expect(await atlasStakeStore.methods.isStaking(shelterer).call()).to.be.true;
+      expect(await atlasStakeStore.methods.canStore(shelterer).call()).to.be.true;
+      expect(await atlasStakeStore.methods.isShelteringAny(shelterer).call()).to.be.false;
+      expect(await atlasStakeStore.methods.getStorageUsed(shelterer).call()).to.be.eq('0');
     });
 
     it('reject if not context internal call', async () => {
-      await expect(atlasStakeStore.methods.decrementStorageUsed(from).send({from: other})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.decrementStorageUsed(shelterer).send({from: otherAddress})).to.be.eventually.rejected;
     });
 
     it('reject if nothing is stored', async () => {
-      await atlasStakeStore.methods.decrementStorageUsed(from).send({from});
-      await expect(atlasStakeStore.methods.decrementStorageUsed(from).send({from})).to.be.eventually.rejected;
+      await atlasStakeStore.methods.decrementStorageUsed(shelterer).send({from: shelterer});
+      await expect(atlasStakeStore.methods.decrementStorageUsed(shelterer).send({from: shelterer})).to.be.eventually.rejected;
     });
   });
 
@@ -158,118 +150,92 @@ describe('AtlasStakeStore Contract', () => {
     const stake = 100;
 
     beforeEach(async () => {
-      await atlasStakeStore.methods.depositStake(from, 1).send({from, value: stake});
+      await atlasStakeStore.methods.depositStake(shelterer, 1).send({from: shelterer, value: stake});
     });
 
     it('properly updates contract state', async () => {
-      await atlasStakeStore.methods.releaseStake(from, other).send({from});
-      expect(await atlasStakeStore.methods.isStaking(from).call()).to.be.false;
-      expect(await atlasStakeStore.methods.canStore(from).call()).to.be.false;
-      expect(await atlasStakeStore.methods.isShelteringAny(from).call()).to.be.false;
-      expect(await atlasStakeStore.methods.getStorageUsed(from).call()).to.be.eq('0');
-      expect(await atlasStakeStore.methods.getStake(from).call()).to.be.eq('0');
+      await atlasStakeStore.methods.releaseStake(shelterer, otherAddress).send({from: shelterer});
+      expect(await atlasStakeStore.methods.isStaking(shelterer).call()).to.be.false;
+      expect(await atlasStakeStore.methods.canStore(shelterer).call()).to.be.false;
+      expect(await atlasStakeStore.methods.isShelteringAny(shelterer).call()).to.be.false;
+      expect(await atlasStakeStore.methods.getStorageUsed(shelterer).call()).to.be.eq('0');
+      expect(await atlasStakeStore.methods.getStake(shelterer).call()).to.be.eq('0');
     });
 
     it('release stake and send it back', async () => {
-      const balanceChange = await observeBalanceChange(web3, other,
-        () => atlasStakeStore.methods.releaseStake(from, other).send({from, gasPrice: '0'}));
+      const balanceChange = await observeBalanceChange(web3, otherAddress,
+        () => atlasStakeStore.methods.releaseStake(shelterer, otherAddress).send({from: shelterer, gasPrice: '0'}));
       expect(balanceChange.toString()).to.equal(stake.toString());
     });
 
     it('can not release a stake if not internal call', async () => {
-      expect(await atlasStakeStore.methods.getStake(from).call()).to.be.eq(stake.toString());
-      await expect(atlasStakeStore.methods.releaseStake(from, other).send({from: other})).to.be.eventually.rejected;
+      expect(await atlasStakeStore.methods.getStake(shelterer).call()).to.be.eq(stake.toString());
+      await expect(atlasStakeStore.methods.releaseStake(shelterer, otherAddress).send({from: otherAddress})).to.be.eventually.rejected;
     });
 
     it('can not release a stake if storing', async () => {
-      await atlasStakeStore.methods.incrementStorageUsed(from).send({from});
-      await expect(atlasStakeStore.methods.releaseStake(from, other).send({from})).to.be.eventually.rejected;
+      await atlasStakeStore.methods.incrementStorageUsed(shelterer).send({from: shelterer});
+      await expect(atlasStakeStore.methods.releaseStake(shelterer, otherAddress).send({from: shelterer})).to.be.eventually.rejected;
     });
 
     it('can not release a stake if is not staking', async () => {
-      await expect(atlasStakeStore.methods.releaseStake(from, other).send({other})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.releaseStake(shelterer, otherAddress).send({other: otherAddress})).to.be.eventually.rejected;
     });
   });
 
   describe('Slashing', () => {
     const stake = 100;
-    const firstPenalty = stake / 100;
-    const secondPenalty = firstPenalty * 2;
-    const thirdPenalty = secondPenalty * 2;
-    const fourthPenalty = thirdPenalty * 2;
+    const penalty = stake / 100;
 
     beforeEach(async () => {
-      await atlasStakeStore.methods.depositStake(from, 10).send({from, value: stake});
+      await atlasStakeStore.methods.depositStake(shelterer, 10).send({from: shelterer, value: stake});
     });
 
     it('can not slash if not staking', async () => {
-      await expect(atlasStakeStore.methods.slash(other, other, now).send({from})).to.be.eventually.rejected;
+      await expect(atlasStakeStore.methods.slash(otherAddress, otherAddress, penalty).send({from: shelterer})).to.be.eventually.rejected;
     });
 
     it('reject slash if not context internal call', async () => {
-      await expect(atlasStakeStore.methods.slash(from, other, now).send({from: other})).to.be.eventually.rejected;
-      expect(await atlasStakeStore.methods.getStake(from).call()).to.equal(stake.toString());
+      await expect(atlasStakeStore.methods.slash(shelterer, otherAddress, penalty).send({from: otherAddress})).to.be.eventually.rejected;
+      expect(await atlasStakeStore.methods.getStake(shelterer).call()).to.equal(stake.toString());
     });
 
     it('slashed stake goes to receiver', async () => {
-      const balanceBefore = new BN(await web3.eth.getBalance(other));
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      const balanceAfter = new BN(await web3.eth.getBalance(other));
-      const expected = balanceBefore.add(new BN(firstPenalty));
+      const balanceBefore = new BN(await web3.eth.getBalance(otherAddress));
+      await atlasStakeStore.methods.slash(shelterer, otherAddress, penalty).send({from: shelterer});
+      const balanceAfter = new BN(await web3.eth.getBalance(otherAddress));
+      const expected = balanceBefore.add(new BN(penalty));
       expect(balanceAfter.toString()).to.equal(expected.toString());
     });
 
-    it('slashed stake is subtracted from contract balance', async () => {
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
+    it('slashed stake is subtracted shelterer contract balance', async () => {
+      await atlasStakeStore.methods.slash(shelterer, otherAddress, penalty).send({from: shelterer});
       const contractBalance = new BN(await web3.eth.getBalance(atlasStakeStore.options.address));
-      expect(contractBalance.toString()).to.equal(new BN(stake - firstPenalty).toString());
-      const stakeAfterSlashing = await atlasStakeStore.methods.getStake(from).call();
-      expect(stakeAfterSlashing).to.equal(new BN(stake - firstPenalty).toString());
+      expect(contractBalance.toString()).to.equal(new BN(stake - penalty).toString());
+      const stakeAfterSlashing = await atlasStakeStore.methods.getStake(shelterer).call();
+      expect(stakeAfterSlashing).to.equal(new BN(stake - penalty).toString());
     });
 
-    it('penalty rises exponentially', async () => {
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      const cumulatedPenalty = firstPenalty + secondPenalty + thirdPenalty + fourthPenalty;
-      expect(await atlasStakeStore.methods.getStake(from).call()).to.eq((stake - cumulatedPenalty).toString());
+    it('slashed stake is zeroed if penalty is higher than stake', async () => {
+      await atlasStakeStore.methods.slash(shelterer, otherAddress, 1000).send({from: shelterer});
+      expect(await atlasStakeStore.methods.getStake(shelterer).call()).to.equal('0');
+    });
+  });
+
+  describe('Set penalty history', () => {
+    const penaltiesCount = '10';
+    const currentTimestamp = '20';
+
+    it('sets penalties count and last penalty timestamp', async () => {
+      await atlasStakeStore.methods.setPenaltyHistory(shelterer, penaltiesCount, currentTimestamp).send({from: shelterer});
+      expect((await atlasStakeStore.methods.getPenaltiesHistory(shelterer).call()).penaltiesCount).to.equal(penaltiesCount);
+      expect((await atlasStakeStore.methods.getPenaltiesHistory(shelterer).call()).lastPenaltyTime).to.equal(currentTimestamp);
     });
 
-    it('can not have negative stake', async () => {
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      expect(await atlasStakeStore.methods.getStake(from).call()).to.eq('0');
-    });
-
-    it('penalties updated after slashing', async () => {
-      await atlasStakeStore.methods.slash(from, other, now).send({from});
-      let blockTime = now;
-      expect(await atlasStakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
-        lastPenaltyTime: blockTime.toString(),
-        penaltiesCount: '1'
-      });
-
-      blockTime = now + 1;
-      await setTimestamp(blockTime);
-      await atlasStakeStore.methods.slash(from, other, blockTime).send({from});
-      expect(await atlasStakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
-        lastPenaltyTime: blockTime.toString(),
-        penaltiesCount: '2'
-      });
-
-      blockTime = now + 2;
-      await setTimestamp(blockTime);
-      await atlasStakeStore.methods.slash(from, other, blockTime).send({from});
-      expect(await atlasStakeStore.methods.getPenaltiesHistory(from).call()).to.deep.include({
-        lastPenaltyTime: blockTime.toString(),
-        penaltiesCount: '3'
-      });
+    it('isContextInternal', async () => {
+      await expect(
+        atlasStakeStore.methods.setPenaltyHistory(shelterer, penaltiesCount, currentTimestamp).send({from: otherAddress})
+      ).to.be.eventually.rejected;
     });
   });
 });

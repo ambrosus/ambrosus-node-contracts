@@ -103,11 +103,8 @@ contract Challenges is Base {
         if (isSystemChallenge(challengeId)) {
             refundAddress = challenge.sheltererId;
         } else {
-            AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
-            Time time = context().time();
-            penalty = atlasStakeStore.slash(challenge.sheltererId, this, time.currentTimestamp());
-
             Sheltering sheltering = context().sheltering();
+            penalty = sheltering.penalizeShelterer(challenge.sheltererId, this);
             revokedReward = sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId, this);
 
             refundAddress = challenge.challengerId;
