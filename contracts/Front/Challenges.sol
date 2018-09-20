@@ -93,7 +93,7 @@ contract Challenges is Base {
     function markAsExpired(bytes32 challengeId) public {
         require(challengeIsInProgress(challengeId));
         require(challengeIsTimedOut(challengeId));
-        
+
         Challenge storage challenge = challenges[challengeId];
 
         uint penalty = 0;
@@ -104,7 +104,8 @@ contract Challenges is Base {
             refundAddress = challenge.sheltererId;
         } else {
             AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
-            penalty = atlasStakeStore.slash(challenge.sheltererId, this);
+            Time time = context().time();
+            penalty = atlasStakeStore.slash(challenge.sheltererId, this, time.currentTimestamp());
 
             Sheltering sheltering = context().sheltering();
             revokedReward = sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId, this);

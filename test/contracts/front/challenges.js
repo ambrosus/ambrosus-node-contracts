@@ -75,11 +75,12 @@ describe('Challenges Contract', () => {
 
   const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from});
   const addToKycWhitelist = async(candidate, role, requiredDeposit) => kycWhitelist.methods.add(candidate, role, requiredDeposit).send({from});
-  const storeBundle = async (bundleId, sheltererId, storagePeriods) => bundleStore.methods.store(bundleId, sheltererId, storagePeriods).send({from});
-  const addSheltererToBundle = async (bundleId, sheltererId, shelteringReward, payoutPeriodsReduction) => bundleStore.methods.addShelterer(bundleId, sheltererId, shelteringReward, payoutPeriodsReduction).send({from});
+  const storeBundle = async (bundleId, sheltererId, storagePeriods, currentTimestamp) => bundleStore.methods.store(bundleId, sheltererId, storagePeriods, currentTimestamp).send({from});
+  const addSheltererToBundle = async (bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp) =>
+    bundleStore.methods.addShelterer(bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp).send({from});
   const depositStake = async(stakerId, storageLimit, stakeValue) => atlasStakeStore.methods.depositStake(stakerId, storageLimit).send({from, value: stakeValue});
   const setStorageUsed = async (nodeId, storageUsed) => atlasStakeStore.methods.setStorageUsed(nodeId, storageUsed).send({from});
-  const addShelterer = async(bundleId, sheltererId, shelteringReward) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from, value: shelteringReward});
+  const addShelterer = async (bundleId, sheltererId, shelteringReward) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from, value: shelteringReward});
   const onboardAsAtlas = async(nodeUrl, nodeAddress, depositValue) => roles.methods.onboardAsAtlas(nodeUrl).send({from: nodeAddress, value: depositValue, gasPrice: '0'});
 
   const getShelteringExpirationDate = async(bundleId, sheltererId) => sheltering.methods.getShelteringExpirationDate(bundleId, sheltererId).call();
@@ -109,7 +110,7 @@ describe('Challenges Contract', () => {
         rolesStore: true
       }}));
     await setTimestamp(now);
-    await storeBundle(bundleId, from, storagePeriods);
+    await storeBundle(bundleId, from, storagePeriods, now);
     userChallengeFee = new BN(await getFeeForChallenge(storagePeriods));
     systemChallengeFee = userChallengeFee.mul(new BN(SYSTEM_CHALLENGES_COUNT));
   });
@@ -131,7 +132,7 @@ describe('Challenges Contract', () => {
     const otherBundleId = utils.keccak256('otherBundleId');
 
     it('Is context internal', async () => {
-      await storeBundle(otherBundleId, other, storagePeriods);
+      await storeBundle(otherBundleId, other, storagePeriods, now);
       await expect(startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, other, systemChallengeFee)).to.be.eventually.rejected;
       await expect(startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee)).to.be.eventually.fulfilled;
     });
@@ -145,7 +146,7 @@ describe('Challenges Contract', () => {
     it(`Should increase nextChallengeSequenceNumber by challengesCount`, async () => {
       await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee);
       expect(await nextChallengeSequenceNumber()).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
-      await storeBundle(otherBundleId, from, storagePeriods);
+      await storeBundle(otherBundleId, from, storagePeriods, now);
       await startChallengeForSystem(from, otherBundleId, 100, from, userChallengeFee.mul(new BN('100')));
       expect(await nextChallengeSequenceNumber()).to.equal((SYSTEM_CHALLENGES_COUNT + 101).toString());
     });
@@ -154,7 +155,7 @@ describe('Challenges Contract', () => {
       await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee);
       expect(await getChallengeSequenceNumber(challengeId)).to.equal('1');
 
-      await storeBundle(otherBundleId, from, storagePeriods);
+      await storeBundle(otherBundleId, from, storagePeriods, now);
       await startChallengeForSystem(from, otherBundleId, 100, from, userChallengeFee.mul(new BN('100')));
       const otherChallengeId = await getChallengeId(from, otherBundleId);
       expect(await getChallengeSequenceNumber(otherChallengeId)).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
@@ -394,7 +395,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails if resolver is already sheltering challenged bundle', async () => {
-      await addSheltererToBundle(bundleId, resolver, shelteringReward, 0);
+      await addSheltererToBundle(bundleId, resolver, shelteringReward, 0, now);
       expect(await canResolve(resolver, challengeId)).to.equal(false);
       await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.rejected;
     });

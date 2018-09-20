@@ -12,7 +12,6 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
-import TimeMockJson from '../../../build/contracts/TimeMock.json';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 
 chai.use(chaiEmitEvents);
@@ -27,36 +26,35 @@ describe('BundleStore Contract', () => {
   let targetUser;
   let otherUser;
   let bundleStore;
-  let time;
   let bundleId;
   let snapshotId;
   const storagePeriods = 3;
   const now = 1500000000;
 
-  const store = async (bundleId, uploader, storagePeriods, sender = deployer) => bundleStore.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
+  const store = async (bundleId, uploader, storagePeriods, currentTimestamp, sender = deployer) =>
+    bundleStore.methods.store(bundleId, uploader, storagePeriods, currentTimestamp).send({from: sender});
   const getUploader = async (bundleId) => bundleStore.methods.getUploader(bundleId).call();
   const getUploadTimestamp = async (bundleId) => bundleStore.methods.getUploadTimestamp(bundleId).call();
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
   const getStoragePeriodsCount = async (bundleId) => bundleStore.methods.getStoragePeriodsCount(bundleId).call();
   const getShelteringStartDate = async (bundleId) => bundleStore.methods.getShelteringStartDate(bundleId, otherUser).call();
   const getTotalShelteringReward = async (bundleId, shelterer) => bundleStore.methods.getTotalShelteringReward(bundleId, shelterer).call();
-  const addShelterer = async (bundleId, shelterer, totalReward, payoutPeriodsReduction, sender = deployer) => bundleStore.methods.addShelterer(bundleId, shelterer, totalReward, payoutPeriodsReduction).send({from: sender});
+  const addShelterer = async (bundleId, shelterer, totalReward, payoutPeriodsReduction, currentTimestamp, sender = deployer) =>
+    bundleStore.methods.addShelterer(bundleId, shelterer, totalReward, payoutPeriodsReduction, currentTimestamp).send({from: sender});
   const getShelteringPayoutPeriodsReduction = async (bundleId, shelterer) => bundleStore.methods.getShelteringPayoutPeriodsReduction(bundleId, shelterer).call();
   const removeShelterer = async (bundleId, shelterer, sender = deployer) => bundleStore.methods.removeShelterer(bundleId, shelterer).send({from: sender});
 
   before(async () => {
     web3 = await createWeb3();
     [deployer, targetUser, otherUser] = await web3.eth.getAccounts();
-    ({bundleStore, time} = await deploy({
+    ({bundleStore} = await deploy({
       web3,
       contracts: {
         bundleStore: true,
-        config: true,
-        time: TimeMockJson
+        config: true
       }
     }));
     bundleId = utils.keccak256('bundleId');
-    await time.methods.setCurrentTimestamp(now).send({from: deployer});
   });
 
   beforeEach(async () => {
@@ -70,7 +68,7 @@ describe('BundleStore Contract', () => {
   describe('Storing a bundle', () => {
     describe('Stores bundle correctly', () => {
       beforeEach(async () => {
-        await store(bundleId, targetUser, storagePeriods);
+        await store(bundleId, targetUser, storagePeriods, now);
       });
 
       it('creator is saved as uploader', async () => {
@@ -95,17 +93,17 @@ describe('BundleStore Contract', () => {
     });
 
     it('should emit event when bundle was added', async () => {
-      expect(await store(bundleId, targetUser, 1))
+      expect(await store(bundleId, targetUser, 1, now))
         .to.emitEvent('BundleStored')
         .withArgs({bundleId, uploader: targetUser});
     });
 
     it('reject if not context internal call', async () => {
-      await expect(store(bundleId, targetUser, storagePeriods, otherUser)).to.be.eventually.rejected;
+      await expect(store(bundleId, targetUser, storagePeriods, now, otherUser)).to.be.eventually.rejected;
     });
 
     it('reject if bundle with same id exists and has shelterers', async () => {
-      await store(bundleId, targetUser, storagePeriods);
+      await store(bundleId, targetUser, storagePeriods, now);
       await expect(store(bundleId, targetUser, storagePeriods)).to.be.eventually.rejected;
     });
   });
@@ -115,12 +113,12 @@ describe('BundleStore Contract', () => {
     const payoutPeriodsReduction = 16;
 
     beforeEach(async () => {
-      await store(bundleId, targetUser, storagePeriods);
-      await addShelterer(bundleId, otherUser, totalReward, payoutPeriodsReduction);
+      await store(bundleId, targetUser, storagePeriods, now);
+      await addShelterer(bundleId, otherUser, totalReward, payoutPeriodsReduction, now);
     });
 
     it('should emit event when the shelterer was added', async () => {
-      expect(await addShelterer(bundleId, targetUser, totalReward, 0)).to.emitEvent('SheltererAdded')
+      expect(await addShelterer(bundleId, targetUser, totalReward, 0, now)).to.emitEvent('SheltererAdded')
         .withArgs({bundleId, shelterer: targetUser});
       expect(await getShelterers(bundleId)).to.deep.equal([otherUser, targetUser]);
     });
@@ -172,11 +170,11 @@ describe('BundleStore Contract', () => {
 
     it('rejects if add shelterer to non-existing bundle', async () => {
       const unknownBundleId = utils.asciiToHex('unknownBundleId');
-      await expect(addShelterer(unknownBundleId, otherUser, totalReward, 0)).to.be.eventually.rejected;
+      await expect(addShelterer(unknownBundleId, otherUser, totalReward, 0, now)).to.be.eventually.rejected;
     });
 
     it('rejects if add same shelterer twice', async () => {
-      await expect(addShelterer(bundleId, otherUser, totalReward, 0)).to.be.eventually.rejected;
+      await expect(addShelterer(bundleId, otherUser, totalReward, 0, now)).to.be.eventually.rejected;
     });
 
     it('cannot put new bundle with same id when all shelterers are removed', async () => {

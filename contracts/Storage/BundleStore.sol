@@ -73,30 +73,30 @@ contract BundleStore is Base {
         return bundles[bundleId].shelterings[shelterer].totalShelteringReward;
     }
 
-    function getShelteringPayoutPeriodsReduction(bytes32 bundleId, address shelterer) view public returns (uint64) { 
+    function getShelteringPayoutPeriodsReduction(bytes32 bundleId, address shelterer) view public returns (uint64) {
         if (getShelteringStartDate(bundleId, shelterer) == 0) {
             return 0;
         }
         return bundles[bundleId].shelterings[shelterer].shelteringPayoutPeriodsReduction;
     }
 
-    function store(bytes32 bundleId, address uploader, uint64 storagePeriods) public onlyContextInternalCalls {
+    function store(bytes32 bundleId, address uploader, uint64 storagePeriods, uint64 currentTimestamp) public onlyContextInternalCalls {
         require(!bundleExists(bundleId));
         require(storagePeriods > 0);
-        Time time = context().time();
-        bundles[bundleId] = Bundle(uploader, time.currentTimestamp(), new address[](0), storagePeriods);
+        bundles[bundleId] = Bundle(uploader, currentTimestamp, new address[](0), storagePeriods);
         emit BundleStored(bundleId, uploader);
     }
 
-    function addShelterer(bytes32 bundleId, address shelterer, uint totalReward, uint64 payoutPeriodsReduction) public onlyContextInternalCalls {
+    function addShelterer(bytes32 bundleId, address shelterer, uint totalReward, uint64 payoutPeriodsReduction, uint64 currentTimestamp)
+    public onlyContextInternalCalls
+    {
         require(bundleExists(bundleId));
 
         for (uint i = 0; i < bundles[bundleId].shelterers.length; i++) {
             require(bundles[bundleId].shelterers[i] != shelterer);
         }
-        Time time = context().time();
         bundles[bundleId].shelterers.push(shelterer);
-        bundles[bundleId].shelterings[shelterer].shelteringStartDate = time.currentTimestamp();
+        bundles[bundleId].shelterings[shelterer].shelteringStartDate = currentTimestamp;
         bundles[bundleId].shelterings[shelterer].totalShelteringReward = totalReward;
         bundles[bundleId].shelterings[shelterer].shelteringPayoutPeriodsReduction = payoutPeriodsReduction;
         emit SheltererAdded(bundleId, shelterer);

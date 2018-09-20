@@ -52,8 +52,10 @@ describe('Sheltering Contract', () => {
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
   const getStorageUsed = async (staker) => atlasStakeStore.methods.getStorageUsed(staker).call();
   const depositStake = async (staker, storageLimit, value, sender = deployer) => atlasStakeStore.methods.depositStake(staker, storageLimit).send({from: sender, value});
-  const injectBundleWithBundleStore = async (bundleId, uploader, storagePeriods, sender = deployer) => bundleStore.methods.store(bundleId, uploader, storagePeriods).send({from: sender});
-  const injectSheltererWithBundleStore = async (bundleId, shelterer, reward, payoutPeriodsReduction, sender = deployer) => bundleStore.methods.addShelterer(bundleId, shelterer, reward, payoutPeriodsReduction).send({from: sender});
+  const injectBundleWithBundleStore = async (bundleId, uploader, storagePeriods, currentTimestamp, sender = deployer) =>
+    bundleStore.methods.store(bundleId, uploader, storagePeriods, currentTimestamp).send({from: sender});
+  const injectSheltererWithBundleStore = async (bundleId, shelterer, reward, payoutPeriodsReduction, currentTimestamp, sender = deployer) =>
+    bundleStore.methods.addShelterer(bundleId, shelterer, reward, payoutPeriodsReduction, currentTimestamp).send({from: sender});
   const getCurrentPayoutPeriod = async () => time.methods.currentPayoutPeriod().call();
   const withdrawPayout = async (targetUser) => payouts.methods.withdraw().send({from: targetUser, gasPrice: '0'});
   const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
@@ -102,20 +104,20 @@ describe('Sheltering Contract', () => {
 
     it(`returns false if account is not bundle's shelterer`, async () => {
       expect(await isSheltering(bundleId, hermes)).to.equal(false);
-      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
+      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods, bundleUploadTimestamp);
       expect(await isSheltering(bundleId, hermes)).to.equal(false);
     });
 
     it(`returns true if account is bundle's shelterer`, async () => {
       expect(await isSheltering(bundleId, other)).to.equal(false);
-      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
-      await injectSheltererWithBundleStore(bundleId, other, totalReward, 0);
+      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods, bundleUploadTimestamp);
+      await injectSheltererWithBundleStore(bundleId, other, totalReward, 0, bundleUploadTimestamp);
       expect(await isSheltering(bundleId, other)).to.equal(true);
     });
 
     it('returns false if sheltering has expired', async () => {
-      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods);
-      await injectSheltererWithBundleStore(bundleId, other, totalReward, 0);
+      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods, bundleUploadTimestamp);
+      await injectSheltererWithBundleStore(bundleId, other, totalReward, 0, bundleUploadTimestamp);
       await setTimestamp('2500000000');
       expect(await isSheltering(bundleId, other)).to.equal(false);
     });
@@ -306,7 +308,7 @@ describe('Sheltering Contract', () => {
     const payoutPeriodsReduction = 5;
     beforeEach(async () => {
       await storeBundle(bundleId, hermes, storagePeriods);
-      await injectSheltererWithBundleStore(bundleId, atlas, totalReward, payoutPeriodsReduction);
+      await injectSheltererWithBundleStore(bundleId, atlas, totalReward, payoutPeriodsReduction, bundleUploadTimestamp);
     });
 
     it('returns expiration date for a shelterer', async () => {
