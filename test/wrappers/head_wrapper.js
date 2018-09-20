@@ -24,7 +24,6 @@ describe('Head Wrapper', () => {
   let headWrapper;
   const deployedMockContracts = {};
 
-  const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor');
   const generateAddress = () => web3.eth.accounts.create().address;
 
   before(async () => {
@@ -32,17 +31,28 @@ describe('Head Wrapper', () => {
     ownerAddress = getDefaultAddress(web3);
     head = await deployContract(web3, contractJsons.head, [ownerAddress]);
 
-    const contextConstructorParams = getContractConstructor(contractJsons.context)
+    const contextInitializer1Params = contractJsons.context.abi.find((method) => method.name === 'initialize1')
+      .inputs
+      .map((input) => input.name.slice(1));
+    const contextInitializer2Params = contractJsons.context.abi.find((method) => method.name === 'initialize2')
+      .inputs
+      .map((input) => input.name.slice(1));
+    const contextInitializer3Params = contractJsons.context.abi.find((method) => method.name === 'initialize3')
       .inputs
       .map((input) => input.name.slice(1));
 
-    for (const paramName of contextConstructorParams) {
+    for (const paramName of [...contextInitializer1Params, ...contextInitializer2Params, ...contextInitializer3Params]) {
       deployedMockContracts[paramName] = generateAddress();
     }
 
-    const addressesForContextConstructor = contextConstructorParams.map((paramName) => deployedMockContracts[paramName]);
+    const addressesForContextInitializer1 = contextInitializer1Params.map((paramName) => deployedMockContracts[paramName]);
+    const addressesForContextInitializer2 = contextInitializer2Params.map((paramName) => deployedMockContracts[paramName]);
+    const addressesForContextInitializer3 = contextInitializer3Params.map((paramName) => deployedMockContracts[paramName]);
 
-    context = await deployContract(web3, contractJsons.context, addressesForContextConstructor);
+    context = await deployContract(web3, contractJsons.context, []);
+    await context.methods.initialize1(...addressesForContextInitializer1).send({from: ownerAddress});
+    await context.methods.initialize2(...addressesForContextInitializer2).send({from: ownerAddress});
+    await context.methods.initialize3(...addressesForContextInitializer3).send({from: ownerAddress});
     await head.methods.setContext(context.options.address).send({
       from: ownerAddress
     });

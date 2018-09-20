@@ -36,7 +36,6 @@ const deploy = async (options = {}) => {
       jsons[key] = requestedContracts[key];
     }
   }
-
   const deployer = new Deployer(web3, sender);
   const contracts = await deployer.deploy(jsons, alreadyDeployed, skipDeployment, params);
 

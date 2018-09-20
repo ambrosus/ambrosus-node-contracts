@@ -43,9 +43,10 @@ describe('Base Contract', () => {
   });
 
   const deployContext = async (web3, sender, head, injected) => {
-    const constructorABI = ContextJson.abi.find((method) => method.type === 'constructor');
-    const constructorArguments = [...new Array(constructorABI.inputs.length - injected.length).fill('0x0'), ...injected];
-    context = await deployContract(web3, ContextJson, constructorArguments, {from: sender});
+    const inti1Abi = ContextJson.abi.find((method) => method.name === 'initialize1');
+    const init1Arguments = [...new Array(inti1Abi.inputs.length - injected.length).fill('0x0'), ...injected];
+    context = await deployContract(web3, ContextJson, [], {from: sender});
+    await context.methods.initialize1(...init1Arguments).send({from: sender});
     await head.methods.setContext(context.options.address).send({from: sender});
     return context;
   };

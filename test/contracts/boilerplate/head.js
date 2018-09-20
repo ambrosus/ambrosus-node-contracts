@@ -12,9 +12,11 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
 import HeadJson from '../../../build/contracts/Head.json';
+import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+chai.use(chaiEmitEvents);
 
 const {expect} = chai;
 

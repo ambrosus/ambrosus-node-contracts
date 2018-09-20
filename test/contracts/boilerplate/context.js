@@ -11,6 +11,8 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
+import {deployContract} from '../../../src/utils/web3_tools';
+import ContextJson from '../../../build/contracts/Context';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -20,12 +22,29 @@ const {expect} = chai;
 describe('Context Contract', () => {
   let web3;
   let context;
+  let context2;
   let fees;
   let accounts;
 
   before(async () => {
     ({web3, fees, context} = await deploy({contracts: {fees: true}}));
+    context2 = await deployContract(web3, ContextJson);
     accounts = await web3.eth.getAccounts();
+  });
+
+  it('initialize1 cannot be called twice', async () => {
+    await expect(context2.methods.initialize1(accounts[1], accounts[2], accounts[3], accounts[4]).send({from: accounts[0]})).to.be.fulfilled;
+    await expect(context2.methods.initialize1(accounts[1], accounts[2], accounts[3], accounts[4]).send({from: accounts[0]})).to.be.rejected;
+  });
+
+  it('initialize2 cannot be called twice', async () => {
+    await expect(context2.methods.initialize2(accounts[1], accounts[2], accounts[3], accounts[4], accounts[3], accounts[4]).send({from: accounts[0]})).to.be.fulfilled;
+    await expect(context2.methods.initialize2(accounts[1], accounts[2], accounts[3], accounts[4], accounts[3], accounts[4]).send({from: accounts[0]})).to.be.rejected;
+  });
+
+  it('initialize3 cannot be called twice', async () => {
+    await expect(context2.methods.initialize3(accounts[1], accounts[2], accounts[3], accounts[4], accounts[3], accounts[4]).send({from: accounts[0]})).to.be.fulfilled;
+    await expect(context2.methods.initialize3(accounts[1], accounts[2], accounts[3], accounts[4], accounts[3], accounts[4]).send({from: accounts[0]})).to.be.rejected;
   });
 
   it('isInternalToContext returns true if address is known', async () => {
