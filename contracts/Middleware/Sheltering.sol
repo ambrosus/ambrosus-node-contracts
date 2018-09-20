@@ -33,7 +33,7 @@ contract Sheltering is Base {
 
     function storeBundle(bytes32 bundleId, address creator, uint64 storagePeriods) public onlyContextInternalCalls {
         RolesStore rolesStore = context().rolesStore();
-        require(rolesStore.getRole(creator) == Config.NodeType.HERMES);
+        require(rolesStore.getRole(creator) == Consts.NodeType.HERMES);
         BundleStore bundleStore = context().bundleStore();
         Time time = context().time();
         bundleStore.store(bundleId, creator, storagePeriods, time.currentTimestamp());

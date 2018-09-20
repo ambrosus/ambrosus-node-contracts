@@ -11,7 +11,6 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
-import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 
 

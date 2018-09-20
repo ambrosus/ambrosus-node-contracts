@@ -10,25 +10,25 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
-import "../Configuration/Config.sol";
+import "../Configuration/Consts.sol";
 
 
 contract RolesStore is Base {
-    mapping(address => Config.NodeType) public roles;
+    mapping(address => Consts.NodeType) public roles;
     mapping(address => string) public urls;
 
     constructor(Head _head) public Base(_head) { }
 
-    function setRole(address node, Config.NodeType role) public onlyContextInternalCalls {
+    function setRole(address node, Consts.NodeType role) public onlyContextInternalCalls {
         roles[node] = role;
     }
 
     function setUrl(address node, string url) public onlyContextInternalCalls {
-        require(getRole(node) == Config.NodeType.ATLAS || getRole(node) == Config.NodeType.HERMES);
+        require(getRole(node) == Consts.NodeType.ATLAS || getRole(node) == Consts.NodeType.HERMES);
         urls[node] = url;
     }
 
-    function getRole(address node) public view returns(Config.NodeType) {
+    function getRole(address node) public view returns(Consts.NodeType) {
         return roles[node];
     }
 
