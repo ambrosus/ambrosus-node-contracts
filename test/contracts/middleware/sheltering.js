@@ -39,19 +39,31 @@ describe('Sheltering Contract', () => {
   let payoutsStore;
   let atlasStakeStore;
   let snapshotId;
+  const atlasStake = 100;
   const bundleUploadTimestamp = PAYOUT_PERIOD_UNIT * 34.2;
 
   const isSheltering = async (bundleId, shelterer) => sheltering.methods.isSheltering(bundleId, shelterer).call();
-  const shelteringExpirationDate = async (bundleId, shelterer) => sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
-  const storeBundle = async (bundleId, uploader, storagePeriods, sender = deployer) => sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
-  const addShelterer = async (bundleId, shelterer, amount, sender = deployer) => sheltering.methods.addShelterer(bundleId, shelterer).send({from: sender, value: amount});
-  const removeShelterer = async (bundleId, shelterer, refundAddress, sender = deployer) => sheltering.methods.removeShelterer(bundleId, shelterer, refundAddress).send({from: sender});
-  const transferSheltering = async (bundleId, donorId, recipientId, sender = deployer) => sheltering.methods.transferSheltering(bundleId, donorId, recipientId).send({from: sender});
+  const shelteringExpirationDate = async (bundleId, shelterer) =>
+    sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
+  const storeBundle = async (bundleId, uploader, storagePeriods, sender = deployer) =>
+    sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
+  const addShelterer = async (bundleId, shelterer, amount, sender = deployer) =>
+    sheltering.methods.addShelterer(bundleId, shelterer).send({from: sender, value: amount});
+  const removeShelterer = async (bundleId, shelterer, refundAddress, sender = deployer) =>
+    sheltering.methods.removeShelterer(bundleId, shelterer, refundAddress).send({from: sender});
+  const penalizeShelterer = async (shelterer, refundAddress, sender = deployer) =>
+    sheltering.methods.penalizeShelterer(shelterer, refundAddress).send({from: sender});
+  const transferSheltering = async (bundleId, donorId, recipientId, sender = deployer) =>
+    sheltering.methods.transferSheltering(bundleId, donorId, recipientId).send({from: sender});
 
-  const setRole = async (targetId, role, sender = deployer) => rolesStore.methods.setRole(targetId, role).send({from: sender});
+  const setRole = async (targetId, role, sender = deployer) =>
+    rolesStore.methods.setRole(targetId, role).send({from: sender});
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
   const getStorageUsed = async (staker) => atlasStakeStore.methods.getStorageUsed(staker).call();
-  const depositStake = async (staker, storageLimit, value, sender = deployer) => atlasStakeStore.methods.depositStake(staker, storageLimit).send({from: sender, value});
+  const getStake = async (staker) => atlasStakeStore.methods.getStake(staker).call();
+  const getPenaltiesHistory = async (staker) => atlasStakeStore.methods.getPenaltiesHistory(staker).call();
+  const depositStake = async (staker, storageLimit, value, sender = deployer) =>
+    atlasStakeStore.methods.depositStake(staker, storageLimit).send({from: sender, value});
   const injectBundleWithBundleStore = async (bundleId, uploader, storagePeriods, currentTimestamp, sender = deployer) =>
     bundleStore.methods.store(bundleId, uploader, storagePeriods, currentTimestamp).send({from: sender});
   const injectSheltererWithBundleStore = async (bundleId, shelterer, reward, payoutPeriodsReduction, currentTimestamp, sender = deployer) =>
@@ -62,7 +74,7 @@ describe('Sheltering Contract', () => {
   const setTimestamp = async (timestamp, sender = deployer) => time.methods.setCurrentTimestamp(timestamp).send({from: sender});
 
 
-  const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount);
+  const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount.toString());
   const timestampToPayoutPeriod = (timestamp) => Math.floor(timestamp / PAYOUT_PERIOD_UNIT);
 
   before(async () => {
@@ -79,14 +91,15 @@ describe('Sheltering Contract', () => {
         payouts: true,
         payoutsStore: true,
         config: true,
-        time: TimeMockJson
+        time: TimeMockJson,
+        fees: true
       }
     }));
     await setRole(hermes, HERMES);
     await setRole(atlas, ATLAS);
     await setTimestamp(bundleUploadTimestamp);
-    await depositStake(atlas, 1, 1);
-    await depositStake(atlas2, 1, 1);
+    await depositStake(atlas, 1, atlasStake);
+    await depositStake(atlas2, 1, atlasStake);
   });
 
   beforeEach(async () => {
@@ -228,6 +241,72 @@ describe('Sheltering Contract', () => {
 
     it('is context internal', async () => {
       await expect(removeShelterer(bundleId, atlas, atlas, atlas)).to.be.eventually.rejected;
+    });
+  });
+
+  describe('Penalizing the shelterer', () => {
+    const firstPenalty = atlasStake / 100;
+    const secondPenalty = firstPenalty * 2;
+    const thirdPenalty = secondPenalty * 2;
+    const fourthPenalty = thirdPenalty * 2;
+
+    beforeEach(async () => {
+      await storeBundle(bundleId, hermes, storagePeriods);
+      await addShelterer(bundleId, atlas, totalReward);
+    });
+
+    it('sends penalty to refund address', async () => {
+      await expectBalanceChange(other, firstPenalty, () => penalizeShelterer(atlas, other));
+    });
+
+    it('penalty rises exponentially', async () => {
+      await expectBalanceChange(other, firstPenalty, () => penalizeShelterer(atlas, other));
+      await expectBalanceChange(other, secondPenalty, () => penalizeShelterer(atlas, other));
+      await expectBalanceChange(other, thirdPenalty, () => penalizeShelterer(atlas, other));
+      await expectBalanceChange(other, fourthPenalty, () => penalizeShelterer(atlas, other));
+      const cumulatedPenalty = firstPenalty + secondPenalty + thirdPenalty + fourthPenalty;
+      expect(await getStake(atlas)).to.eq((atlasStake - cumulatedPenalty).toString());
+    });
+
+    it('cannot have negative stake', async () => {
+      await penalizeShelterer(atlas, other);
+      await penalizeShelterer(atlas, other);
+      await penalizeShelterer(atlas, other);
+      await penalizeShelterer(atlas, other);
+      await penalizeShelterer(atlas, other);
+      await penalizeShelterer(atlas, other);
+      await penalizeShelterer(atlas, other);
+      expect(await getStake(other)).to.eq('0');
+      await expect(penalizeShelterer(atlas, other)).to.be.rejected;
+    });
+
+    it('penalties are updated after slashing', async () => {
+      let blockTime = bundleUploadTimestamp;
+      await penalizeShelterer(atlas, other);
+      expect(await getPenaltiesHistory(atlas)).to.deep.include({
+        lastPenaltyTime: blockTime.toString(),
+        penaltiesCount: '1'
+      });
+
+      blockTime++;
+      await setTimestamp(blockTime);
+      await penalizeShelterer(atlas, other);
+      expect(await getPenaltiesHistory(atlas)).to.deep.include({
+        lastPenaltyTime: blockTime.toString(),
+        penaltiesCount: '2'
+      });
+
+      blockTime++;
+      await setTimestamp(blockTime);
+      await penalizeShelterer(atlas, other);
+      expect(await getPenaltiesHistory(atlas)).to.deep.include({
+        lastPenaltyTime: blockTime.toString(),
+        penaltiesCount: '3'
+      });
+    });
+
+    it('isContextInternal', async () => {
+      await expect(penalizeShelterer(atlas, other, atlas)).to.be.rejected;
     });
   });
 

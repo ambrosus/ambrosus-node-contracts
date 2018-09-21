@@ -14,6 +14,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
+import "../Configuration/Fees.sol";
 import "../Storage/BundleStore.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Storage/RolesStore.sol";
@@ -74,6 +75,18 @@ contract Sheltering is Base {
         refundAddress.transfer(refundValue);
 
         return refundValue;
+    }
+
+    function penalizeShelterer(address sheltererId, address refundAddress) public onlyContextInternalCalls returns(uint) {
+        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
+        Time time = context().time();
+        Fees fees = context().fees();
+
+        (uint penaltiesCount, uint64 lastPenaltyTime) = atlasStakeStore.getPenaltiesHistory(sheltererId);
+        uint basicStake = atlasStakeStore.getBasicStake(sheltererId);
+        (uint penaltyAmount, uint newPenaltiesCount) = fees.getPenalty(basicStake, penaltiesCount, lastPenaltyTime);
+        atlasStakeStore.setPenaltyHistory(sheltererId, newPenaltiesCount, time.currentTimestamp());
+        return atlasStakeStore.slash(sheltererId, refundAddress, penaltyAmount);
     }
 
     function transferSheltering(bytes32 bundleId, address donorId, address recipientId) public onlyContextInternalCalls {

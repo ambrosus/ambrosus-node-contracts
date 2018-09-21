@@ -11,7 +11,6 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
-import "../Configuration/Fees.sol";
 
 
 contract AtlasStakeStore is Base {
@@ -93,21 +92,16 @@ contract AtlasStakeStore is Base {
         stakes[node].storageUsed = stakes[node].storageUsed.add(1);
     }
 
-    function slash(address shelterer, address refundAddress, uint64 currentTimestamp) public onlyContextInternalCalls returns(uint) {
+    function slash(address shelterer, address refundAddress, uint penaltyAmount)
+    public onlyContextInternalCalls returns(uint)
+    {
         require(isStaking(shelterer));
 
-        (uint penaltiesCount, uint64 lastPenaltyTime) = getPenaltiesHistory(shelterer);
-
-        Fees fees = context().fees();
-        (uint amount, uint newPenaltiesCount) = fees.getPenalty(stakes[shelterer].initialAmount, penaltiesCount, lastPenaltyTime);
-
-        setPenaltyHistory(shelterer, newPenaltiesCount, currentTimestamp);
-
         uint slashedAmount;
-        if (amount > stakes[shelterer].amount) {
+        if (penaltyAmount > stakes[shelterer].amount) {
             slashedAmount = stakes[shelterer].amount;
         } else {
-            slashedAmount = amount;
+            slashedAmount = penaltyAmount;
         }
         stakes[shelterer].amount = stakes[shelterer].amount.sub(slashedAmount);
         refundAddress.transfer(slashedAmount);
@@ -119,7 +113,7 @@ contract AtlasStakeStore is Base {
         lastPenaltyTime = stakes[node].lastPenaltyTime;
     }
 
-    function setPenaltyHistory(address shelterer, uint penaltiesCount, uint64 currentTimestamp) private {
+    function setPenaltyHistory(address shelterer, uint penaltiesCount, uint64 currentTimestamp) public onlyContextInternalCalls {
         stakes[shelterer].penaltiesCount = penaltiesCount;
         stakes[shelterer].lastPenaltyTime = currentTimestamp;
     }

@@ -35,7 +35,7 @@ contract Fees is Base, Ownable {
     function setBaseUploadFee(uint fee) public onlyOwner {
         baseUploadFee = fee;
     }
-    
+
     function getFeeForUpload(uint64 storagePeriods) public view returns(uint) {
         require(storagePeriods > 0);
         return baseUploadFee * storagePeriods;
