@@ -15,43 +15,6 @@ import "../Boilerplate/Context.sol";
 contract MockContext is Context {
     mapping(address => bool) whitelist;
 
-    constructor(
-        Time _time,
-        AtlasStakeStore _atlasStakeStore,
-        BundleStore _bundleStore,
-        KycWhitelist _kycWhitelist,
-        Roles _roles,
-        Sheltering _sheltering,
-        Fees _fees,
-        Challenges _challenges,
-        PayoutsStore _payoutsStore,
-        Payouts _payouts,
-        ShelteringTransfers _shelteringTransfers,
-        Config _config,
-        Uploads _uploads,
-        RolesStore _rolesStore,
-        ApolloDepositStore _apolloDepositStore,
-        ValidatorProxy _validatorProxy
-    ) Context(
-        _time,
-        _atlasStakeStore,
-        _bundleStore,
-        _kycWhitelist,
-        _roles,
-        _sheltering,
-        _fees,
-        _challenges,
-        _payoutsStore,
-        _payouts,
-        _shelteringTransfers,
-        _config,
-        _uploads,
-        _rolesStore,
-        _apolloDepositStore,
-        _validatorProxy
-    ) public {        
-    }
-
     function addToWhitelist(address[] whitelisted) public {
         for (uint i = 0; i < whitelisted.length; i++) {
             whitelist[whitelisted[i]] = true;

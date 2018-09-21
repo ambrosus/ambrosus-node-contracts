@@ -131,6 +131,26 @@ export default class Deployer {
     });
   }
 
+  async setContext(jsons, contracts) {
+    const getInitializeContracts = (initSequence) => jsons.context.abi
+      .find((method) => method.name === `initialize${initSequence}`)
+      .inputs
+      .map((input) => (contracts[input.name.slice(1)] ? contracts[input.name.slice(1)].options.address : '0x0'));
+
+    await contracts.context.methods.initialize1(...getInitializeContracts(1)).send({
+      gas: this.gas,
+      from: this.sender
+    });
+    await contracts.context.methods.initialize2(...getInitializeContracts(2)).send({
+      gas: this.gas,
+      from: this.sender
+    });
+    await contracts.context.methods.initialize3(...getInitializeContracts(3)).send({
+      gas: this.gas,
+      from: this.sender
+    });
+  }
+
   async transferOwnerships(contracts) {
     const {validatorSet, blockRewards, validatorProxy} = contracts;
     if (validatorSet !== undefined && validatorProxy !== undefined) {
@@ -158,6 +178,7 @@ export default class Deployer {
   async deploy(jsons, alreadyDeployed, skipDeployment = [], params = {}) {
     const libs = await this.deployLibs();
     const contracts = await this.deployOrLoadContracts(jsons, alreadyDeployed, skipDeployment, libs, params);
+    await this.setContext(jsons, contracts);
     await this.updateContextPointer(contracts);
     await this.transferOwnerships(contracts);
 

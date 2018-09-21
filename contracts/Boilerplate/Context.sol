@@ -49,59 +49,70 @@ contract Context {
     ApolloDepositStore public apolloDepositStore;
     ValidatorProxy public validatorProxy;
 
-    constructor(
+    function initialize1(
+        ValidatorProxy _validatorProxy,
         Time _time,
+        Fees _fees,
+        Config _config
+    ) public {
+        require(validatorProxy == address(0));
+        validatorProxy = _validatorProxy;
+        time = _time;
+        fees = _fees;
+        config = _config;
+    }
+
+    function initialize2(
         AtlasStakeStore _atlasStakeStore,
         BundleStore _bundleStore,
-        KycWhitelist _kycWhitelist,        
-        Roles _roles,
-        Sheltering _sheltering,
-        Fees _fees,
-        Challenges _challenges,
+        KycWhitelist _kycWhitelist,
         PayoutsStore _payoutsStore,
-        Payouts _payouts,
-        ShelteringTransfers _shelteringTransfers,
-        Config _config,
-        Uploads _uploads,
         RolesStore _rolesStore,
-        ApolloDepositStore _apolloDepositStore,
-        ValidatorProxy _validatorProxy
+        ApolloDepositStore _apolloDepositStore
     ) public {
-        time = _time;
+        require(atlasStakeStore == address(0));
         atlasStakeStore = _atlasStakeStore;
         bundleStore = _bundleStore;
         kycWhitelist = _kycWhitelist;
-        roles = _roles;
-        sheltering = _sheltering;
-        fees = _fees;
-        challenges = _challenges;
         payoutsStore = _payoutsStore;
-        payouts = _payouts;
-        shelteringTransfers = _shelteringTransfers;
-        config = _config;
-        uploads = _uploads;
         rolesStore = _rolesStore;
         apolloDepositStore = _apolloDepositStore;
-        validatorProxy = _validatorProxy;
+    }
+
+    function initialize3(
+        Roles _roles,
+        Sheltering _sheltering,
+        Challenges _challenges,
+        Payouts _payouts,
+        ShelteringTransfers _shelteringTransfers,
+        Uploads _uploads
+    ) public {
+        require(roles == address(0));
+        roles = _roles;
+        sheltering = _sheltering;
+        challenges = _challenges;
+        payouts = _payouts;
+        shelteringTransfers = _shelteringTransfers;
+        uploads = _uploads;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
         // solium-disable-next-line operator-whitespace
         return atlasStakeStore == contractAddress ||
-            bundleStore == contractAddress ||
-            kycWhitelist == contractAddress ||
-            roles == contractAddress ||
-            sheltering == contractAddress ||
-            fees == contractAddress ||
-            challenges == contractAddress ||
-            payoutsStore == contractAddress ||
-            shelteringTransfers == contractAddress ||
-            config == contractAddress ||
-            time == contractAddress ||
-            uploads == contractAddress ||            
-            payouts == contractAddress ||            
-            rolesStore == contractAddress ||
-            apolloDepositStore == contractAddress ||
-            validatorProxy == contractAddress;
+        bundleStore == contractAddress ||
+        kycWhitelist == contractAddress ||
+        roles == contractAddress ||
+        sheltering == contractAddress ||
+        fees == contractAddress ||
+        challenges == contractAddress ||
+        payoutsStore == contractAddress ||
+        shelteringTransfers == contractAddress ||
+        config == contractAddress ||
+        time == contractAddress ||
+        uploads == contractAddress ||
+        payouts == contractAddress ||
+        rolesStore == contractAddress ||
+        apolloDepositStore == contractAddress ||
+        validatorProxy == contractAddress;
     }
 }
