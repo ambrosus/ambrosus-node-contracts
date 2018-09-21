@@ -28,8 +28,13 @@ contract Fees is Base, Ownable {
     uint constant public UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO = 10;
 
     uint public baseUploadFee = 10 ether;
+    Config private config;
+    Time private time;
 
-    constructor(Head _head) public Base(_head) {
+
+    constructor(Head _head, Config _config, Time _time) public Base(_head) {
+        config = _config;
+        time = _time;
     }
 
     function setBaseUploadFee(uint fee) public onlyOwner {
@@ -52,8 +57,6 @@ contract Fees is Base, Ownable {
     }
 
     function getPenalty(uint nominalStake, uint penaltiesCount, uint lastPenaltyTime) public view returns(uint penalty, uint newPenaltiesCount) {
-        Config config = context().config();
-        Time time = context().time();
         if ((time.currentTimestamp() - lastPenaltyTime) > config.PENALTY_ESCALATION_TIMEOUT()) {
             return (nominalStake.div(config.PENALTY_DIVIDER()), 1);
         } else {

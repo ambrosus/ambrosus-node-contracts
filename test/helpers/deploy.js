@@ -18,7 +18,11 @@ const deploy = async (options = {}) => {
   const skipDeployment = [];
   const alreadyDeployed = {};
   const jsons = {};
-  const requestedContracts = {head: true, context: MockContextJson, ...options.contracts};
+  const requestedContracts = {
+    head: true,
+    context: MockContextJson,
+    catalogue: true,
+    ...options.contracts};
   const params = {
     head: {
       owner: sender

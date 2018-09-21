@@ -26,7 +26,11 @@ contract ShelteringTransfers is Base {
 
     mapping(bytes32 => Transfer) public transfers;
 
-    constructor(Head _head) public Base(_head) { }
+    Sheltering private sheltering;
+
+    constructor(Head _head, Sheltering _sheltering) public Base(_head) {
+        sheltering = _sheltering;
+    }
 
     function() public payable {}
 
@@ -38,8 +42,7 @@ contract ShelteringTransfers is Base {
 
     function resolve(bytes32 transferId) public {
         Transfer storage transfer = transfers[transferId];
-        Sheltering sheltering = context().sheltering();
-        requireResolutionPossible(sheltering, transferId, transfer.bundleId);
+        requireResolutionPossible(transferId, transfer.bundleId);
 
         uint reward = sheltering.removeShelterer(transfer.bundleId, transfer.donorId, this);
         sheltering.addShelterer.value(reward)(transfer.bundleId, msg.sender);
@@ -78,12 +81,11 @@ contract ShelteringTransfers is Base {
     }
 
     function requireTransferPossible(address donorId, bytes32 bundleId) private view {
-        Sheltering sheltering = context().sheltering();
         require(sheltering.isSheltering(bundleId, donorId));
         require(!transferIsInProgress(getTransferId(donorId, bundleId)));
     }
 
-    function requireResolutionPossible(Sheltering sheltering, bytes32 transferId, bytes32 bundleId) private view {
+    function requireResolutionPossible(bytes32 transferId, bytes32 bundleId) private view {
         require(!sheltering.isSheltering(bundleId, msg.sender));
         require(transferIsInProgress(transferId));
     }

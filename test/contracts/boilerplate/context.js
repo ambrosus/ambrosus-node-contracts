@@ -21,11 +21,22 @@ describe('Context Contract', () => {
   let web3;
   let context;
   let fees;
+  let catalogue;
   let accounts;
 
   before(async () => {
-    ({web3, fees, context} = await deploy({contracts: {fees: true}}));
+    ({web3, fees, catalogue, context} = await deploy({
+      contracts: {
+        fees: true,
+        catalogue: true
+      }
+    }));
     accounts = await web3.eth.getAccounts();
+  });
+
+  it('stores the catalogue provided in the constructor', async () => {
+    const storedCatalogue = await context.methods.catalogue().call();
+    expect(storedCatalogue).to.equal(catalogue.options.address);
   });
 
   it('isInternalToContext returns true if address is known', async () => {

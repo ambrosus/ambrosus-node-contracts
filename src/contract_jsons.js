@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import HeadJson from '../build/contracts/Head.json';
 import ContextJson from '../build/contracts/Context.json';
+import CatalogueJson from '../build/contracts/Catalogue.json';
 import ValidatorSetJson from '../build/contracts/ValidatorSet.json';
 import BlockRewardsJson from '../build/contracts/BlockRewards.json';
 import AtlasStakeStoreJson from '../build/contracts/AtlasStakeStore.json';
@@ -31,6 +32,7 @@ import ValidatorProxyJson from '../build/contracts/ValidatorProxy.json';
 const contractJsons = {
   head: HeadJson,
   context: ContextJson,
+  catalogue: CatalogueJson,
   validatorSet: ValidatorSetJson,
   blockRewards: BlockRewardsJson,
   time: TimeJson,

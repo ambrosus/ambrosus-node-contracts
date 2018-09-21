@@ -21,39 +21,56 @@ import "../Middleware/ValidatorProxy.sol";
 
 contract Roles is Base {
 
-    constructor(Head _head) public Base(_head) { }
+    AtlasStakeStore private atlasStakeStore;
+    RolesStore private rolesStore;
+    ApolloDepositStore private apolloDepositStore;
+    ValidatorProxy private validatorProxy;
+    KycWhitelist private kycWhitelist;
+    Config private config;
+
+    constructor(
+        Head _head, 
+        AtlasStakeStore _atlasStakeStore, 
+        RolesStore _rolesStore, 
+        ApolloDepositStore _apolloDepositStore, 
+        ValidatorProxy _validatorProxy, 
+        KycWhitelist _kycWhitelist,
+        Config _config
+    ) 
+        public Base(_head) 
+    { 
+        atlasStakeStore = _atlasStakeStore;
+        rolesStore = _rolesStore;
+        apolloDepositStore = _apolloDepositStore;
+        validatorProxy = _validatorProxy;
+        kycWhitelist = _kycWhitelist;
+        config = _config;
+    }
 
     function() public payable {}
 
     function onboardAsAtlas(string nodeUrl) public payable {
         require(canOnboard(msg.sender, Consts.NodeType.ATLAS, msg.value));
 
-        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         uint storageLimit = getStorageLimitForAtlas(msg.value);
         atlasStakeStore.depositStake.value(msg.value)(msg.sender, storageLimit);
 
-        RolesStore rolesStore = context().rolesStore();
         rolesStore.setRole(msg.sender, Consts.NodeType.ATLAS);
+
         rolesStore.setUrl(msg.sender, nodeUrl);
     }
 
     function onboardAsApollo() public payable {
         require(canOnboard(msg.sender, Consts.NodeType.APOLLO, msg.value));
 
-        ApolloDepositStore apolloDepositStore = context().apolloDepositStore();
         apolloDepositStore.storeDeposit.value(msg.value)(msg.sender);
-
-        RolesStore rolesStore = context().rolesStore();
         rolesStore.setRole(msg.sender, Consts.NodeType.APOLLO);
-
-        ValidatorProxy validatorProxy = context().validatorProxy();
         validatorProxy.addValidator(msg.sender, msg.value);
     }
 
     function onboardAsHermes(string nodeUrl) public {
         require(canOnboard(msg.sender, Consts.NodeType.HERMES, 0));
 
-        RolesStore rolesStore = context().rolesStore();
         rolesStore.setRole(msg.sender, Consts.NodeType.HERMES);
         rolesStore.setUrl(msg.sender, nodeUrl);
     }
@@ -61,7 +78,6 @@ contract Roles is Base {
     function retireAtlas() public {
         retire(msg.sender, Consts.NodeType.ATLAS);
 
-        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         uint amountToTransfer = atlasStakeStore.releaseStake(msg.sender, this);
         msg.sender.transfer(amountToTransfer);
     }
@@ -69,12 +85,8 @@ contract Roles is Base {
     function retireApollo() public {
         retire(msg.sender, Consts.NodeType.APOLLO);
 
-        ApolloDepositStore apolloDepositStore = context().apolloDepositStore();
         uint amountToTransfer = apolloDepositStore.releaseDeposit(msg.sender, this);
-
-        ValidatorProxy validatorProxy = context().validatorProxy();
         validatorProxy.removeValidator(msg.sender);
-
         msg.sender.transfer(amountToTransfer);
     }
 
@@ -83,22 +95,18 @@ contract Roles is Base {
     }
 
     function getOnboardedRole(address node) public view returns (Consts.NodeType) {
-        RolesStore rolesStore = context().rolesStore();
         return rolesStore.getRole(node);
     }
 
     function getUrl(address node) public view returns (string) {
-        RolesStore rolesStore = context().rolesStore();
         return rolesStore.getUrl(node);
     }
 
     function canOnboard(address node, Consts.NodeType role, uint amount) public view returns (bool) {
-        KycWhitelist kycWhitelist = context().kycWhitelist();
         return kycWhitelist.hasRoleAssigned(node, role) && amount == kycWhitelist.getRequiredDeposit(node);
     }
 
     function getStorageLimitForAtlas(uint amount) public view returns (uint) {
-        Config config = context().config();
         if (amount == config.ATLAS3_STAKE()) {
             return config.ATLAS3_STORAGE_LIMIT();
         } else if (amount == config.ATLAS2_STAKE()) {
@@ -110,8 +118,8 @@ contract Roles is Base {
     }
 
     function retire(address node, Consts.NodeType role) private {
-        RolesStore rolesStore = context().rolesStore();
         require(rolesStore.getRole(node) == role);
+
         rolesStore.setRole(node, Consts.NodeType.NONE);
     }
 }

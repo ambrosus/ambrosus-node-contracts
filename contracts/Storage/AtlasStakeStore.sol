@@ -29,7 +29,7 @@ contract AtlasStakeStore is Base {
 
     mapping (address => Stake) stakes;
 
-    constructor(Head _head) public Base(_head) {}
+    constructor(Head _head) public Base(_head) {} 
 
     function isStaking(address node) public view returns (bool) {
         return stakes[node].amount > 0;
