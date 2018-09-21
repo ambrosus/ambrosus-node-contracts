@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
+import "../Configuration/Consts.sol";
 import "../Configuration/Config.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Storage/KycWhitelist.sol";
@@ -25,40 +26,40 @@ contract Roles is Base {
     function() public payable {}
 
     function onboardAsAtlas(string nodeUrl) public payable {
-        require(canOnboard(msg.sender, Config.NodeType.ATLAS, msg.value));
+        require(canOnboard(msg.sender, Consts.NodeType.ATLAS, msg.value));
 
         AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         uint storageLimit = getStorageLimitForAtlas(msg.value);
         atlasStakeStore.depositStake.value(msg.value)(msg.sender, storageLimit);
 
         RolesStore rolesStore = context().rolesStore();
-        rolesStore.setRole(msg.sender, Config.NodeType.ATLAS);
+        rolesStore.setRole(msg.sender, Consts.NodeType.ATLAS);
         rolesStore.setUrl(msg.sender, nodeUrl);
     }
 
     function onboardAsApollo() public payable {
-        require(canOnboard(msg.sender, Config.NodeType.APOLLO, msg.value));
+        require(canOnboard(msg.sender, Consts.NodeType.APOLLO, msg.value));
 
         ApolloDepositStore apolloDepositStore = context().apolloDepositStore();
         apolloDepositStore.storeDeposit.value(msg.value)(msg.sender);
 
         RolesStore rolesStore = context().rolesStore();
-        rolesStore.setRole(msg.sender, Config.NodeType.APOLLO);
+        rolesStore.setRole(msg.sender, Consts.NodeType.APOLLO);
 
         ValidatorProxy validatorProxy = context().validatorProxy();
         validatorProxy.addValidator(msg.sender, msg.value);
     }
 
     function onboardAsHermes(string nodeUrl) public {
-        require(canOnboard(msg.sender, Config.NodeType.HERMES, 0));
+        require(canOnboard(msg.sender, Consts.NodeType.HERMES, 0));
 
         RolesStore rolesStore = context().rolesStore();
-        rolesStore.setRole(msg.sender, Config.NodeType.HERMES);
+        rolesStore.setRole(msg.sender, Consts.NodeType.HERMES);
         rolesStore.setUrl(msg.sender, nodeUrl);
     }
 
     function retireAtlas() public {
-        retire(msg.sender, Config.NodeType.ATLAS);
+        retire(msg.sender, Consts.NodeType.ATLAS);
 
         AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         uint amountToTransfer = atlasStakeStore.releaseStake(msg.sender, this);
@@ -66,7 +67,7 @@ contract Roles is Base {
     }
 
     function retireApollo() public {
-        retire(msg.sender, Config.NodeType.APOLLO);
+        retire(msg.sender, Consts.NodeType.APOLLO);
 
         ApolloDepositStore apolloDepositStore = context().apolloDepositStore();
         uint amountToTransfer = apolloDepositStore.releaseDeposit(msg.sender, this);
@@ -78,10 +79,10 @@ contract Roles is Base {
     }
 
     function retireHermes() public {
-        retire(msg.sender, Config.NodeType.HERMES);
+        retire(msg.sender, Consts.NodeType.HERMES);
     }
 
-    function getOnboardedRole(address node) public view returns (Config.NodeType) {
+    function getOnboardedRole(address node) public view returns (Consts.NodeType) {
         RolesStore rolesStore = context().rolesStore();
         return rolesStore.getRole(node);
     }
@@ -91,7 +92,7 @@ contract Roles is Base {
         return rolesStore.getUrl(node);
     }
 
-    function canOnboard(address node, Config.NodeType role, uint amount) public view returns (bool) {
+    function canOnboard(address node, Consts.NodeType role, uint amount) public view returns (bool) {
         KycWhitelist kycWhitelist = context().kycWhitelist();
         return kycWhitelist.hasRoleAssigned(node, role) && amount == kycWhitelist.getRequiredDeposit(node);
     }
@@ -108,9 +109,9 @@ contract Roles is Base {
         return 0;
     }
 
-    function retire(address node, Config.NodeType role) private {
+    function retire(address node, Consts.NodeType role) private {
         RolesStore rolesStore = context().rolesStore();
         require(rolesStore.getRole(node) == role);
-        rolesStore.setRole(node, Config.NodeType.NONE);
+        rolesStore.setRole(node, Consts.NodeType.NONE);
     }
 }

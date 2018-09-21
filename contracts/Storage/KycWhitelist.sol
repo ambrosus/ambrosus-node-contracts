@@ -10,21 +10,21 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../Configuration/Config.sol";
+import "../Configuration/Consts.sol";
 
 
 contract KycWhitelist is Ownable {
 
     struct Candidate {
-        Config.NodeType allowedRole;
+        Consts.NodeType allowedRole;
         uint requiredDeposit;
     }
 
     mapping(address => Candidate) whitelist;
 
-    function add(address candidate, Config.NodeType role, uint deposit) public onlyOwner {
+    function add(address candidate, Consts.NodeType role, uint deposit) public onlyOwner {
         require(!isWhitelisted(candidate));
-        require(role == Config.NodeType.ATLAS || role == Config.NodeType.HERMES || role == Config.NodeType.APOLLO);
+        require(role == Consts.NodeType.ATLAS || role == Consts.NodeType.HERMES || role == Consts.NodeType.APOLLO);
 
         whitelist[candidate].allowedRole = role;
         whitelist[candidate].requiredDeposit = deposit;
@@ -36,10 +36,10 @@ contract KycWhitelist is Ownable {
     }
 
     function isWhitelisted(address candidate) public view returns(bool) {
-        return whitelist[candidate].allowedRole != Config.NodeType.NONE;
+        return whitelist[candidate].allowedRole != Consts.NodeType.NONE;
     }
 
-    function hasRoleAssigned(address candidate, Config.NodeType role) public view returns(bool) {
+    function hasRoleAssigned(address candidate, Consts.NodeType role) public view returns(bool) {
         return whitelist[candidate].allowedRole == role;
     }
 
@@ -47,7 +47,7 @@ contract KycWhitelist is Ownable {
         return whitelist[candidate].requiredDeposit;
     }
 
-    function getRoleAssigned(address candidate) public view returns(Config.NodeType role) {
+    function getRoleAssigned(address candidate) public view returns(Consts.NodeType role) {
         return whitelist[candidate].allowedRole;
     }
 }

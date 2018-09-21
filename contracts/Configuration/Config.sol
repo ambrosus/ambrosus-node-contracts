@@ -26,6 +26,4 @@ contract Config {
     uint constant public ATLAS1_STORAGE_LIMIT = 100000;
     uint constant public ATLAS2_STORAGE_LIMIT = 400000;
     uint constant public ATLAS3_STORAGE_LIMIT = 1000000;
-
-    enum NodeType {NONE, ATLAS, HERMES, APOLLO}
 }
