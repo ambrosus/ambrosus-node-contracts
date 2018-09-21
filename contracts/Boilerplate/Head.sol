@@ -20,7 +20,7 @@ contract Head {
     event ContextChange(Context context);
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "only the owner is allowed to call thie method");
+        require(msg.sender == owner, "only the owner is allowed to call this method");
         _;
     }
 
