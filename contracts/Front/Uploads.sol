@@ -11,32 +11,40 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
 import "../Configuration/Fees.sol";
-import "../Middleware/Sheltering.sol";
 import "../Configuration/Config.sol";
+import "../Middleware/Sheltering.sol";
+import "../Front/Challenges.sol";
 
 
 contract Uploads is Base {    
 
     using SafeMath for uint;
 
-    constructor(Head _head) Base(_head) public {         
+    Config private config;
+    Fees private fees;
+    Sheltering private sheltering;
+    Challenges private challenges;
+
+    constructor(Head _head, Config _config, Fees _fees, Sheltering _sheltering, Challenges _challenges) Base(_head) public {
+        config = _config;
+        fees = _fees;
+        sheltering = _sheltering;
+        challenges = _challenges;
     }
 
     event BundleUploaded(bytes32 bundleId, uint storagePeriods);
 
     function registerBundle(bytes32 bundleId, uint64 storagePeriods) public payable {
-        Fees fees = context().fees();
-        Config config = context().config();
         uint fee = fees.getFeeForUpload(storagePeriods);
 
         require(storagePeriods > 0);
         require(msg.value == fee);
 
-        context().sheltering().storeBundle(bundleId, msg.sender, storagePeriods);
+        sheltering.storeBundle(bundleId, msg.sender, storagePeriods);
         (uint challengeFee, uint validatorsFee, uint burnFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
         config.BURN_ADDRESS().transfer(burnFee);
-        context().challenges().startForSystem.value(challengeFee)(msg.sender, bundleId, 7);
+        challenges.startForSystem.value(challengeFee)(msg.sender, bundleId, 7);
 
         emit BundleUploaded(bundleId, storagePeriods);
     }

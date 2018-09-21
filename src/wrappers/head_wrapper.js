@@ -43,8 +43,8 @@ export default class HeadWrapper {
       throw new Error('Requested contract does not exist');
     }
 
-    const context = await this.context();
-    return context.methods[`${contractName}()`]().call({from: this.defaultAddress});
+    const catalogue = await this.catalogue();
+    return catalogue.methods[`${contractName}()`]().call({from: this.defaultAddress});
   }
 
   async context() {
@@ -53,5 +53,14 @@ export default class HeadWrapper {
       .context()
       .call({from: this.defaultAddress});
     return loadContract(this.web3, contractJsons.context.abi, contextAddress);
+  }
+
+  async catalogue() {
+    const context = await this.context();
+    const catalogueAddress = await context
+      .methods
+      .catalogue()
+      .call();
+    return loadContract(this.web3, contractJsons.catalogue.abi, catalogueAddress);
   }
 }

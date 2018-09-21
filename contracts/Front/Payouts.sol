@@ -22,23 +22,25 @@ contract Payouts is Base {
     using SafeMath for uint64;
     using SafeMathExtensions for uint;
 
-    constructor(Head _head) public Base(_head) {}
+    Time private time;
+    PayoutsStore private payoutsStore;
+    Config private config;
+
+    constructor(Head _head, Time _time, PayoutsStore _payoutsStore, Config _config) public Base(_head) {
+        time = _time;
+        payoutsStore = _payoutsStore;
+        config = _config;
+    }
 
     function withdraw() public {
-        Time time = context().time();
-        PayoutsStore payoutsStore = context().payoutsStore();
         return payoutsStore.withdraw(msg.sender, time.currentPayoutPeriod().sub(1).castTo64());
     }
 
     function available(uint64 payoutPeriod) public view returns (uint) {
-        PayoutsStore payoutsStore = context().payoutsStore();
         return payoutsStore.available(msg.sender, payoutPeriod);
     }
 
     function grantShelteringReward(address beneficiary, uint64 numberOfPeriods) public payable onlyContextInternalCalls {
-        Time time = context().time();
-        PayoutsStore payoutsStore = context().payoutsStore();
-
         (uint rewardRegular, uint rewardBonus) = calculateRewards(numberOfPeriods, msg.value);
 
         uint64 beginTimestamp = time.currentTimestamp();
@@ -61,9 +63,6 @@ contract Payouts is Base {
     function revokeShelteringReward(address beneficiary, uint64 beginTimestamp, uint64 numberOfPeriods, uint amount, address refundAddress)
         public onlyContextInternalCalls returns (uint refund)
     {
-        Time time = context().time();
-        PayoutsStore payoutsStore = context().payoutsStore();
-
         (uint rewardRegular, uint rewardBonus) = calculateRewards(numberOfPeriods, amount);
 
         uint64 firstPeriod = time.payoutPeriod(beginTimestamp).add(1).castTo64();
@@ -91,8 +90,6 @@ contract Payouts is Base {
     function calculateRewards(uint64 numberOfPeriods, uint amount)
         private view returns (uint rewardRegular, uint rewardBonus)
     {
-        Config config = context().config();
-
         rewardBonus = amount.mul(config.FINISH_SHELTERING_REWARD_SPLIT()).div(100);
         rewardRegular = amount.sub(rewardBonus).div(numberOfPeriods);
         uint reminder = amount.sub(rewardBonus).sub(rewardRegular.mul(numberOfPeriods));

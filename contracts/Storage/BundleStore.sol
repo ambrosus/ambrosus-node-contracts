@@ -11,7 +11,6 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Boilerplate/Head.sol";
-import "../Configuration/Time.sol";
 
 
 contract BundleStore is Base {
@@ -35,9 +34,7 @@ contract BundleStore is Base {
     }
 
     event BundleStored(bytes32 bundleId, address uploader);
-
     event SheltererAdded(bytes32 bundleId, address shelterer);
-
     event SheltererRemoved(bytes32 bundleId, address shelterer);
 
     mapping(bytes32 => Bundle) bundles;
@@ -82,6 +79,7 @@ contract BundleStore is Base {
     function store(bytes32 bundleId, address uploader, uint64 storagePeriods, uint64 currentTimestamp) public onlyContextInternalCalls {
         require(!bundleExists(bundleId));
         require(storagePeriods > 0);
+
         bundles[bundleId] = Bundle(uploader, currentTimestamp, new address[](0), storagePeriods);
         emit BundleStored(bundleId, uploader);
     }
@@ -94,6 +92,7 @@ contract BundleStore is Base {
         for (uint i = 0; i < bundles[bundleId].shelterers.length; i++) {
             require(bundles[bundleId].shelterers[i] != shelterer);
         }
+
         bundles[bundleId].shelterers.push(shelterer);
         bundles[bundleId].shelterings[shelterer].shelteringStartDate = currentTimestamp;
         bundles[bundleId].shelterings[shelterer].totalShelteringReward = totalReward;

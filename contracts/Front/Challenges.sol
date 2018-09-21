@@ -44,8 +44,19 @@ contract Challenges is Base {
 
     mapping(bytes32 => Challenge) public challenges;
 
-    constructor(Head _head) public Base(_head) {
+    Time private time;
+    Sheltering private sheltering;
+    AtlasStakeStore private atlasStakeStore;
+    Config private config;
+    Fees private fees;
+
+    constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config, Fees _fees) public Base(_head) {
         nextChallengeSequenceNumber = 1;
+        time = _time;
+        sheltering = _sheltering;
+        atlasStakeStore = _atlasStakeStore;
+        config = _config;
+        fees = _fees;
     }
 
     function() public payable {}
@@ -53,7 +64,6 @@ contract Challenges is Base {
     function start(address sheltererId, bytes32 bundleId) public payable {
         validateChallenge(sheltererId, bundleId);
         validateFeeAmount(1, bundleId);
-        Time time = context().time();
         Challenge memory challenge = Challenge(sheltererId, bundleId, msg.sender, msg.value, time.currentTimestamp(), 1, nextChallengeSequenceNumber);
         bytes32 challengeId = storeChallenge(challenge);
         nextChallengeSequenceNumber++;
@@ -64,7 +74,6 @@ contract Challenges is Base {
         validateSystemChallenge(uploaderId, bundleId);
         validateFeeAmount(challengesCount, bundleId);
 
-        Time time = context().time();
         Challenge memory challenge = Challenge(
             uploaderId, bundleId, 0x0, msg.value / challengesCount, time.currentTimestamp(), challengesCount, nextChallengeSequenceNumber);
         bytes32 challengeId = storeChallenge(challenge);
@@ -78,10 +87,8 @@ contract Challenges is Base {
 
         Challenge storage challenge = challenges[challengeId];
 
-        Sheltering sheltering = context().sheltering();
         sheltering.addShelterer.value(challenge.feePerChallenge)(challenge.bundleId, msg.sender);
 
-        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
         atlasStakeStore.updateLastChallengeResolvedSequenceNumber(msg.sender, challenge.sequenceNumber);
 
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
@@ -103,10 +110,8 @@ contract Challenges is Base {
         if (isSystemChallenge(challengeId)) {
             refundAddress = challenge.sheltererId;
         } else {
-            Sheltering sheltering = context().sheltering();
             penalty = sheltering.penalizeShelterer(challenge.sheltererId, this);
             revokedReward = sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId, this);
-
             refundAddress = challenge.challengerId;
         }
 
@@ -118,8 +123,7 @@ contract Challenges is Base {
 
     function canResolve(address resolverId, bytes32 challengeId) public view returns (bool) {
         Challenge storage challenge = challenges[challengeId];
-        Sheltering sheltering = context().sheltering();
-        AtlasStakeStore atlasStakeStore = context().atlasStakeStore();
+
         // solium-disable-next-line operator-whitespace
         return challengeIsInProgress(challengeId) &&
             !sheltering.isSheltering(challenge.bundleId, resolverId) &&
@@ -127,8 +131,6 @@ contract Challenges is Base {
     }
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns(bool) {
-        Config config = context().config();
-        Time time = context().time();
         return time.currentTimestamp() > challenges[challengeId].creationTime + config.CHALLENGE_DURATION();
     }
 
@@ -173,21 +175,17 @@ contract Challenges is Base {
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
-        require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId)));
-        Sheltering sheltering = context().sheltering();
+        require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId))); 
         require(sheltering.isSheltering(bundleId, sheltererId));
     }
 
     function validateSystemChallenge(address uploaderId, bytes32 bundleId) private view {
         require(!challengeIsInProgress(getChallengeId(uploaderId, bundleId)));
-        Sheltering sheltering = context().sheltering();
         require(sheltering.getBundleUploader(bundleId) == uploaderId);
     }
 
     function validateFeeAmount(uint8 challengesCount, bytes32 bundleId) private view {
-        Sheltering sheltering = context().sheltering();
         uint64 storagePeriods = sheltering.getBundleStoragePeriodsCount(bundleId);
-        Fees fees = context().fees();
         uint fee = fees.getFeeForChallenge(storagePeriods);
         require(msg.value == fee * challengesCount);
     }
