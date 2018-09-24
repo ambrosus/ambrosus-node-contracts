@@ -23,6 +23,7 @@ import PayoutsStoreJson from '../build/contracts/PayoutsStore.json';
 import RolesStoreJson from '../build/contracts/RolesStore.json';
 import PayoutsJson from '../build/contracts/Payouts.json';
 import ShelteringTransfersJson from '../build/contracts/ShelteringTransfers.json';
+import ShelteringTransfersStoreJson from '../build/contracts/ShelteringTransfersStore.json';
 import TimeJson from '../build/contracts/Time.json';
 import ConfigJson from '../build/contracts/Config.json';
 import UploadsJson from '../build/contracts/Uploads.json';
@@ -46,6 +47,7 @@ const contractJsons = {
   payoutsStore: PayoutsStoreJson,
   payouts: PayoutsJson,
   shelteringTransfers: ShelteringTransfersJson,
+  shelteringTransfersStore: ShelteringTransfersStoreJson,
   config: ConfigJson,
   uploads: UploadsJson,
   rolesStore: RolesStoreJson,
