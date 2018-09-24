@@ -11,6 +11,7 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
+import "../Storage/ShelteringTransfersStore.sol";
 
 
 contract ShelteringTransfers is Base {
@@ -24,60 +25,57 @@ contract ShelteringTransfers is Base {
     event TransferResolved(address donorId, address recipientId, bytes32 bundleId);
     event TransferCancelled(bytes32 transferId, address donorId, bytes32 bundleId);
 
-    mapping(bytes32 => Transfer) public transfers;
-
     Sheltering private sheltering;
+    ShelteringTransfersStore private shelteringTransfersStore;
 
-    constructor(Head _head, Sheltering _sheltering) public Base(_head) {
+    constructor(Head _head, Sheltering _sheltering, ShelteringTransfersStore _shelteringTransfersStore) public Base(_head) {
         sheltering = _sheltering;
+        shelteringTransfersStore = _shelteringTransfersStore;
     }
 
     function() public payable {}
 
     function start(bytes32 bundleId) public {
         requireTransferPossible(msg.sender, bundleId);
-        bytes32 transferId = store(Transfer(msg.sender, bundleId));
+        bytes32 transferId = shelteringTransfersStore.store(msg.sender, bundleId);
         emit TransferStarted(transferId, msg.sender, bundleId);
     }
 
     function resolve(bytes32 transferId) public {
-        Transfer storage transfer = transfers[transferId];
-        requireResolutionPossible(transferId, transfer.bundleId);
+        (address donorId, bytes32 bundleId) = shelteringTransfersStore.getTransfer(transferId);
+        requireResolutionPossible(transferId, bundleId);
 
-        uint reward = sheltering.removeShelterer(transfer.bundleId, transfer.donorId, this);
-        sheltering.addShelterer.value(reward)(transfer.bundleId, msg.sender);
-        
-        emit TransferResolved(transfer.donorId, msg.sender, transfer.bundleId);
-        delete transfers[transferId];
+        uint reward = sheltering.removeShelterer(bundleId, donorId, this);
+        sheltering.addShelterer.value(reward)(bundleId, msg.sender);
+
+        emit TransferResolved(donorId, msg.sender, bundleId);
+        shelteringTransfersStore.remove(transferId);
     }
 
     function cancel(bytes32 transferId) public {
-        Transfer storage transfer = transfers[transferId];
-        require(msg.sender == transfer.donorId);
-        emit TransferCancelled(transferId, transfer.donorId, transfer.bundleId);
-        delete transfers[transferId];
+        (address donorId, bytes32 bundleId) = shelteringTransfersStore.getTransfer(transferId);
+        require(msg.sender == donorId);
+        emit TransferCancelled(transferId, donorId, bundleId);
+        shelteringTransfersStore.remove(transferId);
     }
 
-    function getTransferId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
-        return keccak256(abi.encodePacked(sheltererId, bundleId));
+    function getTransferId(address sheltererId, bytes32 bundleId) public view returns(bytes32) {
+        return shelteringTransfersStore.getTransferId(sheltererId, bundleId);
     }
 
     function getDonor(bytes32 transferId) public view returns(address) {
-        return transfers[transferId].donorId;
+        (address donorId, ) = shelteringTransfersStore.getTransfer(transferId);
+        return donorId;
     }
 
     function getTransferredBundle(bytes32 transferId) public view returns(bytes32) {
-        return transfers[transferId].bundleId;
+        (, bytes32 bundleId) = shelteringTransfersStore.getTransfer(transferId);
+        return bundleId;
     }
 
     function transferIsInProgress(bytes32 transferId) public view returns(bool) {
-        return transfers[transferId].donorId != address(0x0);
-    }
-
-    function store(Transfer transfer) private returns(bytes32) {
-        bytes32 transferId = getTransferId(transfer.donorId, transfer.bundleId);
-        transfers[transferId] = transfer;
-        return transferId;
+        (address donorId, ) = shelteringTransfersStore.getTransfer(transferId);
+        return donorId != address(0x0);
     }
 
     function requireTransferPossible(address donorId, bytes32 bundleId) private view {

@@ -65,6 +65,7 @@ describe('ShelteringTransfers Contract', () => {
       sender: deployer,
       contracts: {
         shelteringTransfers: true,
+        shelteringTransfersStore: true,
         bundleStore: true,
         sheltering: true,
         config: true,
