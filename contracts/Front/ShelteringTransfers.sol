@@ -45,8 +45,7 @@ contract ShelteringTransfers is Base {
         (address donorId, bytes32 bundleId) = shelteringTransfersStore.getTransfer(transferId);
         requireResolutionPossible(transferId, bundleId);
 
-        uint reward = sheltering.removeShelterer(bundleId, donorId, this);
-        sheltering.addShelterer.value(reward)(bundleId, msg.sender);
+        sheltering.transferSheltering(bundleId, donorId, msg.sender);
 
         emit TransferResolved(donorId, msg.sender, bundleId);
         shelteringTransfersStore.remove(transferId);
