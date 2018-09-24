@@ -24,7 +24,8 @@ import "../Storage/ChallengesStore.sol";
 contract Challenges is Base {
 
     using SafeMath for uint;
-    using SafeMath for uint64;
+    using SafeMath for uint32;
+    using SafeMath for uint64;    
     using SafeMathExtensions for uint;
 
 
@@ -81,9 +82,7 @@ contract Challenges is Base {
         require(challengeIsInProgress(challengeId));
 
         (address sheltererId, bytes32 bundleId,, uint feePerChallenge,,, uint sequenceNumber) = challengesStore.getChallenge(challengeId);
-
         sheltering.addShelterer.value(feePerChallenge)(bundleId, msg.sender);
-
         atlasStakeStore.updateLastChallengeResolvedSequenceNumber(msg.sender, sequenceNumber);
 
         emit ChallengeResolved(sheltererId, bundleId, challengeId, msg.sender);
@@ -175,6 +174,19 @@ contract Challenges is Base {
 
     function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(sheltererId, bundleId));
+    }
+
+    function getCooldown() public view returns (uint) {
+        uint32 numberOfStakers = atlasStakeStore.getNumberOfStakers();
+        uint32 lowReduction = config.COOLDOWN_LOW_REDUCTION();
+        if (numberOfStakers < lowReduction) {
+            return 0;
+        }
+        uint32 threshold = config.COOLDOWN_SWITCH_THRESHOLD();
+        if (numberOfStakers < threshold) {
+            return numberOfStakers.sub(lowReduction).castTo32();
+        }
+        return numberOfStakers.mul(config.COOLDOWN_HIGH_PERCENTAGE()).div(100).add(1).castTo32();
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
