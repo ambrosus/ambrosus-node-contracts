@@ -52,6 +52,7 @@ describe('Upload Contract', () => {
       contracts: {
         rolesStore: true,
         challenges: true,
+        challengesStore: true,
         uploads: true,
         sheltering: true,
         time: true,

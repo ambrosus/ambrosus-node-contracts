@@ -18,6 +18,7 @@ import RolesJson from '../build/contracts/Roles.json';
 import KycWhitelistJson from '../build/contracts/KycWhitelist.json';
 import FeesJson from '../build/contracts/Fees.json';
 import ChallengesJson from '../build/contracts/Challenges.json';
+import ChallengesStoreJson from '../build/contracts/ChallengesStore.json';
 import ShelteringJson from '../build/contracts/Sheltering.json';
 import PayoutsStoreJson from '../build/contracts/PayoutsStore.json';
 import RolesStoreJson from '../build/contracts/RolesStore.json';
@@ -44,6 +45,7 @@ const contractJsons = {
   sheltering: ShelteringJson,
   fees: FeesJson,
   challenges: ChallengesJson,
+  challengesStore: ChallengesStoreJson,
   payoutsStore: PayoutsStoreJson,
   payouts: PayoutsJson,
   shelteringTransfers: ShelteringTransfersJson,

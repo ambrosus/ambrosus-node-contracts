@@ -98,6 +98,7 @@ describe('Challenges Contract', () => {
       web3,
       contracts: {
         challenges: true,
+        challengesStore: true,
         bundleStore: true,
         fees: true,
         sheltering: true,
