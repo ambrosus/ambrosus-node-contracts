@@ -103,15 +103,18 @@ export async function createWeb3(conf = config) {
   const rpc = conf.web3Rpc;
   const account = importPrivateKey(web3, conf);
 
-  if (isValidRPCAddress(rpc)) {
-    web3.setProvider(rpc);
-  } else if (isUsingGanache(rpc)) {
+  if (isUsingGanache(rpc)) {
     web3.setProvider(createGanacheProvider(account.privateKey));
     await ganacheTopUpDefaultAccount(web3);
     augmentWithSnapshotMethods(web3);
-  } else {
-    throw new Error('A configuration value for web3 rpc server is missing');
+    return web3;
   }
+
+  if (!isValidRPCAddress(rpc)) {
+    throw new Error(`The config value for the Parity RPC server is invalid: ${rpc}`);
+  }
+
+  web3.setProvider(rpc);
   return web3;
 }
 
