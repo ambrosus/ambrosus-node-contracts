@@ -57,7 +57,7 @@ export default class OnboardingTask extends TaskBase {
 
   async onboardHermes([url]) {
     if (!url) {
-      console.error(`Invalid parameters for Atlas onboarding`);
+      console.error(`Invalid parameters for Hermes onboarding`);
       this.printUsage();
       return;
     }
@@ -68,7 +68,7 @@ export default class OnboardingTask extends TaskBase {
 
   async onboardApollo([value]) {
     if (!value) {
-      console.error(`Invalid parameters for Atlas onboarding`);
+      console.error(`Invalid parameters for Apollo onboarding`);
       this.printUsage();
       return;
     }

@@ -26,7 +26,7 @@ export default class WhitelistTask extends TaskBase {
     } else if (command === 'check') {
       await this.show(args[1]);
     } else {
-      console.error('Unknown sub-command, use: yarn task whitelist [add/remove/check] [address]');
+      console.error('Unknown sub-command, use: yarn task whitelist [add/remove/check] [address] [role] [requiredDeposit]');
     }
   }
 
@@ -52,7 +52,11 @@ export default class WhitelistTask extends TaskBase {
     this.validateAddress(address);
     const {kycWhitelistWrapper} = this.contractManager;
     const result = await kycWhitelistWrapper.isWhitelisted(address);
-    console.log(result);
+    if (result) {
+      console.log(`Address ${address} is whitelisted`);
+    } else {
+      console.log(`Address ${address} is not whitelisted`);
+    }
   }
 
   help() {
