@@ -17,6 +17,11 @@ contract Config {
     uint constant public PENALTY_DIVIDER = 100;
     uint constant public BUNDLE_SIZE_LIMIT = 16384;
     address constant public BURN_ADDRESS = 0x1000000000000000000000000000000000000000;
+    uint32 constant public COOLDOWN_SWITCH_THRESHOLD = 50;
+    uint32 constant public COOLDOWN_LOW_REDUCTION = 4;
+    uint32 constant public COOLDOWN_HIGH_PERCENTAGE = 90;
+
+    uint32 constant public COOLDOWN_AVAILABLE_TARGET_PERCENT = 90;
 
     uint constant public APOLLO_DEPOSIT = 250000 ether;
     uint constant public ATLAS1_STAKE = 10000 ether;
