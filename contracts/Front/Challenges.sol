@@ -172,8 +172,8 @@ contract Challenges is Base {
         return getChallenger(challengeId) == 0x0;
     }
 
-    function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns (bytes32) {
-        return challengesStore.getChallengeId(sheltererId, bundleId));
+    function getChallengeId(address sheltererId, bytes32 bundleId) public view returns (bytes32) {
+        return challengesStore.getChallengeId(sheltererId, bundleId);
     }
 
     function getCooldown() public view returns (uint) {
