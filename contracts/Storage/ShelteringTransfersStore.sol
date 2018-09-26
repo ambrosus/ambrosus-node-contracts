@@ -18,7 +18,7 @@ contract ShelteringTransfersStore is Base {
         bytes32 bundleId;
     }
 
-    mapping(bytes32 => Transfer) public transfers;
+    mapping(bytes32 => Transfer) transfers;
 
     constructor(Head _head) public Base(_head) { }
 

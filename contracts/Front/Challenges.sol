@@ -28,12 +28,9 @@ contract Challenges is Base {
     using SafeMath for uint64;    
     using SafeMathExtensions for uint;
 
-
     event ChallengeCreated(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint count);
     event ChallengeResolved(address sheltererId, bytes32 bundleId, bytes32 challengeId, address resolverId);
     event ChallengeTimeout(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint penalty);
-
-    uint public nextChallengeSequenceNumber;
 
     Time private time;
     Sheltering private sheltering;
@@ -45,8 +42,7 @@ contract Challenges is Base {
     constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
         Fees _fees, ChallengesStore _challengesStore)
     public Base(_head)
-    {
-        nextChallengeSequenceNumber = 1;
+    {        
         time = _time;
         sheltering = _sheltering;
         atlasStakeStore = _atlasStakeStore;
@@ -60,9 +56,18 @@ contract Challenges is Base {
     function start(address sheltererId, bytes32 bundleId) public payable {
         validateChallenge(sheltererId, bundleId);
         validateFeeAmount(1, bundleId);
+        
         bytes32 challengeId = challengesStore.store(
-            sheltererId, bundleId, msg.sender, msg.value, time.currentTimestamp(), 1, nextChallengeSequenceNumber);
-        nextChallengeSequenceNumber++;
+            sheltererId, 
+            bundleId, 
+            msg.sender, 
+            msg.value, 
+            time.currentTimestamp(), 
+            1, 
+            challengesStore.getNextChallengeSequenceNumber()
+        );
+        challengesStore.incrementNextChallengeSequenceNumber(1);
+
         emit ChallengeCreated(sheltererId, bundleId, challengeId, 1);
     }
 
@@ -70,9 +75,16 @@ contract Challenges is Base {
         validateSystemChallenge(uploaderId, bundleId);
         validateFeeAmount(challengesCount, bundleId);
 
-        bytes32 challengeId = challengesStore.store(uploaderId, bundleId, 0x0,
-            msg.value / challengesCount, time.currentTimestamp(), challengesCount, nextChallengeSequenceNumber);
-        nextChallengeSequenceNumber += challengesCount;
+        bytes32 challengeId = challengesStore.store(
+            uploaderId, 
+            bundleId, 
+            0x0,
+            msg.value / challengesCount, 
+            time.currentTimestamp(), 
+            challengesCount, 
+            challengesStore.getNextChallengeSequenceNumber()
+        );
+        challengesStore.incrementNextChallengeSequenceNumber(challengesCount);
 
         emit ChallengeCreated(uploaderId, bundleId, challengeId, challengesCount);
     }

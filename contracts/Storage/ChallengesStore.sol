@@ -13,8 +13,6 @@ import "../Boilerplate/Head.sol";
 
 
 contract ChallengesStore is Base {
-    constructor(Head _head) public Base(_head){}
-
     struct Challenge {
         address sheltererId;
         bytes32 bundleId;
@@ -25,7 +23,12 @@ contract ChallengesStore is Base {
         uint sequenceNumber;
     }
 
-    mapping(bytes32 => Challenge) public challenges;
+    mapping(bytes32 => Challenge) challenges;
+    uint nextChallengeSequenceNumber;
+
+    constructor(Head _head) public Base(_head){
+        nextChallengeSequenceNumber = 1;
+    }
 
     function store(
         address sheltererId,
@@ -69,5 +72,13 @@ contract ChallengesStore is Base {
 
     function decreaseActiveCount(bytes32 challengeId) public onlyContextInternalCalls {
         challenges[challengeId].activeCount--;
+    }
+
+    function getNextChallengeSequenceNumber() public view onlyContextInternalCalls returns(uint) {
+        return nextChallengeSequenceNumber;
+    }
+
+    function incrementNextChallengeSequenceNumber(uint amount) public onlyContextInternalCalls {
+        nextChallengeSequenceNumber += amount;
     }
 }

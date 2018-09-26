@@ -35,6 +35,7 @@ const {expect} = chai;
 describe('Challenges Contract', () => {
   let web3;
   let challenges;
+  let challengesStore;
   let bundleStore;
   let sheltering;
   let fees;
@@ -63,7 +64,6 @@ describe('Challenges Contract', () => {
   const getCooldown = async () => challenges.methods.getCooldown().call();
 
   const getChallengeId = async (sheltererId, bundleId) => challenges.methods.getChallengeId(sheltererId, bundleId).call();
-  const nextChallengeSequenceNumber = async () => challenges.methods.nextChallengeSequenceNumber().call();
   const getChallengeSequenceNumber = async (challengeId) => challenges.methods.getChallengeSequenceNumber(challengeId).call();
   const getChallengeCreationTime = async (challengeId) => challenges.methods.getChallengeCreationTime(challengeId).call();
   const getChallenger = async (challengeId) => challenges.methods.getChallenger(challengeId).call();
@@ -90,11 +90,12 @@ describe('Challenges Contract', () => {
   const isSheltering = async (bundleId, sheltererId) => sheltering.methods.isSheltering(bundleId, sheltererId).call();
   const getLastChallengeResolvedSequenceNumber = async (nodeId) => atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(nodeId).call();
   const getStake = async (nodeId) => atlasStakeStore.methods.getStake(nodeId).call();
+  const nextChallengeSequenceNumber = async () => challengesStore.methods.getNextChallengeSequenceNumber().call();
 
   before(async () => {
     web3 = await createWeb3();
     [from, other, resolver, totalStranger] = await web3.eth.getAccounts();
-    ({challenges, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles} = await deploy({
+    ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles} = await deploy({
       web3,
       contracts: {
         challenges: true,
@@ -125,10 +126,6 @@ describe('Challenges Contract', () => {
 
   afterEach(async () => {
     await restoreSnapshot(web3, snapshotId);
-  });
-
-  it('nextChallengeSequenceNumber = 1 after deployment', async () => {
-    expect(await nextChallengeSequenceNumber()).to.equal('1');
   });
 
   describe('Starting system challenges', () => {

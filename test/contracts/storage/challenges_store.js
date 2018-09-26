@@ -19,7 +19,7 @@ describe('ChallengesStoreContract', () => {
   let challengesStore;
   let web3;
   let snapshotId;
-  let contextAddress;
+  let deployer;
   let otherAddress;
   let exampleChallengeId;
   let shelterer;
@@ -30,26 +30,28 @@ describe('ChallengesStoreContract', () => {
   const activeCount = '6';
   const sequenceNumber = '2';
 
-  const store = (sender = contextAddress) =>
+  const store = (sender = deployer) =>
     challengesStore.methods.store(shelterer, exampleBundleId, challenger, feePerChallenge, creationTime, activeCount,
       sequenceNumber).send({from: sender});
-  const remove = (challengeId, sender = contextAddress) =>
+  const remove = (challengeId, sender = deployer) =>
     challengesStore.methods.remove(challengeId).send({from: sender});
-  const increaseSequenceNumber = (challengeId, sender = contextAddress) =>
+  const increaseSequenceNumber = (challengeId, sender = deployer) =>
     challengesStore.methods.increaseSequenceNumber(challengeId).send({from: sender});
-  const decreaseActiveCount = (challengeId, sender = contextAddress) =>
+  const decreaseActiveCount = (challengeId, sender = deployer) =>
     challengesStore.methods.decreaseActiveCount(challengeId).send({from: sender});
   const getChallenge = (challengeId) =>
     challengesStore.methods.getChallenge(challengeId).call();
   const getChallengeId = (sheltererId, bundleId) =>
     challengesStore.methods.getChallengeId(sheltererId, bundleId).call();
+  const getNextChallengeSequenceNumber = () => challengesStore.methods.getNextChallengeSequenceNumber().call();
+  const incrementNextChallengeSequenceNumber = (amount, sender = deployer) => challengesStore.methods.incrementNextChallengeSequenceNumber(amount).send({from: sender});
 
   before(async () => {
     web3 = await createWeb3();
-    [contextAddress, shelterer, challenger, otherAddress] = await web3.eth.getAccounts();
+    [deployer, shelterer, challenger, otherAddress] = await web3.eth.getAccounts();
     ({challengesStore} = await deploy({
       web3,
-      sender: contextAddress,
+      sender: deployer,
       contracts: {
         challengesStore: true
       }
@@ -141,6 +143,24 @@ describe('ChallengesStoreContract', () => {
 
     it('should be context internal', async () => {
       await expect(decreaseActiveCount(exampleChallengeId, otherAddress)).to.be.rejected;
+    });
+  });
+
+  describe('Next sequence number', () => {
+    it('has a value of 1 just after creation', async () => {
+      expect(await getNextChallengeSequenceNumber()).to.equal('1');
+    });
+
+    describe('incrementing', () => {
+      it('can be used to change it', async () => {
+        expect(await getNextChallengeSequenceNumber()).to.equal('1');
+        await expect(incrementNextChallengeSequenceNumber(4)).to.eventually.be.fulfilled;
+        expect(await getNextChallengeSequenceNumber()).to.equal('5');
+      });
+
+      it('is context internal', async () => {
+        await expect(incrementNextChallengeSequenceNumber(4, otherAddress)).to.eventually.be.rejected;
+      });
     });
   });
 });
