@@ -23,7 +23,8 @@ import "../Lib/SafeMathExtensions.sol";
 contract Challenges is Base {
 
     using SafeMath for uint;
-    using SafeMath for uint64;
+    using SafeMath for uint32;
+    using SafeMath for uint64;    
     using SafeMathExtensions for uint;
 
     struct Challenge {
@@ -86,9 +87,7 @@ contract Challenges is Base {
         require(canResolve(msg.sender, challengeId));
 
         Challenge storage challenge = challenges[challengeId];
-
         sheltering.addShelterer.value(challenge.feePerChallenge)(challenge.bundleId, msg.sender);
-
         atlasStakeStore.updateLastChallengeResolvedSequenceNumber(msg.sender, challenge.sequenceNumber);
 
         emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
@@ -172,6 +171,19 @@ contract Challenges is Base {
 
     function challengeIsInProgress(bytes32 challengeId) public view returns (bool) {
         return getActiveChallengesCount(challengeId) > 0;
+    }
+
+    function getCooldown() public view returns (uint) {
+        uint32 numberOfStakers = atlasStakeStore.getNumberOfStakers();
+        uint32 lowReduction = config.COOLDOWN_LOW_REDUCTION();
+        if (numberOfStakers < lowReduction) {
+            return 0;
+        }
+        uint32 threshold = config.COOLDOWN_SWITCH_THRESHOLD();
+        if (numberOfStakers < threshold) {
+            return numberOfStakers.sub(lowReduction).castTo32();
+        }
+        return numberOfStakers.mul(config.COOLDOWN_HIGH_PERCENTAGE()).div(100).add(1).castTo32();
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {

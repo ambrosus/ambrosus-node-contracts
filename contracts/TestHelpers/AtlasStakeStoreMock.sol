@@ -20,4 +20,8 @@ contract AtlasStakeStoreMock is AtlasStakeStore {
     function setStorageUsed(address node, uint storageUsed) public {
         stakes[node].storageUsed = storageUsed;
     }
+
+    function setNumberOfStakers(uint32 _numberOfStakers) public {
+        numberOfStakers = _numberOfStakers;
+    }
 }

@@ -60,6 +60,7 @@ describe('Challenges Contract', () => {
   const startChallengeForSystem = async (sheltererId, bundleId, challengeCount, challengerId, fee) => challenges.methods.startForSystem(sheltererId, bundleId, challengeCount).send({from: challengerId, value: fee});
   const resolveChallenge = async (challengeId, resolverId) => challenges.methods.resolve(challengeId).send({from: resolverId});
   const markChallengeAsExpired = async (challengeId, marker) => challenges.methods.markAsExpired(challengeId).send({from: marker, gasPrice: '0'});
+  const getCooldown = async () => challenges.methods.getCooldown().call();
 
   const getChallengeId = async (sheltererId, bundleId) => challenges.methods.getChallengeId(sheltererId, bundleId).call();
   const nextChallengeSequenceNumber = async () => challenges.methods.nextChallengeSequenceNumber().call();
@@ -80,6 +81,7 @@ describe('Challenges Contract', () => {
     bundleStore.methods.addShelterer(bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp).send({from});
   const depositStake = async(stakerId, storageLimit, stakeValue) => atlasStakeStore.methods.depositStake(stakerId, storageLimit).send({from, value: stakeValue});
   const setStorageUsed = async (nodeId, storageUsed) => atlasStakeStore.methods.setStorageUsed(nodeId, storageUsed).send({from});
+  const setNumberOfStakers = async (numberOfStakers) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from});
   const addShelterer = async (bundleId, sheltererId, shelteringReward) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from, value: shelteringReward});
   const onboardAsAtlas = async(nodeUrl, nodeAddress, depositValue) => roles.methods.onboardAsAtlas(nodeUrl).send({from: nodeAddress, value: depositValue, gasPrice: '0'});
 
@@ -540,6 +542,27 @@ describe('Challenges Contract', () => {
       expect(await getActiveChallengesCount(systemChallengeId)).to.equal('5');
       await markChallengeAsExpired(systemChallengeId, totalStranger);
       expect(await challengeIsInProgress(systemChallengeId)).to.equal(false);
+    });
+  });
+
+  describe('Calculating cooldown', () => {
+    it('returns 0 if there are less then 4 atlas nodes', async () => {
+      await setNumberOfStakers(2);
+      expect(await getCooldown()).to.equal('0');
+    });
+
+    it('returns the number of atlas nodes minus 4 if less then 50', async () => {
+      await setNumberOfStakers(20);
+      expect(await getCooldown()).to.equal('16');
+    });
+
+    it('returns 90% of the number of atlas nodes (floor) plus 1 if more then 50', async () => {
+      await setNumberOfStakers(51);
+      expect(await getCooldown()).to.equal('46');
+      await setNumberOfStakers(60);
+      expect(await getCooldown()).to.equal('55');
+      await setNumberOfStakers(100);
+      expect(await getCooldown()).to.equal('91');
     });
   });
 });
