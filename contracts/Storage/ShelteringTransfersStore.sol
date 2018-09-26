@@ -22,22 +22,22 @@ contract ShelteringTransfersStore is Base {
 
     constructor(Head _head) public Base(_head) { }
 
-    function store(address donorId, bytes32 bundleId) onlyContextInternalCalls public returns(bytes32) {
+    function store(address donorId, bytes32 bundleId) public onlyContextInternalCalls returns(bytes32) {
         bytes32 transferId = getTransferId(donorId, bundleId);
         transfers[transferId] = Transfer(donorId, bundleId);
         return transferId;
     }
 
-    function remove(bytes32 transferId) onlyContextInternalCalls public {
+    function remove(bytes32 transferId) public onlyContextInternalCalls {
         delete transfers[transferId];
     }
 
-    function getTransfer(bytes32 transferId) onlyContextInternalCalls view public returns(address donorId, bytes32 bundleId) {
+    function getTransfer(bytes32 transferId) public view onlyContextInternalCalls returns(address donorId, bytes32 bundleId) {
         donorId = transfers[transferId].donorId;
         bundleId = transfers[transferId].bundleId;
     }
 
-    function getTransferId(address sheltererId, bytes32 bundleId) onlyContextInternalCalls view public returns(bytes32) {
+    function getTransferId(address sheltererId, bytes32 bundleId) public view onlyContextInternalCalls returns(bytes32) {
         return keccak256(abi.encodePacked(sheltererId, bundleId));
     }
 }

@@ -173,7 +173,7 @@ contract Challenges is Base {
     }
 
     function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(sheltererId, bundleId));
+        return challengesStore.getChallengeId(sheltererId, bundleId));
     }
 
     function getCooldown() public view returns (uint) {

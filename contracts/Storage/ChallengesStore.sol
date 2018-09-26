@@ -59,7 +59,7 @@ contract ChallengesStore is Base {
         );
     }
 
-    function getChallengeId(address sheltererId, bytes32 bundleId) public onlyContextInternalCalls view returns (bytes32) {
+    function getChallengeId(address sheltererId, bytes32 bundleId) public view onlyContextInternalCalls returns (bytes32) {
         return keccak256(abi.encodePacked(sheltererId, bundleId));
     }
 
