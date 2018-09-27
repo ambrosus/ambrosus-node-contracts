@@ -18,6 +18,7 @@ import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Lib/SafeMathExtensions.sol";
+import "../Storage/ChallengesStore.sol";
 
 
 contract Challenges is Base {
@@ -27,37 +28,27 @@ contract Challenges is Base {
     using SafeMath for uint64;    
     using SafeMathExtensions for uint;
 
-    struct Challenge {
-        address sheltererId;
-        bytes32 bundleId;
-        address challengerId;
-        uint feePerChallenge;
-        uint creationTime;
-        uint8 activeCount;
-        uint sequenceNumber;
-    }
-
     event ChallengeCreated(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint count);
     event ChallengeResolved(address sheltererId, bytes32 bundleId, bytes32 challengeId, address resolverId);
     event ChallengeTimeout(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint penalty);
-
-    uint public nextChallengeSequenceNumber;
-
-    mapping(bytes32 => Challenge) public challenges;
 
     Time private time;
     Sheltering private sheltering;
     AtlasStakeStore private atlasStakeStore;
     Config private config;
     Fees private fees;
+    ChallengesStore private challengesStore;
 
-    constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config, Fees _fees) public Base(_head) {
-        nextChallengeSequenceNumber = 1;
+    constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
+        Fees _fees, ChallengesStore _challengesStore)
+    public Base(_head)
+    {        
         time = _time;
         sheltering = _sheltering;
         atlasStakeStore = _atlasStakeStore;
         config = _config;
         fees = _fees;
+        challengesStore = _challengesStore;
     }
 
     function() public payable {}
@@ -65,9 +56,18 @@ contract Challenges is Base {
     function start(address sheltererId, bytes32 bundleId) public payable {
         validateChallenge(sheltererId, bundleId);
         validateFeeAmount(1, bundleId);
-        Challenge memory challenge = Challenge(sheltererId, bundleId, msg.sender, msg.value, time.currentTimestamp(), 1, nextChallengeSequenceNumber);
-        bytes32 challengeId = storeChallenge(challenge);
-        nextChallengeSequenceNumber++;
+        
+        bytes32 challengeId = challengesStore.store(
+            sheltererId, 
+            bundleId, 
+            msg.sender, 
+            msg.value, 
+            time.currentTimestamp(), 
+            1, 
+            challengesStore.getNextChallengeSequenceNumber()
+        );
+        challengesStore.incrementNextChallengeSequenceNumber(1);
+
         emit ChallengeCreated(sheltererId, bundleId, challengeId, 1);
     }
 
@@ -75,22 +75,29 @@ contract Challenges is Base {
         validateSystemChallenge(uploaderId, bundleId);
         validateFeeAmount(challengesCount, bundleId);
 
-        Challenge memory challenge = Challenge(
-            uploaderId, bundleId, 0x0, msg.value / challengesCount, time.currentTimestamp(), challengesCount, nextChallengeSequenceNumber);
-        bytes32 challengeId = storeChallenge(challenge);
-        nextChallengeSequenceNumber += challengesCount;
+        bytes32 challengeId = challengesStore.store(
+            uploaderId, 
+            bundleId, 
+            0x0,
+            msg.value / challengesCount, 
+            time.currentTimestamp(), 
+            challengesCount, 
+            challengesStore.getNextChallengeSequenceNumber()
+        );
+        challengesStore.incrementNextChallengeSequenceNumber(challengesCount);
 
         emit ChallengeCreated(uploaderId, bundleId, challengeId, challengesCount);
     }
 
     function resolve(bytes32 challengeId) public {
         require(canResolve(msg.sender, challengeId));
+        require(challengeIsInProgress(challengeId));
 
-        Challenge storage challenge = challenges[challengeId];
-        sheltering.addShelterer.value(challenge.feePerChallenge)(challenge.bundleId, msg.sender);
-        atlasStakeStore.updateLastChallengeResolvedSequenceNumber(msg.sender, challenge.sequenceNumber);
+        (address sheltererId, bytes32 bundleId,, uint feePerChallenge,,, uint sequenceNumber) = challengesStore.getChallenge(challengeId);
+        sheltering.addShelterer.value(feePerChallenge)(bundleId, msg.sender);
+        atlasStakeStore.updateLastChallengeResolvedSequenceNumber(msg.sender, sequenceNumber);
 
-        emit ChallengeResolved(challenge.sheltererId, challenge.bundleId, challengeId, msg.sender);
+        emit ChallengeResolved(sheltererId, bundleId, challengeId, msg.sender);
 
         removeChallengeOrDecreaseActiveCount(challengeId);
         increaseChallengeSequenceNumberIfNecessary(challengeId);
@@ -100,77 +107,85 @@ contract Challenges is Base {
         require(challengeIsInProgress(challengeId));
         require(challengeIsTimedOut(challengeId));
 
-        Challenge storage challenge = challenges[challengeId];
+        (address sheltererId, bytes32 bundleId, address challengerId, uint feePerChallenge,, uint8 activeCount,) = challengesStore.getChallenge(challengeId);
 
         uint penalty = 0;
         uint revokedReward = 0;
         address refundAddress;
 
         if (isSystemChallenge(challengeId)) {
-            refundAddress = challenge.sheltererId;
+            refundAddress = sheltererId;
         } else {
-            penalty = sheltering.penalizeShelterer(challenge.sheltererId, this);
-            revokedReward = sheltering.removeShelterer(challenge.bundleId, challenge.sheltererId, this);
-            refundAddress = challenge.challengerId;
+            penalty = sheltering.penalizeShelterer(sheltererId, this);
+            revokedReward = sheltering.removeShelterer(bundleId, sheltererId, this);
+            refundAddress = challengerId;
         }
 
-        uint amountToReturn = (challenge.feePerChallenge * challenge.activeCount) + revokedReward + penalty;
-        emit ChallengeTimeout(challenge.sheltererId, challenge.bundleId, challengeId, penalty);
-        delete challenges[challengeId];
+        uint amountToReturn = (feePerChallenge * activeCount) + revokedReward + penalty;
+        emit ChallengeTimeout(sheltererId, bundleId, challengeId, penalty);
+        challengesStore.remove(challengeId);
         refundAddress.transfer(amountToReturn);
     }
 
     function canResolve(address resolverId, bytes32 challengeId) public view returns (bool) {
-        Challenge storage challenge = challenges[challengeId];
+        bytes32 bundleId = getChallengedBundle(challengeId);
 
         // solium-disable-next-line operator-whitespace
         return challengeIsInProgress(challengeId) &&
-            !sheltering.isSheltering(challenge.bundleId, resolverId) &&
-            atlasStakeStore.canStore(resolverId);
+        !sheltering.isSheltering(bundleId, resolverId) &&
+        atlasStakeStore.canStore(resolverId);
     }
 
-    function challengeIsTimedOut(bytes32 challengeId) public view returns(bool) {
-        return time.currentTimestamp() > challenges[challengeId].creationTime + config.CHALLENGE_DURATION();
+    function challengeIsTimedOut(bytes32 challengeId) public view returns (bool) {
+        uint64 creationTime = getChallengeCreationTime(challengeId);
+        return time.currentTimestamp() > creationTime + config.CHALLENGE_DURATION();
     }
 
-    function isSystemChallenge(bytes32 challengeId) public view returns(bool) {
-        return challenges[challengeId].challengerId == 0x0;
+    function getChallengedShelterer(bytes32 challengeId) public view returns (address) {
+        (address sheltererId,,,,,,) = challengesStore.getChallenge(challengeId);
+        return sheltererId;
     }
 
-    function getChallengeId(address sheltererId, bytes32 bundleId) public pure returns(bytes32) {
-        return keccak256(abi.encodePacked(sheltererId, bundleId));
+    function getChallengedBundle(bytes32 challengeId) public view returns (bytes32) {
+        (, bytes32 bundleId,,,,,) = challengesStore.getChallenge(challengeId);
+        return bundleId;
     }
 
-    function getChallengedShelterer(bytes32 challengeId) public view returns(address) {
-        return challenges[challengeId].sheltererId;
+    function getChallenger(bytes32 challengeId) public view returns (address) {
+        (,, address challengerId,,,,) = challengesStore.getChallenge(challengeId);
+        return challengerId;
     }
 
-    function getChallengedBundle(bytes32 challengeId) public view returns(bytes32) {
-        return challenges[challengeId].bundleId;
+    function getChallengeFee(bytes32 challengeId) public view returns (uint) {
+        (,,, uint feePerChallenge,,,) = challengesStore.getChallenge(challengeId);
+        return feePerChallenge;
     }
 
-    function getChallenger(bytes32 challengeId) public view returns(address) {
-        return challenges[challengeId].challengerId;
+    function getChallengeCreationTime(bytes32 challengeId) public view returns (uint64) {
+        (,,,, uint64 creationTime,,) = challengesStore.getChallenge(challengeId);
+        return creationTime;
     }
 
-    function getChallengeFee(bytes32 challengeId) public view returns(uint) {
-        return challenges[challengeId].feePerChallenge;
+    function getActiveChallengesCount(bytes32 challengeId) public view returns (uint8) {
+        (,,,,, uint8 activeCount,) = challengesStore.getChallenge(challengeId);
+        return activeCount;
     }
 
-    function getChallengeCreationTime(bytes32 challengeId) public view returns(uint) {
-        return challenges[challengeId].creationTime;
-    }
-
-    function getActiveChallengesCount(bytes32 challengeId) public view returns(uint) {
-        return challenges[challengeId].activeCount;
-    }
-
-    function getChallengeSequenceNumber(bytes32 challengeId) public view returns(uint) {
-        return challenges[challengeId].sequenceNumber;
+    function getChallengeSequenceNumber(bytes32 challengeId) public view returns (uint) {
+        (,,,,,, uint sequenceNumber) = challengesStore.getChallenge(challengeId);
+        return sequenceNumber;
     }
 
     function challengeIsInProgress(bytes32 challengeId) public view returns (bool) {
         return getActiveChallengesCount(challengeId) > 0;
+    }
+
+    function isSystemChallenge(bytes32 challengeId) public view returns (bool) {
+        return getChallenger(challengeId) == 0x0;
+    }
+
+    function getChallengeId(address sheltererId, bytes32 bundleId) public view returns (bytes32) {
+        return challengesStore.getChallengeId(sheltererId, bundleId);
     }
 
     function getCooldown() public view returns (uint) {
@@ -187,7 +202,7 @@ contract Challenges is Base {
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
-        require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId))); 
+        require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId)));
         require(sheltering.isSheltering(bundleId, sheltererId));
     }
 
@@ -202,24 +217,17 @@ contract Challenges is Base {
         require(msg.value == fee * challengesCount);
     }
 
-    function storeChallenge(Challenge challenge) private returns(bytes32) {
-        bytes32 challengeId = getChallengeId(challenge.sheltererId, challenge.bundleId);
-        challenges[challengeId] = challenge;
-        return challengeId;
-    }
-
     function removeChallengeOrDecreaseActiveCount(bytes32 challengeId) private {
-        require(challengeIsInProgress(challengeId));
-        if (challenges[challengeId].activeCount == 1) {
-            delete challenges[challengeId];
+        if (getActiveChallengesCount(challengeId) == 1) {
+            challengesStore.remove(challengeId);
         } else {
-            challenges[challengeId].activeCount--;
+            challengesStore.decreaseActiveCount(challengeId);
         }
     }
 
     function increaseChallengeSequenceNumberIfNecessary(bytes32 challengeId) private {
-        if (challenges[challengeId].activeCount > 0) {
-            challenges[challengeId].sequenceNumber++;
+        if (getActiveChallengesCount(challengeId) > 0) {
+            challengesStore.increaseSequenceNumber(challengeId);
         }
     }
 }

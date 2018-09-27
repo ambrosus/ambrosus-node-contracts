@@ -96,7 +96,9 @@ const setupEnvironment = async () => {
       config: true,
       payouts: true,
       payoutsStore: true,
-      rolesStore: true
+      rolesStore: true,
+      shelteringTransfersStore: true,
+      challengesStore: true
     }}));
   await setTimestamp(now);
   await kycWhitelist.methods.add(atlasInitialShelterer, ATLAS, ATLAS1_STAKE).send({from});

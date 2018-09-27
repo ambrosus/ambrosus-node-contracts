@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, utils} from '../../../src/utils/web3_tools';
+import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
 
 chai.use(chaiAsPromised);
@@ -17,6 +17,7 @@ const {expect} = chai;
 
 describe('ShelteringTransfersStore Contract', () => {
   let web3;
+  let snapshotId;
   let contextAddress;
   let otherAddress;
   let donorAddress;
@@ -44,6 +45,14 @@ describe('ShelteringTransfersStore Contract', () => {
       }
     }));
     exampleTransferId = await getTransferId(donorAddress, exampleBundleId);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
   });
 
   describe('store', () => {
