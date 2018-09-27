@@ -108,7 +108,7 @@ const setupEnvironment = async () => {
 const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from});
 
 const onboardAsAtlas = async (address) => {
-  const url = `${address}@atlasUrls.com`;
+  const url = `${address}@atlasUrl.com`;
   return await roles.methods.onboardAsAtlas(url).send({from: address, value: ATLAS1_STAKE});
 };
 
@@ -138,7 +138,7 @@ const extractGasUsedFromError = (error) => {
   const {message} = error;
   const regex = /"gasUsed": (\d+)/g;
   const result = regex.exec(message);
-  return result[1];
+  return result ? result[1] : undefined;
 };
 
 runGasBenchmark();
