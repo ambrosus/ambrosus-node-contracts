@@ -11,14 +11,22 @@ install:
 jobs:
   include:
     - stage: test
+      name: "Linter"
       script:
         - yarn build
         - yarn dev:lint
     - stage: test
+      name: "Unit tests"
       script:
         - yarn build
         - yarn test:units
     - stage: test
+      name: "Task tests"
       script:
         - yarn build
         - yarn test:tasks
+    - stage: test
+      name: "Gas benchmark"
+      script:
+        - yarn build
+        - yarn test:gasbenchmark
