@@ -11,10 +11,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "yarn build:sol && yarn build:js",
+    "prepublish": "yarn build",
+    "build": "yarn build:sol && yarn strip && yarn build:js",
     "build:js": "babel ./src -d ./dist --copy-files",
     "build:sol": "truffle compile all",
-    "strip": "babel-node src/tools/strip_contracts.js build/contracts",
+    "strip": "babel-node src/tools/strip_contracts.js src/contracts",
     "clean": "rm -fr ./src/contracts/* ./dist/*",
     "test:units": "mocha",
     "test:tasks": "node test_cli/test_cli.js",
