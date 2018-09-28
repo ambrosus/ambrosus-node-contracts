@@ -25,7 +25,7 @@ contract Challenges is Base {
 
     using SafeMath for uint;
     using SafeMath for uint32;
-    using SafeMath for uint64;    
+    using SafeMath for uint64;
     using SafeMathExtensions for uint;
 
     event ChallengeCreated(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint count);
@@ -42,7 +42,7 @@ contract Challenges is Base {
     constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
         Fees _fees, ChallengesStore _challengesStore)
     public Base(_head)
-    {        
+    {
         time = _time;
         sheltering = _sheltering;
         atlasStakeStore = _atlasStakeStore;
@@ -56,14 +56,14 @@ contract Challenges is Base {
     function start(address sheltererId, bytes32 bundleId) public payable {
         validateChallenge(sheltererId, bundleId);
         validateFeeAmount(1, bundleId);
-        
+
         bytes32 challengeId = challengesStore.store(
-            sheltererId, 
-            bundleId, 
-            msg.sender, 
-            msg.value, 
-            time.currentTimestamp(), 
-            1, 
+            sheltererId,
+            bundleId,
+            msg.sender,
+            msg.value,
+            time.currentTimestamp(),
+            1,
             challengesStore.getNextChallengeSequenceNumber()
         );
         challengesStore.incrementNextChallengeSequenceNumber(1);
@@ -76,12 +76,12 @@ contract Challenges is Base {
         validateFeeAmount(challengesCount, bundleId);
 
         bytes32 challengeId = challengesStore.store(
-            uploaderId, 
-            bundleId, 
+            uploaderId,
+            bundleId,
             0x0,
-            msg.value / challengesCount, 
-            time.currentTimestamp(), 
-            challengesCount, 
+            msg.value / challengesCount,
+            time.currentTimestamp(),
+            challengesCount,
             challengesStore.getNextChallengeSequenceNumber()
         );
         challengesStore.incrementNextChallengeSequenceNumber(challengesCount);
@@ -91,7 +91,6 @@ contract Challenges is Base {
 
     function resolve(bytes32 challengeId) public {
         require(canResolve(msg.sender, challengeId));
-        require(challengeIsInProgress(challengeId));
 
         (address sheltererId, bytes32 bundleId,, uint feePerChallenge,,, uint sequenceNumber) = challengesStore.getChallenge(challengeId);
         sheltering.addShelterer.value(feePerChallenge)(bundleId, msg.sender);
@@ -133,6 +132,7 @@ contract Challenges is Base {
         // solium-disable-next-line operator-whitespace
         return challengeIsInProgress(challengeId) &&
         !sheltering.isSheltering(bundleId, resolverId) &&
+        !isOnCooldown(resolverId, challengeId) &&
         atlasStakeStore.canStore(resolverId);
     }
 
@@ -229,5 +229,10 @@ contract Challenges is Base {
         if (getActiveChallengesCount(challengeId) > 0) {
             challengesStore.increaseSequenceNumber(challengeId);
         }
+    }
+
+    function isOnCooldown(address resolverId, bytes32 challengeId) private view returns (bool) {
+        uint lastResolvedSequenceNumber = atlasStakeStore.getLastChallengeResolvedSequenceNumber(resolverId);
+        return lastResolvedSequenceNumber != 0 && lastResolvedSequenceNumber.add(getCooldown()) > getChallengeSequenceNumber(challengeId);
     }
 }

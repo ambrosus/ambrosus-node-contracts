@@ -89,6 +89,7 @@ describe('Challenges Contract', () => {
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
   const isSheltering = async (bundleId, sheltererId) => sheltering.methods.isSheltering(bundleId, sheltererId).call();
   const getLastChallengeResolvedSequenceNumber = async (nodeId) => atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(nodeId).call();
+  const setLastChallengeResolvedSequenceNumber = async (nodeId, sequenceNumber) => atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(nodeId, sequenceNumber).send({from});
   const getStake = async (nodeId) => atlasStakeStore.methods.getStake(nodeId).call();
   const nextChallengeSequenceNumber = async () => challengesStore.methods.getNextChallengeSequenceNumber().call();
 
@@ -338,6 +339,9 @@ describe('Challenges Contract', () => {
 
   describe('Resolving a challenge', () => {
     const url = 'url';
+    let cooldown;
+
+    const injectChallengeWithSequenceNumber = async (sequenceNumber) => challengesStore.methods.store(other, bundleId, from, 0, now, 1, sequenceNumber).send({from});
 
     const atlasOnboarding = async (address) => {
       await addToKycWhitelist(address, ATLAS, ATLAS1_STAKE);
@@ -355,6 +359,8 @@ describe('Challenges Contract', () => {
       await addShelterer(bundleId, other, totalReward);
       await startChallenge(other, bundleId, from, userChallengeFee);
       challengeId = await lastChallengeId();
+      await setNumberOfStakers(20);
+      cooldown = parseInt(await getCooldown(), 10);
     });
 
     it('canResolve returns true if challenge can be resolved', async () => {
@@ -386,6 +392,27 @@ describe('Challenges Contract', () => {
     it('Does not increase challenges sequence number if not a system challenge', async () => {
       await resolveChallenge(challengeId, resolver);
       expect(await getChallengeSequenceNumber(challengeId)).to.equal('0');
+    });
+
+    it('Can resolve if last resolved challenge is 0', async () => {
+      await setLastChallengeResolvedSequenceNumber(resolver, 0);
+      await injectChallengeWithSequenceNumber(cooldown - 1);
+      expect(await canResolve(resolver, challengeId)).to.be.true;
+      await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.fulfilled;
+    });
+
+    it('Can resolve if difference between last resolved challenge sequence number and the new one is equal to cooldown or greater', async () => {
+      await setLastChallengeResolvedSequenceNumber(resolver, 1);
+      await injectChallengeWithSequenceNumber(cooldown + 1);
+      expect(await canResolve(resolver, challengeId)).to.be.true;
+      await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.fulfilled;
+    });
+
+    it('Fails to resolve if resolver is on cooldown', async () => {
+      await setLastChallengeResolvedSequenceNumber(resolver, 1);
+      await injectChallengeWithSequenceNumber(cooldown);
+      expect(await canResolve(resolver, challengeId)).to.be.false;
+      await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.rejected;
     });
 
     it('Fails if challenge does not exist', async () => {
