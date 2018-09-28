@@ -2,7 +2,7 @@
   "name": "ambrosus-node-contracts",
   "author": "Ambrosus",
   "description": "Smart contracts used in AMB-NET",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MPL-2.0-no-copyleft-exception",
   "repository": "git@github.com:ambrosus/ambrosus-node-contracts.git",
   "main": "dist/index.js",
@@ -11,7 +11,7 @@
     "access": "public"
   },
   "scripts": {
-    "prepublish": "yarn build",
+    "prepublishOnly": "yarn build",
     "build": "yarn build:sol && yarn strip && yarn build:js",
     "build:js": "babel ./src -d ./dist --copy-files",
     "build:sol": "truffle compile all",
