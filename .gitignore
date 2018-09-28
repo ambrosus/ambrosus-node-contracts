@@ -9,3 +9,4 @@ registryContractAddress.json
 /config/dev.json
 ganache.pid
 test_cli_head.env
+src/contracts
