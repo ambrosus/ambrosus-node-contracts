@@ -38,6 +38,7 @@ describe('Challenges Contract', () => {
   let challengesStore;
   let bundleStore;
   let sheltering;
+  let config;
   let fees;
   let roles;
   let atlasStakeStore;
@@ -92,11 +93,13 @@ describe('Challenges Contract', () => {
   const setLastChallengeResolvedSequenceNumber = async (nodeId, sequenceNumber) => atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(nodeId, sequenceNumber).send({from});
   const getStake = async (nodeId) => atlasStakeStore.methods.getStake(nodeId).call();
   const nextChallengeSequenceNumber = async () => challengesStore.methods.getNextChallengeSequenceNumber().call();
+  // eslint-disable-next-line new-cap
+  const getCooldownTimeout = async () => parseInt(await config.methods.COOLDOWN_TIMEOUT().call(), 10);
 
   before(async () => {
     web3 = await createWeb3();
     [from, other, resolver, totalStranger] = await web3.eth.getAccounts();
-    ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles} = await deploy({
+    ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles, config} = await deploy({
       web3,
       contracts: {
         challenges: true,
@@ -404,6 +407,17 @@ describe('Challenges Contract', () => {
     it('Can resolve if difference between last resolved challenge sequence number and the new one is equal to cooldown or greater', async () => {
       await setLastChallengeResolvedSequenceNumber(resolver, 1);
       await injectChallengeWithSequenceNumber(cooldown + 1);
+      expect(await canResolve(resolver, challengeId)).to.be.true;
+      await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.fulfilled;
+    });
+
+    it('Can resolve ignoring resolver cooldown if challenge is older than cooldown timeout', async () => {
+      const cooldownTimeout = await getCooldownTimeout();
+      await setLastChallengeResolvedSequenceNumber(resolver, 1);
+      await injectChallengeWithSequenceNumber(cooldown);
+      expect(await canResolve(resolver, challengeId)).to.be.false;
+
+      await setTimestamp(now + cooldownTimeout);
       expect(await canResolve(resolver, challengeId)).to.be.true;
       await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.fulfilled;
     });

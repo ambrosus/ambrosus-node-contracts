@@ -23,6 +23,8 @@ contract Config {
 
     uint32 constant public COOLDOWN_AVAILABLE_TARGET_PERCENT = 90;
 
+    uint32 constant public COOLDOWN_TIMEOUT = 1 days;
+
     uint constant public APOLLO_DEPOSIT = 250000 ether;
     uint constant public ATLAS1_STAKE = 10000 ether;
     uint constant public ATLAS2_STAKE = 30000 ether;
