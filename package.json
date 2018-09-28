@@ -6,7 +6,7 @@
   "author": "Ambrosus",
   "repository": "git@github.com:ambrosus/ambrosus-node-contracts.git",
   "private": true,
-  "license": "UNLICENCED",
+  "license": "MPL-2.0-no-copyleft-exception",
   "scripts": {
     "build": "yarn build:js && yarn build:sol",
     "build:js": "babel ./src -d ./dist --copy-files",
