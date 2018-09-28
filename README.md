@@ -4,25 +4,32 @@ Smart contracts used in AMB-NET
 
 ## Development
 Install dependencies and compile contracts:
-```
+```bash
 yarn
 yarn build
 ```
 
-To run test RPC mock, with properly predefined accounts for development and testing:
+First you need an RPC running. For example you may want to start ganache-cli with running
+```bash
+yarn global add ganache-cli
+ganache-cli -e 1000000
 ```
-yarn task ganache
+
+Next you need to set environment variables for the RPC address and private key. In case you run ganache copy one of the available private keys and set
+```bash
+export WEB3_RPC=http://localhost:8545
+export WEB3_NODEPRIVATEKEY="COPIED_PRIVATE_KEY"
 ```
 
 Then deploy contracts and save outcome to an environment file
-```
+```bash
 yarn task deploy --save <path to file>
 ```
 
 You are ready to play.
 
 The following administrative tasks are available: 
-```
+```bash
 yarn task deploy
 yarn task ganache
 yarn task whitelist add [address]
@@ -40,30 +47,35 @@ yarn task transfer cancel [transferId]
 
 ## Testing
 To install dependencies call:
-```
+```bash
 yarn
 ```
 
 To compile contracts:
-```
+```bash
 yarn build
 ```
 
 To run tests:
+```bash
+yarn test:units
+yarn test:tasks
 ```
-yarn test
-```
-
 
 Alternatively, to compile contracts and test:
+```bash
+yarn test:all
 ```
-yarn testall
+
+To check gas consumption of common operations
+```bash
+yarn test:gasbenchmark
 ```
 
 ## Production and deployment
 
 Before distributing the compiled contract files you should strip away unnecessary fields: 
 
-```sh
+```bash
 yarn strip
 ```

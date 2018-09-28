@@ -10,7 +10,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {createWeb3} from '../utils/web3_tools';
 import WhitelistTask from './whitelist';
 import DeployTask from './deploy';
-import GanacheTask from './ganache';
 import OnboardingTask from './onboard';
 import TaskList from './base/task_list';
 import UploadTask from './upload';
@@ -23,7 +22,6 @@ const runTask = async () => {
   const contractManager = new ContractManager(web3, config.headContractAddress, nodeAddress);
   const list = new TaskList();
   const args = process.argv.slice(2);
-  list.add('ganache', new GanacheTask());
   list.add('deploy', new DeployTask(web3, nodeAddress));
   list.add('onboard', new OnboardingTask(web3, contractManager));
   list.add('whitelist', new WhitelistTask(web3, contractManager));
