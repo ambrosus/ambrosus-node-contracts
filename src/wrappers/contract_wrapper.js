@@ -12,10 +12,11 @@ import contractJsons from '../contract_jsons';
 
 /** @abstract */
 export default class ContractWrapper {
-  constructor(headWrapper, web3, defaultAddress) {
+  constructor(headWrapper, web3, defaultAddress, sendTransactions) {
     this.headWrapper = headWrapper;
     this.web3 = web3;
     this.defaultAddress = defaultAddress;
+    this.sendTransactions = sendTransactions;
   }
 
   async contract() {
@@ -25,6 +26,13 @@ export default class ContractWrapper {
 
   get getContractName() {
     throw new Error('Abstract method getContractName needs to be overridden');
+  }
+
+  async processTransaction(transactionObject, sendParams = {}) {
+    if (this.sendTransactions) {
+      return transactionObject.send({from: this.defaultAddress, ...sendParams});
+    }
+    return transactionObject.encodeABI();
   }
 
   setDefaultAddress(defaultAddress) {

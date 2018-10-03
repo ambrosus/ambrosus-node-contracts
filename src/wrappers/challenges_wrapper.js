@@ -36,7 +36,7 @@ export default class ChallengesWrapper extends ContractWrapper {
 
   async resolve(challengeId) {
     const contract = await this.contract();
-    return contract.methods.resolve(challengeId).send({from: this.defaultAddress});
+    return this.processTransaction(contract.methods.resolve(challengeId));
   }
 
   async canResolve(challengeId) {

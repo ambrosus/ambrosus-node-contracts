@@ -256,7 +256,6 @@ describe('Challenges Contract', () => {
 
     it(`Should increase nextChallengeSequenceNumber by 1`, async () => {
       await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee);
-
       await startChallenge(other, bundleId, from, userChallengeFee);
       expect(await nextChallengeSequenceNumber()).to.equal((SYSTEM_CHALLENGES_COUNT + 2).toString());
     });

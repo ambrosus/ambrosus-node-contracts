@@ -26,7 +26,7 @@ export default class RolesWrapper extends ContractWrapper {
 
   async onboardAsApollo(address, deposit) {
     const contract = await this.contract();
-    return contract.methods.onboardAsApollo().send({
+    return this.processTransaction(contract.methods.onboardAsApollo(), {
       from: address,
       value: deposit
     });
@@ -34,7 +34,7 @@ export default class RolesWrapper extends ContractWrapper {
 
   async onboardAsAtlas(address, stake, url) {
     const contract = await this.contract();
-    return contract.methods.onboardAsAtlas(url).send({
+    return this.processTransaction(contract.methods.onboardAsAtlas(url), {
       from: address,
       value: stake
     });
@@ -42,7 +42,7 @@ export default class RolesWrapper extends ContractWrapper {
 
   async onboardAsHermes(address, url) {
     const contract = await this.contract();
-    return contract.methods.onboardAsHermes(url).send({
+    return this.processTransaction(contract.methods.onboardAsHermes(url), {
       from: address
     });
   }

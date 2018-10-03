@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai from 'chai';
-import sinon from 'sinon';
+import sinon, {resetHistory} from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import KycWhitelistWrapper from '../../src/wrappers/kyc_whitelist_wrapper';
@@ -24,62 +24,113 @@ describe('KYC Whitelist Wrapper', () => {
   const exampleAddress = '0x1234';
   const exampleRole = 2;
   const exampleRequiredDeposit = 10000;
+  const exampleData = '0xda7a';
+  const encodeAbiStub = sinon.stub().resolves(exampleData);
 
   describe('add', () => {
     let addStub;
     let addSendStub;
+    let contractMock;
 
     before(async () => {
       addStub = sinon.stub();
       addSendStub = sinon.stub();
-      const contractMock = {
+      contractMock = {
         methods: {
           add: addStub.returns({
-            send: addSendStub.resolves()
+            send: addSendStub.resolves(),
+            encodeABI: encodeAbiStub
           })
         }
       };
-      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress);
-      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(() => {
+      resetHistory(contractMock);
     });
 
     after(async () => {
       getContractStub.restore();
     });
 
-    it('calls contract method with correct arguments', async () => {
-      await kycWhitelistWrapper.add(exampleAddress, exampleRole, exampleRequiredDeposit);
-      expect(addStub).to.be.calledWith(exampleAddress, exampleRole, exampleRequiredDeposit);
-      expect(addSendStub).to.be.calledOnceWith({from: defaultAddress});
+    describe('sendTransactions = true', () => {
+      before(() => {
+        kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, true);
+        getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('calls contract method with correct arguments ', async () => {
+        await kycWhitelistWrapper.add(exampleAddress, exampleRole, exampleRequiredDeposit);
+        expect(addStub).to.be.calledWith(exampleAddress, exampleRole, exampleRequiredDeposit);
+        expect(addSendStub).to.be.calledOnceWith({from: defaultAddress});
+      });
+    });
+
+    describe('sendTransactions = false', () => {
+      before(() => {
+        kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, false);
+        getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('returns data', async () => {
+        expect(await kycWhitelistWrapper.add(exampleAddress, exampleRole, exampleRequiredDeposit)).to.equal(exampleData);
+        expect(addStub).to.be.calledWith(exampleAddress, exampleRole, exampleRequiredDeposit);
+        expect(addSendStub).to.be.not.called;
+        expect(encodeAbiStub).to.be.calledOnceWith();
+      });
     });
   });
 
   describe('remove', () => {
     let removeStub;
     let removeSendStub;
-
+    let contractMock;
     before(async () => {
       removeStub = sinon.stub();
       removeSendStub = sinon.stub();
-      const contractMock = {
+      contractMock = {
         methods: {
           remove: removeStub.returns({
-            send: removeSendStub.resolves()
+            send: removeSendStub.resolves(),
+            encodeABI: encodeAbiStub
           })
         }
       };
-      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress);
-      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(() => {
+      resetHistory(contractMock);
     });
 
     after(async () => {
       getContractStub.restore();
     });
 
-    it('calls contract method with correct arguments', async () => {
-      await kycWhitelistWrapper.remove(exampleAddress);
-      expect(removeStub).to.be.calledWith(exampleAddress);
-      expect(removeSendStub).to.be.calledOnceWith({from: defaultAddress});
+    describe('sendTransactions = true', () => {
+      before(() => {
+        kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, true);
+        getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('calls contract method with correct arguments', async () => {
+        await kycWhitelistWrapper.remove(exampleAddress);
+        expect(removeStub).to.be.calledWith(exampleAddress);
+        expect(removeSendStub).to.be.calledOnceWith({from: defaultAddress});
+      });
+    });
+
+    describe('sendTransactions = false', () => {
+      before(() => {
+        kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, false);
+        getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('returns data', async () => {
+        expect(await kycWhitelistWrapper.remove(exampleAddress)).to.equal(exampleData);
+        expect(removeStub).to.be.calledWith(exampleAddress);
+        expect(removeSendStub).to.be.not.called;
+        expect(encodeAbiStub).to.be.calledOnceWith();
+      });
     });
   });
 

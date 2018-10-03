@@ -9,9 +9,11 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import ContractWrapper from '../../src/wrappers/contract_wrapper';
 
+chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
@@ -35,7 +37,7 @@ describe('Contract Wrapper', () => {
     mockHeadWrapper = {
       contractAddressByName: sinon.stub()
     };
-    contractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress);
+    contractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
   });
 
   describe('getting contract', () => {
@@ -60,6 +62,38 @@ describe('Contract Wrapper', () => {
   describe('getting name', () => {
     it('should throw if name getter is not overloaded', async () => {
       expect(() => contractWrapper.getContractName()).to.throw('Abstract method getContractName needs to be overridden');
+    });
+  });
+
+  describe('process transaction', () => {
+    let mockTransactionObject;
+    const exampleTxData = '0x123';
+
+    beforeEach(() => {
+      mockTransactionObject = {
+        send: sinon.stub().resolves(),
+        encodeABI: sinon.stub().returns(exampleTxData)
+      };
+    });
+
+    it('sends transaction when sendTransactions is true', async () => {
+      const sendingContractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
+      await sendingContractWrapper.processTransaction(mockTransactionObject);
+      expect(mockTransactionObject.send).to.be.calledOnceWith({from: defaultAddress});
+    });
+
+    it('sets custom send params', async () => {
+      const sendingContractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
+      const otherAddress = '0xabcdef';
+      await sendingContractWrapper.processTransaction(mockTransactionObject, {from: otherAddress, value: 2});
+      expect(mockTransactionObject.send).to.be.calledOnceWith({from: otherAddress, value: 2});
+    });
+
+    it('returns data when sendTransactions is false', async () => {
+      const notSendingContractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, false);
+      expect(await notSendingContractWrapper.processTransaction(mockTransactionObject)).to.equal(exampleTxData);
+      expect(mockTransactionObject.encodeABI).to.be.calledOnceWith();
+      expect(mockTransactionObject.send).to.be.not.called;
     });
   });
 });

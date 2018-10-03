@@ -16,12 +16,12 @@ export default class KycWhitelistWrapper extends ContractWrapper {
 
   async add(address, role, requiredDeposit) {
     const contract = await this.contract();
-    await contract.methods.add(address, role, requiredDeposit).send({from: this.defaultAddress});
+    return this.processTransaction(contract.methods.add(address, role, requiredDeposit));
   }
 
   async remove(address) {
     const contract = await this.contract();
-    await contract.methods.remove(address).send({from: this.defaultAddress});
+    return this.processTransaction(contract.methods.remove(address));
   }
 
   async isWhitelisted(address) {
