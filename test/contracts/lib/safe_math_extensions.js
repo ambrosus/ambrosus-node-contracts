@@ -11,7 +11,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
-import SafeMathExtensionsAdapter from '../../../build/contracts/SafeMathExtensionsAdapter.json';
+import SafeMathExtensionsAdapter from '../../../src/contracts/SafeMathExtensionsAdapter.json';
 import BN from 'bn.js';
 import {ONE} from '../../helpers/consts';
 

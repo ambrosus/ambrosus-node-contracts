@@ -7,14 +7,14 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {createWeb3} from '../utils/web3_tools';
-import TimeMockJson from '../../build/contracts/TimeMock.json';
-import deploy from '../../test/helpers/deploy';
+import {createWeb3} from '../src/utils/web3_tools';
+import TimeMockJson from '../src/contracts/TimeMock.json';
+import deploy from '../test/helpers/deploy';
 import {
   ATLAS,
   ATLAS1_STAKE,
   HERMES
-} from '../consts';
+} from '../src/consts';
 import BN from 'bn.js';
 
 let web3;

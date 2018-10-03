@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import SafeMathExtensionsJson from '../build/contracts/SafeMathExtensions.json';
+import SafeMathExtensionsJson from '../src/contracts/SafeMathExtensions.json';
 
 import {DEFAULT_GAS, deployContract, loadContract, link} from './utils/web3_tools';
 

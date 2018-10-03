@@ -11,7 +11,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
-import HeadJson from '../../../build/contracts/Head.json';
+import HeadJson from '../../../src/contracts/Head.json';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);

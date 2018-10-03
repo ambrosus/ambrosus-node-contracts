@@ -11,7 +11,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
-import KycWhitelistJson from '../../../build/contracts/KycWhitelist.json';
+import KycWhitelistJson from '../../../src/contracts/KycWhitelist.json';
 import {APOLLO, ATLAS, HERMES, APOLLO_DEPOSIT} from '../../../src/consts';
 
 chai.use(sinonChai);

@@ -14,7 +14,7 @@ import observeBalanceChange from '../../helpers/web3BalanceObserver';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
 import {ATLAS, HERMES, STORAGE_PERIOD_UNIT, PAYOUT_PERIOD_UNIT} from '../../../src/consts';
-import TimeMockJson from '../../../build/contracts/TimeMock.json';
+import TimeMockJson from '../../../src/contracts/TimeMock.json';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);

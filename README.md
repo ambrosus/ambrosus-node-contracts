@@ -31,18 +31,13 @@ You are ready to play.
 The following administrative tasks are available: 
 ```bash
 yarn task deploy
-yarn task ganache
-yarn task whitelist add [address]
+yarn task whitelist add [address] [node type] [required stake/deposit]
 yarn task whitelist remove [address]
 yarn task whitelist check
 yarn task stake deposit [role] [amount]
 yarn task stake release
 yarn task stake check
 yarn task upload [bundleId] [storagePeriods]
-yarn task transfer list
-yarn task transfer start [bundleId]
-yarn task transfer resolve [transferId]
-yarn task transfer cancel [transferId]
 ```
 
 ## Testing

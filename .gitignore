@@ -1,11 +1,6 @@
 node_modules
 dist
 .idea
-data
-/build/
 yarn-error.log
-nodePrivateKey.json
-registryContractAddress.json
-/config/dev.json
-ganache.pid
+src/contracts
 test_cli_head.env

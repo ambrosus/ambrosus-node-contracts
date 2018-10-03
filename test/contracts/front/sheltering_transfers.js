@@ -12,9 +12,9 @@ import chaiAsPromised from 'chai-as-promised';
 import deploy from '../../helpers/deploy';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
-import AtlasStakeStoreMockJson from '../../../build/contracts/AtlasStakeStoreMock.json';
+import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.json';
 import {ATLAS1_STAKE, HERMES, ATLAS, PAYOUT_PERIOD_UNIT} from '../../../src/consts';
-import TimeMockJson from '../../../build/contracts/TimeMock.json';
+import TimeMockJson from '../../../src/contracts/TimeMock.json';
 
 chai.use(chaiAsPromised);
 chai.use(chaiEmitEvents);

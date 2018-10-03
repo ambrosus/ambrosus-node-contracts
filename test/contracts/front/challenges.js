@@ -22,8 +22,8 @@ import {
 } from '../../../src/consts';
 import {ONE} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
-import AtlasStakeStoreMockJson from '../../../build/contracts/AtlasStakeStoreMock.json';
-import TimeMockJson from '../../../build/contracts/TimeMock.json';
+import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.json';
+import TimeMockJson from '../../../src/contracts/TimeMock.json';
 
 chai.use(chaiEmitEvents);
 

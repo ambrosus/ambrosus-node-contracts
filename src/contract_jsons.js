@@ -7,29 +7,29 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import HeadJson from '../build/contracts/Head.json';
-import ContextJson from '../build/contracts/Context.json';
-import CatalogueJson from '../build/contracts/Catalogue.json';
-import ValidatorSetJson from '../build/contracts/ValidatorSet.json';
-import BlockRewardsJson from '../build/contracts/BlockRewards.json';
-import AtlasStakeStoreJson from '../build/contracts/AtlasStakeStore.json';
-import BundleStoreJson from '../build/contracts/BundleStore.json';
-import RolesJson from '../build/contracts/Roles.json';
-import KycWhitelistJson from '../build/contracts/KycWhitelist.json';
-import FeesJson from '../build/contracts/Fees.json';
-import ChallengesJson from '../build/contracts/Challenges.json';
-import ChallengesStoreJson from '../build/contracts/ChallengesStore.json';
-import ShelteringJson from '../build/contracts/Sheltering.json';
-import PayoutsStoreJson from '../build/contracts/PayoutsStore.json';
-import RolesStoreJson from '../build/contracts/RolesStore.json';
-import PayoutsJson from '../build/contracts/Payouts.json';
-import ShelteringTransfersJson from '../build/contracts/ShelteringTransfers.json';
-import ShelteringTransfersStoreJson from '../build/contracts/ShelteringTransfersStore.json';
-import TimeJson from '../build/contracts/Time.json';
-import ConfigJson from '../build/contracts/Config.json';
-import UploadsJson from '../build/contracts/Uploads.json';
-import ApolloDepositStoreJson from '../build/contracts/ApolloDepositStore.json';
-import ValidatorProxyJson from '../build/contracts/ValidatorProxy.json';
+import HeadJson from './contracts/Head.json';
+import ContextJson from './contracts/Context.json';
+import CatalogueJson from './contracts/Catalogue.json';
+import ValidatorSetJson from './contracts/ValidatorSet.json';
+import BlockRewardsJson from './contracts/BlockRewards.json';
+import AtlasStakeStoreJson from './contracts/AtlasStakeStore.json';
+import BundleStoreJson from './contracts/BundleStore.json';
+import RolesJson from './contracts/Roles.json';
+import KycWhitelistJson from './contracts/KycWhitelist.json';
+import FeesJson from './contracts/Fees.json';
+import ChallengesJson from './contracts/Challenges.json';
+import ChallengesStoreJson from './contracts/ChallengesStore.json';
+import ShelteringJson from './contracts/Sheltering.json';
+import PayoutsStoreJson from './contracts/PayoutsStore.json';
+import RolesStoreJson from './contracts/RolesStore.json';
+import PayoutsJson from './contracts/Payouts.json';
+import ShelteringTransfersJson from './contracts/ShelteringTransfers.json';
+import ShelteringTransfersStoreJson from './contracts/ShelteringTransfersStore.json';
+import TimeJson from './contracts/Time.json';
+import ConfigJson from './contracts/Config.json';
+import UploadsJson from './contracts/Uploads.json';
+import ApolloDepositStoreJson from './contracts/ApolloDepositStore.json';
+import ValidatorProxyJson from './contracts/ValidatorProxy.json';
 
 const contractJsons = {
   head: HeadJson,
