@@ -233,6 +233,10 @@ contract Challenges is Base {
 
     function isOnCooldown(address resolverId, bytes32 challengeId) private view returns (bool) {
         uint lastResolvedSequenceNumber = atlasStakeStore.getLastChallengeResolvedSequenceNumber(resolverId);
-        return lastResolvedSequenceNumber != 0 && lastResolvedSequenceNumber.add(getCooldown()) > getChallengeSequenceNumber(challengeId);
+
+        // solium-disable-next-line operator-whitespace
+        return getChallengeCreationTime(challengeId).add(config.COOLDOWN_TIMEOUT()) > time.currentTimestamp() &&
+        lastResolvedSequenceNumber != 0 &&
+        lastResolvedSequenceNumber.add(getCooldown()) > getChallengeSequenceNumber(challengeId);
     }
 }
