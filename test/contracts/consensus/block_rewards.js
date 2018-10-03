@@ -11,7 +11,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
-import BlockRewardsJson from '../../../build/contracts/BlockRewards.json';
+import BlockRewardsJson from '../../../src/contracts/BlockRewards.json';
 
 const {expect} = chai;
 chai.use(chaiAsPromised);

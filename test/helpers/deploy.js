@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import MockContextJson from '../../build/contracts/MockContext.json';
+import MockContextJson from '../../src/contracts/MockContext.json';
 import Deployer from '../../src/deployer';
 import contractJsons from '../../src/contract_jsons';
 import {createWeb3, getDefaultAddress} from '../../src/utils/web3_tools';

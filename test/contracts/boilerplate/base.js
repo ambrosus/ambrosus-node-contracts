@@ -13,10 +13,10 @@ import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 
-import CallerContractJson from '../../../build/contracts/CallerContract.json';
-import CalledContractJson from '../../../build/contracts/CalledContract.json';
-import HeadJson from '../../../build/contracts/Head.json';
-import ContextJson from '../../../build/contracts/Context.json';
+import CallerContractJson from '../../../src/contracts/CallerContract.json';
+import CalledContractJson from '../../../src/contracts/CalledContract.json';
+import HeadJson from '../../../src/contracts/Head.json';
+import ContextJson from '../../../src/contracts/Context.json';
 
 chai.use(chaiEmitEvents);
 

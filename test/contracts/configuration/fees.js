@@ -13,7 +13,7 @@ import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import {DAY} from '../../../src/consts';
 import {TWO} from '../../helpers/consts';
-import TimeMockJson from '../../../build/contracts/TimeMock.json';
+import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import BN from 'bn.js';
 import {makeSnapshot, restoreSnapshot, createWeb3, utils} from '../../../src/utils/web3_tools';
 

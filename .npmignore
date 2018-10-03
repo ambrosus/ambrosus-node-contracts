@@ -1,0 +1,12 @@
+node_modules
+.idea
+.vscode
+.travis.yml
+.soliumrc.json
+.soliumignore
+yarn-error.log
+dev.env
+truffle.js
+test
+test_cli
+test_gas
