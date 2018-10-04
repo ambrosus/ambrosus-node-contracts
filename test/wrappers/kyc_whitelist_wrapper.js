@@ -18,7 +18,6 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('KYC Whitelist Wrapper', () => {
-  let getContractStub;
   let kycWhitelistWrapper;
   const defaultAddress = '0x6789';
   const exampleAddress = '0x1234';
@@ -49,14 +48,10 @@ describe('KYC Whitelist Wrapper', () => {
       resetHistory(contractMock);
     });
 
-    after(async () => {
-      getContractStub.restore();
-    });
-
     describe('sendTransactions = true', () => {
       before(() => {
         kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, true);
-        getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+        sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
       });
 
       it('calls contract method with correct arguments ', async () => {
@@ -69,7 +64,7 @@ describe('KYC Whitelist Wrapper', () => {
     describe('sendTransactions = false', () => {
       before(() => {
         kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, false);
-        getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+        sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
       });
 
       it('returns data', async () => {
@@ -102,14 +97,10 @@ describe('KYC Whitelist Wrapper', () => {
       resetHistory(contractMock);
     });
 
-    after(async () => {
-      getContractStub.restore();
-    });
-
     describe('sendTransactions = true', () => {
       before(() => {
         kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, true);
-        getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+        sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
       });
 
       it('calls contract method with correct arguments', async () => {
@@ -122,7 +113,7 @@ describe('KYC Whitelist Wrapper', () => {
     describe('sendTransactions = false', () => {
       before(() => {
         kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, false);
-        getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+        sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
       });
 
       it('returns data', async () => {
@@ -149,11 +140,7 @@ describe('KYC Whitelist Wrapper', () => {
         }
       };
       kycWhitelistWrapper = new KycWhitelistWrapper();
-      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    after(async () => {
-      getContractStub.restore();
+      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -179,11 +166,7 @@ describe('KYC Whitelist Wrapper', () => {
         }
       };
       kycWhitelistWrapper = new KycWhitelistWrapper();
-      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    after(async () => {
-      getContractStub.restore();
+      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -208,11 +191,7 @@ describe('KYC Whitelist Wrapper', () => {
         }
       };
       kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, exampleAddress);
-      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    after(async () => {
-      getContractStub.restore();
+      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -237,11 +216,7 @@ describe('KYC Whitelist Wrapper', () => {
         }
       };
       kycWhitelistWrapper = new KycWhitelistWrapper();
-      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    after(async () => {
-      getContractStub.restore();
+      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -266,11 +241,7 @@ describe('KYC Whitelist Wrapper', () => {
         }
       };
       kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, exampleAddress);
-      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    after(async () => {
-      getContractStub.restore();
+      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -295,11 +266,7 @@ describe('KYC Whitelist Wrapper', () => {
         }
       };
       kycWhitelistWrapper = new KycWhitelistWrapper();
-      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    after(async () => {
-      getContractStub.restore();
+      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -324,11 +291,7 @@ describe('KYC Whitelist Wrapper', () => {
         }
       };
       kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, exampleAddress);
-      getContractStub = sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    after(async () => {
-      getContractStub.restore();
+      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {

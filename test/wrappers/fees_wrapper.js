@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai from 'chai';
-import sinon from 'sinon';
+import sinon, {resetHistory} from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import FeesWrapper from '../../src/wrappers/fees_wrapper';
@@ -20,7 +20,61 @@ const {expect} = chai;
 describe('Fees Wrapper', () => {
   let contractManagerMock;
   let feesWrapper;
-  let getContractStub;
+
+  describe('setBaseUploadFee', () => {
+    const exampleFee = '100';
+    let contractMock;
+    let setBaseUploadFeeStub;
+    let setBaseUploadFeeSendStub;
+    const defaultAddress = '0x6789';
+    const exampleData = '0xda7a';
+    const encodeAbiStub = sinon.stub().resolves(exampleData);
+
+    before(() => {
+      setBaseUploadFeeStub = sinon.stub();
+      setBaseUploadFeeSendStub = sinon.stub().resolves();
+
+      contractMock = {
+        methods: {
+          setBaseUploadFee: setBaseUploadFeeStub.returns({
+            send: setBaseUploadFeeSendStub.resolves(),
+            encodeABI: encodeAbiStub
+          })
+        }
+      };
+    });
+
+    afterEach(() => {
+      resetHistory(contractMock);
+    });
+
+    describe('sendTransactions = true', () => {
+      before(() => {
+        feesWrapper = new FeesWrapper({}, {}, defaultAddress, true);
+        sinon.stub(feesWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('calls contract method with correct arguments ', async () => {
+        await feesWrapper.setBaseUploadFee(exampleFee);
+        expect(setBaseUploadFeeStub).to.be.calledWith(exampleFee);
+        expect(setBaseUploadFeeSendStub).to.be.calledOnceWith({from: defaultAddress});
+      });
+    });
+
+    describe('sendTransactions = false', () => {
+      before(() => {
+        feesWrapper = new FeesWrapper({}, {}, defaultAddress, false);
+        sinon.stub(feesWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('returns data', async () => {
+        expect(await feesWrapper.setBaseUploadFee(exampleFee)).to.equal(exampleData);
+        expect(setBaseUploadFeeStub).to.be.calledWith(exampleFee);
+        expect(setBaseUploadFeeSendStub).to.be.not.called;
+        expect(encodeAbiStub).to.be.calledOnceWith();
+      });
+    });
+  });
 
   describe('feeForUpload', () => {
     const storagePeriods = 23;
@@ -40,11 +94,7 @@ describe('Fees Wrapper', () => {
         call: getFeeForUploadCallStub.resolves(fee)
       });
       feesWrapper = new FeesWrapper(contractManagerMock);
-      getContractStub = sinon.stub(feesWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(feesWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {

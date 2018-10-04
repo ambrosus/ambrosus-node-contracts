@@ -14,6 +14,11 @@ export default class FeesWrapper extends ContractWrapper {
     return 'fees';
   }
 
+  async setBaseUploadFee(fee) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.setBaseUploadFee(fee));
+  }
+
   async feeForUpload(storagePeriods) {
     const contract = await this.contract();
     return contract.methods.getFeeForUpload(storagePeriods).call();

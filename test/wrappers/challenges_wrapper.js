@@ -18,7 +18,6 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Challenges Wrapper', () => {
-  let getContractStub;
   let challengesWrapper;
   let web3Mock;
   const defaultAddress = '0xdeadface';
@@ -59,11 +58,7 @@ describe('Challenges Wrapper', () => {
         getPastEvents: getPastEventsStub
       };
       challengesWrapper = new ChallengesWrapper();
-      getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
     });
 
     it('gets past events', async () => {
@@ -83,11 +78,7 @@ describe('Challenges Wrapper', () => {
         getPastEvents: getPastEventsStub
       };
       challengesWrapper = new ChallengesWrapper();
-      getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
     });
 
     it('gets past events', async () => {
@@ -100,7 +91,6 @@ describe('Challenges Wrapper', () => {
     const fromBlock = 4;
     const eventsStub = 'events';
     let getPastEventsStub;
-    let getContractStub;
 
     beforeEach(async () => {
       getPastEventsStub = sinon.stub().returns(eventsStub);
@@ -108,11 +98,7 @@ describe('Challenges Wrapper', () => {
         getPastEvents: getPastEventsStub
       };
       challengesWrapper = new ChallengesWrapper();
-      getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
     });
 
     it('gets past events', async () => {
@@ -125,7 +111,6 @@ describe('Challenges Wrapper', () => {
     const challengeId = '0x123';
     let resolveChallengeStub;
     let resolveChallengeSendStub;
-    let getContractStub;
     let contractMock;
 
     beforeEach(async () => {
@@ -144,13 +129,12 @@ describe('Challenges Wrapper', () => {
 
     afterEach(() => {
       resetHistory(contractMock);
-      getContractStub.restore();
     });
 
     describe('sendTransactions = true', () => {
       beforeEach(() => {
         challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress, true);
-        getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
+        sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
       });
 
       it('calls contract method with correct arguments', async () => {
@@ -163,7 +147,7 @@ describe('Challenges Wrapper', () => {
     describe('sendTransactions = false', () => {
       beforeEach(() => {
         challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress, false);
-        getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
+        sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
       });
 
       it('returns data', async () => {
@@ -181,7 +165,6 @@ describe('Challenges Wrapper', () => {
     const result = 'res';
     let canResolveStub;
     let canResolveCallStub;
-    let getContractStub;
 
     beforeEach(async () => {
       canResolveStub = sinon.stub();
@@ -195,11 +178,7 @@ describe('Challenges Wrapper', () => {
         }
       };
       challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress);
-      getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -214,7 +193,6 @@ describe('Challenges Wrapper', () => {
     const result = 'res';
     let challengeIsInProgressStub;
     let challengeIsInProgressCallStub;
-    let getContractStub;
 
     beforeEach(async () => {
       challengeIsInProgressStub = sinon.stub();
@@ -228,11 +206,7 @@ describe('Challenges Wrapper', () => {
         call: challengeIsInProgressCallStub
       });
       challengesWrapper = new ChallengesWrapper();
-      getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
