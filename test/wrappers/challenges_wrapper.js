@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai from 'chai';
-import sinon from 'sinon';
+import sinon, {resetHistory} from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import ChallengesWrapper from '../../src/wrappers/challenges_wrapper';
@@ -22,6 +22,9 @@ describe('Challenges Wrapper', () => {
   let challengesWrapper;
   let web3Mock;
   const defaultAddress = '0xdeadface';
+  const exampleData = '0xda7a';
+  const encodeAbiStub = sinon.stub().resolves(exampleData);
+
   describe('earliestMeaningfulBlock', () => {
     const blockNumber = 1752205;
     const challengeDuration = 4 * 24 * 60 * 60;
@@ -118,44 +121,63 @@ describe('Challenges Wrapper', () => {
     });
   });
 
-
-
   describe('resolve', () => {
     const challengeId = '0x123';
-    const defaultAccount = '0x123';
     let resolveChallengeStub;
     let resolveChallengeSendStub;
     let getContractStub;
+    let contractMock;
 
     beforeEach(async () => {
       resolveChallengeStub = sinon.stub();
       resolveChallengeSendStub = sinon.stub();
       resolveChallengeStub.returns({
-        send: resolveChallengeSendStub
+        send: resolveChallengeSendStub,
+        encodeABI: encodeAbiStub
       });
-      const contractMock = {
+      contractMock = {
         methods: {
           resolve: resolveChallengeStub
         }
       };
-      challengesWrapper = new ChallengesWrapper({}, {}, defaultAccount);
-      getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
+      resetHistory(contractMock);
       getContractStub.restore();
     });
 
-    it('calls contract method with correct arguments', async () => {
-      await challengesWrapper.resolve(challengeId);
-      expect(resolveChallengeStub).to.be.calledWith(challengeId);
-      expect(resolveChallengeSendStub).to.be.calledWith({from: defaultAccount});
+    describe('sendTransactions = true', () => {
+      beforeEach(() => {
+        challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress, true);
+        getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('calls contract method with correct arguments', async () => {
+        await challengesWrapper.resolve(challengeId);
+        expect(resolveChallengeStub).to.be.calledWith(challengeId);
+        expect(resolveChallengeSendStub).to.be.calledWith({from: defaultAddress});
+      });
+    });
+
+    describe('sendTransactions = false', () => {
+      beforeEach(() => {
+        challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress, false);
+        getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('returns data', async () => {
+        expect(await challengesWrapper.resolve(challengeId)).to.equal(exampleData);
+        expect(resolveChallengeStub).to.be.calledWith(challengeId);
+        expect(resolveChallengeSendStub).to.be.not.called;
+        expect(encodeAbiStub).to.be.calledOnceWith();
+      });
     });
   });
 
   describe('canResolve', () => {
     const challengeId = '0x123';
-    const defaultAccount = '0x123';
+    const defaultAddress = '0x123';
     const result = 'res';
     let canResolveStub;
     let canResolveCallStub;
@@ -172,7 +194,7 @@ describe('Challenges Wrapper', () => {
           canResolve: canResolveStub
         }
       };
-      challengesWrapper = new ChallengesWrapper({}, {}, defaultAccount);
+      challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress);
       getContractStub = sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
     });
 
@@ -182,7 +204,7 @@ describe('Challenges Wrapper', () => {
 
     it('calls contract method with correct arguments', async () => {
       expect(await challengesWrapper.canResolve(challengeId)).to.equal(result);
-      expect(canResolveStub).to.be.calledWith(defaultAccount, challengeId);
+      expect(canResolveStub).to.be.calledWith(defaultAddress, challengeId);
       expect(canResolveCallStub).to.be.called;
     });
   });
