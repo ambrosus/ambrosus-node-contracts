@@ -55,6 +55,7 @@ describe('Roles Contract', () => {
   const retireAtlas = async (sender) => roles.methods.retireAtlas().send({from: sender, gasPrice: '0'});
   const retireHermes = async (sender) => roles.methods.retireHermes().send({from: sender});
   const retireApollo = async (sender) => roles.methods.retireApollo().send({from: sender, gasPrice: '0'});
+  const setUrl = async (sender, url) => roles.methods.setUrl(url).send({from: sender});
   const canOnboardAsAtlas = async (address, value) => roles.methods.canOnboard(address, ATLAS, value).call();
   const canOnboardAsHermes = async (address, value) => roles.methods.canOnboard(address, HERMES, value).call();
   const canOnboardAsApollo = async (address, value) => roles.methods.canOnboard(address, APOLLO, value).call();
@@ -317,6 +318,37 @@ describe('Roles Contract', () => {
       expect(await getStorageLimitForAtlas(ATLAS2_STAKE.sub(ONE).toString())).to.eq('0');
       expect(await getStorageLimitForAtlas(ATLAS1_STAKE.add(ONE).toString())).to.eq('0');
       expect(await getStorageLimitForAtlas(ATLAS1_STAKE.toString())).to.eq(ATLAS1_STORAGE_LIMIT.toString());
+    });
+  });
+
+  describe('setUrl', () => {
+    const oldUrl = 'https://google.com';
+    const newUrl = 'https://yahoo.com';
+
+    it('correctly sets new URL', async () => {
+      onboardAsAtlas(oldUrl, atlas1, ATLAS1_STAKE);
+      expect(await getUrl(atlas1)).to.equal(oldUrl);
+      await setUrl(atlas1, newUrl);
+      expect(await getUrl(atlas1)).to.equal(newUrl);
+    });
+
+    it('allows Atlas to set Url', async () => {
+      onboardAsAtlas(oldUrl, atlas1, ATLAS1_STAKE);
+      await expect(setUrl(atlas1, newUrl)).to.be.eventually.fulfilled;
+    });
+
+    it('allows Hermes to set Url', async () => {
+      onboardAsHermes(oldUrl, hermes);
+      await expect(setUrl(hermes, newUrl)).to.be.eventually.fulfilled;
+    });
+
+    it('does not allow Apollo to set Url', async () => {
+      onboardAsApollo(apollo, APOLLO_DEPOSIT);
+      await expect(setUrl(apollo, newUrl)).to.be.eventually.rejected;
+    });
+
+    it('does not allow unonboarded address to set Url', async () => {
+      await expect(setUrl(atlas1, newUrl)).to.be.eventually.rejected;
     });
   });
 });
