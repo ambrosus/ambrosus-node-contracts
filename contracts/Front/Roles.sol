@@ -102,6 +102,10 @@ contract Roles is Base {
         return rolesStore.getUrl(node);
     }
 
+    function setUrl(string nodeUrl) public {
+        rolesStore.setUrl(msg.sender, nodeUrl);
+    }
+
     function canOnboard(address node, Consts.NodeType role, uint amount) public view returns (bool) {
         return kycWhitelist.hasRoleAssigned(node, role) && amount == kycWhitelist.getRequiredDeposit(node);
     }

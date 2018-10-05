@@ -24,6 +24,13 @@ export default class RolesWrapper extends ContractWrapper {
     return contract.methods.getUrl(address).call();
   }
 
+  async setNodeUrl(address, url) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.setUrl(url), {
+      from: address
+    });
+  }
+
   async onboardAsApollo(address, deposit) {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.onboardAsApollo(), {

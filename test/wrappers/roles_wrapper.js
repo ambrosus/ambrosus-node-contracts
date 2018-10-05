@@ -77,6 +77,60 @@ describe('Roles Wrapper', () => {
     });
   });
 
+
+  describe('setNodeUrl', () => {
+    let setNodeUrlStub;
+    let setNodeUrlSendStub;
+    let contractMock;
+    const nodeUrl = 'url';
+
+    before(async () => {
+      setNodeUrlStub = sinon.stub();
+      setNodeUrlSendStub = sinon.stub();
+      contractMock = {
+        methods: {
+          setUrl: setNodeUrlStub.returns({
+            send: setNodeUrlSendStub.resolves(),
+            encodeABI: encodeAbiStub
+          })
+        }
+      };
+    });
+
+    afterEach(() => {
+      resetHistory(contractMock);
+    });
+
+    describe('sendTransactions = true', () => {
+      before(() => {
+        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, true);
+        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('calls contract method with correct arguments', async () => {
+        await rolesWrapper.setNodeUrl(exampleAddress, nodeUrl);
+        expect(setNodeUrlStub).to.be.calledOnceWith(nodeUrl);
+        expect(setNodeUrlSendStub).to.be.calledOnceWith({
+          from: exampleAddress
+        });
+      });
+    });
+
+    describe('sendTransactions = false', () => {
+      before(() => {
+        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, false);
+        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('returns data', async () => {
+        expect(await rolesWrapper.setNodeUrl(exampleAddress, nodeUrl)).to.equal(exampleData);
+        expect(setNodeUrlStub).to.be.calledOnceWith();
+        expect(setNodeUrlSendStub).to.be.not.called;
+        expect(encodeAbiStub).to.be.calledOnceWith();
+      });
+    });
+  });
+
   describe('onboardAsApollo', () => {
     let onboardAsApolloStub;
     let onboardAsApolloSendStub;
