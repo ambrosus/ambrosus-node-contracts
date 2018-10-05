@@ -12,7 +12,7 @@ import contractJsons from '../contract_jsons';
 
 /** @abstract */
 export default class ContractWrapper {
-  constructor(headWrapper, web3, defaultAddress, sendTransactions) {
+  constructor(headWrapper, web3, defaultAddress, sendTransactions = true) {
     this.headWrapper = headWrapper;
     this.web3 = web3;
     this.defaultAddress = defaultAddress;
