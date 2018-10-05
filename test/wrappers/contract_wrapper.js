@@ -76,6 +76,10 @@ describe('Contract Wrapper', () => {
       };
     });
 
+    it('sendTransactions is true by default', async () => {
+      expect(new ContractWrapper().sendTransactions).to.be.true;
+    });
+
     it('sends transaction when sendTransactions is true', async () => {
       const sendingContractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
       await sendingContractWrapper.processTransaction(mockTransactionObject);
