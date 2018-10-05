@@ -18,7 +18,6 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Sheltering Wrapper', () => {
-  let getContractStub;
   let shelteringWrapper;
 
   describe('isSheltering', () => {
@@ -38,11 +37,7 @@ describe('Sheltering Wrapper', () => {
         }
       };
       shelteringWrapper = new ShelteringWrapper({}, {}, defaultAddress);
-      getContractStub = sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -70,11 +65,7 @@ describe('Sheltering Wrapper', () => {
         }
       };
       shelteringWrapper = new ShelteringWrapper({}, {}, defaultAddress);
-      getContractStub = sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
