@@ -22,7 +22,6 @@ describe('Roles Wrapper', () => {
   const defaultAddress = '0x1234';
   const exampleData = '0xda7a';
   const encodeAbiStub = sinon.stub().resolves(exampleData);
-  let getContractStub;
   let rolesWrapper;
 
   describe('onboardedRole', () => {
@@ -40,11 +39,7 @@ describe('Roles Wrapper', () => {
         }
       };
       rolesWrapper = new RolesWrapper();
-      getContractStub = sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-    });
-
-    after(async () => {
-      getContractStub.restore();
+      sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -71,11 +66,7 @@ describe('Roles Wrapper', () => {
         }
       };
       rolesWrapper = new RolesWrapper();
-      getContractStub = sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-    });
-
-    after(async () => {
-      getContractStub.restore();
+      sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -109,14 +100,10 @@ describe('Roles Wrapper', () => {
       resetHistory(contractMock);
     });
 
-    after(async () => {
-      getContractStub.restore();
-    });
-
     describe('sendTransactions = true', () => {
       before(() => {
         rolesWrapper = new RolesWrapper({}, {}, defaultAddress, true);
-        getContractStub = sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
       });
 
       it('calls contract method with correct arguments', async () => {
@@ -132,7 +119,7 @@ describe('Roles Wrapper', () => {
     describe('sendTransactions = false', () => {
       before(() => {
         rolesWrapper = new RolesWrapper({}, {}, defaultAddress, false);
-        getContractStub = sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
       });
 
       it('returns data', async () => {
@@ -168,14 +155,10 @@ describe('Roles Wrapper', () => {
       resetHistory(contractMock);
     });
 
-    after(async () => {
-      getContractStub.restore();
-    });
-
     describe('sendTransactions = true', () => {
       before(() => {
         rolesWrapper = new RolesWrapper({}, {}, defaultAddress, true);
-        getContractStub = sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
       });
 
       it('calls contract method with correct arguments', async () => {
@@ -191,7 +174,7 @@ describe('Roles Wrapper', () => {
     describe('sendTransactions = false', () => {
       before(() => {
         rolesWrapper = new RolesWrapper({}, {}, defaultAddress, false);
-        getContractStub = sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
       });
 
       it('returns data', async () => {
@@ -226,14 +209,10 @@ describe('Roles Wrapper', () => {
       resetHistory(contractMock);
     });
 
-    after(async () => {
-      getContractStub.restore();
-    });
-
     describe('sendTransactions = true', () => {
       before(() => {
         rolesWrapper = new RolesWrapper({}, {}, defaultAddress, true);
-        getContractStub = sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
       });
 
       it('calls contract method with correct arguments', async () => {
@@ -248,7 +227,7 @@ describe('Roles Wrapper', () => {
     describe('sendTransactions = false', () => {
       before(() => {
         rolesWrapper = new RolesWrapper({}, {}, defaultAddress, false);
-        getContractStub = sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
       });
 
       it('returns data', async () => {
@@ -257,10 +236,6 @@ describe('Roles Wrapper', () => {
         expect(onboardAsHermesSendStub).to.be.not.called;
         expect(encodeAbiStub).to.be.calledOnceWith();
       });
-    });
-
-    after(async () => {
-      getContractStub.restore();
     });
   });
 

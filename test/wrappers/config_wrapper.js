@@ -18,7 +18,6 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Config Wrapper', () => {
-  let getContractStub;
   let configWrapper;
 
   describe('ATLAS1_STAKE', () => {
@@ -37,11 +36,7 @@ describe('Config Wrapper', () => {
         }
       };
       configWrapper = new ConfigWrapper();
-      getContractStub = sinon.stub(configWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(configWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -67,11 +62,7 @@ describe('Config Wrapper', () => {
         }
       };
       configWrapper = new ConfigWrapper();
-      getContractStub = sinon.stub(configWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(configWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -97,11 +88,7 @@ describe('Config Wrapper', () => {
         }
       };
       configWrapper = new ConfigWrapper();
-      getContractStub = sinon.stub(configWrapper, 'contract').resolves(contractMock);
-    });
-
-    afterEach(async () => {
-      getContractStub.restore();
+      sinon.stub(configWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
