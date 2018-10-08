@@ -15,11 +15,11 @@ export default class WhitelistActions {
   async add(address, role, requiredDeposit) {
     const owner = await this.kycWhitelistWrapper.getOwner();
     if (owner !== this.kycWhitelistWrapper.defaultAddress) {
-      throw 'You need to be the owner of the KYC whitelist to perform a add action';
+      throw new Error('You need to be the owner of the KYC whitelist to perform a add action');
     }
 
     if (await this.kycWhitelistWrapper.isWhitelisted(address)) {
-      throw `The provided address ${address} is already whitelisted`;
+      throw new Error(`The provided address ${address} is already whitelisted`);
     }
 
     await this.kycWhitelistWrapper.add(address, role, requiredDeposit);
@@ -28,11 +28,11 @@ export default class WhitelistActions {
   async remove(address) {
     const owner = await this.kycWhitelistWrapper.getOwner();
     if (owner !== this.kycWhitelistWrapper.defaultAddress) {
-      throw 'You need to be the owner of the KYC whitelist to perform this action';
+      throw new Error('You need to be the owner of the KYC whitelist to perform this action');
     }
 
     if (!await this.kycWhitelistWrapper.isWhitelisted(address)) {
-      throw `Address ${address} is not whitelisted`;
+      throw new Error(`Address ${address} is not whitelisted`);
     }
 
     await this.kycWhitelistWrapper.remove(address);

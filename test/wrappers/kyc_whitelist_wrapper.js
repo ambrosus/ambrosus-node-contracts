@@ -225,4 +225,30 @@ describe('KYC Whitelist Wrapper', () => {
       expect(getRoleAssignedCallStub).to.be.calledOnce;
     });
   });
+
+  describe('getOwner', () => {
+    let getOwnerStub;
+    let getOwnerCallStub;
+    const ownerAddress = '0x1234ABCD';
+
+    before(async () => {
+      getOwnerStub = sinon.stub();
+      getOwnerCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          owner: getOwnerStub.returns({
+            call: getOwnerCallStub.resolves(ownerAddress)
+          })
+        }
+      };
+      kycWhitelistWrapper = new KycWhitelistWrapper();
+      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await expect(kycWhitelistWrapper.getOwner()).to.eventually.equal(ownerAddress);
+      expect(getOwnerStub).to.be.calledOnce;
+      expect(getOwnerCallStub).to.be.calledOnce;
+    });
+  });
 });

@@ -38,22 +38,17 @@ export default class OnboardActions {
   async validateWhitelistedForRole(address, role) {
     const kyc = this.kycWhitelistWrapper;
 
-    if (await kyc.hasRoleAssigned(address, role)) {
-      return;
+    if (!await kyc.hasRoleAssigned(address, role)) {
+      throw new Error(`Address ${address} is not white-listed for the ${ROLE_REVERSE_CODES[role]} role.`);
     }
-
-    throw `Address ${address} is not white-listed for the ${ROLE_REVERSE_CODES[role]} role.`;
   }
 
   async validateStakeDepositAmount(address, amount) {
     const kyc = this.kycWhitelistWrapper;
-
     const requiredAmount = await kyc.getRequiredDeposit(address);
 
     if (amount === requiredAmount) {
-      return;
+      throw new Error(`Address ${address} requires a deposit of ${requiredAmount} but ${amount} provided.`);
     }
-
-    throw `Address ${address} requires a deposit of ${requiredAmount} but ${amount} provided.`;
   }
 }
