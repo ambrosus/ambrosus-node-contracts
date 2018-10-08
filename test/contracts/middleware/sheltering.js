@@ -35,7 +35,6 @@ describe('Sheltering Contract', () => {
   let sheltering;
   let rolesStore;
   let time;
-  let payouts;
   let payoutsStore;
   let atlasStakeStore;
   let snapshotId;
@@ -69,7 +68,6 @@ describe('Sheltering Contract', () => {
   const injectSheltererWithBundleStore = async (bundleId, shelterer, reward, payoutPeriodsReduction, currentTimestamp, sender = deployer) =>
     bundleStore.methods.addShelterer(bundleId, shelterer, reward, payoutPeriodsReduction, currentTimestamp).send({from: sender});
   const getCurrentPayoutPeriod = async () => time.methods.currentPayoutPeriod().call();
-  const withdrawPayout = async (targetUser) => payouts.methods.withdraw().send({from: targetUser, gasPrice: '0'});
   const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
   const setTimestamp = async (timestamp, sender = deployer) => time.methods.setCurrentTimestamp(timestamp).send({from: sender});
 
@@ -80,7 +78,7 @@ describe('Sheltering Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [deployer, hermes, atlas, atlas2, other] = await web3.eth.getAccounts();
-    ({bundleStore, sheltering, atlasStakeStore, rolesStore, payouts, payoutsStore, time} = await deploy({
+    ({bundleStore, sheltering, atlasStakeStore, rolesStore, payoutsStore, time} = await deploy({
       web3,
       sender: deployer,
       contracts: {
@@ -317,7 +315,6 @@ describe('Sheltering Contract', () => {
       await storeBundle(bundleId, hermes, storagePeriods);
       await addShelterer(bundleId, atlas, totalReward);
       await setTimestamp(transferTimestamp);
-      await withdrawPayout(atlas);
     });
 
     describe('if successful', () => {

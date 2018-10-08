@@ -32,8 +32,8 @@ contract Payouts is Base {
         config = _config;
     }
 
-    function withdraw() public {
-        return payoutsStore.withdraw(msg.sender, time.currentPayoutPeriod().sub(1).castTo64());
+    function withdraw(address target) public {
+        return payoutsStore.withdraw(msg.sender, target, time.currentPayoutPeriod().sub(1).castTo64());
     }
 
     function available(uint64 payoutPeriod) public view returns (uint) {
