@@ -37,7 +37,8 @@ const startServer = () => new Promise((resolve, reject) => {
   });
 });
 
-const execute = (command, env = {}) => new Promise((resolve, reject) =>
+const execute = (command, env = {}) => new Promise((resolve, reject) => {
+  console.log(command);
   exec(command, {env: {...process.env, WEB3_RPC, WEB3_NODEPRIVATEKEY, ...env}, cwd: __dirname},
     (error, stdout, stderr) => {
       if (stderr) {
@@ -49,8 +50,9 @@ const execute = (command, env = {}) => new Promise((resolve, reject) =>
         console.log(stdout);
         resolve(stdout);
       }
-    })
-);
+    }
+  );
+});
 
 startServer()
   .then(async (server) => {
@@ -59,7 +61,6 @@ startServer()
       await execute(`yarn task deploy --save ${headEnvFile}`);
       const headConfig = dotenv.parse(fs.readFileSync(headEnvFile));
       await execute(`yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 HERMES 0`, headConfig);
-      await execute(`yarn task whitelist check 0xEbDEAC82424a053DFf79397862BD122F76798bC5`, headConfig);
       await execute(`yarn task whitelist remove 0xEbDEAC82424a053DFf79397862BD122F76798bC5`, headConfig);
       await execute(`yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 HERMES 0`, headConfig);
       await execute(`yarn task onboard HERMES localhost`, headConfig);

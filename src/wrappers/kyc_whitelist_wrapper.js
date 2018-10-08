@@ -14,6 +14,11 @@ export default class KycWhitelistWrapper extends ContractWrapper {
     return 'kycWhitelist';
   }
 
+  async getOwner() {
+    const contract = await this.contract();
+    return contract.methods.owner().call();
+  }
+
   async add(address, role, requiredDeposit) {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.add(address, role, requiredDeposit));
@@ -34,25 +39,13 @@ export default class KycWhitelistWrapper extends ContractWrapper {
     return contract.methods.hasRoleAssigned(address, role).call();
   }
 
-  async selfHasRoleAssigned(role) {
-    return this.hasRoleAssigned(this.defaultAddress, role);
-  }
-
   async getRequiredDeposit(address) {
     const contract = await this.contract();
     return contract.methods.getRequiredDeposit(address).call();
   }
 
-  async selfGetRequiredDeposit() {
-    return this.getRequiredDeposit(this.defaultAddress);
-  }
-
   async getRoleAssigned(address) {
     const contract = await this.contract();
     return contract.methods.getRoleAssigned(address).call();
-  }
-
-  async selfGetRoleAssigned() {
-    return this.getRoleAssigned(this.defaultAddress);
   }
 }

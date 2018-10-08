@@ -53,16 +53,4 @@ export default class RolesWrapper extends ContractWrapper {
       from: address
     });
   }
-
-  async selfOnboardAsApollo(deposit) {
-    return this.onboardAsApollo(this.defaultAddress, deposit);
-  }
-
-  async selfOnboardAsAtlas(stake, url) {
-    return this.onboardAsAtlas(this.defaultAddress, stake, url);
-  }
-
-  async selfOnboardAsHermes(url) {
-    return this.onboardAsHermes(this.defaultAddress, url);
-  }
 }

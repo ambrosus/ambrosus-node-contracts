@@ -44,14 +44,14 @@ export default class HeadWrapper {
     }
 
     const catalogue = await this.catalogue();
-    return catalogue.methods[`${contractName}()`]().call({from: this.defaultAddress});
+    return catalogue.methods[`${contractName}()`]().call();
   }
 
   async context() {
     const contextAddress = await this.head
       .methods
       .context()
-      .call({from: this.defaultAddress});
+      .call();
     return loadContract(this.web3, contractJsons.context.abi, contextAddress);
   }
 

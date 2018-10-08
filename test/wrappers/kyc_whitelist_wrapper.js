@@ -176,31 +176,6 @@ describe('KYC Whitelist Wrapper', () => {
     });
   });
 
-  describe('selfHasRoleAssigned', () => {
-    let selfHasRoleAssignedStub;
-    let selfHasRoleAssignedCallStub;
-
-    before(async () => {
-      selfHasRoleAssignedStub = sinon.stub();
-      selfHasRoleAssignedCallStub = sinon.stub();
-      const contractMock = {
-        methods: {
-          hasRoleAssigned: selfHasRoleAssignedStub.returns({
-            call: selfHasRoleAssignedCallStub.resolves(1)
-          })
-        }
-      };
-      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, exampleAddress);
-      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    it('calls contract method with correct arguments', async () => {
-      await kycWhitelistWrapper.selfHasRoleAssigned(exampleRole);
-      expect(selfHasRoleAssignedStub).to.be.calledWith(exampleAddress, exampleRole);
-      expect(selfHasRoleAssignedCallStub).to.be.calledOnce;
-    });
-  });
-
   describe('getRequiredDeposit', () => {
     let getRequiredDepositStub;
     let getRequiredDepositCallStub;
@@ -226,31 +201,6 @@ describe('KYC Whitelist Wrapper', () => {
     });
   });
 
-  describe('selfGetRequiredDeposit', () => {
-    let selfGetRequiredDepositStub;
-    let selfGetRequiredDepositCallStub;
-
-    before(async () => {
-      selfGetRequiredDepositStub = sinon.stub();
-      selfGetRequiredDepositCallStub = sinon.stub();
-      const contractMock = {
-        methods: {
-          getRequiredDeposit: selfGetRequiredDepositStub.returns({
-            call: selfGetRequiredDepositCallStub.resolves(exampleRequiredDeposit)
-          })
-        }
-      };
-      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, exampleAddress);
-      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    it('calls contract method with correct arguments', async () => {
-      await kycWhitelistWrapper.selfGetRequiredDeposit();
-      expect(selfGetRequiredDepositStub).to.be.calledWith(exampleAddress);
-      expect(selfGetRequiredDepositCallStub).to.be.calledOnce;
-    });
-  });
-
   describe('getRoleAssigned', () => {
     let getRoleAssignedStub;
     let getRoleAssignedCallStub;
@@ -273,31 +223,6 @@ describe('KYC Whitelist Wrapper', () => {
       await kycWhitelistWrapper.getRoleAssigned(exampleAddress);
       expect(getRoleAssignedStub).to.be.calledWith(exampleAddress);
       expect(getRoleAssignedCallStub).to.be.calledOnce;
-    });
-  });
-
-  describe('selfGetRoleAssigned', () => {
-    let selfGetRoleAssignedStub;
-    let selfGetRoleAssignedCallStub;
-
-    before(async () => {
-      selfGetRoleAssignedStub = sinon.stub();
-      selfGetRoleAssignedCallStub = sinon.stub();
-      const contractMock = {
-        methods: {
-          getRoleAssigned: selfGetRoleAssignedStub.returns({
-            call: selfGetRoleAssignedCallStub.resolves(exampleRole)
-          })
-        }
-      };
-      kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, exampleAddress);
-      sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
-    });
-
-    it('calls contract method with correct arguments', async () => {
-      await kycWhitelistWrapper.selfGetRoleAssigned();
-      expect(selfGetRoleAssignedStub).to.be.calledWith(exampleAddress);
-      expect(selfGetRoleAssignedCallStub).to.be.calledOnce;
     });
   });
 });
