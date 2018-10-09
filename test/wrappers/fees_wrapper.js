@@ -18,7 +18,6 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Fees Wrapper', () => {
-  let contractManagerMock;
   let feesWrapper;
 
   describe('setBaseUploadFee', () => {
@@ -93,7 +92,7 @@ describe('Fees Wrapper', () => {
       getFeeForUploadStub.returns({
         call: getFeeForUploadCallStub.resolves(fee)
       });
-      feesWrapper = new FeesWrapper(contractManagerMock);
+      feesWrapper = new FeesWrapper({}, {}, null);
       sinon.stub(feesWrapper, 'contract').resolves(contractMock);
     });
 

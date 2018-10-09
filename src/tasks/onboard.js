@@ -9,13 +9,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import BN from 'bn.js';
 import TaskBase from './base/task_base';
-import {ATLAS, HERMES, APOLLO, ROLE_CODES} from '../consts';
+import {ATLAS, HERMES, APOLLO} from '../consts';
 
 export default class OnboardingTask extends TaskBase {
-  constructor(web3, contractManager) {
+  constructor(web3, nodeAddress, onboardActions) {
     super();
     this.web3 = web3;
-    this.contractManager = contractManager;
+    this.onboardActions = onboardActions;
+    this.nodeAddress = nodeAddress;
   }
 
   async execute([role, ...options]) {
@@ -43,16 +44,14 @@ export default class OnboardingTask extends TaskBase {
     console.log(`${APOLLO} - APOLLO (stakes: required in AMB; no url)`);
   }
 
-  async onboardAtlas([amount, url]) {
-    if (!url) {
+  async onboardAtlas([stakeAmountInEth, url]) {
+    if (!url || !stakeAmountInEth) {
       console.error(`Invalid parameters for Atlas onboarding`);
       this.printUsage();
       return;
     }
-    await this.validateOnWhitelist('ATLAS');
-    const value = this.web3.utils.toWei(new BN(amount));
-    const {rolesWrapper} = this.contractManager;
-    await rolesWrapper.selfOnboardAsAtlas(url, value);
+    const stakeAmount = this.web3.utils.toWei(new BN(stakeAmountInEth));
+    await this.onboardActions.onboardAsAtlas(this.nodeAddress, url, stakeAmount);
   }
 
   async onboardHermes([url]) {
@@ -61,32 +60,17 @@ export default class OnboardingTask extends TaskBase {
       this.printUsage();
       return;
     }
-    await this.validateOnWhitelist('HERMES');
-    const {rolesWrapper} = this.contractManager;
-    await rolesWrapper.selfOnboardAsHermes(url);
+    await this.onboardActions.onboardAsHermes(this.nodeAddress, url);
   }
 
-  async onboardApollo([value]) {
-    if (!value) {
+  async onboardApollo([depositAmountInEth]) {
+    if (!depositAmountInEth) {
       console.error(`Invalid parameters for Apollo onboarding`);
       this.printUsage();
       return;
     }
-    await this.validateOnWhitelist('APOLLO');
-    const {rolesWrapper} = this.contractManager;
-    await rolesWrapper.selfOnboardAsApollo(value);
-  }
-
-  async validateOnWhitelist(role) {
-    const {kycWhitelistWrapper} = this.contractManager;
-    const result = await kycWhitelistWrapper.selfHasRoleAssigned(ROLE_CODES[role]);
-    const {defaultAddress} = kycWhitelistWrapper;
-    if (result) {
-      console.log(`Address ${defaultAddress} is on whitelist as ${role}. Onboarding.`);
-    } else {
-      console.error(`Address ${defaultAddress} is not on whitelist or does not have ${role} role assigned.`);
-      throw 'Your address needs to be white listed before you can stake.';
-    }
+    const depositAmount = this.web3.utils.toWei(new BN(depositAmountInEth));
+    await this.onboardActions.onboardAsApollo(this.nodeAddress, depositAmount);
   }
 
   help() {

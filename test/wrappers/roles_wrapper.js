@@ -292,31 +292,4 @@ describe('Roles Wrapper', () => {
       });
     });
   });
-
-  describe('selfOnboardAs...', () => {
-    const stake = '100';
-    const url = 'url';
-
-    beforeEach(() => {
-      rolesWrapper = new RolesWrapper({}, {}, defaultAddress);
-    });
-
-    it('selfOnboardAsAtlas calls onboardAsAtlas with default address', async () => {
-      const onboardAsAtlasStub = sinon.stub(rolesWrapper, 'onboardAsAtlas');
-      await rolesWrapper.selfOnboardAsAtlas(stake, url);
-      expect(onboardAsAtlasStub).to.be.calledOnceWith(defaultAddress, stake, url);
-    });
-
-    it('selfOnboardAsApollo calls onboardAsApollo with default address', async () => {
-      const onboardAsApolloStub = sinon.stub(rolesWrapper, 'onboardAsApollo');
-      await rolesWrapper.selfOnboardAsApollo(stake);
-      expect(onboardAsApolloStub).to.be.calledOnceWith(defaultAddress, stake);
-    });
-
-    it('selfOnboardAsHermes calls onboardAsHermes with default address', async () => {
-      const onboardAsHermesStub = sinon.stub(rolesWrapper, 'onboardAsHermes');
-      await rolesWrapper.selfOnboardAsHermes(url);
-      expect(onboardAsHermesStub).to.be.calledOnceWith(defaultAddress, url);
-    });
-  });
 });

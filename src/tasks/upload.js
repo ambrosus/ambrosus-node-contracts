@@ -11,9 +11,9 @@ import TaskBase from './base/task_base';
 
 
 export default class UploadTask extends TaskBase {
-  constructor(contractManager) {
+  constructor(uploadActions) {
     super();
-    this.contractManager = contractManager;
+    this.uploadActions = uploadActions;
   }
 
   async execute(args) {
@@ -21,15 +21,12 @@ export default class UploadTask extends TaskBase {
       console.error('Invalid parameters.');
       this.printUsage();
     } else {
-      console.log('Uploading empty bundle...');
       await this.uploadBundle(args[0], args[1]);
     }
   }
 
   async uploadBundle(bundleId, storagePeriods) {
-    const {uploadsWrapper, feesWrapper} = this.contractManager;
-    const value = await feesWrapper.feeForUpload(storagePeriods);
-    await uploadsWrapper.registerBundle(bundleId, value, storagePeriods);
+    await this.uploadActions.uploadBundle(bundleId, storagePeriods);
   }
 
   printUsage() {

@@ -16,7 +16,9 @@ import KycWhitelistWrapper from './wrappers/kyc_whitelist_wrapper';
 import RolesWrapper from './wrappers/roles_wrapper';
 import ShelteringWrapper from './wrappers/sheltering_wrapper';
 import UploadsWrapper from './wrappers/uploads_wrapper';
-import ContractManager from './wrappers/contract_manager';
+import WhitelistActions from './actions/whitelist_actions';
+import OnboardActions from './actions/onboard_actions';
+import UploadActions from './actions/upload_actions';
 import Deployer from './deployer';
 import contractJsons from './contract_jsons.js';
 const constants = require('./consts');
@@ -30,7 +32,9 @@ module.exports = {
   RolesWrapper,
   ShelteringWrapper,
   UploadsWrapper,
-  ContractManager,
+  WhitelistActions,
+  OnboardActions,
+  UploadActions,
   Deployer,
   constants,
   contractJsons

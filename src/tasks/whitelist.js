@@ -11,10 +11,10 @@ import TaskBase from './base/task_base';
 import {ROLE_CODES} from '../consts';
 
 export default class WhitelistTask extends TaskBase {
-  constructor(web3, contractManager) {
+  constructor(web3, whitelistActions) {
     super();
     this.web3 = web3;
-    this.contractManager = contractManager;
+    this.whitelistActions = whitelistActions;
   }
 
   async execute(args) {
@@ -26,7 +26,7 @@ export default class WhitelistTask extends TaskBase {
     } else if (command === 'check') {
       await this.show(args[1]);
     } else {
-      console.error('Unknown sub-command, use: yarn task whitelist [add/remove/check] [address] [role] [requiredDeposit]');
+      console.error('Unknown sub-command, use: yarn task whitelist [add/remove] [address] [role] [requiredDeposit]');
     }
   }
 
@@ -37,31 +37,26 @@ export default class WhitelistTask extends TaskBase {
   }
 
   async add(address, role, requiredDeposit) {
-    this.validateAddress(address);
-    const {kycWhitelistWrapper} = this.contractManager;
-    await kycWhitelistWrapper.add(address, ROLE_CODES[role], requiredDeposit);
+    try {
+      this.validateAddress(address);
+      await this.whitelistActions.add(address, ROLE_CODES[role], requiredDeposit);
+    } catch (err) {
+      console.error(err.message);
+    }
   }
 
   async remove(address) {
-    this.validateAddress(address);
-    const {kycWhitelistWrapper} = this.contractManager;
-    await kycWhitelistWrapper.remove(address);
-  }
-
-  async show(address) {
-    this.validateAddress(address);
-    const {kycWhitelistWrapper} = this.contractManager;
-    const result = await kycWhitelistWrapper.isWhitelisted(address);
-    if (result) {
-      console.log(`Address ${address} is whitelisted`);
-    } else {
-      console.log(`Address ${address} is not whitelisted`);
+    try {
+      this.validateAddress(address);
+      await this.whitelistActions.remove(address);
+    } catch (err) {
+      console.error(err.message);
     }
   }
 
   help() {
     return {
-      options: '[add/remove/check] [address]',
+      options: '[add/remove] [address]',
       desciption: 'manages list of whitelisted node candidates'
     };
   }
