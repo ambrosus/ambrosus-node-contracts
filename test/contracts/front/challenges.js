@@ -24,6 +24,7 @@ import {ONE} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
 import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.json';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
+import observeBalanceChange from '../../helpers/web3BalanceObserver';
 
 chai.use(chaiEmitEvents);
 
@@ -43,8 +44,10 @@ describe('Challenges Contract', () => {
   let roles;
   let atlasStakeStore;
   let kycWhitelist;
-  let from;
-  let other;
+  let challenger;
+  let context;
+  let uploader;
+  let shelterer;
   let resolver;
   let totalStranger;
   let time;
@@ -75,22 +78,22 @@ describe('Challenges Contract', () => {
   const challengeIsInProgress = async (challengeId) => challenges.methods.challengeIsInProgress(challengeId).call();
   const canResolve = async (resolver, challengeId) => challenges.methods.canResolve(resolver, challengeId).call();
 
-  const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from});
-  const addToKycWhitelist = async(candidate, role, requiredDeposit) => kycWhitelist.methods.add(candidate, role, requiredDeposit).send({from});
-  const storeBundle = async (bundleId, sheltererId, storagePeriods, currentTimestamp) => bundleStore.methods.store(bundleId, sheltererId, storagePeriods, currentTimestamp).send({from});
+  const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from: context});
+  const addToKycWhitelist = async(candidate, role, requiredDeposit) => kycWhitelist.methods.add(candidate, role, requiredDeposit).send({from: context});
+  const storeBundle = async (bundleId, sheltererId, storagePeriods, currentTimestamp) => bundleStore.methods.store(bundleId, sheltererId, storagePeriods, currentTimestamp).send({from: context});
   const addSheltererToBundle = async (bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp) =>
-    bundleStore.methods.addShelterer(bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp).send({from});
-  const depositStake = async(stakerId, storageLimit, stakeValue) => atlasStakeStore.methods.depositStake(stakerId, storageLimit).send({from, value: stakeValue});
-  const setStorageUsed = async (nodeId, storageUsed) => atlasStakeStore.methods.setStorageUsed(nodeId, storageUsed).send({from});
-  const setNumberOfStakers = async (numberOfStakers) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from});
-  const addShelterer = async (bundleId, sheltererId, shelteringReward) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from, value: shelteringReward});
+    bundleStore.methods.addShelterer(bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp).send({from: context});
+  const depositStake = async (stakerId, storageLimit, stakeValue) => atlasStakeStore.methods.depositStake(stakerId, storageLimit).send({from: context, value: stakeValue});
+  const setStorageUsed = async (nodeId, storageUsed) => atlasStakeStore.methods.setStorageUsed(nodeId, storageUsed).send({from: context});
+  const setNumberOfStakers = async (numberOfStakers) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from: context});
+  const addShelterer = async (bundleId, sheltererId, shelteringReward) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from: context, value: shelteringReward});
   const onboardAsAtlas = async(nodeUrl, nodeAddress, depositValue) => roles.methods.onboardAsAtlas(nodeUrl).send({from: nodeAddress, value: depositValue, gasPrice: '0'});
 
   const getShelteringExpirationDate = async(bundleId, sheltererId) => sheltering.methods.getShelteringExpirationDate(bundleId, sheltererId).call();
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
   const isSheltering = async (bundleId, sheltererId) => sheltering.methods.isSheltering(bundleId, sheltererId).call();
   const getLastChallengeResolvedSequenceNumber = async (nodeId) => atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(nodeId).call();
-  const setLastChallengeResolvedSequenceNumber = async (nodeId, sequenceNumber) => atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(nodeId, sequenceNumber).send({from});
+  const setLastChallengeResolvedSequenceNumber = async (nodeId, sequenceNumber) => atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(nodeId, sequenceNumber).send({from: context});
   const getStake = async (nodeId) => atlasStakeStore.methods.getStake(nodeId).call();
   const nextChallengeSequenceNumber = async () => challengesStore.methods.getNextChallengeSequenceNumber().call();
   // eslint-disable-next-line new-cap
@@ -98,7 +101,7 @@ describe('Challenges Contract', () => {
 
   before(async () => {
     web3 = await createWeb3();
-    [from, other, resolver, totalStranger] = await web3.eth.getAccounts();
+    [context, challenger, uploader, resolver, shelterer, totalStranger] = await web3.eth.getAccounts();
     ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles, config} = await deploy({
       web3,
       contracts: {
@@ -118,14 +121,14 @@ describe('Challenges Contract', () => {
         rolesStore: true
       }}));
     await setTimestamp(now);
-    await storeBundle(bundleId, from, storagePeriods, now);
+    await storeBundle(bundleId, uploader, storagePeriods, now);
     userChallengeFee = new BN(await getFeeForChallenge(storagePeriods));
     systemChallengeFee = userChallengeFee.mul(new BN(SYSTEM_CHALLENGES_COUNT));
   });
 
   beforeEach(async () => {
     snapshotId = await makeSnapshot(web3);
-    challengeId = await getChallengeId(from, bundleId);
+    challengeId = await getChallengeId(uploader, bundleId);
   });
 
   afterEach(async () => {
@@ -136,58 +139,57 @@ describe('Challenges Contract', () => {
     const otherBundleId = utils.keccak256('otherBundleId');
 
     it('Is context internal', async () => {
-      await storeBundle(otherBundleId, other, storagePeriods, now);
-      await expect(startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, other, systemChallengeFee)).to.be.eventually.rejected;
-      await expect(startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee)).to.be.eventually.fulfilled;
+      await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, challenger, systemChallengeFee)).to.be.eventually.rejected;
+      await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to.be.eventually.fulfilled;
     });
 
     it('Should emit event', async () => {
-      expect(await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee)).to
+      expect(await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to
         .emitEvent('ChallengeCreated')
-        .withArgs({sheltererId: from, bundleId, challengeId, count: SYSTEM_CHALLENGES_COUNT.toString()});
+        .withArgs({sheltererId: uploader, bundleId, challengeId, count: SYSTEM_CHALLENGES_COUNT.toString()});
     });
 
     it(`Should increase nextChallengeSequenceNumber by challengesCount`, async () => {
-      await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee);
+      await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
       expect(await nextChallengeSequenceNumber()).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
-      await storeBundle(otherBundleId, from, storagePeriods, now);
-      await startChallengeForSystem(from, otherBundleId, 100, from, userChallengeFee.mul(new BN('100')));
+      await storeBundle(otherBundleId, uploader, storagePeriods, now);
+      await startChallengeForSystem(uploader, otherBundleId, 100, context, userChallengeFee.mul(new BN('100')));
       expect(await nextChallengeSequenceNumber()).to.equal((SYSTEM_CHALLENGES_COUNT + 101).toString());
     });
 
     it('Sets challenge sequence number to nextChallengeSequenceNumber', async () => {
-      await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee);
+      await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
       expect(await getChallengeSequenceNumber(challengeId)).to.equal('1');
 
-      await storeBundle(otherBundleId, from, storagePeriods, now);
-      await startChallengeForSystem(from, otherBundleId, 100, from, userChallengeFee.mul(new BN('100')));
-      const otherChallengeId = await getChallengeId(from, otherBundleId);
+      await storeBundle(otherBundleId, uploader, storagePeriods, now);
+      await startChallengeForSystem(uploader, otherBundleId, 100, context, userChallengeFee.mul(new BN('100')));
+      const otherChallengeId = await getChallengeId(uploader, otherBundleId);
       expect(await getChallengeSequenceNumber(otherChallengeId)).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
     });
 
     it('Stores challengerId as 0x0', async () => {
-      await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee);
+      await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
       expect(await getChallengeCreationTime(challengeId)).to.equal(now.toString());
       expect(await getChallenger(challengeId)).to.equal('0x0000000000000000000000000000000000000000');
     });
 
     it('Fails if bundle has not been uploaded by provided account', async () => {
-      await expect(startChallengeForSystem(other, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee)).to.be.eventually.rejected;
+      await expect(startChallengeForSystem(totalStranger, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to.be.eventually.rejected;
     });
 
-    it(`Fails if provided too small fee`, async () => {
+    it(`Fails if provided fee is too small`, async () => {
       const tooSmallFee = systemChallengeFee.sub(ONE);
-      await expect(startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, tooSmallFee)).to.be.eventually.rejected;
+      await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, tooSmallFee)).to.be.eventually.rejected;
     });
 
     it(`Fails if provided fee that is too high`, async () => {
       const tooBigFee = systemChallengeFee.add(ONE);
-      await expect(startChallengeForSystem(from, bundleId, 5, from, tooBigFee)).to.be.eventually.rejected;
+      await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, tooBigFee)).to.be.eventually.rejected;
     });
 
     it('Fails if added same challenge twice', async () => {
-      await expect(startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee)).to.be.eventually.fulfilled;
-      await expect(startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee)).to.be.eventually.rejected;
+      await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to.be.eventually.fulfilled;
+      await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to.be.eventually.rejected;
     });
 
     describe('Stores system challenges correctly', () => {
@@ -197,18 +199,18 @@ describe('Challenges Contract', () => {
       let challengeId;
 
       beforeEach(async () => {
-        await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee);
+        await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
         challengeBlockTimestamp = now;
         [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
         ({challengeId} = challengeCreationEvent.returnValues);
       });
 
       it('Stores challenge id', async () => {
-        expect(await getChallengeId(from, bundleId)).to.equal(challengeId);
+        expect(await getChallengeId(uploader, bundleId)).to.equal(challengeId);
       });
 
       it('Shelterer id', async () => {
-        expect(await getChallengedShelterer(challengeId)).to.equal(from);
+        expect(await getChallengedShelterer(challengeId)).to.equal(uploader);
       });
 
       it('Bundle id', async () => {
@@ -238,10 +240,15 @@ describe('Challenges Contract', () => {
   });
 
   describe('Starting user challenge', () => {
+    let systemChallengeId;
+
     beforeEach(async () => {
-      await depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
-      await addShelterer(bundleId, other, totalReward);
-      challengeId = await getChallengeId(other, bundleId);
+      await depositStake(uploader, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
+      await addShelterer(bundleId, uploader, totalReward);
+
+      await depositStake(shelterer, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
+      await addShelterer(bundleId, shelterer, totalReward);
+      systemChallengeId = await getChallengeId(shelterer, bundleId);
     });
 
     it('Challenge is not in progress until started', async () => {
@@ -249,48 +256,47 @@ describe('Challenges Contract', () => {
     });
 
     it('Creates a challenge and emits an event', async () => {
-      expect(await startChallenge(other, bundleId, from, userChallengeFee)).to
+      expect(await startChallenge(uploader, bundleId, challenger, userChallengeFee)).to
         .emitEvent('ChallengeCreated')
-        .withArgs({sheltererId: other, bundleId, challengeId, count: '1'});
+        .withArgs({sheltererId: uploader, bundleId, challengeId, count: '1'});
     });
 
     it(`Should increase nextChallengeSequenceNumber by 1`, async () => {
-      await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee);
-      await startChallenge(other, bundleId, from, userChallengeFee);
+      await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
+      await startChallenge(shelterer, bundleId, challenger, userChallengeFee);
       expect(await nextChallengeSequenceNumber()).to.equal((SYSTEM_CHALLENGES_COUNT + 2).toString());
     });
 
     it('Sets challenge sequence number to nextChallengeSequenceNumber', async () => {
-      await startChallengeForSystem(from, bundleId, SYSTEM_CHALLENGES_COUNT, from, systemChallengeFee);
-
-      await startChallenge(other, bundleId, from, userChallengeFee);
-      expect(await getChallengeSequenceNumber(challengeId)).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
+      await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
+      await startChallenge(shelterer, bundleId, challenger, userChallengeFee);
+      expect(await getChallengeSequenceNumber(systemChallengeId)).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
     });
 
     it('Fails if bundle is not being sheltered by provided account', async () => {
-      await expect(startChallenge(from, bundleId, from, userChallengeFee)).to.be.eventually.rejected;
-      await expect(startChallenge(other, bundleId, other, userChallengeFee)).to.be.eventually.fulfilled;
+      await expect(startChallenge(totalStranger, bundleId, challenger, userChallengeFee)).to.be.eventually.rejected;
+      await expect(startChallenge(uploader, bundleId, challenger, userChallengeFee)).to.be.eventually.fulfilled;
     });
 
     it(`Fails if challenger has provided too low value`, async () => {
       const tooSmallFee = userChallengeFee.sub(ONE);
-      await expect(startChallenge(other, bundleId, from, tooSmallFee)).to.be.eventually.rejected;
+      await expect(startChallenge(uploader, bundleId, challenger, tooSmallFee)).to.be.eventually.rejected;
     });
 
     it(`Fails if challenger has provided too high value`, async () => {
       const tooBigFee = userChallengeFee.add(ONE);
-      await expect(startChallenge(other, bundleId, from, tooBigFee)).to.be.eventually.rejected;
+      await expect(startChallenge(uploader, bundleId, challenger, tooBigFee)).to.be.eventually.rejected;
     });
 
     it('Fails if the challenge was added after bundle has expired', async () => {
-      const expirationTime = await getShelteringExpirationDate(bundleId, other);
+      const expirationTime = await getShelteringExpirationDate(bundleId, uploader);
       await setTimestamp(expirationTime + 1);
-      await expect(startChallenge(other, bundleId, from, userChallengeFee)).to.be.eventually.rejected;
+      await expect(startChallenge(uploader, bundleId, challenger, userChallengeFee)).to.be.eventually.rejected;
     });
 
     it('Fails if added same challenge twice', async () => {
-      expect(await startChallenge(other, bundleId, from, userChallengeFee)).to.emitEvent('ChallengeCreated');
-      await expect(startChallenge(other, bundleId, from, userChallengeFee)).to.be.eventually.rejected;
+      expect(await startChallenge(uploader, bundleId, challenger, userChallengeFee)).to.emitEvent('ChallengeCreated');
+      await expect(startChallenge(uploader, bundleId, challenger, userChallengeFee)).to.be.eventually.rejected;
     });
 
     describe('Stores challenge correctly', () => {
@@ -299,18 +305,18 @@ describe('Challenges Contract', () => {
       let challengeId;
 
       beforeEach(async () => {
-        await startChallenge(other, bundleId, from, userChallengeFee);
+        await startChallenge(uploader, bundleId, challenger, userChallengeFee);
         challengeBlockTimestamp = now;
         [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
         ({challengeId} = challengeCreationEvent.returnValues);
       });
 
       it('Stores challenge id', async () => {
-        expect(await getChallengeId(other, bundleId)).to.equal(challengeId);
+        expect(await getChallengeId(uploader, bundleId)).to.equal(challengeId);
       });
 
       it('Shelterer id', async () => {
-        expect(await getChallengedShelterer(challengeId)).to.equal(other);
+        expect(await getChallengedShelterer(challengeId)).to.equal(uploader);
       });
 
       it('Bundle id', async () => {
@@ -318,7 +324,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Challenger id', async () => {
-        expect(await getChallenger(challengeId)).to.equal(from);
+        expect(await getChallenger(challengeId)).to.equal(challenger);
       });
 
       it('Challenge fee', async () => {
@@ -343,7 +349,7 @@ describe('Challenges Contract', () => {
     const url = 'url';
     let cooldown;
 
-    const injectChallengeWithSequenceNumber = async (sequenceNumber) => challengesStore.methods.store(other, bundleId, from, 0, now, 1, sequenceNumber).send({from});
+    const injectChallengeWithSequenceNumber = async (sequenceNumber) => challengesStore.methods.store(shelterer, bundleId, challenger, 0, now, 1, sequenceNumber).send({from: context});
 
     const atlasOnboarding = async (address) => {
       await addToKycWhitelist(address, ATLAS, ATLAS1_STAKE);
@@ -357,9 +363,9 @@ describe('Challenges Contract', () => {
 
     beforeEach(async () => {
       await atlasOnboarding(resolver);
-      await depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
-      await addShelterer(bundleId, other, totalReward);
-      await startChallenge(other, bundleId, from, userChallengeFee);
+      await depositStake(shelterer, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
+      await addShelterer(bundleId, shelterer, totalReward);
+      await startChallenge(shelterer, bundleId, challenger, userChallengeFee);
       challengeId = await lastChallengeId();
       await setNumberOfStakers(20);
       cooldown = parseInt(await getCooldown(), 10);
@@ -383,7 +389,7 @@ describe('Challenges Contract', () => {
     it('Emits an event', async () => {
       expect(await resolveChallenge(challengeId, resolver)).to
         .emitEvent('ChallengeResolved')
-        .withArgs({sheltererId: other, bundleId, challengeId, resolverId: resolver});
+        .withArgs({sheltererId: shelterer, bundleId, challengeId, resolverId: resolver});
     });
 
     it('Removes challenge if active count was 1', async () => {
@@ -448,7 +454,7 @@ describe('Challenges Contract', () => {
 
     it('Decreases active count', async () => {
       const systemFee = userChallengeFee.mul(new BN('3'));
-      await startChallengeForSystem(from, bundleId, 3, from, systemFee);
+      await startChallengeForSystem(uploader, bundleId, 3, context, systemFee);
       challengeId = await lastChallengeId();
       await resolveChallenge(challengeId, resolver);
       expect(await getActiveChallengesCount(challengeId)).to.equal('2');
@@ -457,7 +463,7 @@ describe('Challenges Contract', () => {
     it('Increases sequence number for all resolutions but last', async () => {
       await atlasOnboarding(totalStranger);
       const systemFee = userChallengeFee.mul(new BN('2'));
-      await startChallengeForSystem(from, bundleId, 2, from, systemFee);
+      await startChallengeForSystem(uploader, bundleId, 2, context, systemFee);
       challengeId = await lastChallengeId();
       expect(await getChallengeSequenceNumber(challengeId)).to.equal('2');
       await resolveChallenge(challengeId, resolver);
@@ -467,7 +473,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Removes system challenge if active count was 1', async () => {
-      await startChallengeForSystem(from, bundleId, 1, from, userChallengeFee);
+      await startChallengeForSystem(uploader, bundleId, 1, context, userChallengeFee);
       challengeId = await lastChallengeId();
       await resolveChallenge(challengeId, resolver);
       expect(await challengeIsInProgress(challengeId)).to.equal(false);
@@ -478,10 +484,10 @@ describe('Challenges Contract', () => {
     const challengeTimeout = 3 * DAY;
 
     beforeEach(async () => {
-      await depositStake(other, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
-      await addShelterer(bundleId, other, userChallengeFee);
+      await depositStake(uploader, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
+      await addShelterer(bundleId, uploader, userChallengeFee);
 
-      await startChallenge(other, bundleId, from, userChallengeFee);
+      await startChallenge(uploader, bundleId, challenger, userChallengeFee);
       const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
       ({challengeId} = challengeCreationEvent.returnValues);
     });
@@ -489,25 +495,25 @@ describe('Challenges Contract', () => {
     it(`Fails if challenge does not exist`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
       const fakeChallengeId = utils.keccak256('fakeChallengeId');
-      await expect(markChallengeAsExpired(fakeChallengeId, from)).to.be.eventually.rejected;
+      await expect(markChallengeAsExpired(fakeChallengeId, challenger)).to.be.eventually.rejected;
     });
 
     it(`Fails if challenge has already been marked as expired`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      await expect(markChallengeAsExpired(challengeId, from)).to.be.fulfilled;
-      await expect(markChallengeAsExpired(challengeId, from)).to.be.eventually.rejected;
+      await expect(markChallengeAsExpired(challengeId, challenger)).to.be.fulfilled;
+      await expect(markChallengeAsExpired(challengeId, challenger)).to.be.eventually.rejected;
     });
 
     it(`Fails if challenge has not timed out yet`, async () => {
-      await expect(markChallengeAsExpired(challengeId, from)).to.be.eventually.rejected;
+      await expect(markChallengeAsExpired(challengeId, challenger)).to.be.eventually.rejected;
     });
 
     it(`Emits event when marked as expired successfully`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
       const penalty = utils.toWei('100', 'ether');
-      expect(await markChallengeAsExpired(challengeId, from)).to
+      expect(await markChallengeAsExpired(challengeId, challenger)).to
         .emitEvent('ChallengeTimeout')
-        .withArgs({sheltererId: other, bundleId, challengeId, penalty});
+        .withArgs({sheltererId: uploader, bundleId, challengeId, penalty});
     });
 
     it(`Can be called by anyone`, async () => {
@@ -517,17 +523,17 @@ describe('Challenges Contract', () => {
 
     it(`Penalized shelterer stops being shelterer`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      await markChallengeAsExpired(challengeId, from);
+      await markChallengeAsExpired(challengeId, challenger);
       expect(await isSheltering(bundleId, resolver)).to.equal(false);
     });
 
     it(`Transfer funds to challenger`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      const stakeBefore = new BN(await getStake(other));
-      const balanceBefore = new BN(await web3.eth.getBalance(from));
-      await markChallengeAsExpired(challengeId, from);
-      const balanceAfter = new BN(await web3.eth.getBalance(from));
-      const stakeAfter = new BN(await getStake(other));
+      const stakeBefore = new BN(await getStake(uploader));
+      const balanceBefore = new BN(await web3.eth.getBalance(challenger));
+      await markChallengeAsExpired(challengeId, challenger);
+      const balanceAfter = new BN(await web3.eth.getBalance(challenger));
+      const stakeAfter = new BN(await getStake(uploader));
       expect(balanceAfter.sub(balanceBefore).toString()).to
         .equal((userChallengeFee.mul(new BN(2)).add(stakeBefore.sub(stakeAfter)))
           .toString());
@@ -536,7 +542,7 @@ describe('Challenges Contract', () => {
     it(`Deletes challenge with active count equal 1`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
       expect(await challengeIsInProgress(challengeId)).to.equal(true);
-      await markChallengeAsExpired(challengeId, from);
+      await markChallengeAsExpired(challengeId, challenger);
       expect(await challengeIsInProgress(challengeId)).to.equal(false);
     });
   });
@@ -550,17 +556,15 @@ describe('Challenges Contract', () => {
 
     beforeEach(async () => {
       systemFee = userChallengeFee.mul(new BN('5'));
-      await startChallengeForSystem(from, bundleId, 5, from, systemFee);
+      await startChallengeForSystem(uploader, bundleId, 5, context, systemFee);
       [systemChallengeCreationEvent] = await challenges.getPastEvents('allEvents');
       systemChallengeId = systemChallengeCreationEvent.returnValues.challengeId;
     });
 
     it(`Returns fee to creator (full fee if no one resolved)`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      const balanceBefore = new BN(await web3.eth.getBalance(from));
-      await markChallengeAsExpired(systemChallengeId, totalStranger);
-      const balanceAfter = new BN(await web3.eth.getBalance(from));
-      expect(balanceAfter.sub(balanceBefore).toString()).to.equal(systemFee.toString());
+      expect((await observeBalanceChange(web3, uploader, () => markChallengeAsExpired(systemChallengeId, totalStranger))).toString())
+        .to.equal(systemFee.toString());
     });
 
     it(`Returns fee to creator (part of the fee if partially resolved)`, async () => {
@@ -569,10 +573,8 @@ describe('Challenges Contract', () => {
       await resolveChallenge(systemChallengeId, resolver);
 
       await setTimestamp(now + challengeTimeout + 1);
-      const balanceBefore = new BN(await web3.eth.getBalance(from));
-      await markChallengeAsExpired(systemChallengeId, totalStranger);
-      const balanceAfter = new BN(await web3.eth.getBalance(from));
-      expect(balanceAfter.sub(balanceBefore).toString()).to.equal(systemFee.sub(userChallengeFee).toString());
+      expect((await observeBalanceChange(web3, uploader, () => markChallengeAsExpired(systemChallengeId, totalStranger))).toString())
+        .to.equal(systemFee.sub(userChallengeFee).toString());
     });
 
     it(`Deletes challenge with active count bigger than 1`, async () => {

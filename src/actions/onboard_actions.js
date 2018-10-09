@@ -47,7 +47,7 @@ export default class OnboardActions {
     const kyc = this.kycWhitelistWrapper;
     const requiredAmount = await kyc.getRequiredDeposit(address);
 
-    if (amount === requiredAmount) {
+    if (!amount.eq(requiredAmount)) {
       throw new Error(`Address ${address} requires a deposit of ${requiredAmount} but ${amount} provided.`);
     }
   }
