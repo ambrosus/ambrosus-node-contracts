@@ -16,7 +16,6 @@ contract Config {
     uint constant public FINISH_SHELTERING_REWARD_SPLIT = 22;
     uint constant public PENALTY_DIVIDER = 100;
     uint constant public BUNDLE_SIZE_LIMIT = 16384;
-    address constant public BURN_ADDRESS = 0x1000000000000000000000000000000000000000;
     uint32 constant public COOLDOWN_SWITCH_THRESHOLD = 50;
     uint32 constant public COOLDOWN_LOW_REDUCTION = 4;
     uint32 constant public COOLDOWN_HIGH_PERCENTAGE = 90;

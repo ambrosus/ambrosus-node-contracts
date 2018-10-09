@@ -124,7 +124,7 @@ describe('Fees Contract', () => {
 
   describe('Calculate fee split', () => {
     it('Calculates split correctly', async () => {
-      const {challengeFee, validatorsFee, burnFee} = await fees.methods.calculateFeeSplit(basicFee).call();
+      const {challengeFee, validatorsFee} = await fees.methods.calculateFeeSplit(basicFee).call();
       const bnFee = new BN(basicFee);
       expect(challengeFee).to.equal(
         bnFee
@@ -134,14 +134,13 @@ describe('Fees Contract', () => {
       );
       expect(validatorsFee).to.equal(
         bnFee
-          .div(new BN(4))
+          .div(new BN(10))
+          .mul(new BN(3))
           .toString()
       );
-      expect(burnFee).to.equal(bnFee.div(new BN(20)).toString());
       expect(
         new BN(challengeFee)
           .add(new BN(validatorsFee))
-          .add(new BN(burnFee))
           .toString()
       ).to.equal(basicFee);
     });

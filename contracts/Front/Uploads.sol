@@ -16,7 +16,7 @@ import "../Middleware/Sheltering.sol";
 import "../Front/Challenges.sol";
 
 
-contract Uploads is Base {    
+contract Uploads is Base {
 
     using SafeMath for uint;
 
@@ -41,9 +41,8 @@ contract Uploads is Base {
         require(msg.value == fee);
 
         sheltering.storeBundle(bundleId, msg.sender, storagePeriods);
-        (uint challengeFee, uint validatorsFee, uint burnFee) = fees.calculateFeeSplit(msg.value);
+        (uint challengeFee, uint validatorsFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
-        config.BURN_ADDRESS().transfer(burnFee);
         challenges.startForSystem.value(challengeFee)(msg.sender, bundleId, 7);
 
         emit BundleUploaded(bundleId, storagePeriods);
