@@ -33,8 +33,6 @@ describe('Upload Contract', () => {
   let challenges;
   let rolesStore;
   let bundleStore;
-  let burnAddress;
-  let config;
   let fees;
   let fee;
   let atlas;
@@ -42,12 +40,11 @@ describe('Upload Contract', () => {
   let hermes;
   let snapshotId;
 
-  const expectedMinersFee = () => fee.div(new BN(4));
-  const expectedBurnAmount = () => fee.mul(new BN(5)).div(new BN(100));
+  const expectedMinersFee = () => fee.mul(new BN(3)).div(new BN(10));
 
   before(async () => {
     web3 = await createWeb3();
-    ({uploads, fees, config, challenges, bundleStore, rolesStore} = await deploy({
+    ({uploads, fees, challenges, bundleStore, rolesStore} = await deploy({
       web3,
       contracts: {
         rolesStore: true,
@@ -62,7 +59,6 @@ describe('Upload Contract', () => {
     }));
     [hermes, atlas, other] = await web3.eth.getAccounts();
     fee = new BN(await fees.methods.getFeeForUpload(1).call());
-    burnAddress = await config.methods.BURN_ADDRESS().call();
     await rolesStore.methods.setRole(hermes, HERMES).send({from: hermes});
     await rolesStore.methods.setRole(atlas, ATLAS).send({from: hermes});
   });
@@ -135,12 +131,5 @@ describe('Upload Contract', () => {
     const balanceAfter = new BN(await web3.eth.getBalance(COINBASE));
     const actualFee = balanceAfter.sub(balanceBefore).sub(BLOCK_REWARD);
     expect(actualFee.eq(expectedMinersFee())).to.be.true;
-  });
-
-  it('Burn tokens', async () => {
-    const balanceBefore = new BN(await web3.eth.getBalance(burnAddress));
-    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee, gasPrice: '0'});
-    const balanceAfter = new BN(await web3.eth.getBalance(burnAddress));
-    expect(balanceAfter.sub(balanceBefore).eq(expectedBurnAmount())).to.be.true;
   });
 });
