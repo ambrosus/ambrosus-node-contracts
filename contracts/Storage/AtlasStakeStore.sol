@@ -33,7 +33,7 @@ contract AtlasStakeStore is Base {
     mapping (address => Stake) stakes;
     uint32 numberOfStakers;
 
-    constructor(Head _head) public Base(_head) {} 
+    constructor(Head _head) public Base(_head) {}
 
     function isStaking(address node) public view returns (bool) {
         return stakes[node].initialAmount > 0;
@@ -69,7 +69,7 @@ contract AtlasStakeStore is Base {
 
     function depositStake(address _who, uint _storageLimit) public payable onlyContextInternalCalls {
         require(!isStaking(_who));
-        
+
         stakes[_who] = Stake(msg.value, msg.value, _storageLimit, 0, 0, 0, 0);
         numberOfStakers = numberOfStakers.add(1).castTo32();
     }

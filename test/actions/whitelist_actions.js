@@ -19,7 +19,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe.only('Whitelist Actions', () => {
+describe('Whitelist Actions', () => {
   let whitelistActions;
   let kycWhitelistWrapperStub;
   const targetAddress = '0xABCD';
