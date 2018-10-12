@@ -101,6 +101,10 @@ describe('KYC Whitelist Contract', () => {
     await expect(addToWhitelist(other, 420, APOLLO_DEPOSIT)).to.be.eventually.rejected;
   });
 
+  it('throws if trying to whitelist Apollo with 0 deposit', async () => {
+    await expect(addToWhitelist(other, APOLLO, 0)).to.be.eventually.rejected;
+  });
+
   it('throws if whitelisting the address that is already whitelisted', async () => {
     await addToWhitelist(other, APOLLO, APOLLO_DEPOSIT);
     await expect(addToWhitelist(other, HERMES, 0)).to.be.eventually.rejected;
