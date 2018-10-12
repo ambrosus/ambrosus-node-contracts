@@ -25,6 +25,9 @@ contract KycWhitelist is Ownable {
     function add(address candidate, Consts.NodeType role, uint deposit) public onlyOwner {
         require(!isWhitelisted(candidate));
         require(role == Consts.NodeType.ATLAS || role == Consts.NodeType.HERMES || role == Consts.NodeType.APOLLO);
+        if(role == Consts.NodeType.APOLLO) {
+            require(deposit > 0);
+        }
 
         whitelist[candidate].allowedRole = role;
         whitelist[candidate].requiredDeposit = deposit;
