@@ -12,6 +12,11 @@ import sinon, {resetHistory} from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import UploadsWrapper from '../../src/wrappers/uploads_wrapper';
+import {createWeb3, utils} from '../../src/utils/web3_tools';
+import deploy from '../helpers/deploy';
+import HeadWrapper from '../../src/wrappers/head_wrapper';
+import {HERMES} from '../../src/consts';
+import BN from 'bn.js';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -74,6 +79,42 @@ describe('Uploads Wrapper', () => {
         expect(registerBundleSendStub).to.be.not.called;
         expect(encodeAbiStub).to.be.calledOnceWith();
       });
+    });
+  });
+
+  describe('getUploadData', () => {
+    let web3;
+    let uploader;
+    const bundleId = utils.keccak256('someBundleId');
+    const otherBundleId = utils.keccak256('otherBundleId');
+    before(async () => {
+      web3 = await createWeb3();
+      [uploader] = await web3.eth.getAccounts();
+      const {head, fees, rolesStore} = await deploy({
+        web3,
+        contracts: {
+          rolesStore: true,
+          challenges: true,
+          challengesStore: true,
+          uploads: true,
+          sheltering: true,
+          time: true,
+          fees: true,
+          config: true,
+          bundleStore: true}
+      });
+      uploadsWrapper = new UploadsWrapper(new HeadWrapper(head.options.address, web3, uploader), web3, uploader);
+      const fee = new BN(await fees.methods.getFeeForUpload(1).call());
+      await rolesStore.methods.setRole(uploader, HERMES).send({from: uploader});
+      await uploadsWrapper.registerBundle(bundleId, fee, 1);
+      await uploadsWrapper.registerBundle(otherBundleId, fee, 1);
+    });
+
+    it('gets BundleUploaded event and returns correct values properties', async () => {
+      const uploadData = await uploadsWrapper.getUploadData(bundleId);
+      expect(uploadData.transactionHash).to.match(/^0x[0-9a-f]{64}$/i);
+      expect(uploadData.blockNumber).to.be.a('number');
+      expect(uploadData.uploader).to.equal(uploader);
     });
   });
 });

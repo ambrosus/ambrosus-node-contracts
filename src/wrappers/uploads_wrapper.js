@@ -18,4 +18,21 @@ export default class UploadsWrapper extends ContractWrapper {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.registerBundle(bundleId, storagePeriods), {from: this.defaultAddress, value: fee});
   }
+
+  /**
+   * @returns {Object} bundle blockchain data
+   * @property {number} blockNumber block number when the bundle was uploaded
+   * @property {string} transactionHash bundle upload transaction hash
+   * @property {string} uploader bundle uploader address
+   */
+  async getUploadData(bundleId) {
+    const contract = await this.contract();
+    const [{transactionHash, blockNumber}] = await contract.getPastEvents('BundleUploaded', {bundleId});
+    const {from: uploader} = await this.web3.eth.getTransaction(transactionHash);
+    return {
+      transactionHash,
+      blockNumber,
+      uploader
+    };
+  }
 }
