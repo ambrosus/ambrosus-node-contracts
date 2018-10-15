@@ -8,14 +8,23 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class UploadActions {
-  constructor(uploadsWrapper, feesWrapper) {
+  constructor(uploadsWrapper, feesWrapper, shelteringWrapper) {
     this.uploadsWrapper = uploadsWrapper;
     this.feesWrapper = feesWrapper;
+    this.shelteringWrapper = shelteringWrapper;
   }
 
   async uploadBundle(bundleId, storagePeriods) {
     const {uploadsWrapper: uploads, feesWrapper: fees} = this;
     const value = await fees.feeForUpload(storagePeriods);
     await uploads.registerBundle(bundleId, value, storagePeriods);
+  }
+
+  async getBundleUploadData(bundleId) {
+    const uploadBlock = await this.shelteringWrapper.getBundleUploadBlockNumber(bundleId);
+    if (!uploadBlock) {
+      return null;
+    }
+    return this.uploadsWrapper.getUploadData(bundleId, uploadBlock);
   }
 }

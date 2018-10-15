@@ -47,6 +47,39 @@ describe('Sheltering Wrapper', () => {
     });
   });
 
+  describe('getBundleUploadBlockNumber', () => {
+    let getBundleUploadBlockNumberStub;
+    let igetBundleUploadBlockNumberCallStub;
+    const bundleId = 'bundle';
+    const defaultAddress = '0x123';
+    const blockNumber = '23';
+
+    beforeEach(async () => {
+      getBundleUploadBlockNumberStub = sinon.stub();
+      igetBundleUploadBlockNumberCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getBundleUploadBlockNumber: getBundleUploadBlockNumberStub.returns({
+            call: igetBundleUploadBlockNumberCallStub.resolves(blockNumber)
+          })
+        }
+      };
+      shelteringWrapper = new ShelteringWrapper({}, {}, defaultAddress);
+      sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await shelteringWrapper.getBundleUploadBlockNumber(bundleId)).to.equal(blockNumber);
+      expect(getBundleUploadBlockNumberStub).to.be.calledOnceWith(bundleId);
+      expect(igetBundleUploadBlockNumberCallStub).to.be.calledOnce;
+    });
+
+    it('returns null if upload block number is 0', async () => {
+      igetBundleUploadBlockNumberCallStub.resolves('0');
+      expect(await shelteringWrapper.getBundleUploadBlockNumber(bundleId)).to.be.null;
+    });
+  });
+
   describe('shelteringExpirationDate', () => {
     let shelteringExpirationDateStub;
     let shelteringExpirationDateCallStub;

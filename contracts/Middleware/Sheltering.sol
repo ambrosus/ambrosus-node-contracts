@@ -36,14 +36,14 @@ contract Sheltering is Base {
     Fees private fees;
 
     constructor(
-        Head _head, 
-        Time _time, 
-        AtlasStakeStore _atlasStakeStore, 
-        BundleStore _bundleStore, 
-        Payouts _payouts, 
+        Head _head,
+        Time _time,
+        AtlasStakeStore _atlasStakeStore,
+        BundleStore _bundleStore,
+        Payouts _payouts,
         RolesStore _rolesStore,
         Fees _fees)
-        public Base(_head) 
+        public Base(_head)
     {
         time = _time;
         atlasStakeStore = _atlasStakeStore;
@@ -57,12 +57,16 @@ contract Sheltering is Base {
 
     function storeBundle(bytes32 bundleId, address creator, uint64 storagePeriods) public onlyContextInternalCalls {
         require(rolesStore.getRole(creator) == Consts.NodeType.HERMES);
-        
+
         bundleStore.store(bundleId, creator, storagePeriods, time.currentTimestamp());
     }
 
     function getBundleUploader(bytes32 bundleId) public view returns (address) {
         return bundleStore.getUploader(bundleId);
+    }
+
+    function getBundleUploadBlockNumber(bytes32 bundleId) view public returns (uint) {
+        return bundleStore.getUploadBlockNumber(bundleId);
     }
 
     function getBundleStoragePeriodsCount(bytes32 bundleId) public view returns (uint64) {
@@ -109,7 +113,7 @@ contract Sheltering is Base {
         addSheltererInternal(bundleId, recipientId, refund, currentPeriod.sub(donorBeginPeriod).castTo64());
     }
 
-    function getShelteringExpirationDate(bytes32 bundleId, address sheltererId) public view returns (uint64) { 
+    function getShelteringExpirationDate(bytes32 bundleId, address sheltererId) public view returns (uint64) {
         uint64 startDate = bundleStore.getShelteringStartDate(bundleId, sheltererId);
         if (startDate == 0) {
             return 0;

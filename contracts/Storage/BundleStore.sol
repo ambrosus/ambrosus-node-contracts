@@ -10,12 +10,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../Lib/SafeMathExtensions.sol";
 import "../Boilerplate/Head.sol";
 
 
 contract BundleStore is Base {
 
     using SafeMath for uint;
+    using SafeMathExtensions for uint;
 
     uint constant MAX_EXPIRATION_DATE = 32503680000; // year 3000
 
@@ -27,10 +29,11 @@ contract BundleStore is Base {
 
     struct Bundle {
         address uploader;
-        uint64 uploadTimestamp;
         address[] shelterers;
         mapping(address => Sheltering) shelterings;
         uint64 storagePeriods;
+        uint64 uploadTimestamp;
+        uint32 uploadBlockNumber;
     }
 
     event BundleStored(bytes32 bundleId, address uploader);
@@ -51,6 +54,10 @@ contract BundleStore is Base {
 
     function getUploadTimestamp(bytes32 bundleId) view public returns (uint64) {
         return bundles[bundleId].uploadTimestamp;
+    }
+
+    function getUploadBlockNumber(bytes32 bundleId) view public returns (uint) {
+        return bundles[bundleId].uploadBlockNumber;
     }
 
     function getStoragePeriodsCount(bytes32 bundleId) view public returns (uint64) {
@@ -80,7 +87,7 @@ contract BundleStore is Base {
         require(!bundleExists(bundleId));
         require(storagePeriods > 0);
 
-        bundles[bundleId] = Bundle(uploader, currentTimestamp, new address[](0), storagePeriods);
+        bundles[bundleId] = Bundle(uploader, new address[](0), storagePeriods, currentTimestamp, block.number.castTo32());
         emit BundleStored(bundleId, uploader);
     }
 
