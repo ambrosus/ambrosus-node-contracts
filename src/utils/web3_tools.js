@@ -16,7 +16,7 @@ const DEFAULT_PORT = 8545;
 export const {utils} = new Web3();
 
 function isValidRPCAddress(rpc) {
-  return /^((?:http)|(?:ws)):\/\//g.test(rpc);
+  return /^((?:https?)|(?:ws)):\/\//g.test(rpc);
 }
 
 function isUsingGanache(rpc) {
