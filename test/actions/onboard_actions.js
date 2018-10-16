@@ -32,7 +32,8 @@ describe('Onboard Actions', () => {
     rolesWrapperStub = {
       onboardAsAtlas: sinon.stub(),
       onboardAsHermes: sinon.stub(),
-      onboardAsApollo: sinon.stub()
+      onboardAsApollo: sinon.stub(),
+      onboardedRole: sinon.stub()
     };
     onboardActions = new OnboardActions(kycWhitelistWrapperStub, rolesWrapperStub);
   });
@@ -136,6 +137,22 @@ describe('Onboard Actions', () => {
       await expect(callSubject()).to.eventually.be.fulfilled;
 
       expect(rolesWrapperStub.onboardAsApollo).to.have.been.calledOnceWith(address, depositAmount);
+    });
+  });
+
+  describe('getOnboardedRole', async () => {
+    const targetAddress = '0xABCD';
+
+    const callSubject = async () => onboardActions.getOnboardedRole(targetAddress);
+
+    beforeEach(() => {
+      rolesWrapperStub.onboardedRole.resolves(HERMES);
+    });
+
+    it('proxies the call to the wrapper', async () => {
+      await expect(callSubject()).to.eventually.be.fulfilled.and.equal(HERMES);
+
+      expect(rolesWrapperStub.onboardedRole).to.have.been.calledOnceWith(targetAddress);
     });
   });
 });

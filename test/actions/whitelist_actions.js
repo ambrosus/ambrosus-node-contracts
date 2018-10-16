@@ -13,7 +13,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import WhitelistActions from '../../src/actions/whitelist_actions';
-import {ATLAS} from '../../src/consts';
+import {ATLAS, HERMES} from '../../src/consts';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -31,7 +31,8 @@ describe('Whitelist Actions', () => {
       getOwner: sinon.stub(),
       isWhitelisted: sinon.stub(),
       add: sinon.stub(),
-      remove: sinon.stub()
+      remove: sinon.stub(),
+      getRoleAssigned: sinon.stub()
     };
     whitelistActions = new WhitelistActions(kycWhitelistWrapperStub);
   });
@@ -109,6 +110,20 @@ describe('Whitelist Actions', () => {
       await expect(callSubject()).to.eventually.be.fulfilled;
 
       expect(kycWhitelistWrapperStub.remove).to.have.been.calledOnceWith(targetAddress);
+    });
+  });
+
+  describe('get', async () => {
+    const callSubject = async () => whitelistActions.get(targetAddress);
+
+    beforeEach(() => {
+      kycWhitelistWrapperStub.getRoleAssigned.resolves(HERMES);
+    });
+
+    it('proxies the call to the wrapper', async () => {
+      await expect(callSubject()).to.eventually.be.fulfilled.and.equal(HERMES);
+
+      expect(kycWhitelistWrapperStub.getRoleAssigned).to.have.been.calledOnceWith(targetAddress);
     });
   });
 });

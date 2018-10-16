@@ -12,11 +12,12 @@ import BN from 'bn.js';
 
 export const MIN_BLOCK_TIME = 5;
 
+export const NONE = 0;
 export const ATLAS = 1;
 export const HERMES = 2;
 export const APOLLO = 3;
-export const ROLE_CODES = {ATLAS, HERMES, APOLLO};
-export const ROLE_REVERSE_CODES = {[ATLAS]: 'ATLAS', [HERMES]: 'HERMES', [APOLLO]: 'APOLLO'};
+export const ROLE_CODES = {NONE, ATLAS, HERMES, APOLLO};
+export const ROLE_REVERSE_CODES = {[NONE]: 'NONE', [ATLAS]: 'ATLAS', [HERMES]: 'HERMES', [APOLLO]: 'APOLLO'};
 
 export const ATLAS1_STAKE = utils.toWei(new BN(10000));
 export const ATLAS2_STAKE = utils.toWei(new BN(30000));

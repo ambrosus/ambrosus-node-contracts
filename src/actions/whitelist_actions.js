@@ -13,28 +13,37 @@ export default class WhitelistActions {
   }
 
   async add(address, role, requiredDeposit) {
-    const owner = await this.kycWhitelistWrapper.getOwner();
-    if (owner !== this.kycWhitelistWrapper.defaultAddress) {
+    const kycWhitelist = this.kycWhitelistWrapper;
+
+    const owner = await kycWhitelist.getOwner();
+    if (owner !== kycWhitelist.defaultAddress) {
       throw new Error('You need to be the owner of the KYC whitelist to perform a add action');
     }
 
-    if (await this.kycWhitelistWrapper.isWhitelisted(address)) {
+    if (await kycWhitelist.isWhitelisted(address)) {
       throw new Error(`The provided address ${address} is already whitelisted`);
     }
 
-    await this.kycWhitelistWrapper.add(address, role, requiredDeposit);
+    await kycWhitelist.add(address, role, requiredDeposit);
   }
 
   async remove(address) {
-    const owner = await this.kycWhitelistWrapper.getOwner();
-    if (owner !== this.kycWhitelistWrapper.defaultAddress) {
+    const kycWhitelist = this.kycWhitelistWrapper;
+
+    const owner = await kycWhitelist.getOwner();
+    if (owner !== kycWhitelist.defaultAddress) {
       throw new Error('You need to be the owner of the KYC whitelist to perform this action');
     }
 
-    if (!await this.kycWhitelistWrapper.isWhitelisted(address)) {
+    if (!await kycWhitelist.isWhitelisted(address)) {
       throw new Error(`Address ${address} is not whitelisted`);
     }
 
-    await this.kycWhitelistWrapper.remove(address);
+    await kycWhitelist.remove(address);
+  }
+
+  async get(address) {
+    const kycWhitelist = this.kycWhitelistWrapper;
+    return kycWhitelist.getRoleAssigned(address);
   }
 }
