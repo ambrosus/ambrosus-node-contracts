@@ -16,6 +16,7 @@ import AtlasStakeStoreJson from './contracts/AtlasStakeStore.json';
 import BundleStoreJson from './contracts/BundleStore.json';
 import RolesJson from './contracts/Roles.json';
 import KycWhitelistJson from './contracts/KycWhitelist.json';
+import KycWhitelistStoreJson from './contracts/KycWhitelistStore.json';
 import FeesJson from './contracts/Fees.json';
 import ChallengesJson from './contracts/Challenges.json';
 import ChallengesStoreJson from './contracts/ChallengesStore.json';
@@ -42,6 +43,7 @@ const contractJsons = {
   roles: RolesJson,
   bundleStore: BundleStoreJson,
   kycWhitelist: KycWhitelistJson,
+  kycWhitelistStore: KycWhitelistStoreJson,
   sheltering: ShelteringJson,
   fees: FeesJson,
   challenges: ChallengesJson,
