@@ -8,13 +8,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import TaskBase from './base/task_base';
-import {ROLE_CODES} from '../consts';
+import {ROLE_CODES, ROLE_REVERSE_CODES} from '../consts';
 
 export default class WhitelistTask extends TaskBase {
-  constructor(web3, whitelistActions) {
+  constructor(web3, whitelistActions, onboardActions) {
     super();
     this.web3 = web3;
     this.whitelistActions = whitelistActions;
+    this.onboardActions = onboardActions;
   }
 
   async execute(args) {
@@ -23,8 +24,8 @@ export default class WhitelistTask extends TaskBase {
       await this.add(args[1], args[2], args[3]);
     } else if (command === 'remove') {
       await this.remove(args[1]);
-    } else if (command === 'check') {
-      await this.show(args[1]);
+    } else if (command === 'get') {
+      await this.get(args[1]);
     } else {
       console.error('Unknown sub-command, use: yarn task whitelist [add/remove] [address] [role] [requiredDeposit]');
     }
@@ -54,10 +55,22 @@ export default class WhitelistTask extends TaskBase {
     }
   }
 
+  async get(address) {
+    try {
+      this.validateAddress(address);
+      const whitelistedRole = await this.whitelistActions.get(address);
+      console.log(`Address ${address} is whitelisted for the ${ROLE_REVERSE_CODES[whitelistedRole]} role`);
+      const onboardedRole = await this.onboardActions.getOnboardedRole(address);
+      console.log(`Address ${address} is onboarded for the ${ROLE_REVERSE_CODES[onboardedRole]} role`);
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+
   help() {
     return {
-      options: '[add/remove] [address]',
-      desciption: 'manages list of whitelisted node candidates'
+      options: '[add/remove/get] [address]',
+      description: 'manages list of whitelisted node candidates'
     };
   }
 }
