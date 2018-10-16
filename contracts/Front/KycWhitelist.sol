@@ -12,21 +12,24 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../Boilerplate/Head.sol";
 import "../Configuration/Consts.sol";
+import "../Configuration/Config.sol";
 import "../Storage/KycWhitelistStore.sol";
 
 
 contract KycWhitelist is Ownable {
 
     KycWhitelistStore private kycWhitelistStore;
+    Config private config;
 
-    constructor(KycWhitelistStore _kycWhitelistStore) public {
+    constructor(KycWhitelistStore _kycWhitelistStore, Config _config) public {
         kycWhitelistStore = _kycWhitelistStore;
+        config = _config;
     }
 
     function add(address candidate, Consts.NodeType role, uint deposit) public onlyOwner {
         require(!isWhitelisted(candidate));
         require(role == Consts.NodeType.ATLAS || role == Consts.NodeType.HERMES || role == Consts.NodeType.APOLLO);
-        require(!(role == Consts.NodeType.APOLLO && deposit == 0));
+        requireCorrectDeposit(role, deposit);
 
         kycWhitelistStore.set(candidate, role, deposit);
     }
@@ -50,5 +53,13 @@ contract KycWhitelist is Ownable {
 
     function getRoleAssigned(address candidate) public view returns(Consts.NodeType role) {
         return kycWhitelistStore.getRoleAssigned(candidate);
+    }
+
+    function requireCorrectDeposit(Consts.NodeType role, uint deposit) private view {
+        if (role == Consts.NodeType.APOLLO) {
+            require(deposit > 0);
+        } else if (role == Consts.NodeType.ATLAS) {
+            require(deposit == config.ATLAS1_STAKE() || deposit == config.ATLAS2_STAKE() || deposit == config.ATLAS3_STAKE());
+        }
     }
 }
