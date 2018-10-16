@@ -10,8 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
-import KycWhitelistJson from '../../../src/contracts/KycWhitelist.json';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import deploy from '../../helpers/deploy';
 import {APOLLO, ATLAS, HERMES, APOLLO_DEPOSIT} from '../../../src/consts';
 
 chai.use(sinonChai);
@@ -37,7 +37,14 @@ describe('KYC Whitelist Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [from, other, totalStranger] = await web3.eth.getAccounts();
-    kycWhitelist = await deployContract(web3, KycWhitelistJson);
+    ({kycWhitelist} = await deploy({
+      web3,
+      contracts: {
+        kycWhitelistStore: true,
+        kycWhitelist: true,
+        config: true
+      }
+    }));
   });
 
   beforeEach(async () => {

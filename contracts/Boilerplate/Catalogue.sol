@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-import "../Storage/KycWhitelist.sol";
+import "../Front/KycWhitelist.sol";
 import "../Front/Roles.sol";
 import "../Configuration/Fees.sol";
 import "../Front/Challenges.sol";
