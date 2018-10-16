@@ -15,8 +15,7 @@ import "../Configuration/Consts.sol";
 
 contract KycWhitelistStore is Base {
 
-    constructor(Head _head) public Base(_head) {
-    }
+    constructor(Head _head) public Base(_head) { }
 
     struct Candidate {
         Consts.NodeType allowedRole;
