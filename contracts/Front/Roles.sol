@@ -13,7 +13,7 @@ import "../Boilerplate/Head.sol";
 import "../Configuration/Consts.sol";
 import "../Configuration/Config.sol";
 import "../Storage/AtlasStakeStore.sol";
-import "../Storage/KycWhitelist.sol";
+import "../Front/KycWhitelist.sol";
 import "../Storage/RolesStore.sol";
 import "../Storage/ApolloDepositStore.sol";
 import "../Middleware/ValidatorProxy.sol";

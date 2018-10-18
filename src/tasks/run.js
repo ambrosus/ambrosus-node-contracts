@@ -43,7 +43,7 @@ const runTask = async () => {
   const args = process.argv.slice(2);
   list.add('deploy', new DeployTask(web3, nodeAddress));
   list.add('onboard', new OnboardingTask(web3, nodeAddress, onboardActions));
-  list.add('whitelist', new WhitelistTask(web3, whitelistActions));
+  list.add('whitelist', new WhitelistTask(web3, whitelistActions, onboardActions));
   list.add('upload', new UploadTask(uploadActions));
 
   await list.run(args[0], args.slice(1));

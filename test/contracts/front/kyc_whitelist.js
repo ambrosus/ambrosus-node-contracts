@@ -10,9 +10,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
-import KycWhitelistJson from '../../../src/contracts/KycWhitelist.json';
-import {APOLLO, ATLAS, HERMES, APOLLO_DEPOSIT} from '../../../src/consts';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import deploy from '../../helpers/deploy';
+import {APOLLO, ATLAS, HERMES, APOLLO_DEPOSIT, ATLAS1_STAKE, ATLAS2_STAKE, ATLAS3_STAKE} from '../../../src/consts';
+import {ONE} from '../../helpers/consts';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -37,7 +38,14 @@ describe('KYC Whitelist Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [from, other, totalStranger] = await web3.eth.getAccounts();
-    kycWhitelist = await deployContract(web3, KycWhitelistJson);
+    ({kycWhitelist} = await deploy({
+      web3,
+      contracts: {
+        kycWhitelistStore: true,
+        kycWhitelist: true,
+        config: true
+      }
+    }));
   });
 
   beforeEach(async () => {
@@ -54,6 +62,18 @@ describe('KYC Whitelist Contract', () => {
     expect(await isWhitelisted(other)).to.equal(true);
     await removeFromWhitelist(other);
     expect(await isWhitelisted(other)).to.equal(false);
+  });
+
+  it('works for ATLAS1_STAKE', async () => {
+    await expect(addToWhitelist(other, ATLAS, ATLAS1_STAKE)).to.be.fulfilled;
+  });
+
+  it('works for ATLAS2_STAKE', async () => {
+    await expect(addToWhitelist(other, ATLAS, ATLAS2_STAKE)).to.be.fulfilled;
+  });
+
+  it('works for ATLAS3_STAKE', async () => {
+    await expect(addToWhitelist(other, ATLAS, ATLAS3_STAKE)).to.be.fulfilled;
   });
 
   it('has no role permitted before whitelisting', async () => {
@@ -103,6 +123,15 @@ describe('KYC Whitelist Contract', () => {
 
   it('throws if trying to whitelist Apollo with 0 deposit', async () => {
     await expect(addToWhitelist(other, APOLLO, 0)).to.be.eventually.rejected;
+  });
+
+  it('throws if trying to whitelist Atlas with a stake not included in config', async () => {
+    await expect(addToWhitelist(other, ATLAS, ATLAS1_STAKE.sub(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS1_STAKE.add(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS2_STAKE.sub(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS2_STAKE.add(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS3_STAKE.sub(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS3_STAKE.add(ONE))).to.be.eventually.rejected;
   });
 
   it('throws if whitelisting the address that is already whitelisted', async () => {

@@ -115,6 +115,7 @@ describe('Challenges Contract', () => {
         time: TimeMockJson,
         roles: true,
         kycWhitelist: true,
+        kycWhitelistStore: true,
         config: true,
         payouts: true,
         payoutsStore: true,

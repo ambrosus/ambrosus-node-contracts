@@ -10,45 +10,56 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../Boilerplate/Head.sol";
 import "../Configuration/Consts.sol";
+import "../Configuration/Config.sol";
+import "../Storage/KycWhitelistStore.sol";
 
 
 contract KycWhitelist is Ownable {
 
-    struct Candidate {
-        Consts.NodeType allowedRole;
-        uint requiredDeposit;
-    }
+    KycWhitelistStore private kycWhitelistStore;
+    Config private config;
 
-    mapping(address => Candidate) whitelist;
+    constructor(KycWhitelistStore _kycWhitelistStore, Config _config) public {
+        kycWhitelistStore = _kycWhitelistStore;
+        config = _config;
+    }
 
     function add(address candidate, Consts.NodeType role, uint deposit) public onlyOwner {
         require(!isWhitelisted(candidate));
         require(role == Consts.NodeType.ATLAS || role == Consts.NodeType.HERMES || role == Consts.NodeType.APOLLO);
-        require(!(role == Consts.NodeType.APOLLO && deposit == 0));
+        requireCorrectDeposit(role, deposit);
 
-        whitelist[candidate].allowedRole = role;
-        whitelist[candidate].requiredDeposit = deposit;
+        kycWhitelistStore.set(candidate, role, deposit);
     }
 
     function remove(address candidate) public onlyOwner {
         require(isWhitelisted(candidate));
-        delete whitelist[candidate];
+        kycWhitelistStore.set(candidate, Consts.NodeType.NONE, 0);
     }
 
     function isWhitelisted(address candidate) public view returns(bool) {
-        return whitelist[candidate].allowedRole != Consts.NodeType.NONE;
+        return kycWhitelistStore.getRoleAssigned(candidate) != Consts.NodeType.NONE;
     }
 
     function hasRoleAssigned(address candidate, Consts.NodeType role) public view returns(bool) {
-        return whitelist[candidate].allowedRole == role;
+        return kycWhitelistStore.getRoleAssigned(candidate) == role;
     }
 
     function getRequiredDeposit(address candidate) public view returns(uint) {
-        return whitelist[candidate].requiredDeposit;
+        return kycWhitelistStore.getRequiredDeposit(candidate);
     }
 
     function getRoleAssigned(address candidate) public view returns(Consts.NodeType role) {
-        return whitelist[candidate].allowedRole;
+        return kycWhitelistStore.getRoleAssigned(candidate);
+    }
+
+    function requireCorrectDeposit(Consts.NodeType role, uint deposit) private view {
+        if (role == Consts.NodeType.APOLLO) {
+            require(deposit > 0);
+        } else if (role == Consts.NodeType.ATLAS) {
+            require(deposit == config.ATLAS1_STAKE() || deposit == config.ATLAS2_STAKE() || deposit == config.ATLAS3_STAKE());
+        }
     }
 }

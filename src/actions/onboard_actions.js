@@ -35,6 +35,11 @@ export default class OnboardActions {
     await roles.onboardAsApollo(address, depositAmount);
   }
 
+  async getOnboardedRole(address) {
+    const roles = this.rolesWrapper;
+    return roles.onboardedRole(address);
+  }
+
   async validateWhitelistedForRole(address, role) {
     const kyc = this.kycWhitelistWrapper;
 

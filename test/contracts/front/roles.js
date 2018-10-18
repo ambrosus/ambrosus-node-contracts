@@ -82,6 +82,7 @@ describe('Roles Contract', () => {
         time: true,
         config: true,
         kycWhitelist: true,
+        kycWhitelistStore: true,
         atlasStakeStore: true,
         rolesStore: true,
         apolloDepositStore: true,
