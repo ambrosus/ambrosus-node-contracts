@@ -22,6 +22,7 @@ import WhitelistActions from '../actions/whitelist_actions';
 import OnboardActions from '../actions/onboard_actions';
 import UploadActions from '../actions/upload_actions';
 import config from '../../config/config';
+import ShelteringWrapper from '../wrappers/sheltering_wrapper';
 
 const runTask = async () => {
   const web3 = await createWeb3();
@@ -32,10 +33,11 @@ const runTask = async () => {
   const uploadsWrapper = new UploadsWrapper(headWrapper, web3, nodeAddress);
   const feesWrapper = new FeesWrapper(headWrapper, web3, nodeAddress);
   const kycWhitelistWrapper = new KycWhitelistWrapper(headWrapper, web3, nodeAddress);
+  const shelteringWrapper = new ShelteringWrapper(headWrapper, web3, nodeAddress);
 
   const whitelistActions = new WhitelistActions(kycWhitelistWrapper);
   const onboardActions = new OnboardActions(kycWhitelistWrapper, rolesWrapper);
-  const uploadActions = new UploadActions(uploadsWrapper, feesWrapper);
+  const uploadActions = new UploadActions(uploadsWrapper, feesWrapper, shelteringWrapper);
 
   const list = new TaskList();
   const args = process.argv.slice(2);

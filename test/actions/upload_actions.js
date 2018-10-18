@@ -22,20 +22,27 @@ describe('Upload Actions', () => {
   let uploadActions;
   let uploadsWrapperStub;
   let feesWrapperStub;
+  let shelteringWrapperStub;
 
   before(() => {
     uploadsWrapperStub = {
-      registerBundle: sinon.stub()
+      registerBundle: sinon.stub(),
+      getUploadData: sinon.stub()
     };
     feesWrapperStub = {
       feeForUpload: sinon.stub()
     };
-    uploadActions = new UploadActions(uploadsWrapperStub, feesWrapperStub);
+    shelteringWrapperStub = {
+      getBundleUploadBlockNumber: sinon.stub()
+    };
+    uploadActions = new UploadActions(uploadsWrapperStub, feesWrapperStub, shelteringWrapperStub);
   });
 
   afterEach(() => {
     uploadsWrapperStub.registerBundle.reset();
+    uploadsWrapperStub.getUploadData.reset();
     feesWrapperStub.feeForUpload.reset();
+    shelteringWrapperStub.getBundleUploadBlockNumber.reset();
   });
 
   it('uploadBundle', async () => {
@@ -54,6 +61,28 @@ describe('Upload Actions', () => {
       fee,
       storagePeriods
     );
+  });
+
+  describe('getBundleUploadData', () => {
+    const bundleId = '0xABCD';
+    const blockNumber = '2';
+    const exampleUploadData = {
+      blockNumber,
+      transactionHash: '0x123'
+    };
+
+    it('gets block number and returns upload data', async () => {
+      shelteringWrapperStub.getBundleUploadBlockNumber.resolves(blockNumber);
+      uploadsWrapperStub.getUploadData.resolves(exampleUploadData);
+
+      expect(await uploadActions.getBundleUploadData(bundleId)).to.deep.equal(exampleUploadData);
+    });
+
+    it('returns null if bundle was not uploaded', async () => {
+      shelteringWrapperStub.getBundleUploadBlockNumber.resolves(null);
+
+      expect(await uploadActions.getBundleUploadData(bundleId)).to.be.null;
+    });
   });
 });
 

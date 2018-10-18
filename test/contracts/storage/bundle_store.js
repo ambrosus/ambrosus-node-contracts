@@ -35,6 +35,7 @@ describe('BundleStore Contract', () => {
     bundleStore.methods.store(bundleId, uploader, storagePeriods, currentTimestamp).send({from: sender});
   const getUploader = async (bundleId) => bundleStore.methods.getUploader(bundleId).call();
   const getUploadTimestamp = async (bundleId) => bundleStore.methods.getUploadTimestamp(bundleId).call();
+  const getUploadBlockNumber = async (bundleId) => bundleStore.methods.getUploadBlockNumber(bundleId).call();
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
   const getStoragePeriodsCount = async (bundleId) => bundleStore.methods.getStoragePeriodsCount(bundleId).call();
   const getShelteringStartDate = async (bundleId) => bundleStore.methods.getShelteringStartDate(bundleId, otherUser).call();
@@ -67,8 +68,10 @@ describe('BundleStore Contract', () => {
 
   describe('Storing a bundle', () => {
     describe('Stores bundle correctly', () => {
+      let transaction;
+
       beforeEach(async () => {
-        await store(bundleId, targetUser, storagePeriods, now);
+        transaction = await store(bundleId, targetUser, storagePeriods, now);
       });
 
       it('creator is saved as uploader', async () => {
@@ -89,6 +92,10 @@ describe('BundleStore Contract', () => {
 
       it('reward for creator should be 0', async () => {
         expect(await getTotalShelteringReward(bundleId, targetUser)).to.equal('0');
+      });
+
+      it('stores transaction block number', async () => {
+        expect(await getUploadBlockNumber(bundleId)).to.equal(transaction.blockNumber.toString());
       });
     });
 

@@ -44,6 +44,8 @@ describe('Sheltering Contract', () => {
   const isSheltering = async (bundleId, shelterer) => sheltering.methods.isSheltering(bundleId, shelterer).call();
   const shelteringExpirationDate = async (bundleId, shelterer) =>
     sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
+  const getBundleUploadBlockNumber = async (bundleId) =>
+    sheltering.methods.getBundleUploadBlockNumber(bundleId).call();
   const storeBundle = async (bundleId, uploader, storagePeriods, sender = deployer) =>
     sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
   const addShelterer = async (bundleId, shelterer, amount, sender = deployer) =>
@@ -136,9 +138,10 @@ describe('Sheltering Contract', () => {
 
   describe('Storing', () => {
     it('adds bundle to bundleStore', async () => {
-      await storeBundle(bundleId, hermes, storagePeriods);
+      const transaction = await storeBundle(bundleId, hermes, storagePeriods);
       expect(await bundleStore.methods.getUploader(bundleId).call()).to.equal(hermes);
       expect(await bundleStore.methods.getStoragePeriodsCount(bundleId).call()).to.equal(storagePeriods.toString());
+      expect(await getBundleUploadBlockNumber(bundleId)).to.equal(transaction.blockNumber.toString());
     });
 
     it(`fails if already stored`, async () => {

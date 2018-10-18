@@ -18,4 +18,22 @@ export default class UploadsWrapper extends ContractWrapper {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.registerBundle(bundleId, storagePeriods), {from: this.defaultAddress, value: fee});
   }
+
+  /**
+   * @returns {Object} bundle blockchain data
+   * @property {number} blockNumber block number when the bundle was uploaded
+   * @property {string} transactionHash bundle upload transaction hash
+   */
+  async getUploadData(bundleId, blockNumber) {
+    const contract = await this.contract();
+    const bundleUploadEvents = (await contract.getPastEvents('BundleUploaded', {fromBlock: blockNumber, toBlock: blockNumber})).filter(({returnValues}) => returnValues.bundleId === bundleId);
+    if (bundleUploadEvents.length === 0) {
+      return null;
+    }
+    const [{transactionHash}] = bundleUploadEvents;
+    return {
+      transactionHash,
+      blockNumber
+    };
+  }
 }
