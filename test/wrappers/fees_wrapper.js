@@ -20,6 +20,32 @@ const {expect} = chai;
 describe('Fees Wrapper', () => {
   let feesWrapper;
 
+  describe('getOwner', () => {
+    let getOwnerStub;
+    let getOwnerCallStub;
+    const ownerAddress = '0x1234ABCD';
+
+    before(async () => {
+      getOwnerStub = sinon.stub();
+      getOwnerCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          owner: getOwnerStub.returns({
+            call: getOwnerCallStub.resolves(ownerAddress)
+          })
+        }
+      };
+      feesWrapper = new FeesWrapper();
+      sinon.stub(feesWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await expect(feesWrapper.getOwner()).to.eventually.equal(ownerAddress);
+      expect(getOwnerStub).to.be.calledOnce;
+      expect(getOwnerCallStub).to.be.calledOnce;
+    });
+  });
+
   describe('setBaseUploadFee', () => {
     const exampleFee = '100';
     let contractMock;
