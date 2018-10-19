@@ -17,7 +17,7 @@ export default class UploadActions {
   async uploadBundle(bundleId, storagePeriods) {
     const {uploadsWrapper: uploads, feesWrapper: fees} = this;
     const value = await fees.feeForUpload(storagePeriods);
-    await uploads.registerBundle(bundleId, value, storagePeriods);
+    return uploads.registerBundle(bundleId, value, storagePeriods);
   }
 
   async getBundleUploadData(bundleId) {
