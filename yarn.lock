@@ -6018,7 +6018,7 @@ trim@0.0.1:
   resolved "https://registry.yarnpkg.com/trim/-/trim-0.0.1.tgz#5858547f6b290757ee95cccc666fb50084c460dd"
   integrity sha1-WFhUf2spB1fulczMZm+1AITEYN0=
 
-truffle@^4.1.8:
+truffle@4.1.9:
   version "4.1.9"
   resolved "https://registry.yarnpkg.com/truffle/-/truffle-4.1.9.tgz#109a4428098cf32f5e7a84b2de32662f59296b21"
   integrity sha512-3j+UGKyXpr4KAkFEGvhbPeJEBJ0Ktz0qmThFnOqOL5A/19tlYi6MRVQC9b2M9GoCGZtzM0bWTz8py7bfnBhYww==
@@ -6444,9 +6444,9 @@ web3-utils@1.0.0-beta.34:
     underscore "1.8.3"
     utf8 "2.1.1"
 
-web3@^1.0.0-beta.30, web3@^1.0.0-beta.34:
+web3@1.0.0-beta.34, web3@^1.0.0-beta.30:
   version "1.0.0-beta.34"
-  resolved "https://registry.yarnpkg.com/web3/-/web3-1.0.0-beta.34.tgz#347e561b784098cb5563315f490479a1d91f2ab1"
+  resolved "http://registry.npmjs.org/web3/-/web3-1.0.0-beta.34.tgz#347e561b784098cb5563315f490479a1d91f2ab1"
   integrity sha1-NH5WG3hAmMtVYzFfSQR5odkfKrE=
   dependencies:
     web3-bzz "1.0.0-beta.34"
