@@ -21,6 +21,7 @@ import OnboardActions from './actions/onboard_actions';
 import UploadActions from './actions/upload_actions';
 import Deployer from './deployer';
 import contractJsons from './contract_jsons.js';
+import FeesActions from './actions/fees_actions';
 const constants = require('./consts');
 
 module.exports = {
@@ -35,6 +36,7 @@ module.exports = {
   WhitelistActions,
   OnboardActions,
   UploadActions,
+  FeesActions,
   Deployer,
   constants,
   contractJsons
