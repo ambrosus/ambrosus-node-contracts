@@ -43,7 +43,7 @@ describe('Fees Actions', () => {
       expect(feesWrapperMock.setBaseUploadFee).to.be.calledOnceWith(exampleFee);
     });
 
-    it('throws if sender is not an owner', async () => {
+    it('throws if sender is not the owner', async () => {
       feesWrapperMock.getOwner.resolves('0x21312');
       await expect(feesActions.setBaseUploadFee(exampleFee)).to.be.rejected;
       expect(feesWrapperMock.setBaseUploadFee).to.be.not.called;
