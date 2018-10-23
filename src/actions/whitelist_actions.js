@@ -44,6 +44,9 @@ export default class WhitelistActions {
 
   async get(address) {
     const kycWhitelist = this.kycWhitelistWrapper;
-    return kycWhitelist.getRoleAssigned(address);
+    return {
+      role: await kycWhitelist.getRoleAssigned(address),
+      requiredDeposit: await kycWhitelist.getRequiredDeposit(address)
+    };
   }
 }

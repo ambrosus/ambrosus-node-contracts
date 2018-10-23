@@ -32,7 +32,8 @@ describe('Whitelist Actions', () => {
       isWhitelisted: sinon.stub(),
       add: sinon.stub(),
       remove: sinon.stub(),
-      getRoleAssigned: sinon.stub()
+      getRoleAssigned: sinon.stub(),
+      getRequiredDeposit: sinon.stub()
     };
     whitelistActions = new WhitelistActions(kycWhitelistWrapperStub);
   });
@@ -118,12 +119,17 @@ describe('Whitelist Actions', () => {
 
     beforeEach(() => {
       kycWhitelistWrapperStub.getRoleAssigned.resolves(HERMES);
+      kycWhitelistWrapperStub.getRequiredDeposit.resolves('123456');
     });
 
     it('proxies the call to the wrapper', async () => {
-      await expect(callSubject()).to.eventually.be.fulfilled.and.equal(HERMES);
+      await expect(callSubject()).to.eventually.be.fulfilled.and.deep.equal({
+        role: HERMES,
+        requiredDeposit: '123456'
+      });
 
       expect(kycWhitelistWrapperStub.getRoleAssigned).to.have.been.calledOnceWith(targetAddress);
+      expect(kycWhitelistWrapperStub.getRequiredDeposit).to.have.been.calledOnceWith(targetAddress);
     });
   });
 });
