@@ -57,7 +57,7 @@ contract Challenges is Base {
         validateChallenge(sheltererId, bundleId);
         validateFeeAmount(1, bundleId);
 
-        bytes32 challengeId = challengesStore.store(
+        bytes32 challengeId = challengesStore.store.value(msg.value)(
             sheltererId,
             bundleId,
             msg.sender,
@@ -75,7 +75,7 @@ contract Challenges is Base {
         validateSystemChallenge(uploaderId, bundleId);
         validateFeeAmount(challengesCount, bundleId);
 
-        bytes32 challengeId = challengesStore.store(
+        bytes32 challengeId = challengesStore.store.value(msg.value)(
             uploaderId,
             bundleId,
             0x0,
@@ -93,6 +93,7 @@ contract Challenges is Base {
         require(canResolve(msg.sender, challengeId));
 
         (address sheltererId, bytes32 bundleId,, uint feePerChallenge,,, uint sequenceNumber) = challengesStore.getChallenge(challengeId);
+        challengesStore.transferFee(this, feePerChallenge);
         sheltering.addShelterer.value(feePerChallenge)(bundleId, msg.sender);
         atlasStakeStore.updateLastChallengeResolvedSequenceNumber(msg.sender, sequenceNumber);
 
@@ -120,10 +121,11 @@ contract Challenges is Base {
             refundAddress = challengerId;
         }
 
-        uint amountToReturn = (feePerChallenge * activeCount) + revokedReward + penalty;
+        uint feeToReturn = feePerChallenge * activeCount;
         emit ChallengeTimeout(sheltererId, bundleId, challengeId, penalty);
         challengesStore.remove(challengeId);
-        refundAddress.transfer(amountToReturn);
+        challengesStore.transferFee(this, feeToReturn);
+        refundAddress.transfer(feeToReturn + revokedReward + penalty);
     }
 
     function canResolve(address resolverId, bytes32 challengeId) public view returns (bool) {
