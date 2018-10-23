@@ -69,7 +69,7 @@ export default class OnboardingTask extends TaskBase {
       this.printUsage();
       return;
     }
-    const depositAmount = this.web3.utils.toWei(new BN(depositAmountInEth));
+    const depositAmount = new BN(depositAmountInEth);
     await this.onboardActions.onboardAsApollo(this.nodeAddress, depositAmount);
   }
 

@@ -60,13 +60,12 @@ startServer()
       const headEnvFile = `${__dirname}/test_cli_head.env`;
       await execute(`yarn task deploy --save ${headEnvFile}`);
       const headConfig = dotenv.parse(fs.readFileSync(headEnvFile));
-      await execute(`yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 HERMES 0`, headConfig);
+      await execute(`yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 APOLLO 1000000000000000000`, headConfig);
       await execute(`yarn task whitelist get 0xEbDEAC82424a053DFf79397862BD122F76798bC5`, headConfig);
       await execute(`yarn task whitelist remove 0xEbDEAC82424a053DFf79397862BD122F76798bC5`, headConfig);
-      await execute(`yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 HERMES 0`, headConfig);
-      await execute(`yarn task onboard HERMES localhost`, headConfig);
+      await execute(`yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 APOLLO 1000000000000000000`, headConfig);
+      await execute(`yarn task onboard APOLLO 1000000000000000000`, headConfig);
       await execute(`yarn task whitelist get 0xEbDEAC82424a053DFf79397862BD122F76798bC5`, headConfig);
-      await execute(`yarn task upload 0xcafe 1`, headConfig);
     } catch (err) {
       printError(err);
     }
