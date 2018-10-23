@@ -30,6 +30,8 @@ contract ChallengesStore is Base {
         nextChallengeSequenceNumber = 1;
     }
 
+    function() public payable {}
+
     function store(
         address sheltererId,
         bytes32 bundleId,
@@ -38,7 +40,7 @@ contract ChallengesStore is Base {
         uint64 creationTime,
         uint8 activeCount,
         uint sequenceNumber)
-    public onlyContextInternalCalls returns (bytes32)
+    public payable onlyContextInternalCalls returns (bytes32)
     {
         bytes32 challengeId = getChallengeId(sheltererId, bundleId);
         challenges[challengeId] = Challenge(sheltererId, bundleId, challengerId, feePerChallenge, creationTime, activeCount, sequenceNumber);
@@ -47,6 +49,10 @@ contract ChallengesStore is Base {
 
     function remove(bytes32 challengeId) public onlyContextInternalCalls {
         delete challenges[challengeId];
+    }
+
+    function transferFee(address refundAddress, uint amountToReturn) public onlyContextInternalCalls {
+        refundAddress.transfer(amountToReturn);
     }
 
     function getChallenge(bytes32 challengeId) public view returns (address, bytes32, address, uint, uint64, uint8, uint) {

@@ -11,6 +11,8 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
+import observeBalanceChange from '../../helpers/web3BalanceObserver';
+import BN from 'bn.js';
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -32,9 +34,11 @@ describe('ChallengesStoreContract', () => {
 
   const store = (sender = deployer) =>
     challengesStore.methods.store(shelterer, exampleBundleId, challenger, feePerChallenge, creationTime, activeCount,
-      sequenceNumber).send({from: sender});
+      sequenceNumber).send({from: sender, value: feePerChallenge});
   const remove = (challengeId, sender = deployer) =>
     challengesStore.methods.remove(challengeId).send({from: sender});
+  const transferFee = (refundAddress, amountToReturn, sender = deployer) =>
+    challengesStore.methods.transferFee(refundAddress, amountToReturn).send({from: sender});
   const increaseSequenceNumber = (challengeId, sender = deployer) =>
     challengesStore.methods.increaseSequenceNumber(challengeId).send({from: sender});
   const decreaseActiveCount = (challengeId, sender = deployer) =>
@@ -69,7 +73,7 @@ describe('ChallengesStoreContract', () => {
 
   describe('store', () => {
     it('stores challenge', async () => {
-      await store();
+      expect(await observeBalanceChange(web3, challengesStore.options.address, () => store())).to.deep.equal(new BN(feePerChallenge));
       const storedChallenge = await getChallenge(exampleChallengeId);
       expect(storedChallenge[0]).to.equal(shelterer);
       expect(storedChallenge[1]).to.equal(exampleBundleId);
@@ -111,6 +115,21 @@ describe('ChallengesStoreContract', () => {
 
     it('should be context internal', async () => {
       await expect(remove(exampleChallengeId, otherAddress)).to.be.rejected;
+    });
+  });
+
+  describe('transferFee', () => {
+    const amountToReturn = '42';
+    beforeEach(async () => {
+      await store();
+    });
+
+    it('transfers provided value to the refund address', async () => {
+      expect((await observeBalanceChange(web3, challenger, () => transferFee(challenger, amountToReturn))).toString()).to.deep.equal(amountToReturn);
+    });
+
+    it('should be context internal', async () => {
+      await expect(transferFee(challenger, amountToReturn, otherAddress)).to.be.rejected;
     });
   });
 
