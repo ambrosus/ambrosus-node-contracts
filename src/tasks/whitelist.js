@@ -58,8 +58,8 @@ export default class WhitelistTask extends TaskBase {
   async get(address) {
     try {
       this.validateAddress(address);
-      const whitelistedRole = await this.whitelistActions.get(address);
-      console.log(`Address ${address} is whitelisted for the ${ROLE_REVERSE_CODES[whitelistedRole]} role`);
+      const whitelisted = await this.whitelistActions.get(address);
+      console.log(`Address ${address} is whitelisted for the ${ROLE_REVERSE_CODES[whitelisted.role]} role with ${whitelisted.requiredDeposit} deposit/stake`);
       const onboardedRole = await this.onboardActions.getOnboardedRole(address);
       console.log(`Address ${address} is onboarded for the ${ROLE_REVERSE_CODES[onboardedRole]} role`);
     } catch (err) {
