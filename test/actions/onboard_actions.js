@@ -55,7 +55,7 @@ describe('Onboard Actions', () => {
 
     beforeEach(() => {
       kycWhitelistWrapperStub.hasRoleAssigned.resolves(true);
-      kycWhitelistWrapperStub.getRequiredDeposit.resolves(stakeAmount);
+      kycWhitelistWrapperStub.getRequiredDeposit.resolves(stakeAmount.toString());
     });
 
     it('fails if the address is not whitelisted for ATLAS', async () => {
@@ -67,7 +67,7 @@ describe('Onboard Actions', () => {
     });
 
     it('fails if the stakeAmount is not matching the whitlisted pledge', async () => {
-      kycWhitelistWrapperStub.getRequiredDeposit.resolves(new BN(45678));
+      kycWhitelistWrapperStub.getRequiredDeposit.resolves('45678');
 
       await expect(callSubject()).to.eventually.be.rejected;
 
@@ -114,7 +114,7 @@ describe('Onboard Actions', () => {
 
     beforeEach(() => {
       kycWhitelistWrapperStub.hasRoleAssigned.resolves(true);
-      kycWhitelistWrapperStub.getRequiredDeposit.resolves(depositAmount);
+      kycWhitelistWrapperStub.getRequiredDeposit.resolves(depositAmount.toString());
     });
 
     it('fails if the address is not whitelisted for APOLLO', async () => {
@@ -126,7 +126,7 @@ describe('Onboard Actions', () => {
     });
 
     it('fails if the depositAmount is not matching the whitlisted pledge', async () => {
-      kycWhitelistWrapperStub.getRequiredDeposit.resolves(new BN(45678));
+      kycWhitelistWrapperStub.getRequiredDeposit.resolves('45678');
 
       await expect(callSubject()).to.eventually.be.rejected;
 
