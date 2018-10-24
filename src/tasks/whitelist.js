@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import TaskBase from './base/task_base';
-import {ROLE_CODES, ROLE_REVERSE_CODES} from '../consts';
+import {ROLE_CODES, ROLE_REVERSE_CODES} from '../constants';
 
 export default class WhitelistTask extends TaskBase {
   constructor(web3, whitelistActions, onboardActions) {

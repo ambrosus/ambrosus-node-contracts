@@ -22,7 +22,7 @@ import UploadActions from './actions/upload_actions';
 import Deployer from './deployer';
 import contractJsons from './contract_jsons.js';
 import FeesActions from './actions/fees_actions';
-const constants = require('./consts');
+const constants = require('./constants');
 
 module.exports = {
   ChallengesWrapper,

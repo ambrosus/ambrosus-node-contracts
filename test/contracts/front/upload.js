@@ -14,10 +14,13 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
-import {ATLAS, HERMES, SYSTEM_CHALLENGES_COUNT} from '../../../src/consts';
-import {BLOCK_REWARD, COINBASE} from '../../helpers/consts';
+import {ATLAS, HERMES} from '../../../src/constants';
+import {SYSTEM_CHALLENGES_COUNT} from '../../helpers/consts';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 import BN from 'bn.js';
+
+export const COINBASE = '0x0000000000000000000000000000000000000000';
+export const BLOCK_REWARD = utils.toWei(new BN(3));
 
 chai.use(chaiEmitEvents);
 

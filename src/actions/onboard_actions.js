@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {ATLAS, HERMES, APOLLO, ROLE_REVERSE_CODES} from '../consts';
+import {ATLAS, HERMES, APOLLO, ROLE_REVERSE_CODES} from '../constants';
 import BN from 'bn.js';
 
 export default class OnboardActions {

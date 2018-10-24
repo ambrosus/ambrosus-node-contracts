@@ -11,7 +11,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
-import {APOLLO, ATLAS, HERMES} from '../../../src/consts';
+import {APOLLO, ATLAS, HERMES} from '../../../src/constants';
 import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 
 chai.use(sinonChai);

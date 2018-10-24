@@ -24,8 +24,14 @@ import {
   ATLAS3_STAKE,
   ATLAS3_STORAGE_LIMIT,
   HERMES
-} from '../../../src/consts';
+} from '../../../src/constants';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
+import BN from 'bn.js';
+
+const APOLLO_DEPOSIT_BN = new BN(APOLLO_DEPOSIT);
+const ATLAS1_STAKE_BN = new BN(ATLAS1_STAKE);
+const ATLAS2_STAKE_BN = new BN(ATLAS2_STAKE);
+const ATLAS3_STAKE_BN = new BN(ATLAS3_STAKE);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -122,9 +128,9 @@ describe('Roles Contract', () => {
   describe('canOnboard', () => {
     it('Atlas 1', async () => {
       expect(await canOnboardAsAtlas(atlas1, 0)).to.be.false;
-      expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE.sub(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE_BN.sub(ONE).toString())).to.be.false;
       expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE)).to.be.true;
-      expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE.add(ONE))).to.be.false;
+      expect(await canOnboardAsAtlas(atlas1, ATLAS1_STAKE_BN.add(ONE).toString())).to.be.false;
       expect(await canOnboardAsAtlas(atlas1, ATLAS2_STAKE)).to.be.false;
       expect(await canOnboardAsAtlas(atlas1, ATLAS3_STAKE)).to.be.false;
       expect(await canOnboardAsAtlas(hermes, ATLAS1_STAKE)).to.be.false;
@@ -150,10 +156,10 @@ describe('Roles Contract', () => {
 
     it('Apollo', async () => {
       expect(await canOnboardAsApollo(apollo, 0)).to.be.false;
-      expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT.sub(ONE))).to.be.false;
-      expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT)).to.be.true;
-      expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT.add(ONE))).to.be.false;
-      expect(await canOnboardAsApollo(atlas1, APOLLO_DEPOSIT)).to.be.false;
+      expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT_BN.sub(ONE).toString())).to.be.false;
+      expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT_BN)).to.be.true;
+      expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT_BN.add(ONE).toString())).to.be.false;
+      expect(await canOnboardAsApollo(atlas1, APOLLO_DEPOSIT_BN)).to.be.false;
     });
   });
 
@@ -163,21 +169,21 @@ describe('Roles Contract', () => {
     describe('Atlas', () => {
       it('atlas 1', async () => {
         await expect(onboardAsAtlas(url, atlas1, ATLAS1_STAKE)).to.eventually.be.fulfilled;
-        expect(await getStake(atlas1)).to.equal(ATLAS1_STAKE.toString());
+        expect(await getStake(atlas1)).to.equal(ATLAS1_STAKE);
         expect(await getUrl(atlas1)).to.equal(url);
         expect(await getRole(atlas1)).to.equal(ATLAS.toString());
       });
 
       it('atlas 2', async () => {
         await expect(onboardAsAtlas(url, atlas2, ATLAS2_STAKE)).to.eventually.be.fulfilled;
-        expect(await getStake(atlas2)).to.equal(ATLAS2_STAKE.toString());
+        expect(await getStake(atlas2)).to.equal(ATLAS2_STAKE);
         expect(await getUrl(atlas2)).to.equal(url);
         expect(await getRole(atlas2)).to.equal(ATLAS.toString());
       });
 
       it('atlas 3', async () => {
         await expect(onboardAsAtlas(url, atlas3, ATLAS3_STAKE)).to.eventually.be.fulfilled;
-        expect(await getStake(atlas3)).to.equal(ATLAS3_STAKE.toString());
+        expect(await getStake(atlas3)).to.equal(ATLAS3_STAKE);
         expect(await getUrl(atlas3)).to.equal(url);
         expect(await getRole(atlas3)).to.equal(ATLAS.toString());
       });
@@ -188,7 +194,7 @@ describe('Roles Contract', () => {
       });
 
       it('throws if value sent does not equal the stake specified during kyc', async () => {
-        await expect(onboardAsAtlas(url, atlas3, ATLAS3_STAKE.add(ONE))).to.be.eventually.rejected;
+        await expect(onboardAsAtlas(url, atlas3, ATLAS3_STAKE_BN.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(atlas3)).to.equal('0');
       });
     });
@@ -227,8 +233,8 @@ describe('Roles Contract', () => {
       });
 
       it('throws if value sent does not equal the stake required during kyc', async () => {
-        await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT.sub(ONE))).to.be.eventually.rejected;
-        await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT.add(ONE))).to.be.eventually.rejected;
+        await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT_BN.sub(ONE))).to.be.eventually.rejected;
+        await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT_BN.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(apollo)).to.equal('0');
       });
     });
@@ -251,7 +257,7 @@ describe('Roles Contract', () => {
 
       it('returns stake to the node', async () => {
         const balanceChange = await observeBalanceChange(web3, atlas1, () => retireAtlas(atlas1));
-        expect(balanceChange.toString()).to.equal(ATLAS1_STAKE.toString());
+        expect(balanceChange.toString()).to.equal(ATLAS1_STAKE);
       });
 
       it('throws if atlas is storing something', async () => {
@@ -304,21 +310,21 @@ describe('Roles Contract', () => {
 
   describe('getStorageLimit', () => {
     it('Atlas 3', async () => {
-      expect(await getStorageLimitForAtlas(ATLAS3_STAKE.add(ONE).toString())).to.eq('0');
-      expect(await getStorageLimitForAtlas(ATLAS3_STAKE.sub(ONE).toString())).to.eq('0');
-      expect(await getStorageLimitForAtlas(ATLAS3_STAKE.toString())).to.eq(ATLAS3_STORAGE_LIMIT.toString());
+      expect(await getStorageLimitForAtlas(ATLAS3_STAKE_BN.add(ONE).toString())).to.eq('0');
+      expect(await getStorageLimitForAtlas(ATLAS3_STAKE_BN.sub(ONE).toString())).to.eq('0');
+      expect(await getStorageLimitForAtlas(ATLAS3_STAKE_BN)).to.eq(ATLAS3_STORAGE_LIMIT);
     });
 
     it('Atlas 2', async () => {
-      expect(await getStorageLimitForAtlas(ATLAS3_STAKE.sub(ONE).toString())).to.eq('0');
-      expect(await getStorageLimitForAtlas(ATLAS2_STAKE.add(ONE).toString())).to.eq('0');
-      expect(await getStorageLimitForAtlas(ATLAS2_STAKE.toString())).to.eq(ATLAS2_STORAGE_LIMIT.toString());
+      expect(await getStorageLimitForAtlas(ATLAS3_STAKE_BN.sub(ONE).toString())).to.eq('0');
+      expect(await getStorageLimitForAtlas(ATLAS2_STAKE_BN.add(ONE).toString())).to.eq('0');
+      expect(await getStorageLimitForAtlas(ATLAS2_STAKE_BN)).to.eq(ATLAS2_STORAGE_LIMIT);
     });
 
     it('Atlas 1', async () => {
-      expect(await getStorageLimitForAtlas(ATLAS2_STAKE.sub(ONE).toString())).to.eq('0');
-      expect(await getStorageLimitForAtlas(ATLAS1_STAKE.add(ONE).toString())).to.eq('0');
-      expect(await getStorageLimitForAtlas(ATLAS1_STAKE.toString())).to.eq(ATLAS1_STORAGE_LIMIT.toString());
+      expect(await getStorageLimitForAtlas(ATLAS2_STAKE_BN.sub(ONE).toString())).to.eq('0');
+      expect(await getStorageLimitForAtlas(ATLAS1_STAKE_BN.add(ONE).toString())).to.eq('0');
+      expect(await getStorageLimitForAtlas(ATLAS1_STAKE_BN)).to.eq(ATLAS1_STORAGE_LIMIT);
     });
   });
 

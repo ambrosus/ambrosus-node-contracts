@@ -16,11 +16,9 @@ import BN from 'bn.js';
 import {
   ATLAS,
   ATLAS1_STAKE,
-  ATLAS1_STORAGE_LIMIT,
-  DAY,
-  SYSTEM_CHALLENGES_COUNT
-} from '../../../src/consts';
-import {ONE} from '../../helpers/consts';
+  ATLAS1_STORAGE_LIMIT
+} from '../../../src/constants';
+import {ONE, DAY, SYSTEM_CHALLENGES_COUNT} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
 import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.json';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';

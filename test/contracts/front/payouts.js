@@ -14,7 +14,7 @@ import deploy from '../../helpers/deploy';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
-import {PAYOUT_PERIOD_IN_SECONDS} from '../../../src/consts';
+import {PAYOUT_PERIOD_UNIT} from '../../helpers/consts';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -56,7 +56,7 @@ describe('Payouts Contract', () => {
         config: true
       }
     }));
-    await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 10.4);
+    await setTimestamp(PAYOUT_PERIOD_UNIT * 10.4);
   });
 
   beforeEach(async () => {
@@ -94,7 +94,7 @@ describe('Payouts Contract', () => {
 
     it('can be used multiple times', async () => {
       await grantShelteringReward(beneficiary, 3, 100000);
-      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 11);
+      await setTimestamp(PAYOUT_PERIOD_UNIT * 11);
       await grantShelteringReward(beneficiary, 3, 100000);
 
       expect(await available(10, beneficiary)).to.be.equal('0'); // 0 + 0
@@ -124,7 +124,7 @@ describe('Payouts Contract', () => {
 
     it('is only possible on previously granted rewards', async () => {
       await grantShelteringReward(beneficiary, 3, 100000);
-      await expect(revokeShelteringReward(beneficiary, await getTimestamp() - PAYOUT_PERIOD_IN_SECONDS, 3, 100000, beneficiary)).to.be.eventually.rejected;
+      await expect(revokeShelteringReward(beneficiary, await getTimestamp() - PAYOUT_PERIOD_UNIT, 3, 100000, beneficiary)).to.be.eventually.rejected;
       await expect(revokeShelteringReward(beneficiary, await getTimestamp(), 3, 120000, beneficiary)).to.be.eventually.rejected;
       await expect(revokeShelteringReward(beneficiary, await getTimestamp(), 4, 100000, beneficiary)).to.be.eventually.rejected;
       await expect(revokeShelteringReward(otherUser, await getTimestamp(), 4, 100000, beneficiary)).to.be.eventually.rejected;
@@ -136,13 +136,13 @@ describe('Payouts Contract', () => {
     });
 
     it('transfers the refund to provided address and takes withdrawals into account', async () => {
-      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 10.4);
+      await setTimestamp(PAYOUT_PERIOD_UNIT * 10.4);
       await grantShelteringReward(beneficiary, 3, 100000);
 
-      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 12.4);
+      await setTimestamp(PAYOUT_PERIOD_UNIT * 12.4);
       await expectBalanceChange(withdrawTarget, '26000', async () => withdraw(withdrawTarget, beneficiary));
 
-      await expectBalanceChange(otherUser, '74000', async () => revokeShelteringReward(beneficiary, PAYOUT_PERIOD_IN_SECONDS * 10.4, 3, 100000, otherUser));
+      await expectBalanceChange(otherUser, '74000', async () => revokeShelteringReward(beneficiary, PAYOUT_PERIOD_UNIT * 10.4, 3, 100000, otherUser));
     });
 
     it('returns the refunded amount', async () => {
@@ -151,13 +151,13 @@ describe('Payouts Contract', () => {
     });
 
     it('returns the refunded amount and takes withdrawals into account', async () => {
-      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 10.4);
+      await setTimestamp(PAYOUT_PERIOD_UNIT * 10.4);
       await grantShelteringReward(beneficiary, 3, 100000);
 
-      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 12.4);
+      await setTimestamp(PAYOUT_PERIOD_UNIT * 12.4);
       await withdraw(withdrawTarget, beneficiary);
 
-      expect(await revokeShelteringRewardCall(beneficiary, PAYOUT_PERIOD_IN_SECONDS * 10.4, 3, 100000, otherUser)).to.equal('74000');
+      expect(await revokeShelteringRewardCall(beneficiary, PAYOUT_PERIOD_UNIT * 10.4, 3, 100000, otherUser)).to.equal('74000');
     });
 
     it(`is a contextInternalCall`, async () => {
@@ -173,7 +173,7 @@ describe('Payouts Contract', () => {
       await injectGrantRepeating(beneficiary, 8, 9, 10); // 5 per period
 
       await expectBalanceChange(withdrawTarget, '19', async () => withdraw(withdrawTarget, beneficiary)); // from periods: 7, 8, 9 => 3, 3 + 5, 3 + 5
-      await setTimestamp(PAYOUT_PERIOD_IN_SECONDS * 11.2);
+      await setTimestamp(PAYOUT_PERIOD_UNIT * 11.2);
       await expectBalanceChange(withdrawTarget, '3', async () => withdraw(withdrawTarget, beneficiary)); // from periods: 10 => 3
     });
 

@@ -12,8 +12,13 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
-import {APOLLO, ATLAS, HERMES, APOLLO_DEPOSIT, ATLAS1_STAKE, ATLAS2_STAKE, ATLAS3_STAKE} from '../../../src/consts';
+import {APOLLO, ATLAS, HERMES, APOLLO_DEPOSIT, ATLAS1_STAKE, ATLAS2_STAKE, ATLAS3_STAKE} from '../../../src/constants';
 import {ONE} from '../../helpers/consts';
+import BN from 'bn.js';
+
+const ATLAS1_STAKE_BN = new BN(ATLAS1_STAKE);
+const ATLAS2_STAKE_BN = new BN(ATLAS2_STAKE);
+const ATLAS3_STAKE_BN = new BN(ATLAS3_STAKE);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -126,12 +131,12 @@ describe('KYC Whitelist Contract', () => {
   });
 
   it('throws if trying to whitelist Atlas with a stake not included in config', async () => {
-    await expect(addToWhitelist(other, ATLAS, ATLAS1_STAKE.sub(ONE))).to.be.eventually.rejected;
-    await expect(addToWhitelist(other, ATLAS, ATLAS1_STAKE.add(ONE))).to.be.eventually.rejected;
-    await expect(addToWhitelist(other, ATLAS, ATLAS2_STAKE.sub(ONE))).to.be.eventually.rejected;
-    await expect(addToWhitelist(other, ATLAS, ATLAS2_STAKE.add(ONE))).to.be.eventually.rejected;
-    await expect(addToWhitelist(other, ATLAS, ATLAS3_STAKE.sub(ONE))).to.be.eventually.rejected;
-    await expect(addToWhitelist(other, ATLAS, ATLAS3_STAKE.add(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS1_STAKE_BN.sub(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS1_STAKE_BN.add(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS2_STAKE_BN.sub(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS2_STAKE_BN.add(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS3_STAKE_BN.sub(ONE))).to.be.eventually.rejected;
+    await expect(addToWhitelist(other, ATLAS, ATLAS3_STAKE_BN.add(ONE))).to.be.eventually.rejected;
   });
 
   it('throws if whitelisting the address that is already whitelisted', async () => {
