@@ -13,18 +13,37 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 
 const PORT = 8777;
-const WEB3_RPC = `http://localhost:${PORT}`;
-const WEB3_NODEPRIVATEKEY = '0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696';
+
+const adminUser = {
+  privateKey: '0x0437b4d845f99fd40155fe63379c961d93c1f4fbd1eb42b75328f7baf754ab48',
+  address: '0x2C72a45FC3A7A48C9dB1ab40c31df0f58c27fcdb'
+};
+
+const apolloUser = {
+  privateKey: '0x8deeb01a11f8dab88027556125eadc7110caa0d938464c5ac33bcd4e2b79c7de',
+  address: '0xD09f1d3855159bDBC3D2a292e3960786C701Eb0B'
+};
+
+const atlasUser = {
+  privateKey: '0x1572c318193427f664b526e2c1710f441122f5929acb0dcc5054fbed1f5c966f',
+  address: '0xD392341D72e1B2B3b6dE02604e7913A60D7B21Ae'
+};
+
+const hermesUser = {
+  privateKey: '0x2c6d57b31ca7c55ca76417d16650136ae625d37ef2824553eb52153dd86a91e7',
+  address: '0xC04c60FB732724a287f147f8bfC1cEF108a0C45b'
+};
 
 const printError = (message) => console.error('\x1b[31m', message, '\x1b[0m');
 
-const startServer = () => new Promise((resolve, reject) => {
+const startServer = (privateKeys) => new Promise((resolve, reject) => {
+  const accountRequests = privateKeys.map((value) => ({
+    balance: '10000000000000000000000000000000000',
+    secretKey: value
+  }));
   const server = Ganache.server({
     accounts: [
-      {
-        balance: '10000000000000000000000000000000000',
-        secretKey: WEB3_NODEPRIVATEKEY
-      },
+      ...accountRequests,
       ...Array(9).fill({balance: '10000000000000000000000000000000000'})
     ]
   });
@@ -39,7 +58,7 @@ const startServer = () => new Promise((resolve, reject) => {
 
 const execute = (command, env = {}) => new Promise((resolve, reject) => {
   console.log(command);
-  exec(command, {env: {...process.env, WEB3_RPC, WEB3_NODEPRIVATEKEY, ...env}, cwd: __dirname},
+  exec(command, {env: {...process.env, ...env}, cwd: __dirname},
     (error, stdout, stderr) => {
       if (stderr) {
         printError(stderr);
@@ -54,18 +73,62 @@ const execute = (command, env = {}) => new Promise((resolve, reject) => {
   );
 });
 
-startServer()
+const envForUser = (account) => ({
+  WEB3_RPC: `http://localhost:${PORT}`,
+  WEB3_NODEPRIVATEKEY: account.privateKey
+});
+
+startServer(
+  [
+    adminUser.privateKey,
+    apolloUser.privateKey,
+    atlasUser.privateKey,
+    hermesUser.privateKey
+  ])
   .then(async (server) => {
     try {
       const headEnvFile = `${__dirname}/test_cli_head.env`;
-      await execute(`yarn task deploy --save ${headEnvFile}`);
+      await execute(`yarn task deploy --save ${headEnvFile}`, envForUser(adminUser));
       const headConfig = dotenv.parse(fs.readFileSync(headEnvFile));
-      await execute(`yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 APOLLO 1000000000000000000`, headConfig);
-      await execute(`yarn task whitelist get 0xEbDEAC82424a053DFf79397862BD122F76798bC5`, headConfig);
-      await execute(`yarn task whitelist remove 0xEbDEAC82424a053DFf79397862BD122F76798bC5`, headConfig);
-      await execute(`yarn task whitelist add 0xEbDEAC82424a053DFf79397862BD122F76798bC5 APOLLO 1000000000000000000`, headConfig);
-      await execute(`yarn task onboard APOLLO 1000000000000000000`, headConfig);
-      await execute(`yarn task whitelist get 0xEbDEAC82424a053DFf79397862BD122F76798bC5`, headConfig);
+      const adminEnv = {
+        ...envForUser(adminUser),
+        ...headConfig
+      };
+      const apolloEnv = {
+        ...envForUser(apolloUser),
+        ...headConfig
+      };
+      const atlasEnv = {
+        ...envForUser(atlasUser),
+        ...headConfig
+      };
+      const hermesEnv = {
+        ...envForUser(hermesUser),
+        ...headConfig
+      };
+      console.log('------ test whitelisting ------');
+      await execute(`yarn task whitelist add ${apolloUser.address} APOLLO 250000`, adminEnv);
+      await execute(`yarn task whitelist get ${apolloUser.address}`, adminEnv);
+      await execute(`yarn task whitelist remove ${apolloUser.address}`, adminEnv);
+      await execute(`yarn task whitelist get ${apolloUser.address}`, adminEnv);
+
+      console.log('------ test APOLLO onboarding ------');
+      await execute(`yarn task whitelist add ${apolloUser.address} APOLLO 250000`, adminEnv);
+      await execute(`yarn task whitelist get ${apolloUser.address}`, adminEnv);
+      await execute(`yarn task onboard APOLLO 250000`, apolloEnv);
+      await execute(`yarn task whitelist get ${apolloUser.address}`, adminEnv);
+
+      console.log('------ test ATLAS onboarding ------');
+      await execute(`yarn task whitelist add ${atlasUser.address} ATLAS 75000`, adminEnv);
+      await execute(`yarn task whitelist get ${atlasUser.address}`, adminEnv);
+      await execute(`yarn task onboard ATLAS 75000 http://example.com`, atlasEnv);
+      await execute(`yarn task whitelist get ${atlasUser.address}`, adminEnv);
+
+      console.log('------ test HERMES onboarding ------');
+      await execute(`yarn task whitelist add ${hermesUser.address} HERMES 0`, adminEnv);
+      await execute(`yarn task whitelist get ${hermesUser.address}`, adminEnv);
+      await execute(`yarn task onboard HERMES http://example.com`, hermesEnv);
+      await execute(`yarn task whitelist get ${hermesUser.address}`, adminEnv);
     } catch (err) {
       printError(err);
     }

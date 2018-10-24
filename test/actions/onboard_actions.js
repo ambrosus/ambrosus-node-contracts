@@ -7,7 +7,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import BN from 'bn.js';
 import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
@@ -49,9 +48,9 @@ describe('Onboard Actions', () => {
   describe('onboardAsAtlas', async () => {
     const address = '0xABCD';
     const url = 'http://example.com';
-    const stakeAmount = new BN(12345);
+    const stakeAmount = '12345';
 
-    const callSubject = async () => onboardActions.onboardAsAtlas(address, url, stakeAmount);
+    const callSubject = async () => onboardActions.onboardAsAtlas(address, stakeAmount, url);
 
     beforeEach(() => {
       kycWhitelistWrapperStub.hasRoleAssigned.resolves(true);
@@ -77,7 +76,7 @@ describe('Onboard Actions', () => {
     it('works otherwise', async () => {
       await expect(callSubject()).to.eventually.be.fulfilled;
 
-      expect(rolesWrapperStub.onboardAsAtlas).to.have.been.calledOnceWith(address, url, stakeAmount);
+      expect(rolesWrapperStub.onboardAsAtlas).to.have.been.calledOnceWith(address, stakeAmount, url);
     });
   });
 
@@ -108,7 +107,7 @@ describe('Onboard Actions', () => {
 
   describe('onboardAsApollo', async () => {
     const address = '0xABCD';
-    const depositAmount = new BN(12345);
+    const depositAmount = '12345';
 
     const callSubject = async () => onboardActions.onboardAsApollo(address, depositAmount);
 
