@@ -14,7 +14,7 @@ import {
   ATLAS,
   ATLAS1_STAKE,
   HERMES
-} from '../src/consts';
+} from '../src/constants';
 import BN from 'bn.js';
 
 let web3;

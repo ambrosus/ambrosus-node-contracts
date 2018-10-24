@@ -12,7 +12,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
-import {APOLLO, ATLAS, APOLLO_DEPOSIT, ATLAS1_STAKE} from '../../../src/consts';
+import {APOLLO, ATLAS, APOLLO_DEPOSIT, ATLAS1_STAKE} from '../../../src/constants';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);

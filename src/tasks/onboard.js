@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import BN from 'bn.js';
 import TaskBase from './base/task_base';
-import {ATLAS, HERMES, APOLLO} from '../consts';
+import {ATLAS, HERMES, APOLLO} from '../constants';
 
 export default class OnboardingTask extends TaskBase {
   constructor(web3, nodeAddress, onboardActions) {

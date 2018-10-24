@@ -13,7 +13,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import WhitelistActions from '../../src/actions/whitelist_actions';
-import {ATLAS, HERMES} from '../../src/consts';
+import {ATLAS, HERMES} from '../../src/constants';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
