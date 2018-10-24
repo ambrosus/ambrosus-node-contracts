@@ -40,7 +40,8 @@ export default class WhitelistTask extends TaskBase {
   async add(address, role, requiredDeposit) {
     try {
       this.validateAddress(address);
-      await this.whitelistActions.add(address, ROLE_CODES[role], requiredDeposit);
+      const deposit = this.web3.utils.toWei(requiredDeposit, 'ether');
+      await this.whitelistActions.add(address, ROLE_CODES[role], deposit);
     } catch (err) {
       console.error(err.message);
     }
@@ -59,7 +60,7 @@ export default class WhitelistTask extends TaskBase {
     try {
       this.validateAddress(address);
       const whitelisted = await this.whitelistActions.get(address);
-      console.log(`Address ${address} is whitelisted for the ${ROLE_REVERSE_CODES[whitelisted.role]} role with ${whitelisted.requiredDeposit} deposit/stake`);
+      console.log(`Address ${address} is whitelisted for the ${ROLE_REVERSE_CODES[whitelisted.role]} role with ${this.web3.utils.fromWei(whitelisted.requiredDeposit, 'ether')} AMB deposit/stake`);
       const onboardedRole = await this.onboardActions.getOnboardedRole(address);
       console.log(`Address ${address} is onboarded for the ${ROLE_REVERSE_CODES[onboardedRole]} role`);
     } catch (err) {

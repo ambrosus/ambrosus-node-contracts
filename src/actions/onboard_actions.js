@@ -8,7 +8,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {ATLAS, HERMES, APOLLO, ROLE_REVERSE_CODES} from '../constants';
-import BN from 'bn.js';
 
 export default class OnboardActions {
   constructor(kycWhitelistWrapper, rolesWrapper) {
@@ -16,11 +15,11 @@ export default class OnboardActions {
     this.rolesWrapper = rolesWrapper;
   }
 
-  async onboardAsAtlas(address, url, stakeAmount) {
+  async onboardAsAtlas(address, stakeAmount, url) {
     await this.validateWhitelistedForRole(address, ATLAS);
     await this.validateStakeDepositAmount(address, stakeAmount);
     const roles = this.rolesWrapper;
-    await roles.onboardAsAtlas(address, url, stakeAmount);
+    await roles.onboardAsAtlas(address, stakeAmount, url);
   }
 
   async onboardAsHermes(address, url) {
@@ -51,9 +50,9 @@ export default class OnboardActions {
 
   async validateStakeDepositAmount(address, amount) {
     const kyc = this.kycWhitelistWrapper;
-    const requiredAmount = new BN(await kyc.getRequiredDeposit(address));
+    const requiredAmount = await kyc.getRequiredDeposit(address);
 
-    if (!requiredAmount.eq(amount)) {
+    if (requiredAmount !== amount) {
       throw new Error(`Address ${address} requires a deposit of ${requiredAmount} but ${amount} provided.`);
     }
   }

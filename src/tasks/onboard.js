@@ -7,7 +7,6 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import BN from 'bn.js';
 import TaskBase from './base/task_base';
 import {ATLAS, HERMES, APOLLO} from '../constants';
 
@@ -50,8 +49,8 @@ export default class OnboardingTask extends TaskBase {
       this.printUsage();
       return;
     }
-    const stakeAmount = this.web3.utils.toWei(new BN(stakeAmountInEth));
-    await this.onboardActions.onboardAsAtlas(this.nodeAddress, url, stakeAmount);
+    const stakeAmount = this.web3.utils.toWei(stakeAmountInEth, 'ether');
+    await this.onboardActions.onboardAsAtlas(this.nodeAddress, stakeAmount, url);
   }
 
   async onboardHermes([url]) {
@@ -69,7 +68,7 @@ export default class OnboardingTask extends TaskBase {
       this.printUsage();
       return;
     }
-    const depositAmount = new BN(depositAmountInEth);
+    const depositAmount = this.web3.utils.toWei(depositAmountInEth, 'ether');
     await this.onboardActions.onboardAsApollo(this.nodeAddress, depositAmount);
   }
 
