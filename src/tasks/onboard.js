@@ -32,6 +32,7 @@ export default class OnboardingTask extends TaskBase {
       default:
         console.error(`Unknown role: ${role}`);
         this.printUsage();
+        process.exit(1);
     }
   }
 
@@ -47,6 +48,7 @@ export default class OnboardingTask extends TaskBase {
     if (!url || !stakeAmountInEth) {
       console.error(`Invalid parameters for Atlas onboarding`);
       this.printUsage();
+      process.exit(1);
       return;
     }
     const stakeAmount = this.web3.utils.toWei(stakeAmountInEth, 'ether');
@@ -57,6 +59,7 @@ export default class OnboardingTask extends TaskBase {
     if (!url) {
       console.error(`Invalid parameters for Hermes onboarding`);
       this.printUsage();
+      process.exit(1);
       return;
     }
     await this.onboardActions.onboardAsHermes(this.nodeAddress, url);
@@ -66,6 +69,7 @@ export default class OnboardingTask extends TaskBase {
     if (!depositAmountInEth) {
       console.error(`Invalid parameters for Apollo onboarding`);
       this.printUsage();
+      process.exit(1);
       return;
     }
     const depositAmount = this.web3.utils.toWei(depositAmountInEth, 'ether');

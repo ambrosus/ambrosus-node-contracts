@@ -28,6 +28,7 @@ export default class WhitelistTask extends TaskBase {
       await this.get(args[1]);
     } else {
       console.error('Unknown sub-command, use: yarn task whitelist [add/remove] [address] [role] [requiredDeposit]');
+      process.exit(1);
     }
   }
 
@@ -44,6 +45,7 @@ export default class WhitelistTask extends TaskBase {
       await this.whitelistActions.add(address, ROLE_CODES[role], deposit);
     } catch (err) {
       console.error(err.message);
+      process.exit(1);
     }
   }
 
@@ -53,6 +55,7 @@ export default class WhitelistTask extends TaskBase {
       await this.whitelistActions.remove(address);
     } catch (err) {
       console.error(err.message);
+      process.exit(1);
     }
   }
 
@@ -65,6 +68,7 @@ export default class WhitelistTask extends TaskBase {
       console.log(`Address ${address} is onboarded for the ${ROLE_REVERSE_CODES[onboardedRole]} role`);
     } catch (err) {
       console.error(err.message);
+      process.exit(1);
     }
   }
 
