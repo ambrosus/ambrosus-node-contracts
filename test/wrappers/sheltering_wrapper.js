@@ -47,6 +47,32 @@ describe('Sheltering Wrapper', () => {
     });
   });
 
+  describe('getBundleUploader', () => {
+    let getBundleUploaderStub;
+    let getBundleUploaderCallStub;
+    const bundleId = 'bundle';
+
+    beforeEach(async () => {
+      getBundleUploaderStub = sinon.stub();
+      getBundleUploaderCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getBundleUploader: getBundleUploaderStub.returns({
+            call: getBundleUploaderCallStub.resolves(4)
+          })
+        }
+      };
+      shelteringWrapper = new ShelteringWrapper({}, {}, null);
+      sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await shelteringWrapper.getBundleUploader(bundleId)).to.equal(4);
+      expect(getBundleUploaderStub).to.be.calledOnceWith(bundleId);
+      expect(getBundleUploaderCallStub).to.be.calledOnce;
+    });
+  });
+
   describe('getBundleUploadBlockNumber', () => {
     let getBundleUploadBlockNumberStub;
     let igetBundleUploadBlockNumberCallStub;
