@@ -33,7 +33,8 @@ describe('Whitelist Actions', () => {
       add: sinon.stub(),
       remove: sinon.stub(),
       getRoleAssigned: sinon.stub(),
-      getRequiredDeposit: sinon.stub()
+      getRequiredDeposit: sinon.stub(),
+      transferOwnership: sinon.stub()
     };
     whitelistActions = new WhitelistActions(kycWhitelistWrapperStub);
   });
@@ -130,6 +131,25 @@ describe('Whitelist Actions', () => {
 
       expect(kycWhitelistWrapperStub.getRoleAssigned).to.have.been.calledOnceWith(targetAddress);
       expect(kycWhitelistWrapperStub.getRequiredDeposit).to.have.been.calledOnceWith(targetAddress);
+    });
+  });
+
+  describe('transferOwnership', () => {
+    const newOwnerAddress = '0x12345';
+    beforeEach(() => {
+      kycWhitelistWrapperStub.defaultAddress = ownerAddress;
+      kycWhitelistWrapperStub.getOwner.resolves(ownerAddress);
+    });
+
+    it(`calls wrapper's transferOwnership method`, async () => {
+      await whitelistActions.transferOwnership(newOwnerAddress);
+      expect(kycWhitelistWrapperStub.transferOwnership).to.be.calledOnceWith(newOwnerAddress);
+    });
+
+    it('throws when caller is not an owner', async () => {
+      kycWhitelistWrapperStub.getOwner.resolves('0x420');
+      await expect(whitelistActions.transferOwnership(newOwnerAddress)).to.be.rejected;
+      expect(kycWhitelistWrapperStub.getOwner).to.be.called;
     });
   });
 });

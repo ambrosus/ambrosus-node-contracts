@@ -29,7 +29,8 @@ describe('Fees Actions', () => {
       getOwner: sinon.stub(),
       defaultAddress,
       setBaseUploadFee: sinon.stub(),
-      feeForUpload: sinon.stub()
+      feeForUpload: sinon.stub(),
+      transferOwnership: sinon.stub()
     };
 
     feesActions = new FeesActions(feesWrapperMock);
@@ -56,6 +57,26 @@ describe('Fees Actions', () => {
       feesWrapperMock.feeForUpload.resolves(exampleFee);
       expect(await feesActions.feeForUpload(storagePeriods)).to.equal(exampleFee);
       expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
+    });
+  });
+
+  describe('transferOwnership', () => {
+    const newOwnerAddress = '0x12345';
+
+    beforeEach(() => {
+      feesWrapperMock.defaultAddress = defaultAddress;
+      feesWrapperMock.getOwner.resolves(defaultAddress);
+    });
+
+    it(`calls wrapper's transferOwnership method`, async () => {
+      await feesActions.transferOwnership(newOwnerAddress);
+      expect(feesWrapperMock.transferOwnership).to.be.calledOnceWith(newOwnerAddress);
+    });
+
+    it('throws when caller is not an owner', async () => {
+      feesWrapperMock.getOwner.resolves('0x420');
+      await expect(feesActions.transferOwnership(newOwnerAddress)).to.be.rejected;
+      expect(feesWrapperMock.getOwner).to.be.called;
     });
   });
 });

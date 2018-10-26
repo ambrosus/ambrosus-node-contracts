@@ -251,4 +251,53 @@ describe('KYC Whitelist Wrapper', () => {
       expect(getOwnerCallStub).to.be.calledOnce;
     });
   });
+
+  describe('transferOwnership', () => {
+    let transferOwnershipStub;
+    let transferOwnershipSendStub;
+    let contractMock;
+    before(async () => {
+      transferOwnershipStub = sinon.stub();
+      transferOwnershipSendStub = sinon.stub();
+      contractMock = {
+        methods: {
+          transferOwnership: transferOwnershipStub.returns({
+            send: transferOwnershipSendStub.resolves(),
+            encodeABI: encodeAbiStub
+          })
+        }
+      };
+    });
+
+    afterEach(() => {
+      resetHistory(contractMock);
+    });
+
+    describe('sendTransactions = true', () => {
+      before(() => {
+        kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, true);
+        sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('calls contract method with correct arguments', async () => {
+        await kycWhitelistWrapper.transferOwnership(exampleAddress);
+        expect(transferOwnershipStub).to.be.calledWith(exampleAddress);
+        expect(transferOwnershipSendStub).to.be.calledOnceWith({from: defaultAddress});
+      });
+    });
+
+    describe('sendTransactions = false', () => {
+      before(() => {
+        kycWhitelistWrapper = new KycWhitelistWrapper({}, {}, defaultAddress, false);
+        sinon.stub(kycWhitelistWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('returns data', async () => {
+        expect(await kycWhitelistWrapper.transferOwnership(exampleAddress)).to.equal(exampleData);
+        expect(transferOwnershipStub).to.be.calledWith(exampleAddress);
+        expect(transferOwnershipSendStub).to.be.not.called;
+        expect(encodeAbiStub).to.be.calledOnceWith();
+      });
+    });
+  });
 });
