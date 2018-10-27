@@ -55,7 +55,7 @@ export default class WhitelistActions {
 
     const owner = await kycWhitelist.getOwner();
     if (owner !== kycWhitelist.defaultAddress) {
-      throw new Error('You need to be the owner of the Fees contract to be able to transfer ownership');
+      throw new Error('You need to be the owner of the KycWhitelist contract to be able to transfer ownership');
     }
 
     return kycWhitelist.transferOwnership(newOwnerAddress);
