@@ -10,34 +10,21 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "./Context.sol";
+import "../Consensus/ConstructorOwnable.sol";
 
 
-contract Head {
-    address public owner;
+contract Head is ConstructorOwnable {
     Context public context;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event ContextChange(Context context);
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "only the owner is allowed to call this method");
-        _;
-    }
 
     /**
     @notice Constructor
     @param _owner the owner of this contract.
     */
-    constructor(address _owner) public {
-        owner = _owner;
+    constructor(address _owner) public ConstructorOwnable(_owner) {
     }
-
-    function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "the new owner must not be null");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
-    }
-    
+        
     function setContext(Context _context) public onlyOwner {
         context = _context;
         emit ContextChange(context);

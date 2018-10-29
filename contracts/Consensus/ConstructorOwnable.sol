@@ -23,6 +23,7 @@ contract ConstructorOwnable {
     @param _owner the owner of this contract, that can add/remove validators.
     */
     constructor(address _owner) public {
+        require(_owner != address(0));
         owner = _owner;
     }
 

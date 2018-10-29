@@ -38,6 +38,7 @@ describe('Validator set contract', () => {
   let superUser;
   let newOwner;
   let exampleValidatorAddresses;
+  let additionalValidator;
 
   before(async () => {
     web3 = await createWeb3();
@@ -45,6 +46,7 @@ describe('Validator set contract', () => {
     exampleValidatorAddresses = Array(3)
       .fill(null)
       .map(() => web3.eth.accounts.create().address);
+    additionalValidator = web3.eth.accounts.create().address;
   });
 
   describe('constructor', () => {
@@ -65,14 +67,31 @@ describe('Validator set contract', () => {
     });
   });
 
+  describe('constructor - fail safes', () => {
+    // NOTE: web3 incorrectly reports a failed deployment as successful, as a workaround we try to call a different method which should then fail.
+    const zeroAddress = '0x0000000000000000000000000000000000000000';
+    it('throws if no initial validators are provided', async () => {
+      const contract = await deploy(web3, deployer, owner, [], superUser);
+      await expect(getValidators(contract)).to.eventually.be.rejected;
+    });
+
+    it('throws if super user  is 0x0', async () => {
+      const contract = await deploy(web3, deployer, owner, exampleValidatorAddresses, zeroAddress);
+      await expect(getValidators(contract)).to.eventually.be.rejected;
+    });
+
+    it('throws if owner is 0x0', async () => {
+      const contract = await deploy(web3, deployer, zeroAddress, exampleValidatorAddresses, superUser);
+      await expect(getValidators(contract)).to.eventually.be.rejected;
+    });
+  });
+
   describe('adding a validator', () => {
     let contract;
-    let validator;
     let snapshotId;
 
     before(async () => {
-      contract = await deploy(web3, deployer, owner, [], superUser);
-      [validator] = exampleValidatorAddresses;
+      contract = await deploy(web3, deployer, owner, exampleValidatorAddresses, superUser);
     });
 
     beforeEach(async () => {
@@ -84,29 +103,29 @@ describe('Validator set contract', () => {
     });
 
     it('adds the new validator to the pendingValidators list', async () => {
-      await expect(addValidator(contract, owner, validator)).to.be.fulfilled;
-      expect(await getPendingValidators(contract)).to.have.same.members([validator]);
+      await expect(addValidator(contract, owner, additionalValidator)).to.be.fulfilled;
+      expect(await getPendingValidators(contract)).to.have.same.members([...exampleValidatorAddresses, additionalValidator]);
     });
 
     it(`doesn't change the validator list`, async () => {
-      await expect(addValidator(contract, owner, validator)).to.be.fulfilled;
-      expect(await getValidators(contract)).to.have.be.empty;
+      await expect(addValidator(contract, owner, additionalValidator)).to.be.fulfilled;
+      expect(await getValidators(contract)).to.have.same.members(exampleValidatorAddresses);
     });
 
     it(`fails on duplicate insertions`, async () => {
-      expect(await getPendingValidators(contract)).to.have.lengthOf(0);
-      await expect(addValidator(contract, owner, validator)).to.be.fulfilled;
-      expect(await getPendingValidators(contract)).to.have.same.members([validator]);
-      await expect(addValidator(contract, owner, validator)).to.be.rejected;
-      expect(await getPendingValidators(contract)).to.have.same.members([validator]);
+      expect(await getPendingValidators(contract)).to.have.same.members(exampleValidatorAddresses);
+      await expect(addValidator(contract, owner, additionalValidator)).to.be.fulfilled;
+      expect(await getPendingValidators(contract)).to.have.same.members([...exampleValidatorAddresses, additionalValidator]);
+      await expect(addValidator(contract, owner, additionalValidator)).to.be.rejected;
+      expect(await getPendingValidators(contract)).to.have.same.members([...exampleValidatorAddresses, additionalValidator]);
     });
 
     it('emits a InitiateChange event', async () => {
-      expect(await addValidator(contract, owner, validator)).to.emitEvent('InitiateChange');
+      expect(await addValidator(contract, owner, additionalValidator)).to.emitEvent('InitiateChange');
     });
 
     it(`can't be invoked by non-owner`, async () => {
-      await expect(addValidator(contract, otherUser, validator)).to.be.rejected;
+      await expect(addValidator(contract, otherUser, additionalValidator)).to.be.rejected;
     });
   });
 
@@ -163,15 +182,13 @@ describe('Validator set contract', () => {
     let contract;
 
     before(async () => {
-      contract = await deploy(web3, deployer, owner, [], superUser);
+      contract = await deploy(web3, deployer, owner, exampleValidatorAddresses, superUser);
     });
 
     // Note: according to spec the finalizeChange method is called internally by Parity using the special SUPER_USER address.
     // As we can't use it our selfs for tests, we inject a different address using the constructor
     it('copies the contents of the pendingValidators array into the validators array', async () => {
-      for (const address of exampleValidatorAddresses) {
-        await addValidator(contract, owner, address);
-      }
+      await addValidator(contract, owner, additionalValidator);
       expect(await getPendingValidators(contract)).to.not.have.same.members(await getValidators(contract));
 
       await expect(finalizeChange(contract, superUser)).to.be.fulfilled;
@@ -189,7 +206,7 @@ describe('Validator set contract', () => {
     let snapshotId;
 
     before(async () => {
-      contract = await deploy(web3, deployer, owner, [], superUser);
+      contract = await deploy(web3, deployer, owner, exampleValidatorAddresses, superUser);
     });
 
     beforeEach(async () => {

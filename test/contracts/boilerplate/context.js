@@ -10,7 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import deploy from '../../helpers/deploy';
+import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
+import ContextJson from '../../../src/contracts/Context.json';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -20,30 +21,53 @@ const {expect} = chai;
 describe('Context Contract', () => {
   let web3;
   let context;
-  let fees;
-  let catalogue;
-  let accounts;
+  let deployer;
+  let trustedAddress;
+  let catalogueAddress;
+  let untrustedAddress;
+
+  const deploy = async (sender, trustedAddresses, catalogue) => deployContract(web3, ContextJson, [trustedAddresses, catalogue], {from: sender});
+  const isInternalToContext = async (contract, address) => contract.methods.isInternalToContext(address).call();
+  const catalogue = async (contract) => contract.methods.catalogue().call();
 
   before(async () => {
-    ({web3, fees, catalogue, context} = await deploy({
-      contracts: {
-        fees: true,
-        catalogue: true
-      }
-    }));
-    accounts = await web3.eth.getAccounts();
+    web3 = await createWeb3();
+    [deployer, trustedAddress, catalogueAddress, untrustedAddress] = await web3.eth.getAccounts();
   });
 
-  it('stores the catalogue provided in the constructor', async () => {
-    const storedCatalogue = await context.methods.catalogue().call();
-    expect(storedCatalogue).to.equal(catalogue.options.address);
+  describe('constructor', () => {
+    it('stores the catalogue provided in the constructor', async () => {
+      context = await expect(deploy(deployer, [trustedAddress], catalogueAddress)).to.be.eventually.fulfilled;
+      expect(await catalogue(context)).to.equal(catalogueAddress);
+    });
   });
 
-  it('isInternalToContext returns true if address is known', async () => {
-    expect(await context.methods.isInternalToContext(fees.options.address).call()).to.equal(true);
+  describe('constructor - fail safes', () => {
+    // NOTE: web3 incorrectly reports a failed deployment as successful, as a workaround we try to call a different method which should then fail.
+    const zeroAddress = '0x0000000000000000000000000000000000000000';
+
+    it('throws if no catalogue is provided', async () => {
+      context = await deploy(deployer, [trustedAddress], zeroAddress);
+      await expect(catalogue(context)).to.be.eventually.rejected;
+    });
+
+    it('throws if trusted addresses are empty', async () => {
+      context = await deploy(deployer, [], catalogueAddress);
+      await expect(catalogue(context)).to.be.eventually.rejected;
+    });
   });
 
-  it('isInternalToContext returns false only if such address is unknown', async () => {
-    expect(await context.methods.isInternalToContext(accounts[1]).call()).to.equal(false);
+  describe('isInternalToContext', () => {
+    before(async () => {
+      context = await deploy(deployer, [trustedAddress], catalogueAddress);
+    });
+
+    it('returns true if address is known', async () => {
+      expect(await isInternalToContext(context, trustedAddress)).to.equal(true);
+    });
+
+    it('returns false only if such address is unknown', async () => {
+      expect(await isInternalToContext(context, untrustedAddress)).to.equal(false);
+    });
   });
 });

@@ -23,7 +23,7 @@ describe('ValidatorProxy', () => {
   };
 
   const deployContracts = async (web3, sender, initialValidators, initialBeneficiaries) => {
-    const superUser = '0x0000000000000000000000000000000000000000';
+    const superUser = '0x000000000000000000000000000000000000000F';
     ({validatorProxy, validatorSet, blockRewards} = await deploy({
       web3,
       contracts: {

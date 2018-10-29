@@ -32,10 +32,11 @@ describe('Base Contract', () => {
   let calledContract;
   let context;
   let deployer;
+  let catalogue;
 
   before(async () => {
     web3 = await createWeb3();
-    [deployer] = await web3.eth.getAccounts();
+    [deployer, catalogue] = await web3.eth.getAccounts();
 
     head = await deployContract(web3, HeadJson, [deployer], {from: deployer});
     calledContract = await deployContract(web3, CalledContractJson, [head.options.address], {from: deployer});
@@ -43,7 +44,7 @@ describe('Base Contract', () => {
   });
 
   const deployContext = async (web3, sender, head, injected) => {
-    context = await deployContract(web3, ContextJson, [injected, '0x0'], {from: sender});
+    context = await deployContract(web3, ContextJson, [injected, catalogue], {from: sender});
     await head.methods.setContext(context.options.address).send({from: sender});
     return context;
   };
@@ -56,5 +57,15 @@ describe('Base Contract', () => {
   it('onlyContextInternalCalls decorated methods can not be called by contracts that are not part of the context', async () => {
     await deployContext(web3, deployer, head, [calledContract.options.address]);
     await expect(callerContract.methods.callOtherContract().call()).to.be.eventually.rejected;
+  });
+
+  describe('constructor - fail saves', async () => {
+    // NOTE: web3 incorrectly reports a failed deployment as successful, as a workaround we try to call a different method which should then fail.
+    const zeroAddress = '0x0000000000000000000000000000000000000000';
+
+    it('throws if owner is zero', async () => {
+      const head2 = await deployContract(web3, HeadJson, [zeroAddress], {from: deployer});
+      await expect(head2.methods.context().call()).to.be.eventually.rejected;
+    });
   });
 });

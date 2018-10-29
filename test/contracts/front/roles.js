@@ -53,6 +53,7 @@ describe('Roles Contract', () => {
   let atlas2;
   let atlas3;
   let hermes;
+  let initialApollo;
 
   const addToWhitelist = async (sender, address, role, deposit) => kycWhitelist.methods.add(address, role, deposit).send({from: sender});
   const onboardAsAtlas = async (url, sender, value) => roles.methods.onboardAsAtlas(url).send({from: sender, value});
@@ -78,7 +79,7 @@ describe('Roles Contract', () => {
 
   before(async () => {
     web3 = await createWeb3();
-    [owner, apollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
+    [owner, apollo, initialApollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
     ({roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards} = await deploy({
       web3,
       sender : owner,
@@ -99,7 +100,7 @@ describe('Roles Contract', () => {
       params: {
         validatorSet: {
           owner,
-          initialValidators : [],
+          initialValidators : [initialApollo],
           superUser: owner
         },
         blockRewards: {
