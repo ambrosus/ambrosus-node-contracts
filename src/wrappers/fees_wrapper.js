@@ -19,6 +19,11 @@ export default class FeesWrapper extends ContractWrapper {
     return contract.methods.owner().call();
   }
 
+  async transferOwnership(newOwnerAddress) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.transferOwnership(newOwnerAddress));
+  }
+
   async setBaseUploadFee(fee) {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.setBaseUploadFee(fee));

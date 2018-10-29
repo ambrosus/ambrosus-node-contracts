@@ -13,6 +13,15 @@ export default class FeesActions {
     this.feesWrapper = feesWrapper;
   }
 
+  async transferOwnership(newOwnerAddress) {
+    const owner = await this.feesWrapper.getOwner();
+    if (owner !== this.feesWrapper.defaultAddress) {
+      throw new Error('You need to be the owner of the Fees contract to be able to transfer ownership');
+    }
+
+    return this.feesWrapper.transferOwnership(newOwnerAddress);
+  }
+
   async setBaseUploadFee(fee) {
     const owner = await this.feesWrapper.getOwner();
     if (owner !== this.feesWrapper.defaultAddress) {

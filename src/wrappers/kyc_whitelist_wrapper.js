@@ -19,6 +19,11 @@ export default class KycWhitelistWrapper extends ContractWrapper {
     return contract.methods.owner().call();
   }
 
+  async transferOwnership(newOwnerAddress) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.transferOwnership(newOwnerAddress));
+  }
+
   async add(address, role, requiredDeposit) {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.add(address, role, requiredDeposit));

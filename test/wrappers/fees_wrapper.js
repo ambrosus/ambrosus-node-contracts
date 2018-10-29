@@ -19,6 +19,9 @@ const {expect} = chai;
 
 describe('Fees Wrapper', () => {
   let feesWrapper;
+  const defaultAddress = '0x6789';
+  const exampleData = '0xda7a';
+  const encodeAbiStub = sinon.stub().resolves(exampleData);
 
   describe('getOwner', () => {
     let getOwnerStub;
@@ -46,14 +49,62 @@ describe('Fees Wrapper', () => {
     });
   });
 
+  describe('transferOwnership', () => {
+    const exampleAddress = '0xdeadbeef';
+    let transferOwnershipStub;
+    let transferOwnershipSendStub;
+    let contractMock;
+
+    before(async () => {
+      transferOwnershipStub = sinon.stub();
+      transferOwnershipSendStub = sinon.stub();
+      contractMock = {
+        methods: {
+          transferOwnership: transferOwnershipStub.returns({
+            send: transferOwnershipSendStub.resolves(),
+            encodeABI: encodeAbiStub
+          })
+        }
+      };
+    });
+
+    afterEach(() => {
+      resetHistory(contractMock);
+    });
+
+    describe('sendTransactions = true', () => {
+      before(() => {
+        feesWrapper = new FeesWrapper({}, {}, defaultAddress, true);
+        sinon.stub(feesWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('calls contract method with correct arguments', async () => {
+        await feesWrapper.transferOwnership(exampleAddress);
+        expect(transferOwnershipStub).to.be.calledWith(exampleAddress);
+        expect(transferOwnershipSendStub).to.be.calledOnceWith({from: defaultAddress});
+      });
+    });
+
+    describe('sendTransactions = false', () => {
+      before(() => {
+        feesWrapper = new FeesWrapper({}, {}, defaultAddress, false);
+        sinon.stub(feesWrapper, 'contract').resolves(contractMock);
+      });
+
+      it('returns data', async () => {
+        expect(await feesWrapper.transferOwnership(exampleAddress)).to.equal(exampleData);
+        expect(transferOwnershipStub).to.be.calledWith(exampleAddress);
+        expect(transferOwnershipSendStub).to.be.not.called;
+        expect(encodeAbiStub).to.be.calledOnceWith();
+      });
+    });
+  });
+
   describe('setBaseUploadFee', () => {
     const exampleFee = '100';
     let contractMock;
     let setBaseUploadFeeStub;
     let setBaseUploadFeeSendStub;
-    const defaultAddress = '0x6789';
-    const exampleData = '0xda7a';
-    const encodeAbiStub = sinon.stub().resolves(exampleData);
 
     before(() => {
       setBaseUploadFeeStub = sinon.stub();

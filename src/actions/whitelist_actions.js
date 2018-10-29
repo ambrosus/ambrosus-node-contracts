@@ -49,4 +49,15 @@ export default class WhitelistActions {
       requiredDeposit: await kycWhitelist.getRequiredDeposit(address)
     };
   }
+
+  async transferOwnership(newOwnerAddress) {
+    const kycWhitelist = this.kycWhitelistWrapper;
+
+    const owner = await kycWhitelist.getOwner();
+    if (owner !== kycWhitelist.defaultAddress) {
+      throw new Error('You need to be the owner of the KycWhitelist contract to be able to transfer ownership');
+    }
+
+    return kycWhitelist.transferOwnership(newOwnerAddress);
+  }
 }
