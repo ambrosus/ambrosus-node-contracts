@@ -16,6 +16,7 @@ import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.
 import {ATLAS1_STAKE, HERMES, ATLAS} from '../../../src/constants';
 import {PAYOUT_PERIOD_UNIT} from '../../helpers/consts';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
+import BN from 'bn.js';
 
 chai.use(chaiAsPromised);
 chai.use(chaiEmitEvents);
@@ -27,9 +28,11 @@ describe('ShelteringTransfers Contract', () => {
   let shelteringTransfers;
   let sheltering;
   let rolesStore;
+  let challenges;
   let atlasStakeStore;
   let payoutsStore;
   let time;
+  let fees;
   let deployer;
   let hermes;
   let atlas;
@@ -52,6 +55,8 @@ describe('ShelteringTransfers Contract', () => {
   const getTransferredBundle = async (transferId) => shelteringTransfers.methods.getTransferredBundle(transferId).call();
   const getTransferId = async (donor, bundleId) => shelteringTransfers.methods.getTransferId(donor, bundleId).call();
 
+  const startChallenge = async (sheltererId, bundleId, challengerId, fee) => challenges.methods.start(sheltererId, bundleId).send({from: challengerId, value: fee});
+  const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
   const setRole = async (targetId, role, sender = deployer) => rolesStore.methods.setRole(targetId, role).send({from: sender});
   const addShelterer = async (bundleId, sheltererId, totalReward, sender = deployer) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from: sender, value: totalReward});
   const isSheltering = async (sheltererId, bundleId) => sheltering.methods.isSheltering(sheltererId, bundleId).call();
@@ -68,7 +73,7 @@ describe('ShelteringTransfers Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [deployer, hermes, atlas, notSheltering, notStaking] = await web3.eth.getAccounts();
-    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore} = await deploy({
+    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees} = await deploy({
       web3,
       sender: deployer,
       contracts: {
@@ -81,7 +86,10 @@ describe('ShelteringTransfers Contract', () => {
         atlasStakeStore: AtlasStakeStoreMockJson,
         payouts: true,
         payoutsStore: true,
-        rolesStore: true
+        rolesStore: true,
+        challenges: true,
+        challengesStore: true,
+        fees: true
       }
     }));
     await setTimestamp(bundleUploadTimestamp);
@@ -111,6 +119,12 @@ describe('ShelteringTransfers Contract', () => {
 
     it('Fails if identical transfer already exists', async () => {
       await expect(startTransfer(bundleId, atlas)).to.be.fulfilled;
+      await expect(startTransfer(bundleId, atlas)).to.be.eventually.rejected;
+    });
+
+    it('Fails if the donor is being challenged with this bundle', async () => {
+      const userChallengeFee = new BN(await getFeeForChallenge(storagePeriods));
+      await startChallenge(atlas, bundleId, notSheltering, userChallengeFee);
       await expect(startTransfer(bundleId, atlas)).to.be.eventually.rejected;
     });
 

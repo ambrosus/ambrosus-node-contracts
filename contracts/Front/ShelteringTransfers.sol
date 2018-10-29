@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
 import "../Storage/ShelteringTransfersStore.sol";
+import "../Front/Challenges.sol";
 
 
 contract ShelteringTransfers is Base {
@@ -27,10 +28,12 @@ contract ShelteringTransfers is Base {
 
     Sheltering private sheltering;
     ShelteringTransfersStore private shelteringTransfersStore;
+    Challenges private challenges;
 
-    constructor(Head _head, Sheltering _sheltering, ShelteringTransfersStore _shelteringTransfersStore) public Base(_head) {
+    constructor(Head _head, Sheltering _sheltering, ShelteringTransfersStore _shelteringTransfersStore, Challenges _challenges) public Base(_head) {
         sheltering = _sheltering;
         shelteringTransfersStore = _shelteringTransfersStore;
+        challenges = _challenges;
     }
 
     function() public payable {}
@@ -80,6 +83,7 @@ contract ShelteringTransfers is Base {
     function requireTransferPossible(address donorId, bytes32 bundleId) private view {
         require(sheltering.isSheltering(bundleId, donorId));
         require(!transferIsInProgress(getTransferId(donorId, bundleId)));
+        require(!challenges.challengeIsInProgress(challenges.getChallengeId(donorId, bundleId)));
     }
 
     function requireResolutionPossible(bytes32 transferId, bytes32 bundleId) private view {
