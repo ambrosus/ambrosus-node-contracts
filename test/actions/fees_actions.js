@@ -73,7 +73,7 @@ describe('Fees Actions', () => {
       expect(feesWrapperMock.transferOwnership).to.be.calledOnceWith(newOwnerAddress);
     });
 
-    it('throws when caller is not an owner', async () => {
+    it('throws if caller is not the current owner', async () => {
       feesWrapperMock.getOwner.resolves('0x420');
       await expect(feesActions.transferOwnership(newOwnerAddress)).to.be.rejected;
       expect(feesWrapperMock.getOwner).to.be.called;
