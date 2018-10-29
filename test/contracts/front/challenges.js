@@ -83,6 +83,7 @@ describe('Challenges Contract', () => {
     bundleStore.methods.addShelterer(bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp).send({from: context});
   const depositStake = async (stakerId, storageLimit, stakeValue) => atlasStakeStore.methods.depositStake(stakerId, storageLimit).send({from: context, value: stakeValue});
   const setStorageUsed = async (nodeId, storageUsed) => atlasStakeStore.methods.setStorageUsed(nodeId, storageUsed).send({from: context});
+  const setStake = async (nodeId, stake) => atlasStakeStore.methods.setStakeAmount(nodeId, stake).send({from: context});
   const setNumberOfStakers = async (numberOfStakers) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from: context});
   const addShelterer = async (bundleId, sheltererId, shelteringReward) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from: context, value: shelteringReward});
   const onboardAsAtlas = async(nodeUrl, nodeAddress, depositValue) => roles.methods.onboardAsAtlas(nodeUrl).send({from: nodeAddress, value: depositValue, gasPrice: '0'});
@@ -520,7 +521,7 @@ describe('Challenges Contract', () => {
       await expect(markChallengeAsExpired(challengeId, totalStranger)).to.be.fulfilled;
     });
 
-    it(`Penalized shelterer stops being shelterer`, async () => {
+    it(`Penalized shelterer stops being a shelterer`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
       await markChallengeAsExpired(challengeId, challenger);
       expect(await isSheltering(bundleId, resolver)).to.equal(false);
@@ -543,6 +544,14 @@ describe('Challenges Contract', () => {
       expect(await challengeIsInProgress(challengeId)).to.equal(true);
       await markChallengeAsExpired(challengeId, challenger);
       expect(await challengeIsInProgress(challengeId)).to.equal(false);
+    });
+
+    it('Challenge can be marked as expired even after the shelterer has lost all of the stake', async () => {
+      await setStake(uploader, 0);
+      await setTimestamp(now + challengeTimeout + 1);
+      expect(await getStake(uploader)).to.equal('0');
+      await expect(markChallengeAsExpired(challengeId, challenger)).to.be.fulfilled;
+      expect(await isSheltering(bundleId, resolver)).to.equal(false);
     });
   });
 
