@@ -146,7 +146,7 @@ describe('Whitelist Actions', () => {
       expect(kycWhitelistWrapperStub.transferOwnership).to.be.calledOnceWith(newOwnerAddress);
     });
 
-    it('throws when caller is not an owner', async () => {
+    it('throws if caller is not the current owner', async () => {
       kycWhitelistWrapperStub.getOwner.resolves('0x420');
       await expect(whitelistActions.transferOwnership(newOwnerAddress)).to.be.rejected;
       expect(kycWhitelistWrapperStub.getOwner).to.be.called;
