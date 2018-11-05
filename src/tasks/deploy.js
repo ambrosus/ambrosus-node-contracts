@@ -44,9 +44,14 @@ export default class DeployTask extends TaskBase {
       console.log('Reusing already deployed validator set contract.');
       predeployed.validatorSet = options.validatorSet;
     } else {
+      const initialValidators = Array(3)
+        .fill(null)
+        .map(() => this.web3.eth.accounts.create().address);
+      console.log(`Initial validators are: ${initialValidators}`);
+
       params.validatorSet = {
         owner: this.sender,
-        initialValidators : [],
+        initialValidators,
         superUser: this.sender
       };
     }
