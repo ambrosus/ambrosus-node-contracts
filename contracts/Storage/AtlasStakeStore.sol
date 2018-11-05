@@ -76,6 +76,7 @@ contract AtlasStakeStore is Base {
 
     function releaseStake(address node, address refundAddress) public onlyContextInternalCalls returns(uint) {
         require(isStaking(node));
+        require(refundAddress != address(0));
         require(!isShelteringAny(node));
         uint amount = stakes[node].amount;
         delete stakes[node];

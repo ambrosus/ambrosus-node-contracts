@@ -124,6 +124,9 @@ contract Roles is Base {
     function retire(address node, Consts.NodeType role) private {
         require(rolesStore.getRole(node) == role);
 
+        if (role == Consts.NodeType.ATLAS || role == Consts.NodeType.HERMES) {
+            rolesStore.setUrl(node, "");
+        }
         rolesStore.setRole(node, Consts.NodeType.NONE);
     }
 }

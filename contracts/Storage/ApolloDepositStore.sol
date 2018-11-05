@@ -24,6 +24,7 @@ contract ApolloDepositStore is Base {
     }
 
     function releaseDeposit(address apollo, address refundAddress) public onlyContextInternalCalls returns (uint) {
+        require(refundAddress != address(0));
         require(isDepositing(apollo));
         uint amountToTransfer = deposits[apollo];
         deposits[apollo] = 0;

@@ -73,6 +73,10 @@ describe('Apollo Deposit Contract', () => {
     await expect(releaseDeposit(from, other, other)).to.be.eventually.rejected;
   });
 
+  it('can not release deposit if the refund address equals 0x0', async () => {
+    await expect(releaseDeposit(from, '0x0000000000000000000000000000000000000000', from)).to.be.eventually.rejected;
+  });
+
   it('is not possible to release empty deposit', async () => {
     await expect(releaseDeposit()).to.be.eventually.rejected;
   });

@@ -42,11 +42,11 @@ contract Fees is Base, Ownable {
 
     function getFeeForUpload(uint64 storagePeriods) public view returns(uint) {
         require(storagePeriods > 0);
-        return baseUploadFee * storagePeriods;
+        return baseUploadFee.mul(storagePeriods);
     }
 
     function getFeeForChallenge(uint64 storagePeriods) public view returns (uint) {
-        return getFeeForUpload(storagePeriods) / UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO;
+        return getFeeForUpload(storagePeriods).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
     }
 
     function calculateFeeSplit(uint value) public pure returns (uint challengeFee, uint validatorsFee) {
@@ -58,7 +58,7 @@ contract Fees is Base, Ownable {
         if ((time.currentTimestamp() - lastPenaltyTime) > config.PENALTY_ESCALATION_TIMEOUT()) {
             return (nominalStake.div(config.PENALTY_DIVIDER()), 1);
         } else {
-            return (nominalStake.div(config.PENALTY_DIVIDER()).mul(penaltiesCount.safePow2()), penaltiesCount + 1);
+            return (nominalStake.mul(penaltiesCount.safePow2()).div(config.PENALTY_DIVIDER()), penaltiesCount + 1);
         }
     }
 }
