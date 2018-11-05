@@ -88,7 +88,6 @@ contract AtlasStakeStore is Base {
         public onlyContextInternalCalls returns(uint)
     {
         require(isStaking(shelterer));
-        require(stakes[shelterer].amount > 0);
 
         uint slashedAmount;
         if (penaltyAmount > stakes[shelterer].amount) {

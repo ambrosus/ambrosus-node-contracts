@@ -24,4 +24,8 @@ contract AtlasStakeStoreMock is AtlasStakeStore {
     function setNumberOfStakers(uint32 _numberOfStakers) public {
         numberOfStakers = _numberOfStakers;
     }
+
+    function setStakeAmount(address node, uint amount) public {
+        stakes[node].amount = amount;
+    }
 }

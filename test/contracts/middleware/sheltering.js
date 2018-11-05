@@ -279,7 +279,8 @@ describe('Sheltering Contract', () => {
       await penalizeShelterer(atlas, other);
       await penalizeShelterer(atlas, other);
       expect(await getStake(other)).to.eq('0');
-      await expect(penalizeShelterer(atlas, other)).to.be.rejected;
+      await penalizeShelterer(atlas, other);
+      expect(await getStake(other)).to.eq('0');
     });
 
     it('penalties are updated after slashing', async () => {
