@@ -17,6 +17,9 @@ contract Context {
     Catalogue public catalogue;
 
     constructor(address[] _trustedAddresses, Catalogue _catalogue) public {
+        require(_trustedAddresses.length > 0);
+        require(_catalogue != address(0));
+
         for (uint i = 0; i < _trustedAddresses.length; i++) {
             trustedAddresses[_trustedAddresses[i]] = true;
         }

@@ -39,6 +39,8 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
     @param _superUser SUPER_USER address value injectable for test purpouses. Under normal operation it should be set to 2^160-2 as defined in EIP96 
     */
     constructor(address _owner, address[] _initialValidators, address _superUser) public ConstructorOwnable(_owner) {
+        require(_initialValidators.length > 0);
+        require(_superUser != address(0));
         superUser = _superUser;
         validators = _initialValidators;
         pendingValidators = _initialValidators;
