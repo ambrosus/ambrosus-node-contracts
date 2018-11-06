@@ -125,8 +125,15 @@ contract Sheltering is Base {
         return cap;
     }
 
-    function getBundleShelterersCount(bytes32 bundleId) public view returns (uint) {
-        return bundleStore.getShelterers(bundleId).length;
+    function getBundleShelterersCount(bytes32 bundleId) public view returns (uint32) {
+        address[] memory shelterers = bundleStore.getShelterers(bundleId);
+        uint32 counter = 0;
+        for (uint i = 0; i < shelterers.length; i++) {
+            if (isSheltering(bundleId, shelterers[i])) {
+                counter++;
+            }
+        }
+        return counter;
     }
 
     function getShelteringExpirationDate(bytes32 bundleId, address sheltererId) public view returns (uint64) {

@@ -20,6 +20,8 @@ contract Uploads is Base {
 
     using SafeMath for uint;
 
+    uint8 constant SYSTEM_CHALLENGES_COUNT = 7;
+
     Config private config;
     Fees private fees;
     Sheltering private sheltering;
@@ -43,8 +45,14 @@ contract Uploads is Base {
         sheltering.storeBundle(bundleId, msg.sender, storagePeriods);
         (uint challengeFee, uint validatorsFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
-        challenges.startForSystem.value(challengeFee)(msg.sender, bundleId, 7);
+        challenges.startForSystem.value(challengeFee)(msg.sender, bundleId, SYSTEM_CHALLENGES_COUNT);
 
         emit BundleUploaded(bundleId, storagePeriods);
+    }
+
+    function triggerSystemChallenges(bytes32 bundleId) public payable {
+        require(msg.sender == sheltering.getBundleUploader(bundleId));
+        require(sheltering.getBundleShelterersCount(bundleId) == 0);
+        challenges.startForSystem.value(msg.value)(msg.sender, bundleId, SYSTEM_CHALLENGES_COUNT);
     }
 }

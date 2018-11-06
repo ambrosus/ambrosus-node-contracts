@@ -93,7 +93,7 @@ contract ChallengesStore is Base {
         challenges[challengeId].activeCount = challenges[challengeId].activeCount.sub(1).castTo8();
     }
 
-    function getActiveChallengesOnBundleCount(bytes32 bundleId) public view onlyContextInternalCalls returns (uint32) {
+    function getActiveChallengesOnBundleCount(bytes32 bundleId) public view onlyContextInternalCalls returns(uint32) {
         return activeChallengesOnBundleCount[bundleId];
     }
 

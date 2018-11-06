@@ -64,8 +64,8 @@ describe('Challenges Contract', () => {
   const startChallengeForSystem = async (uploaderId, bundleId, challengeCount, challengerId, fee) => challenges.methods.startForSystem(uploaderId, bundleId, challengeCount).send({from: challengerId, value: fee});
   const resolveChallenge = async (challengeId, resolverId) => challenges.methods.resolve(challengeId).send({from: resolverId});
   const markChallengeAsExpired = async (challengeId, marker) => challenges.methods.markAsExpired(challengeId).send({from: marker, gasPrice: '0'});
-  const getCooldown = async () => challenges.methods.getCooldown().call();
 
+  const getCooldown = async () => challenges.methods.getCooldown().call();
   const getChallengeId = async (sheltererId, bundleId) => challenges.methods.getChallengeId(sheltererId, bundleId).call();
   const getChallengeSequenceNumber = async (challengeId) => challenges.methods.getChallengeSequenceNumber(challengeId).call();
   const getChallengeCreationTime = async (challengeId) => challenges.methods.getChallengeCreationTime(challengeId).call();

@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 
 contract Config {
     uint constant public CHALLENGE_DURATION = 3 days;
+
     uint constant public PENALTY_ESCALATION_TIMEOUT = 90 days;
     uint constant public FINISH_SHELTERING_REWARD_SPLIT = 22;
     uint constant public PENALTY_DIVIDER = 100;

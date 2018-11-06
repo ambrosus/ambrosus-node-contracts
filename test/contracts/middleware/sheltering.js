@@ -415,6 +415,14 @@ describe('Sheltering Contract', () => {
       await addShelterer(bundleId, atlas, totalReward);
       expect(await getBundleShelterersCount(bundleId)).to.equal('1');
     });
+
+    it('does not include shelterers with expired sheltering', async () => {
+      await injectBundleWithBundleStore(bundleId, hermes, storagePeriods, bundleUploadTimestamp);
+      await injectSheltererWithBundleStore(bundleId, other, totalReward, 0, bundleUploadTimestamp);
+      expect(await getBundleShelterersCount(bundleId)).to.equal('1');
+      await setTimestamp('2500000000');
+      expect(await getBundleShelterersCount(bundleId)).to.equal('0');
+    });
   });
 
   describe('getShelteringExpirationDate', () => {
