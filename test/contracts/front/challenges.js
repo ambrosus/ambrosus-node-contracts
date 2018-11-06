@@ -452,6 +452,11 @@ describe('Challenges Contract', () => {
       await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.rejected;
     });
 
+    it('Fails to resolve if resolver has no stake', async () => {
+      await setStake(resolver, '0');
+      await expect(resolveChallenge(challengeId, resolver)).to.be.rejected;
+    });
+
     it('Decreases active count', async () => {
       const systemFee = userChallengeFee.mul(new BN('3'));
       await startChallengeForSystem(uploader, bundleId, 3, context, systemFee);
