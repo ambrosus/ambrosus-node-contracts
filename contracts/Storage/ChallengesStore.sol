@@ -10,9 +10,16 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../Lib/SafeMathExtensions.sol";
 
 
 contract ChallengesStore is Base {
+
+    using SafeMath for uint8;
+    using SafeMath for uint32;
+    using SafeMathExtensions for uint;
+
     struct Challenge {
         address sheltererId;
         bytes32 bundleId;
@@ -24,6 +31,7 @@ contract ChallengesStore is Base {
     }
 
     mapping(bytes32 => Challenge) challenges;
+    mapping(bytes32 => uint32) activeChallengesOnBundleCount;
     uint nextChallengeSequenceNumber;
 
     constructor(Head _head) public Base(_head){
@@ -44,10 +52,13 @@ contract ChallengesStore is Base {
     {
         bytes32 challengeId = getChallengeId(sheltererId, bundleId);
         challenges[challengeId] = Challenge(sheltererId, bundleId, challengerId, feePerChallenge, creationTime, activeCount, sequenceNumber);
+        activeChallengesOnBundleCount[bundleId] = activeChallengesOnBundleCount[bundleId].add(activeCount).castTo32();
         return challengeId;
     }
 
     function remove(bytes32 challengeId) public onlyContextInternalCalls {
+        activeChallengesOnBundleCount[challenges[challengeId].bundleId] = activeChallengesOnBundleCount[
+            challenges[challengeId].bundleId].sub(challenges[challengeId].activeCount).castTo32();
         delete challenges[challengeId];
     }
 
@@ -77,10 +88,16 @@ contract ChallengesStore is Base {
     }
 
     function decreaseActiveCount(bytes32 challengeId) public onlyContextInternalCalls {
-        challenges[challengeId].activeCount--;
+        activeChallengesOnBundleCount[challenges[challengeId].bundleId] = activeChallengesOnBundleCount[
+            challenges[challengeId].bundleId].sub(1).castTo32();
+        challenges[challengeId].activeCount = challenges[challengeId].activeCount.sub(1).castTo8();
     }
 
-    function getNextChallengeSequenceNumber() public view onlyContextInternalCalls returns(uint) {
+    function getActiveChallengesOnBundleCount(bytes32 bundleId) public view onlyContextInternalCalls returns (uint32) {
+        return activeChallengesOnBundleCount[bundleId];
+    }
+
+    function getNextChallengeSequenceNumber() public view onlyContextInternalCalls returns (uint) {
         return nextChallengeSequenceNumber;
     }
 

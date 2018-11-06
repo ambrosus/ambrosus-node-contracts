@@ -48,6 +48,7 @@ describe('ChallengesStoreContract', () => {
   const getChallengeId = (sheltererId, bundleId) =>
     challengesStore.methods.getChallengeId(sheltererId, bundleId).call();
   const getNextChallengeSequenceNumber = () => challengesStore.methods.getNextChallengeSequenceNumber().call();
+  const getActiveChallengesOnBundleCount = (bundleId) => challengesStore.methods.getActiveChallengesOnBundleCount(bundleId).call();
   const incrementNextChallengeSequenceNumber = (amount, sender = deployer) => challengesStore.methods.incrementNextChallengeSequenceNumber(amount).send({from: sender});
 
   before(async () => {
@@ -91,6 +92,15 @@ describe('ChallengesStoreContract', () => {
       ).to.equal(exampleChallengeId);
     });
 
+    it('should increase active challenges count for the bundle by activeCount', async () => {
+      expect(await getActiveChallengesOnBundleCount(exampleBundleId)).to.equal('0');
+      await store();
+      expect(await getActiveChallengesOnBundleCount(exampleBundleId)).to.equal(activeCount);
+      await challengesStore.methods.store(otherAddress, exampleBundleId, challenger, feePerChallenge, creationTime,
+        '4', sequenceNumber).send({from: deployer});
+      expect(await getActiveChallengesOnBundleCount(exampleBundleId)).to.equal('10');
+    });
+
     it('should be context internal', async () => {
       await expect(store(otherAddress)).to.be.rejected;
     });
@@ -111,6 +121,12 @@ describe('ChallengesStoreContract', () => {
       expect(removedChallenge[4]).to.equal('0');
       expect(removedChallenge[5]).to.equal('0');
       expect(removedChallenge[6]).to.equal('0');
+    });
+
+    it('should decrease active challenges count for the bundle by its activeCount', async () => {
+      expect(await getActiveChallengesOnBundleCount(exampleBundleId)).to.equal(activeCount);
+      await remove(exampleChallengeId);
+      expect(await getActiveChallengesOnBundleCount(exampleBundleId)).to.equal('0');
     });
 
     it('should be context internal', async () => {
@@ -158,6 +174,11 @@ describe('ChallengesStoreContract', () => {
       await decreaseActiveCount(exampleChallengeId);
       const storedChallenge = await getChallenge(exampleChallengeId);
       expect(storedChallenge[5]).to.equal('5');
+    });
+
+    it('should decrease active challenges count for the bundle by 1', async () => {
+      await decreaseActiveCount(exampleChallengeId);
+      expect(await getActiveChallengesOnBundleCount(exampleBundleId)).to.equal('5');
     });
 
     it('should be context internal', async () => {

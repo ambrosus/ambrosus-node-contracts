@@ -207,6 +207,11 @@ contract Challenges is Base {
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
         require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId)));
         require(sheltering.isSheltering(bundleId, sheltererId));
+
+        uint shelteringCap = sheltering.getShelteringCap();
+        uint shelterersCount = sheltering.getBundleShelterersCount(bundleId);
+        uint challengesOnBundleCount = challengesStore.getActiveChallengesOnBundleCount(bundleId);
+        require(shelteringCap > shelterersCount.add(challengesOnBundleCount));
     }
 
     function validateSystemChallenge(address uploaderId, bytes32 bundleId) private view {
