@@ -22,6 +22,9 @@ const {expect} = chai;
 
 
 describe('SafeMathExtensions', () => {
+  const MAX_UINT8 = new BN(2)
+    .pow(new BN(8))
+    .sub(new BN(1));
   const MAX_UINT32 = new BN(2)
     .pow(new BN(32))
     .sub(new BN(1));
@@ -91,6 +94,18 @@ describe('SafeMathExtensions', () => {
     await expect(safeMathExtension.methods.mod(2, 0).call()).to.be.eventually.rejected;
     await expect(safeMathExtension.methods.mod(10, 0).call()).to.be.eventually.rejected;
     await expect(safeMathExtension.methods.mod(MAX_UINT256, 0).call()).to.be.eventually.rejected;
+  });
+
+  describe('castTo8', () => {
+    it('works for numbers that fit into 8 bits', async () => {
+      const result = await safeMathExtension.methods.castTo8(MAX_UINT8).call();
+      expect(result).to.equal(MAX_UINT8.toString());
+    });
+
+    it(`throws for numbers that dont fit into 8 bits`, async () => {
+      const promise = safeMathExtension.methods.castTo8(MAX_UINT8.add(ONE)).call();
+      await expect(promise).to.be.eventually.rejected;
+    });
   });
 
   describe('castTo32', () => {

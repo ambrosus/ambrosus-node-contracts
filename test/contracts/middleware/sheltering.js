@@ -16,6 +16,7 @@ import deploy from '../../helpers/deploy';
 import {ATLAS, HERMES} from '../../../src/constants';
 import {STORAGE_PERIOD_UNIT, PAYOUT_PERIOD_UNIT} from '../../helpers/consts';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
+import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.json';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -47,6 +48,10 @@ describe('Sheltering Contract', () => {
     sheltering.methods.getShelteringExpirationDate(bundleId, shelterer).call();
   const getBundleUploadBlockNumber = async (bundleId) =>
     sheltering.methods.getBundleUploadBlockNumber(bundleId).call();
+  const getShelteringCap = async () =>
+    sheltering.methods.getShelteringCap().call();
+  const getBundleShelterersCount = async (bundleId) =>
+    sheltering.methods.getBundleShelterersCount(bundleId).call();
   const storeBundle = async (bundleId, uploader, storagePeriods, sender = deployer) =>
     sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
   const addShelterer = async (bundleId, shelterer, amount, sender = deployer) =>
@@ -73,6 +78,7 @@ describe('Sheltering Contract', () => {
   const getCurrentPayoutPeriod = async () => time.methods.currentPayoutPeriod().call();
   const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
   const setTimestamp = async (timestamp, sender = deployer) => time.methods.setCurrentTimestamp(timestamp).send({from: sender});
+  const setNumberOfStakers = async (numberOfStakers) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from: deployer});
 
 
   const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount.toString());
@@ -88,7 +94,7 @@ describe('Sheltering Contract', () => {
         rolesStore: true,
         bundleStore: true,
         sheltering: true,
-        atlasStakeStore: true,
+        atlasStakeStore: AtlasStakeStoreMockJson,
         payouts: true,
         payoutsStore: true,
         config: true,
@@ -382,6 +388,32 @@ describe('Sheltering Contract', () => {
     it('is context internal', async () => {
       await expect(transferSheltering(bundleId, atlas, atlas2, other)).to.be.eventually.rejected;
       await expect(transferSheltering(bundleId, atlas, atlas2, deployer)).to.be.eventually.fulfilled;
+    });
+  });
+
+  describe('getShelteringCap', () => {
+    it('returns threshold when total number of atlases * 80% is below threshold', async () => {
+      await setNumberOfStakers(5);
+      expect(await getShelteringCap()).to.equal('8');
+      await setNumberOfStakers(11);
+      expect(await getShelteringCap()).to.equal('8');
+    });
+
+    it('returns total number of atlases * 80% if it is above or equals threshold', async () => {
+      await setNumberOfStakers(12);
+      expect(await getShelteringCap()).to.equal('9');
+      await setNumberOfStakers(147);
+      expect(await getShelteringCap()).to.equal('117'); // ⌊147 * 0.8⌋
+    });
+  });
+
+  describe('getBundleShelterersCount', () => {
+    it('returns the number of nodes sheltering the bundle', async () => {
+      expect(await getBundleShelterersCount(bundleId)).to.equal('0');
+      await storeBundle(bundleId, hermes, storagePeriods);
+      expect(await getBundleShelterersCount(bundleId)).to.equal('0');
+      await addShelterer(bundleId, atlas, totalReward);
+      expect(await getBundleShelterersCount(bundleId)).to.equal('1');
     });
   });
 

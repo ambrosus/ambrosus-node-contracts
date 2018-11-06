@@ -12,6 +12,15 @@ pragma solidity ^0.4.23;
 
 library SafeMathExtensions {
     /**
+     * @dev Casts to uint8, throws on overflow.
+     */
+    function castTo8(uint256 a) internal pure returns (uint8 c) {
+        c = uint8(a);
+        assert(a == c);
+        return c;
+    }
+
+    /**
      * @dev Casts to uint32, throws on overflow.
      */
     function castTo32(uint256 a) internal pure returns (uint32 c) {
@@ -40,10 +49,10 @@ library SafeMathExtensions {
 
     function safePow2(uint exponent) internal pure returns (uint256) {
         require(exponent < 256);
-        return 2 ** exponent;        
+        return 2 ** exponent;
     }
 
     function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a % b; //modulo is overflow safe   
+        return a % b; //modulo is overflow safe
     }
 }

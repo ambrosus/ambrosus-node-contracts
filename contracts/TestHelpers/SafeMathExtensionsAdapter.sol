@@ -12,6 +12,10 @@ contract SafeMathExtensionsAdapter {
         return SafeMathExtensions.safePow2(exponent);
     }
 
+    function castTo8(uint256 a) public pure returns (uint8) {
+        return SafeMathExtensions.castTo8(a);
+    }
+
     function castTo32(uint256 a) public pure returns (uint32) {
         return SafeMathExtensions.castTo32(a);
     }

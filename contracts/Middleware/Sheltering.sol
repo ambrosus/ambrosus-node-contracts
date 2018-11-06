@@ -34,6 +34,7 @@ contract Sheltering is Base {
     Payouts private payouts;
     RolesStore private rolesStore;
     Fees private fees;
+    Config private config;
 
     constructor(
         Head _head,
@@ -42,7 +43,8 @@ contract Sheltering is Base {
         BundleStore _bundleStore,
         Payouts _payouts,
         RolesStore _rolesStore,
-        Fees _fees)
+        Fees _fees,
+        Config _config)
         public Base(_head)
     {
         time = _time;
@@ -51,6 +53,7 @@ contract Sheltering is Base {
         payouts = _payouts;
         rolesStore = _rolesStore;
         fees = _fees;
+        config = _config;
     }
 
     function() public payable {}
@@ -111,6 +114,19 @@ contract Sheltering is Base {
 
         uint refund = this.removeShelterer(bundleId, donorId, this);
         addSheltererInternal(bundleId, recipientId, refund, currentPeriod.sub(donorBeginPeriod).castTo64());
+    }
+
+    function getShelteringCap() public view returns (uint) {
+        uint atlasesCount = atlasStakeStore.getNumberOfStakers();
+        uint cap = atlasesCount.mul(config.SHELTERING_CAP_ATLASES_PERCENTAGE()).div(100);
+        if (cap < config.SHELTERING_CAP_ATLAS_NUMBER_THRESHOLD()) {
+            return config.SHELTERING_CAP_ATLAS_NUMBER_THRESHOLD();
+        }
+        return cap;
+    }
+
+    function getBundleShelterersCount(bytes32 bundleId) public view returns (uint) {
+        return bundleStore.getShelterers(bundleId).length;
     }
 
     function getShelteringExpirationDate(bytes32 bundleId, address sheltererId) public view returns (uint64) {
