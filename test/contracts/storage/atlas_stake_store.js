@@ -209,6 +209,10 @@ describe('AtlasStakeStore Contract', () => {
       await expect(releaseStake(shelterer, otherAddress)).to.be.eventually.rejected;
     });
 
+    it('can not release a stake if the refund address equals 0x0', async () => {
+      await expect(releaseStake(shelterer, '0x0000000000000000000000000000000000000000')).to.be.eventually.rejected;
+    });
+
     it('can not release a stake if is not staking', async () => {
       await expect(releaseStake(otherAddress, otherAddress)).to.be.eventually.rejected;
     });

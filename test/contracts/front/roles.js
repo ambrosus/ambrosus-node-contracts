@@ -256,6 +256,11 @@ describe('Roles Contract', () => {
         expect(await getRole(atlas1)).to.equal('0');
       });
 
+      it('removes assigned url', async () => {
+        await retireAtlas(atlas1);
+        expect(await getUrl(atlas1)).to.equal('');
+      });
+
       it('returns stake to the node', async () => {
         const balanceChange = await observeBalanceChange(web3, atlas1, () => retireAtlas(atlas1));
         expect(balanceChange.toString()).to.equal(ATLAS1_STAKE);
@@ -300,6 +305,11 @@ describe('Roles Contract', () => {
       it('removes assigned role', async () => {
         await retireHermes(hermes);
         expect(await getRole(hermes)).to.equal('0');
+      });
+
+      it('removes assigned url', async () => {
+        await retireHermes(hermes);
+        expect(await getUrl(hermes)).to.equal('');
       });
 
       it('throws if not a hermes', async () => {

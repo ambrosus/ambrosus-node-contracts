@@ -79,7 +79,7 @@ contract Challenges is Base {
             uploaderId,
             bundleId,
             0x0,
-            msg.value / challengesCount,
+            msg.value.div(challengesCount),
             time.currentTimestamp(),
             challengesCount,
             challengesStore.getNextChallengeSequenceNumber()
@@ -121,7 +121,7 @@ contract Challenges is Base {
             refundAddress = challengerId;
         }
 
-        uint feeToReturn = feePerChallenge * activeCount;
+        uint feeToReturn = feePerChallenge.mul(activeCount);
         emit ChallengeTimeout(sheltererId, bundleId, challengeId, penalty);
         challengesStore.remove(challengeId);
         challengesStore.transferFee(this, feeToReturn);
@@ -141,7 +141,7 @@ contract Challenges is Base {
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns (bool) {
         uint64 creationTime = getChallengeCreationTime(challengeId);
-        return time.currentTimestamp() > creationTime + config.CHALLENGE_DURATION();
+        return time.currentTimestamp() > creationTime.add(config.CHALLENGE_DURATION());
     }
 
     function getChallengedShelterer(bytes32 challengeId) public view returns (address) {

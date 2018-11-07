@@ -96,7 +96,7 @@ contract PayoutsStore is Base {
         GrantPeriodChange storage grantChangeEnd = grantPeriodChanges[beneficiaryId][lastPeriod];
         grantChangeEnd.decrease = grantChangeEnd.decrease.sub(payoutPerPeriod);
 
-        refund = payoutPerPeriod * calculateNumberOfPeriodsToRefund(nextWithdrawPeriod[beneficiaryId], firstPeriod, lastPeriod);
+        refund = payoutPerPeriod.mul(calculateNumberOfPeriodsToRefund(nextWithdrawPeriod[beneficiaryId], firstPeriod, lastPeriod));
         refundAddress.transfer(refund);
     }
 
