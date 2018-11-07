@@ -37,6 +37,7 @@ contract Fees is Base, Ownable {
     }
 
     function setBaseUploadFee(uint fee) public onlyOwner {
+        require(fee > 0 && fee.mod(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO) == 0);
         baseUploadFee = fee;
     }
 
