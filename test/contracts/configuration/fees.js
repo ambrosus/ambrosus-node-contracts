@@ -68,8 +68,16 @@ describe('Fees Contract', () => {
     expect(new BN(basicFee).gt(new BN(0))).to.be.true;
   });
 
+  it(`Fee can't be set to 0`, async () => {
+    await expect(changeBaseFee('0', from)).to.be.eventually.rejected;
+  });
+
+  it(`Fee needs to be correctly dividable`, async () => {
+    await expect(fees.methods.setBaseUploadFee('1').send({from})).to.be.eventually.rejected;
+  });
+
   it('Only an owner can modify basic fee', async () => {
-    await expect(changeBaseFee('2'), other).to.be.eventually.rejected;
+    await expect(changeBaseFee('20', other)).to.be.eventually.rejected;
   });
 
   describe('Challenge fees', () => {
