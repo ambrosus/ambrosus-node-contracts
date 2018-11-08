@@ -123,11 +123,15 @@ startServer(
       await execute(`yarn task whitelist get ${atlasUser.address}`, adminEnv);
       await execute(`yarn task onboard ATLAS 75000 http://example.com`, atlasEnv);
       await execute(`yarn task whitelist get ${atlasUser.address}`, adminEnv);
+      await execute(`yarn task nodeService setUrl http://amazon.com`, atlasEnv);
+      await execute(`yarn task whitelist get ${atlasUser.address}`, adminEnv);
 
       console.log('------ test HERMES onboarding ------');
       await execute(`yarn task whitelist add ${hermesUser.address} HERMES 0`, adminEnv);
       await execute(`yarn task whitelist get ${hermesUser.address}`, adminEnv);
       await execute(`yarn task onboard HERMES http://example.com`, hermesEnv);
+      await execute(`yarn task whitelist get ${hermesUser.address}`, adminEnv);
+      await execute(`yarn task nodeService setUrl http://google.com`, hermesEnv);
       await execute(`yarn task whitelist get ${hermesUser.address}`, adminEnv);
     } catch (err) {
       printError(err);

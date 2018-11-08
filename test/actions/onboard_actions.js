@@ -32,17 +32,10 @@ describe('Onboard Actions', () => {
       onboardAsAtlas: sinon.stub(),
       onboardAsHermes: sinon.stub(),
       onboardAsApollo: sinon.stub(),
-      onboardedRole: sinon.stub()
+      onboardedRole: sinon.stub(),
+      nodeUrl: sinon.stub()
     };
     onboardActions = new OnboardActions(kycWhitelistWrapperStub, rolesWrapperStub);
-  });
-
-  afterEach(() => {
-    kycWhitelistWrapperStub.hasRoleAssigned.reset();
-    kycWhitelistWrapperStub.getRequiredDeposit.reset();
-    rolesWrapperStub.onboardAsAtlas.reset();
-    rolesWrapperStub.onboardAsHermes.reset();
-    rolesWrapperStub.onboardAsApollo.reset();
   });
 
   describe('onboardAsAtlas', async () => {
@@ -146,12 +139,19 @@ describe('Onboard Actions', () => {
 
     beforeEach(() => {
       rolesWrapperStub.onboardedRole.resolves(HERMES);
+      rolesWrapperStub.nodeUrl.resolves('http://example.com');
     });
 
     it('proxies the call to the wrapper', async () => {
-      await expect(callSubject()).to.eventually.be.fulfilled.and.equal(HERMES);
+      await expect(callSubject()).to.eventually.be.fulfilled.and.deep.equal(
+        {
+          role: HERMES,
+          url: 'http://example.com'
+        }
+      );
 
       expect(rolesWrapperStub.onboardedRole).to.have.been.calledOnceWith(targetAddress);
+      expect(rolesWrapperStub.nodeUrl).to.have.been.calledOnceWith(targetAddress);
     });
   });
 });

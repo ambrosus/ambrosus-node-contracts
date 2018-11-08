@@ -23,6 +23,8 @@ import OnboardActions from '../actions/onboard_actions';
 import UploadActions from '../actions/upload_actions';
 import config from '../../config/config';
 import ShelteringWrapper from '../wrappers/sheltering_wrapper';
+import NodeServiceTask from './node_service';
+import NodeServiceActions from '../actions/node_service';
 
 const runTask = async () => {
   const web3 = await createWeb3();
@@ -38,6 +40,7 @@ const runTask = async () => {
   const whitelistActions = new WhitelistActions(kycWhitelistWrapper);
   const onboardActions = new OnboardActions(kycWhitelistWrapper, rolesWrapper);
   const uploadActions = new UploadActions(uploadsWrapper, feesWrapper, shelteringWrapper);
+  const nodeServiceActions = new NodeServiceActions(rolesWrapper);
 
   const list = new TaskList();
   const args = process.argv.slice(2);
@@ -45,6 +48,7 @@ const runTask = async () => {
   list.add('onboard', new OnboardingTask(web3, nodeAddress, onboardActions));
   list.add('whitelist', new WhitelistTask(web3, whitelistActions, onboardActions));
   list.add('upload', new UploadTask(uploadActions));
+  list.add('nodeService', new NodeServiceTask(nodeAddress, nodeServiceActions));
 
   await list.run(args[0], args.slice(1));
 };
