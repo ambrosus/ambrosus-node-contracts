@@ -145,13 +145,7 @@ contract Sheltering is Base {
     }
 
     function isSheltering(bytes32 bundleId, address sheltererId) public view returns (bool) {
-        address[] memory shelterers = bundleStore.getShelterers(bundleId);
-        for (uint i = 0; i < shelterers.length; i++) {
-            if (shelterers[i] == sheltererId) {
-                return getShelteringExpirationDate(bundleId, sheltererId) > time.currentTimestamp();
-            }
-        }
-        return false;
+        return getShelteringExpirationDate(bundleId, sheltererId) > time.currentTimestamp();
     }
 
     function addSheltererInternal(bytes32 bundleId, address shelterer, uint reward, uint64 payoutPeriodReduction) private {

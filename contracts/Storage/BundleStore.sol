@@ -25,6 +25,7 @@ contract BundleStore is Base {
         uint64 shelteringStartDate;
         uint64 shelteringPayoutPeriodsReduction;
         uint totalShelteringReward;
+        uint32 index;
     }
 
     struct Bundle {
@@ -95,37 +96,36 @@ contract BundleStore is Base {
     public onlyContextInternalCalls
     {
         require(bundleExists(bundleId));
-
-        for (uint i = 0; i < bundles[bundleId].shelterers.length; i++) {
-            require(bundles[bundleId].shelterers[i] != shelterer);
-        }
+        require(bundles[bundleId].shelterings[shelterer].shelteringStartDate == 0);
 
         bundles[bundleId].shelterers.push(shelterer);
-        bundles[bundleId].shelterings[shelterer].shelteringStartDate = currentTimestamp;
-        bundles[bundleId].shelterings[shelterer].totalShelteringReward = totalReward;
-        bundles[bundleId].shelterings[shelterer].shelteringPayoutPeriodsReduction = payoutPeriodsReduction;
+        bundles[bundleId].shelterings[shelterer] = Sheltering(
+            currentTimestamp,
+            payoutPeriodsReduction,
+            totalReward,
+            // solium-disable-next-line indentation
+            (bundles[bundleId].shelterers.length - 1).castTo32()
+        );
         emit SheltererAdded(bundleId, shelterer);
     }
 
-    function removeSheltererByIndex(bytes32 bundleId, uint index) public onlyContextInternalCalls {
+    function removeSheltererByIndex(bytes32 bundleId, uint32 index) public onlyContextInternalCalls {
         require(bundleExists(bundleId));
         require(bundles[bundleId].shelterers.length > index);
 
         delete bundles[bundleId].shelterings[bundles[bundleId].shelterers[index]];
         bundles[bundleId].shelterers[index] = bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
+        bundles[bundleId].shelterings[bundles[bundleId].shelterers[index]].index = index;
         delete bundles[bundleId].shelterers[bundles[bundleId].shelterers.length - 1];
         bundles[bundleId].shelterers.length -= 1;
     }
 
     function removeShelterer(bytes32 bundleId, address shelterer) public onlyContextInternalCalls {
         require(bundleExists(bundleId));
-
-        for (uint i = 0; i < bundles[bundleId].shelterers.length; i++) {
-            if (bundles[bundleId].shelterers[i] == shelterer) {
-                removeSheltererByIndex(bundleId, i);
-                emit SheltererRemoved(bundleId, shelterer);
-                return;
-            }
+        if (bundles[bundleId].shelterings[shelterer].shelteringStartDate == 0) {
+            return;
         }
+        removeSheltererByIndex(bundleId, bundles[bundleId].shelterings[shelterer].index);
+        emit SheltererRemoved(bundleId, shelterer);
     }
 }

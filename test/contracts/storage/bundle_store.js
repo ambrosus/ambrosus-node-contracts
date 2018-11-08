@@ -25,6 +25,7 @@ describe('BundleStore Contract', () => {
   let deployer;
   let targetUser;
   let otherUser;
+  let otherUsers;
   let bundleStore;
   let bundleId;
   let snapshotId;
@@ -38,7 +39,7 @@ describe('BundleStore Contract', () => {
   const getUploadBlockNumber = async (bundleId) => bundleStore.methods.getUploadBlockNumber(bundleId).call();
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
   const getStoragePeriodsCount = async (bundleId) => bundleStore.methods.getStoragePeriodsCount(bundleId).call();
-  const getShelteringStartDate = async (bundleId) => bundleStore.methods.getShelteringStartDate(bundleId, otherUser).call();
+  const getShelteringStartDate = async (bundleId, shelterer = otherUser) => bundleStore.methods.getShelteringStartDate(bundleId, shelterer).call();
   const getTotalShelteringReward = async (bundleId, shelterer) => bundleStore.methods.getTotalShelteringReward(bundleId, shelterer).call();
   const addShelterer = async (bundleId, shelterer, totalReward, payoutPeriodsReduction, currentTimestamp, sender = deployer) =>
     bundleStore.methods.addShelterer(bundleId, shelterer, totalReward, payoutPeriodsReduction, currentTimestamp).send({from: sender});
@@ -47,7 +48,7 @@ describe('BundleStore Contract', () => {
 
   before(async () => {
     web3 = await createWeb3();
-    [deployer, targetUser, otherUser] = await web3.eth.getAccounts();
+    [deployer, targetUser, otherUser, ...otherUsers] = await web3.eth.getAccounts();
     ({bundleStore} = await deploy({
       web3,
       contracts: {
@@ -187,6 +188,33 @@ describe('BundleStore Contract', () => {
     it('cannot put new bundle with same id when all shelterers are removed', async () => {
       await removeShelterer(bundleId, otherUser);
       await expect(store(bundleId, targetUser, storagePeriods)).to.be.eventually.rejected;
+    });
+
+    describe('Removing multiple shelterers', () => {
+      const checkIfAllAddressesAreShelterers = async (addresses) => {
+        const shelterers = await getShelterers(bundleId);
+        return addresses.every((address) => shelterers.includes(address));
+      };
+
+      const addAllShelterers = async (addresses) => {
+        for (const address of addresses) {
+          await addShelterer(bundleId, address, totalReward, payoutPeriodsReduction, now);
+        }
+      };
+
+      beforeEach(async () => {
+        await addAllShelterers(otherUsers);
+      });
+
+      it('should correctly remove shelterers', async () => {
+        const shuffledShelterers = [otherUsers[4], otherUsers[1], otherUsers[2], otherUsers[6], otherUsers[0], otherUsers[5], otherUsers[3]];
+        for (let ind = 0; ind < shuffledShelterers.length; ind++) {
+          await removeShelterer(bundleId, shuffledShelterers[ind]);
+          expect(await checkIfAllAddressesAreShelterers(shuffledShelterers.slice(ind + 1))).to.be.true;
+          expect(await getShelteringStartDate(bundleId, shuffledShelterers[ind])).to.equal('0');
+        }
+        expect(await getShelterers(bundleId)).to.deep.equal([otherUser]);
+      });
     });
   });
 });
