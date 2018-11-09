@@ -77,6 +77,10 @@ describe('AtlasStakeStore Contract', () => {
   });
 
   describe('Deposit a stake', () => {
+    const examplePenaltyCount = '5';
+    const examplePenaltyTimestamp = '100000';
+    const exampleChallengeSequenceNumber = '10';
+
     it('can not stake if already staking', async () => {
       await depositStake(shelterer, 1, 1);
       await expect(depositStake(shelterer, 1, 2)).to.be.eventually.rejected;
@@ -100,6 +104,22 @@ describe('AtlasStakeStore Contract', () => {
       });
       expect(await getBalance(atlasStakeStore.options.address)).to.eq('2');
     });
+
+    it('depositing stake doesn’t change the penalty and cooldown data', async () => {
+      await depositStake(shelterer, 1, 2);
+      await setPenaltyHistory(shelterer, examplePenaltyCount, examplePenaltyTimestamp);
+      await updateLastChallengeResolvedSequenceNumber(shelterer, exampleChallengeSequenceNumber);
+
+      await releaseStake(shelterer, otherAddress);
+      await depositStake(shelterer, 1, 2);
+
+      const penaltiesHistory = await getPenaltiesHistory(shelterer);
+      expect(penaltiesHistory.penaltiesCount).to.be.equal(examplePenaltyCount);
+      expect(penaltiesHistory.lastPenaltyTime).to.be.equal(examplePenaltyTimestamp);
+      expect(await getLastChallengeResolvedSequenceNumber(shelterer)).to.be.equal(exampleChallengeSequenceNumber);
+    });
+
+
 
     it('increments the number of stakers', async () => {
       expect(await getNumberOfStakers()).to.equal('0');
@@ -176,6 +196,9 @@ describe('AtlasStakeStore Contract', () => {
 
   describe('Release a stake', () => {
     const stake = 100;
+    const examplePenaltyCount = '5';
+    const examplePenaltyTimestamp = '100000';
+    const exampleChallengeSequenceNumber = '10';
 
     beforeEach(async () => {
       await depositStake(shelterer, 1, stake);
@@ -188,6 +211,18 @@ describe('AtlasStakeStore Contract', () => {
       expect(await isShelteringAny(shelterer)).to.be.false;
       expect(await getStorageUsed(shelterer)).to.be.eq('0');
       expect(await getStake(shelterer)).to.be.eq('0');
+    });
+
+    it('penalty and cooldown data is not erased', async () => {
+      await setPenaltyHistory(shelterer, examplePenaltyCount, examplePenaltyTimestamp);
+      await updateLastChallengeResolvedSequenceNumber(shelterer, exampleChallengeSequenceNumber);
+
+      await releaseStake(shelterer, otherAddress);
+
+      const penaltiesHistory = await getPenaltiesHistory(shelterer);
+      expect(penaltiesHistory.penaltiesCount).to.be.equal(examplePenaltyCount);
+      expect(penaltiesHistory.lastPenaltyTime).to.be.equal(examplePenaltyTimestamp);
+      expect(await getLastChallengeResolvedSequenceNumber(shelterer)).to.be.equal(exampleChallengeSequenceNumber);
     });
 
     it('release stake and send it back', async () => {

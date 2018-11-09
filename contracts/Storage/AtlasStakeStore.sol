@@ -70,7 +70,10 @@ contract AtlasStakeStore is Base {
     function depositStake(address _who, uint _storageLimit) public payable onlyContextInternalCalls {
         require(!isStaking(_who));
 
-        stakes[_who] = Stake(msg.value, msg.value, _storageLimit, 0, 0, 0, 0);
+        stakes[_who].initialAmount = msg.value;
+        stakes[_who].amount = msg.value;
+        stakes[_who].storageLimit = _storageLimit;
+        stakes[_who].storageUsed = 0;
         numberOfStakers = numberOfStakers.add(1).castTo32();
     }
 
@@ -79,7 +82,10 @@ contract AtlasStakeStore is Base {
         require(refundAddress != address(0));
         require(!isShelteringAny(node));
         uint amount = stakes[node].amount;
-        delete stakes[node];
+        stakes[node].initialAmount = 0;
+        stakes[node].amount = 0;
+        stakes[node].storageLimit = 0;
+        stakes[node].storageUsed = 0;
         numberOfStakers = numberOfStakers.sub(1).castTo32();
         refundAddress.transfer(amount);
         return amount;
