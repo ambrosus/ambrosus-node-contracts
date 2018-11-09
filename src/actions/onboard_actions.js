@@ -37,7 +37,10 @@ export default class OnboardActions {
 
   async getOnboardedRole(address) {
     const roles = this.rolesWrapper;
-    return roles.onboardedRole(address);
+    return {
+      role: await roles.onboardedRole(address),
+      url: await roles.nodeUrl(address)
+    };
   }
 
   async validateWhitelistedForRole(address, role) {
