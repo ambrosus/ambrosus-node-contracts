@@ -36,7 +36,7 @@ const hermesUser = {
 
 const printError = (message) => console.error('\x1b[31m', message, '\x1b[0m');
 
-const startServer = (privateKeys) => new Promise((resolve, reject) => {
+const startGanacheServer = (privateKeys) => new Promise((resolve, reject) => {
   const accountRequests = privateKeys.map((value) => ({
     balance: '10000000000000000000000000000000000',
     secretKey: value
@@ -78,7 +78,7 @@ const envForUser = (account) => ({
   WEB3_NODEPRIVATEKEY: account.privateKey
 });
 
-startServer(
+startGanacheServer(
   [
     adminUser.privateKey,
     apolloUser.privateKey,
@@ -86,6 +86,7 @@ startServer(
     hermesUser.privateKey
   ])
   .then(async (server) => {
+    let failed = false;
     try {
       const headEnvFile = `${__dirname}/test_cli_head.env`;
       await execute(`yarn task deploy --save ${headEnvFile}`, envForUser(adminUser));
@@ -106,35 +107,50 @@ startServer(
         ...envForUser(hermesUser),
         ...headConfig
       };
+
+      const verifyNodeState = async (address, whitelistedRole, onboardedRole, stake, url) => {
+        const ret = await execute(`yarn task whitelist get ${address}`, adminEnv);
+        const regexStr = `Address ${address} is whitelisted for the ${whitelistedRole} role with ${stake} AMB deposit\/stake\\W+Address ${address} is onboarded for the ${onboardedRole} role with url:\\W*${url}`;
+        const regex = new RegExp(regexStr, 'g');
+        if (!regex.test(ret)) {
+          throw new Error('Expected whitelist/onboard state not present');
+        }
+      };
+
       console.log('------ test whitelisting ------');
+      await verifyNodeState(apolloUser.address, 'NONE', 'NONE', '0', '');
       await execute(`yarn task whitelist add ${apolloUser.address} APOLLO 250000`, adminEnv);
-      await execute(`yarn task whitelist get ${apolloUser.address}`, adminEnv);
+      await verifyNodeState(apolloUser.address, 'APOLLO', 'NONE', '250000', '');
       await execute(`yarn task whitelist remove ${apolloUser.address}`, adminEnv);
-      await execute(`yarn task whitelist get ${apolloUser.address}`, adminEnv);
+      await verifyNodeState(apolloUser.address, 'NONE', 'NONE', '0', '');
 
       console.log('------ test APOLLO onboarding ------');
       await execute(`yarn task whitelist add ${apolloUser.address} APOLLO 250000`, adminEnv);
-      await execute(`yarn task whitelist get ${apolloUser.address}`, adminEnv);
+      await verifyNodeState(apolloUser.address, 'APOLLO', 'NONE', '250000', '');
       await execute(`yarn task onboard APOLLO 250000`, apolloEnv);
-      await execute(`yarn task whitelist get ${apolloUser.address}`, adminEnv);
+      await verifyNodeState(apolloUser.address, 'APOLLO', 'APOLLO', '250000', '');
 
       console.log('------ test ATLAS onboarding ------');
       await execute(`yarn task whitelist add ${atlasUser.address} ATLAS 75000`, adminEnv);
-      await execute(`yarn task whitelist get ${atlasUser.address}`, adminEnv);
+      await verifyNodeState(atlasUser.address, 'ATLAS', 'NONE', '75000', '');
       await execute(`yarn task onboard ATLAS 75000 http://example.com`, atlasEnv);
-      await execute(`yarn task whitelist get ${atlasUser.address}`, adminEnv);
+      await verifyNodeState(atlasUser.address, 'ATLAS', 'ATLAS', '75000', 'http://example.com');
       await execute(`yarn task nodeService setUrl http://amazon.com`, atlasEnv);
-      await execute(`yarn task whitelist get ${atlasUser.address}`, adminEnv);
+      await verifyNodeState(atlasUser.address, 'ATLAS', 'ATLAS', '75000', 'http://amazon.com');
 
       console.log('------ test HERMES onboarding ------');
       await execute(`yarn task whitelist add ${hermesUser.address} HERMES 0`, adminEnv);
-      await execute(`yarn task whitelist get ${hermesUser.address}`, adminEnv);
+      await verifyNodeState(hermesUser.address, 'HERMES', 'NONE', '0', '');
       await execute(`yarn task onboard HERMES http://example.com`, hermesEnv);
-      await execute(`yarn task whitelist get ${hermesUser.address}`, adminEnv);
+      await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://example.com');
       await execute(`yarn task nodeService setUrl http://google.com`, hermesEnv);
-      await execute(`yarn task whitelist get ${hermesUser.address}`, adminEnv);
+      await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://google.com');
     } catch (err) {
       printError(err);
+      failed = true;
     }
     server.close();
+    if (failed) {
+      process.exit(1);
+    }
   });
