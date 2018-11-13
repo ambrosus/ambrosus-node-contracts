@@ -11,6 +11,7 @@ pragma solidity ^0.4.23;
 
 import "../Configuration/Config.sol";
 
+
 contract SuperSpeedConfig is Config {
     uint constant public CHALLENGE_DURATION = 30 minutes;
     uint32 constant public COOLDOWN_TIMEOUT = 15 minutes;

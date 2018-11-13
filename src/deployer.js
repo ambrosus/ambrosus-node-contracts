@@ -143,6 +143,25 @@ export default class Deployer {
     });
   }
 
+  async checkOwnership(contracts) {
+    const checkRightOwner = async (contract, contractName) => {
+      if (contract === undefined) {
+        return;
+      }
+      const owner = await contract.methods.owner().call();
+      if (owner === this.sender) {
+        return;
+      }
+      throw `The ${contractName} contract needs to be owned by ${this.sender} (the sender). The current owner is ${owner}`;
+    };
+
+    const {validatorSet, blockRewards, head} = contracts;
+
+    await checkRightOwner(head, 'head');
+    await checkRightOwner(validatorSet, 'validator set');
+    await checkRightOwner(blockRewards, 'block rewards');
+  }
+
   async transferOwnerships(contracts) {
     const {validatorSet, blockRewards, validatorProxy} = contracts;
     if (validatorSet !== undefined && validatorProxy !== undefined) {
@@ -171,6 +190,7 @@ export default class Deployer {
     const libs = await this.deployLibs();
     const {context: contextJson, ...jsonsWithoutContext} = jsons;
     const contracts = await this.deployOrLoadContracts(jsonsWithoutContext, alreadyDeployed, skipDeployment, libs, params);
+    await this.checkOwnership(contracts);
     contracts.context = await this.deployContext(contextJson, contracts);
     await this.updateContextPointer(contracts);
     await this.transferOwnerships(contracts);
