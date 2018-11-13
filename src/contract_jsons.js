@@ -32,6 +32,8 @@ import ConfigJson from './contracts/Config.json';
 import UploadsJson from './contracts/Uploads.json';
 import ApolloDepositStoreJson from './contracts/ApolloDepositStore.json';
 import ValidatorProxyJson from './contracts/ValidatorProxy.json';
+import SuperSpeedConfig from './contracts/SuperSpeedConfig.json';
+import SuperSpeedTime from './contracts/SuperSpeedTime.json';
 
 const contractJsons = {
   head: HeadJson,
@@ -59,6 +61,11 @@ const contractJsons = {
   rolesStore: RolesStoreJson,
   apolloDepositStore: ApolloDepositStoreJson,
   validatorProxy: ValidatorProxyJson
+};
+
+export const contractSuperSpeedJsons = {
+  config: SuperSpeedConfig,
+  time: SuperSpeedTime
 };
 
 export default contractJsons;
