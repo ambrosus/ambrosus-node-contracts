@@ -47,4 +47,10 @@ contract Base {
     function context() view public returns (Context) {
         return head.context();
     }
+
+    function migrateFunds(address targetContractAddress) public onlyContextInternalCalls {
+        require(!context().isInternalToContext(address(this)), "Called contract can not be context internal");
+        require(context().isInternalToContext(targetContractAddress), "Targeted address must be context internal");
+        targetContractAddress.transfer(address(this).balance);
+    }
 }

@@ -15,5 +15,7 @@ import "../Boilerplate/Head.sol";
 contract CalledContract is Base {
     constructor(Head _head) Base(_head) public { }
 
+    function() public payable {}
+
     function contextInternalMethod() view onlyContextInternalCalls public { }
 }

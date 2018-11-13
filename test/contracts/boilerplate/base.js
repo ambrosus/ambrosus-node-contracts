@@ -12,6 +12,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
+import observeBalanceChange from '../../helpers/web3BalanceObserver';
 
 import CallerContractJson from '../../../src/contracts/CallerContract.json';
 import CalledContractJson from '../../../src/contracts/CalledContract.json';
@@ -34,10 +35,13 @@ describe('Base Contract', () => {
   let deployer;
   let catalogue;
   let storageCatalogue;
+  let fundsMigrationTarget;
+  let migrator;
+
 
   before(async () => {
     web3 = await createWeb3();
-    [deployer, catalogue, storageCatalogue] = await web3.eth.getAccounts();
+    [deployer, catalogue, storageCatalogue, migrator, fundsMigrationTarget] = await web3.eth.getAccounts();
 
     head = await deployContract(web3, HeadJson, [deployer], {from: deployer});
     calledContract = await deployContract(web3, CalledContractJson, [head.options.address], {from: deployer});
@@ -67,6 +71,36 @@ describe('Base Contract', () => {
     it('throws if owner is zero', async () => {
       const head2 = await deployContract(web3, HeadJson, [zeroAddress], {from: deployer});
       await expect(head2.methods.context().call()).to.be.eventually.rejected;
+    });
+  });
+
+  describe('funds migration', async () => {
+    const storedValue = '100';
+    const allocateFunds = async (from, to, value) => web3.eth.sendTransaction({from, to, value, gas: 1000000});
+    const fundsMigration =  async (sender, to) => calledContract.methods.migrateFunds(to).send({from: sender});
+
+    it('if all requirements are met, funds are moved correctly', async () => {
+      await deployContext(web3, deployer, head, [migrator, fundsMigrationTarget]);
+      await allocateFunds(deployer, calledContract.options.address, storedValue);
+
+      const balanceChange = await observeBalanceChange(web3, fundsMigrationTarget, async () => fundsMigration(migrator, fundsMigrationTarget));
+
+      expect(balanceChange.toString()).to.equal(storedValue);
+      expect(await web3.eth.getBalance(calledContract.options.address)).to.equal('0');
+    });
+
+    it('called contract can not be context internal', async () => {
+      await deployContext(web3, deployer, head, [calledContract.options.address, migrator, fundsMigrationTarget]);
+      await allocateFunds(deployer, calledContract.options.address, storedValue);
+
+      await expect(fundsMigration(migrator, fundsMigrationTarget)).to.be.eventually.rejected;
+    });
+
+    it('targeted address must be context internal', async () => {
+      await deployContext(web3, deployer, head, [migrator]);
+      await allocateFunds(deployer, calledContract.options.address, storedValue);
+
+      await expect(fundsMigration(migrator, fundsMigrationTarget)).to.be.eventually.rejected;
     });
   });
 });
