@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import Deployer from '../deployer';
-import contractJsons from '../contract_jsons';
+import contractJsons, {contractSuperSpeedJsons} from '../contract_jsons';
 import commandLineArgs from 'command-line-args';
 import {writeFile} from '../utils/file';
 
@@ -25,6 +25,7 @@ export default class DeployTask extends TaskBase {
     const deployer = new Deployer(this.web3, this.sender);
     const predeployed = {};
     const params = {};
+    let contractsToDeploy = {...contractJsons};
 
     const options = this.parseOptions(args);
     if (options === null) {
@@ -38,6 +39,11 @@ export default class DeployTask extends TaskBase {
       params.head = {
         owner: this.sender
       };
+    }
+
+    if (options.turbo) {
+      console.log('⚡️ Deploying in super speed mode. ⚡️');
+      contractsToDeploy = {...contractsToDeploy, ...contractSuperSpeedJsons};
     }
 
     if (options.validatorSet) {
@@ -67,7 +73,7 @@ export default class DeployTask extends TaskBase {
       };
     }
 
-    const contracts = await deployer.deploy(contractJsons, predeployed, [], params);
+    const contracts = await deployer.deploy(contractsToDeploy, predeployed, [], params);
     console.log(`Contracts deployed: `);
     Object.entries(contracts).forEach(([key, contract]) => console.log(`\t${key} -> ${contract.options.address}`));
 
@@ -85,6 +91,7 @@ export default class DeployTask extends TaskBase {
         {name: 'head', type: String},
         {name: 'validatorSet', type: String},
         {name: 'blockRewards', type: String},
+        {name: 'turbo', type: Boolean},
         {name: 'save', type: String}
       ],
       {argv: args, partial: true}
