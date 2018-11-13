@@ -22,6 +22,7 @@ describe('Head Wrapper', () => {
   let head;
   let context;
   let catalogue;
+  let storageCatalogue;
   let headWrapper;
   const deployedMockContracts = {};
 
@@ -36,15 +37,20 @@ describe('Head Wrapper', () => {
     const catalogueConstructorParams = getContractConstructor(contractJsons.catalogue)
       .inputs
       .map((input) => input.name.slice(1));
+    const storageCatalogueConstructorParams = getContractConstructor(contractJsons.storageCatalogue)
+      .inputs
+      .map((input) => input.name.slice(1));
 
     for (const paramName of catalogueConstructorParams) {
       deployedMockContracts[paramName] = generateAddress();
     }
 
     const addressesForCatalogueConstructor = catalogueConstructorParams.map((paramName) => deployedMockContracts[paramName]);
+    const addressesForStorageCatalogueConstructor = storageCatalogueConstructorParams.map((paramName) => deployedMockContracts[paramName]);
 
     catalogue = await deployContract(web3, contractJsons.catalogue, addressesForCatalogueConstructor);
-    context = await deployContract(web3, contractJsons.context, [addressesForCatalogueConstructor, catalogue.options.address]);
+    storageCatalogue = await deployContract(web3, contractJsons.storageCatalogue, addressesForStorageCatalogueConstructor);
+    context = await deployContract(web3, contractJsons.context, [addressesForCatalogueConstructor, catalogue.options.address, storageCatalogue.options.address]);
     await head.methods.setContext(context.options.address).send({
       from: ownerAddress
     });
