@@ -129,7 +129,8 @@ export default class Deployer {
       contextJson,
       [
         Object.values(contracts).map((contract) => contract.options.address),
-        contracts.catalogue.options.address
+        contracts.catalogue.options.address,
+        contracts.storageCatalogue.options.address
       ],
       []
     );

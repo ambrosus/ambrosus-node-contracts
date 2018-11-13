@@ -22,6 +22,7 @@ const deploy = async (options = {}) => {
     head: true,
     context: MockContextJson,
     catalogue: true,
+    storageCatalogue: true,
     ...options.contracts};
   const params = {
     head: {
@@ -29,7 +30,6 @@ const deploy = async (options = {}) => {
     },
     ...(options.params || {})
   };
-
   for (const [key, json] of Object.entries(contractJsons)) {
     if (requestedContracts[key] === undefined) {
       jsons[key] = json;

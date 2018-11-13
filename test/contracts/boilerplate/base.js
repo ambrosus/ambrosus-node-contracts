@@ -33,10 +33,11 @@ describe('Base Contract', () => {
   let context;
   let deployer;
   let catalogue;
+  let storageCatalogue;
 
   before(async () => {
     web3 = await createWeb3();
-    [deployer, catalogue] = await web3.eth.getAccounts();
+    [deployer, catalogue, storageCatalogue] = await web3.eth.getAccounts();
 
     head = await deployContract(web3, HeadJson, [deployer], {from: deployer});
     calledContract = await deployContract(web3, CalledContractJson, [head.options.address], {from: deployer});
@@ -44,7 +45,7 @@ describe('Base Contract', () => {
   });
 
   const deployContext = async (web3, sender, head, injected) => {
-    context = await deployContract(web3, ContextJson, [injected, catalogue], {from: sender});
+    context = await deployContract(web3, ContextJson, [injected, catalogue, storageCatalogue], {from: sender});
     await head.methods.setContext(context.options.address).send({from: sender});
     return context;
   };

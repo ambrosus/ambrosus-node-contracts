@@ -13,17 +13,20 @@ import "../Boilerplate/Catalogue.sol";
 
 
 contract Context {
-    mapping (address => bool) public trustedAddresses; 
+    mapping (address => bool) public trustedAddresses;
     Catalogue public catalogue;
+    StorageCatalogue public storageCatalogue;
 
-    constructor(address[] _trustedAddresses, Catalogue _catalogue) public {
+    constructor(address[] _trustedAddresses, Catalogue _catalogue, StorageCatalogue _storageCatalogue) public {
         require(_trustedAddresses.length > 0);
         require(_catalogue != address(0));
+        require(_storageCatalogue != address(0));
 
         for (uint i = 0; i < _trustedAddresses.length; i++) {
             trustedAddresses[_trustedAddresses[i]] = true;
         }
         catalogue = _catalogue;
+        storageCatalogue = _storageCatalogue;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
