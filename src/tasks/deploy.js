@@ -141,7 +141,9 @@ export default class DeployTask extends TaskBase {
   }
 
   contractsToEnvFile(addresses) {
-    return `HEAD_CONTRACT_ADDRESS="${addresses.head.options.address}"`;
+    return `HEAD_CONTRACT_ADDRESS="${addresses.head.options.address}"
+VALIDATOR_SET_CONTRACT_ADDRESS="${addresses.validatorSet.options.address}"
+BLOCK_REWARDS_CONTRACT_ADDRESS="${addresses.blockRewards.options.address}"`;
   }
 
   help() {

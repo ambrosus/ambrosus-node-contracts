@@ -71,6 +71,7 @@ contract Catalogue {
     }
 }
 
+
 contract StorageCatalogue {
     ApolloDepositStore public apolloDepositStore;
     AtlasStakeStore public atlasStakeStore;

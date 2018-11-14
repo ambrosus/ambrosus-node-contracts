@@ -88,24 +88,24 @@ startGanacheServer(
   .then(async (server) => {
     let failed = false;
     try {
-      const headEnvFile = `${__dirname}/test_cli_head.env`;
-      await execute(`yarn task deploy --save ${headEnvFile}`, envForUser(adminUser));
-      const headConfig = dotenv.parse(fs.readFileSync(headEnvFile));
+      const deployEnvFile = `${__dirname}/test_cli_head.env`;
+      await execute(`yarn task deploy --save ${deployEnvFile}`, envForUser(adminUser));
+      const deployConfig = dotenv.parse(fs.readFileSync(deployEnvFile));
       const adminEnv = {
         ...envForUser(adminUser),
-        ...headConfig
+        ...deployConfig
       };
       const apolloEnv = {
         ...envForUser(apolloUser),
-        ...headConfig
+        ...deployConfig
       };
       const atlasEnv = {
         ...envForUser(atlasUser),
-        ...headConfig
+        ...deployConfig
       };
       const hermesEnv = {
         ...envForUser(hermesUser),
-        ...headConfig
+        ...deployConfig
       };
 
       const verifyNodeState = async (address, whitelistedRole, onboardedRole, stake, url) => {
@@ -114,6 +114,18 @@ startGanacheServer(
         const regex = new RegExp(regexStr, 'g');
         if (!regex.test(ret)) {
           throw new Error('Expected whitelist/onboard state not present');
+        }
+      };
+
+      const verifyFails = async (work) => {
+        let failed = false;
+        try {
+          await work();
+        } catch (err) {
+          failed = true;
+        }
+        if (!failed) {
+          throw new Error('Should have failed');
         }
       };
 
@@ -145,6 +157,15 @@ startGanacheServer(
       await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://example.com');
       await execute(`yarn task nodeService setUrl http://google.com`, hermesEnv);
       await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://google.com');
+
+      console.log('------ test deploy owner checks ------');
+      await verifyFails(async () => {
+        await execute(
+          `yarn task deploy --head=${deployConfig.HEAD_CONTRACT_ADDRESS}` +
+          ` --validatorSet=${deployConfig.VALIDATOR_SET_CONTRACT_ADDRESS}` +
+          ` --blockRewards=${deployConfig.BLOCK_REWARDS_CONTRACT_ADDRESS}`,
+          envForUser(adminUser));
+      });
     } catch (err) {
       printError(err);
       failed = true;
