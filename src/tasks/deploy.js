@@ -12,17 +12,18 @@ import Deployer from '../deployer';
 import contractJsons, {contractSuperSpeedJsons} from '../contract_jsons';
 import commandLineArgs from 'command-line-args';
 import {writeFile} from '../utils/file';
+import DeployActions from '../actions/deploy_actions';
 
 export default class DeployTask extends TaskBase {
   constructor(web3, sender) {
     super();
     this.web3 = web3;
     this.sender = sender;
+    this.deployActions = new DeployActions(new Deployer(this.web3, this.sender));
   }
 
   async execute(args) {
     console.log('Deploying contracts. This may take some time...');
-    const deployer = new Deployer(this.web3, this.sender);
     const predeployed = {};
     const params = {};
     let contractsToDeploy = {...contractJsons};
@@ -73,7 +74,7 @@ export default class DeployTask extends TaskBase {
       };
     }
 
-    const contracts = await deployer.deploy(contractsToDeploy, predeployed, [], params);
+    const contracts = await this.deployActions.deploy(contractsToDeploy, predeployed, [], params);
     console.log(`Contracts deployed: `);
     Object.entries(contracts).forEach(([key, contract]) => console.log(`\t${key} -> ${contract.options.address}`));
 
