@@ -25,7 +25,7 @@ contract ChallengesStoreMock is ChallengesStore {
         uint64 creationTime,
         uint8 activeCount,
         uint sequenceNumber)
-    public payable onlyContextInternalCalls returns (bytes32)
+    public payable returns (bytes32)
     {
         bytes32 challengeId = getChallengeId(sheltererId, bundleId);
         challenges[challengeId] = Challenge(sheltererId, bundleId, challengerId, feePerChallenge, creationTime, activeCount, sequenceNumber);

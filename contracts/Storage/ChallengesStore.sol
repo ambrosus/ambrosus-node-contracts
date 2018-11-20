@@ -50,7 +50,7 @@ contract ChallengesStore is Base {
     public payable onlyContextInternalCalls returns (bytes32)
     {
         bytes32 challengeId = getChallengeId(sheltererId, bundleId);
-        challenges[challengeId] = Challenge(sheltererId, bundleId, challengerId, feePerChallenge, creationTime, activeCount, getNextChallengeSequenceNumber());
+        challenges[challengeId] = Challenge(sheltererId, bundleId, challengerId, feePerChallenge, creationTime, activeCount, nextChallengeSequenceNumber);
         activeChallengesOnBundleCount[bundleId] = activeChallengesOnBundleCount[bundleId].add(activeCount).castTo32();
         incrementNextChallengeSequenceNumber(activeCount);
         return challengeId;
@@ -87,7 +87,7 @@ contract ChallengesStore is Base {
         activeChallengesOnBundleCount[challenges[challengeId].bundleId] = activeChallengesOnBundleCount[
             challenges[challengeId].bundleId].sub(1).castTo32();
         challenges[challengeId].activeCount = challenges[challengeId].activeCount.sub(1).castTo8();
-        increaseSequenceNumber(challengeId);
+        challenges[challengeId].sequenceNumber++;
     }
 
     function getActiveChallengesOnBundleCount(bytes32 bundleId) public view onlyContextInternalCalls returns (uint32) {
@@ -96,10 +96,6 @@ contract ChallengesStore is Base {
 
     function getNextChallengeSequenceNumber() public view onlyContextInternalCalls returns (uint) {
         return nextChallengeSequenceNumber;
-    }
-
-    function increaseSequenceNumber(bytes32 challengeId) private {
-        challenges[challengeId].sequenceNumber++;
     }
 
     function incrementNextChallengeSequenceNumber(uint amount) private {
