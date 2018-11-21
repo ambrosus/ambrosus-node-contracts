@@ -46,13 +46,13 @@ contract ChallengesStore is Base {
         address challengerId,
         uint feePerChallenge,
         uint64 creationTime,
-        uint8 activeCount,
-        uint sequenceNumber)
+        uint8 activeCount)
     public payable onlyContextInternalCalls returns (bytes32)
     {
         bytes32 challengeId = getChallengeId(sheltererId, bundleId);
-        challenges[challengeId] = Challenge(sheltererId, bundleId, challengerId, feePerChallenge, creationTime, activeCount, sequenceNumber);
+        challenges[challengeId] = Challenge(sheltererId, bundleId, challengerId, feePerChallenge, creationTime, activeCount, nextChallengeSequenceNumber);
         activeChallengesOnBundleCount[bundleId] = activeChallengesOnBundleCount[bundleId].add(activeCount).castTo32();
+        incrementNextChallengeSequenceNumber(activeCount);
         return challengeId;
     }
 
@@ -83,14 +83,11 @@ contract ChallengesStore is Base {
         return keccak256(abi.encodePacked(sheltererId, bundleId));
     }
 
-    function increaseSequenceNumber(bytes32 challengeId) public onlyContextInternalCalls {
-        challenges[challengeId].sequenceNumber++;
-    }
-
     function decreaseActiveCount(bytes32 challengeId) public onlyContextInternalCalls {
         activeChallengesOnBundleCount[challenges[challengeId].bundleId] = activeChallengesOnBundleCount[
             challenges[challengeId].bundleId].sub(1).castTo32();
         challenges[challengeId].activeCount = challenges[challengeId].activeCount.sub(1).castTo8();
+        challenges[challengeId].sequenceNumber++;
     }
 
     function getActiveChallengesOnBundleCount(bytes32 bundleId) public view onlyContextInternalCalls returns (uint32) {
@@ -101,7 +98,7 @@ contract ChallengesStore is Base {
         return nextChallengeSequenceNumber;
     }
 
-    function incrementNextChallengeSequenceNumber(uint amount) public onlyContextInternalCalls {
+    function incrementNextChallengeSequenceNumber(uint amount) private {
         nextChallengeSequenceNumber += amount;
     }
 }

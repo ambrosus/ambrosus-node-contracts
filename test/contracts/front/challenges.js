@@ -21,6 +21,7 @@ import {
 import {ONE, DAY, SYSTEM_CHALLENGES_COUNT} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
 import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.json';
+import ChallengesStoreMockJson from '../../../src/contracts/ChallengesStoreMock.json';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 
@@ -106,7 +107,7 @@ describe('Challenges Contract', () => {
       web3,
       contracts: {
         challenges: true,
-        challengesStore: true,
+        challengesStore: ChallengesStoreMockJson,
         bundleStore: true,
         fees: true,
         sheltering: true,
@@ -358,7 +359,7 @@ describe('Challenges Contract', () => {
     const url = 'url';
     let cooldown;
 
-    const injectChallengeWithSequenceNumber = async (sequenceNumber) => challengesStore.methods.store(shelterer, bundleId, challenger, 0, now, 1, sequenceNumber).send({from: context});
+    const injectChallengeWithSequenceNumber = async (sequenceNumber) => challengesStore.methods.injectChallenge(shelterer, bundleId, challenger, 0, now, 1, sequenceNumber).send({from: context});
 
     const atlasOnboarding = async (address) => {
       await addToKycWhitelist(address, ATLAS, ATLAS1_STAKE);

@@ -63,10 +63,8 @@ contract Challenges is Base {
             msg.sender,
             msg.value,
             time.currentTimestamp(),
-            1,
-            challengesStore.getNextChallengeSequenceNumber()
+            1
         );
-        challengesStore.incrementNextChallengeSequenceNumber(1);
 
         emit ChallengeCreated(sheltererId, bundleId, challengeId, 1);
     }
@@ -81,10 +79,8 @@ contract Challenges is Base {
             0x0,
             msg.value.div(challengesCount),
             time.currentTimestamp(),
-            challengesCount,
-            challengesStore.getNextChallengeSequenceNumber()
+            challengesCount
         );
-        challengesStore.incrementNextChallengeSequenceNumber(challengesCount);
 
         emit ChallengeCreated(uploaderId, bundleId, challengeId, challengesCount);
     }
@@ -100,7 +96,6 @@ contract Challenges is Base {
         emit ChallengeResolved(sheltererId, bundleId, challengeId, msg.sender);
 
         removeChallengeOrDecreaseActiveCount(challengeId);
-        increaseChallengeSequenceNumberIfNecessary(challengeId);
     }
 
     function markAsExpired(bytes32 challengeId) public {
@@ -230,12 +225,6 @@ contract Challenges is Base {
             challengesStore.remove(challengeId);
         } else {
             challengesStore.decreaseActiveCount(challengeId);
-        }
-    }
-
-    function increaseChallengeSequenceNumberIfNecessary(bytes32 challengeId) private {
-        if (getActiveChallengesCount(challengeId) > 0) {
-            challengesStore.increaseSequenceNumber(challengeId);
         }
     }
 
