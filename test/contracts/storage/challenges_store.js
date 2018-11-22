@@ -30,17 +30,15 @@ describe('ChallengesStoreContract', () => {
   const feePerChallenge = '130000';
   const creationTime = '1500000000';
   const activeCount = '6';
-  const sequenceNumber = '2';
+  const initialSequenceNumber = '1';
+  const initialSequenceNumberSummedWithActiveCount = '7';
 
   const store = (sender = deployer) =>
-    challengesStore.methods.store(shelterer, exampleBundleId, challenger, feePerChallenge, creationTime, activeCount,
-      sequenceNumber).send({from: sender, value: feePerChallenge});
+    challengesStore.methods.store(shelterer, exampleBundleId, challenger, feePerChallenge, creationTime, activeCount).send({from: sender, value: feePerChallenge});
   const remove = (challengeId, sender = deployer) =>
     challengesStore.methods.remove(challengeId).send({from: sender});
   const transferFee = (refundAddress, amountToReturn, sender = deployer) =>
     challengesStore.methods.transferFee(refundAddress, amountToReturn).send({from: sender});
-  const increaseSequenceNumber = (challengeId, sender = deployer) =>
-    challengesStore.methods.increaseSequenceNumber(challengeId).send({from: sender});
   const decreaseActiveCount = (challengeId, sender = deployer) =>
     challengesStore.methods.decreaseActiveCount(challengeId).send({from: sender});
   const getChallenge = (challengeId) =>
@@ -49,7 +47,6 @@ describe('ChallengesStoreContract', () => {
     challengesStore.methods.getChallengeId(sheltererId, bundleId).call();
   const getNextChallengeSequenceNumber = () => challengesStore.methods.getNextChallengeSequenceNumber().call();
   const getActiveChallengesOnBundleCount = (bundleId) => challengesStore.methods.getActiveChallengesOnBundleCount(bundleId).call();
-  const incrementNextChallengeSequenceNumber = (amount, sender = deployer) => challengesStore.methods.incrementNextChallengeSequenceNumber(amount).send({from: sender});
 
   before(async () => {
     web3 = await createWeb3();
@@ -82,13 +79,13 @@ describe('ChallengesStoreContract', () => {
       expect(storedChallenge[3]).to.equal(feePerChallenge);
       expect(storedChallenge[4]).to.equal(creationTime);
       expect(storedChallenge[5]).to.equal(activeCount);
-      expect(storedChallenge[6]).to.equal(sequenceNumber);
+      expect(storedChallenge[6]).to.equal(initialSequenceNumber);
     });
 
     it('should return stored challenge id', async () => {
       expect(
         await challengesStore.methods.store(shelterer, exampleBundleId, challenger, feePerChallenge, creationTime,
-          activeCount, sequenceNumber).call()
+          activeCount).call()
       ).to.equal(exampleChallengeId);
     });
 
@@ -97,8 +94,14 @@ describe('ChallengesStoreContract', () => {
       await store();
       expect(await getActiveChallengesOnBundleCount(exampleBundleId)).to.equal(activeCount);
       await challengesStore.methods.store(otherAddress, exampleBundleId, challenger, feePerChallenge, creationTime,
-        '4', sequenceNumber).send({from: deployer});
+        '4').send({from: deployer});
       expect(await getActiveChallengesOnBundleCount(exampleBundleId)).to.equal('10');
+    });
+
+    it('should increment nextChallengeSequenceNumber', async () => {
+      expect(await getNextChallengeSequenceNumber()).to.equal(initialSequenceNumber);
+      await store();
+      expect(await getNextChallengeSequenceNumber()).to.equal(initialSequenceNumberSummedWithActiveCount);
     });
 
     it('should be context internal', async () => {
@@ -149,22 +152,6 @@ describe('ChallengesStoreContract', () => {
     });
   });
 
-  describe('increaseChallengeSequenceNumber', () => {
-    beforeEach(async () => {
-      await store();
-    });
-
-    it('should increase sequence number', async () => {
-      await increaseSequenceNumber(exampleChallengeId);
-      const storedChallenge = await getChallenge(exampleChallengeId);
-      expect(storedChallenge[6]).to.equal('3');
-    });
-
-    it('should be context internal', async () => {
-      await expect(increaseSequenceNumber(exampleChallengeId, otherAddress)).to.be.rejected;
-    });
-  });
-
   describe('decreaseActiveCount', () => {
     beforeEach(async () => {
       await store();
@@ -174,6 +161,12 @@ describe('ChallengesStoreContract', () => {
       await decreaseActiveCount(exampleChallengeId);
       const storedChallenge = await getChallenge(exampleChallengeId);
       expect(storedChallenge[5]).to.equal('5');
+    });
+
+    it('should increase challenge sequence number', async () => {
+      await decreaseActiveCount(exampleChallengeId);
+      const storedChallenge = await getChallenge(exampleChallengeId);
+      expect(storedChallenge[6]).to.equal('2');
     });
 
     it('should decrease active challenges count for the bundle by 1', async () => {
@@ -189,18 +182,6 @@ describe('ChallengesStoreContract', () => {
   describe('Next sequence number', () => {
     it('has a value of 1 just after creation', async () => {
       expect(await getNextChallengeSequenceNumber()).to.equal('1');
-    });
-
-    describe('incrementing', () => {
-      it('can be used to change it', async () => {
-        expect(await getNextChallengeSequenceNumber()).to.equal('1');
-        await expect(incrementNextChallengeSequenceNumber(4)).to.eventually.be.fulfilled;
-        expect(await getNextChallengeSequenceNumber()).to.equal('5');
-      });
-
-      it('is context internal', async () => {
-        await expect(incrementNextChallengeSequenceNumber(4, otherAddress)).to.eventually.be.rejected;
-      });
     });
   });
 });
