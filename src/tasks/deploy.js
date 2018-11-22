@@ -9,73 +9,47 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import Deployer from '../deployer';
-import contractJsons, {contractSuperSpeedJsons} from '../contract_jsons';
 import commandLineArgs from 'command-line-args';
 import {writeFile} from '../utils/file';
+import DeployActions from '../actions/deploy_actions';
 
 export default class DeployTask extends TaskBase {
   constructor(web3, sender) {
     super();
     this.web3 = web3;
     this.sender = sender;
+    this.deployActions = new DeployActions(new Deployer(this.web3, this.sender));
   }
 
   async execute(args) {
     console.log('Deploying contracts. This may take some time...');
-    const deployer = new Deployer(this.web3, this.sender);
-    const predeployed = {};
-    const params = {};
-    let contractsToDeploy = {...contractJsons};
-
     const options = this.parseOptions(args);
     if (options === null) {
       return;
     }
+    let {head, validatorSet, blockRewards} = options;
 
-    if (options.head) {
-      console.log('Reusing already deployed head contract.');
-      predeployed.head = options.head;
-    } else {
-      params.head = {
-        owner: this.sender
-      };
-    }
-
-    if (options.turbo) {
-      console.log('⚡️ Deploying in super speed mode. ⚡️');
-      contractsToDeploy = {...contractsToDeploy, ...contractSuperSpeedJsons};
-    }
-
-    if (options.validatorSet) {
-      console.log('Reusing already deployed validator set contract.');
-      predeployed.validatorSet = options.validatorSet;
-    } else {
+    if (options.genesis) {
       const initialValidators = Array(3)
         .fill(null)
         .map(() => this.web3.eth.accounts.create().address);
       console.log(`Initial validators are: ${initialValidators}`);
-
-      params.validatorSet = {
-        owner: this.sender,
-        initialValidators,
-        superUser: this.sender
-      };
+      console.log('Deploying genesis contracts');
+      const genesisContracts = await this.deployActions.deployGenesis(initialValidators);
+      console.log(`Genesis deployed: `);
+      this.prettyPrintAddresses(genesisContracts);
+      head = genesisContracts.head.options.address;
+      validatorSet = genesisContracts.validatorSet.options.address;
+      blockRewards = genesisContracts.blockRewards.options.address;
     }
 
-    if (options.blockRewards) {
-      console.log('Reusing already deployed block rewards contract.');
-      predeployed.blockRewards = options.blockRewards;
-    } else {
-      params.blockRewards = {
-        owner: this.sender,
-        baseReward: '2000000000000000000',
-        superUser: this.sender
-      };
+    if (options.turbo) {
+      console.log('⚡️ Deploying in super speed mode. ⚡️');
     }
 
-    const contracts = await deployer.deploy(contractsToDeploy, predeployed, [], params);
+    const contracts = await this.deployActions.deployAll(head, validatorSet, blockRewards, options.turbo);
     console.log(`Contracts deployed: `);
-    Object.entries(contracts).forEach(([key, contract]) => console.log(`\t${key} -> ${contract.options.address}`));
+    this.prettyPrintAddresses(contracts);
 
     const envFile = this.contractsToEnvFile(contracts);
     if (options.save) {
@@ -88,6 +62,7 @@ export default class DeployTask extends TaskBase {
   parseOptions(args) {
     const options = commandLineArgs(
       [
+        {name: 'genesis', type: Boolean},
         {name: 'head', type: String},
         {name: 'validatorSet', type: String},
         {name: 'blockRewards', type: String},
@@ -103,17 +78,17 @@ export default class DeployTask extends TaskBase {
       return null;
     }
 
-    if (options.head === null) {
+    if (!options.genesis && !options.head) {
       console.error(`You should provide a value for the head parameter.`);
       return null;
     }
 
-    if (options.validatorSet === null) {
+    if (!options.genesis && !options.validatorSet) {
       console.error(`You should provide a value for the validatorSet parameter.`);
       return null;
     }
 
-    if (options.blockRewards === null) {
+    if (!options.genesis && !options.blockRewards) {
       console.error(`You should provide a value for the blockRewards parameter.`);
       return null;
     }
@@ -133,6 +108,10 @@ export default class DeployTask extends TaskBase {
     } catch (err) {
       console.error(`Unable to save configuration: ${err}`);
     }
+  }
+
+  prettyPrintAddresses(contracts) {
+    return Object.entries(contracts).forEach(([key, contract]) => console.log(`\t${key} -> ${contract.options.address}`));
   }
 
   printSummary(envFile) {

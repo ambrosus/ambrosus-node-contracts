@@ -89,7 +89,7 @@ startGanacheServer(
     let failed = false;
     try {
       const deployEnvFile = `${__dirname}/test_cli_head.env`;
-      await execute(`yarn task deploy --save ${deployEnvFile}`, envForUser(adminUser));
+      await execute(`yarn task deploy --genesis --save ${deployEnvFile}`, envForUser(adminUser));
       const deployConfig = dotenv.parse(fs.readFileSync(deployEnvFile));
       const adminEnv = {
         ...envForUser(adminUser),
