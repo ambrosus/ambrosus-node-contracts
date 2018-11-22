@@ -29,7 +29,17 @@ export default class DeployActions {
     return {head, validatorSet, blockRewards};
   }
 
+  validateGenesisAddresses(addresses) {
+    const isAddress = (address) => /0x[a-f0-9]{40}/i.exec(address);
+    ['head', 'validatorSet', 'blockRewards'].forEach((contractName) => {
+      if (!isAddress(addresses[contractName])) {
+        throw new Error(`${contractName} address ${addresses[contractName]} is not a valid Ethereum address`);
+      }
+    });
+  }
+
   async deployAll(head, validatorSet, blockRewards, turbo = false) {
+    this.validateGenesisAddresses({head, validatorSet, blockRewards});
     const overrides = turbo ? contractSuperSpeedJsons : {};
     const contractsToDeploy = {...contractJsons, ...overrides};
     return this.deployer.deploy(contractsToDeploy, {head, validatorSet, blockRewards});

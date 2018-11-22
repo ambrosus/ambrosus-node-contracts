@@ -56,10 +56,34 @@ describe('Deploy Actions', () => {
     });
   });
 
+  describe('validateGenesisAddresses', () => {
+    const correctAddresses = {
+      head: '0x92f858c22417249e4ee11b2683ef6fca7bad0555',
+      validatorSet: '0xf0c80fb9fb22bef8269cb6feb9a51130288a671f',
+      blockRewards: '0xEA53770a899d79a61953666c6D7Fa0DB183944aD'
+    };
+
+    it('accepts when all contracts are fine', async () => {
+      expect(() => deployActions.validateGenesisAddresses(correctAddresses)).to.not.throw();
+    });
+
+    ['head', 'validatorSet', 'blockRewards'].forEach((contractName) => {
+      it(`should throw when ${contractName} is not set`, async () => {
+        // eslint-disable-next-line no-unused-vars
+        const {[contractName]: _, ...rest} = correctAddresses;
+        expect(() => deployActions.validateGenesisAddresses(rest)).to.throw();
+      });
+
+      it(`should throw when ${contractName} is not an address`, async () => {
+        expect(() => deployActions.validateGenesisAddresses({...correctAddresses, [contractName]: '0x123'})).to.throw();
+      });
+    });
+  });
+
   describe('Deploy all', () => {
-    const headAddress = '0xhead';
-    const validatorSetAddress = '0xvalidatorset';
-    const blockRewardsAddress = '0xblockrewards';
+    const headAddress = '0x92f858c22417249e4ee11b2683ef6fca7bad0555';
+    const validatorSetAddress = '0xf0c80fb9fb22bef8269cb6feb9a51130288a671f';
+    const blockRewardsAddress = '0xEA53770a899d79a61953666c6D7Fa0DB183944aD';
 
     it('passes contract jsons to the deployer together with genesis addresses', async () => {
       expect(await deployActions.deployAll(headAddress, validatorSetAddress, blockRewardsAddress)).to.equal(exampleDeployResult);
@@ -69,6 +93,13 @@ describe('Deploy Actions', () => {
     it('overwrites some contracts in turbo mode', async () => {
       await deployActions.deployAll(headAddress, validatorSetAddress, blockRewardsAddress, true);
       expect(mockDeployer.deploy).to.be.calledOnceWithExactly({...contractJsons, ...contractSuperSpeedJsons}, {head: headAddress, validatorSet: validatorSetAddress, blockRewards: blockRewardsAddress});
+    });
+
+    it('calls validateGenesisAddresses with correct parameters', async () => {
+      const validateGenesisAddressesStub = sinon.stub(deployActions, 'validateGenesisAddresses');
+      await deployActions.deployAll(headAddress, validatorSetAddress, blockRewardsAddress);
+      expect(validateGenesisAddressesStub).to.be.calledOnceWithExactly({head: headAddress, validatorSet: validatorSetAddress, blockRewards: blockRewardsAddress});
+      validateGenesisAddressesStub.reset();
     });
   });
 });
