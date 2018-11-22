@@ -13,7 +13,7 @@ import contractJsons, {contractSuperSpeedJsons} from '../contract_jsons';
  * Computed as:
  * floor((Total AMB supply) * 2% / (blocks/year))
  */
-const DEFAULT_BLOCK_REWARD = '1146237436580416032';
+const DEFAULT_BLOCK_REWARD = '1146237435108134836';
 
 export default class DeployActions {
   constructor(deployer) {
