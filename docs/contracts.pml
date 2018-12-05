@@ -1,195 +1,180 @@
 @startuml
 
-package Front <<Rectangle>> {
-  class Challenges
-  class ShelteringTransfers
-  class Uploads
-  class Stakes
-  class Payouts
-  class Challenge
-  class Transfer
+package Consensus <<Rectangle>> {
+  class ValidatorSetBase
+  class ValidatorSet
+  class BlockRewardsBase
+  class BlockRewards
 }
 
 package Storage <<Rectangle>> {
+  class KycWhitelistStore
+  class RolesStore
+  class AtlasStakeStore
+  class ApolloDepositStore
   class BundleStore
-  class Bundle
-  class StakeStore
-  class Stake
-  class KycWhitelist
-  class PayoutStorage
+  class ChallengesStore
+  class PayoutsStore
+  class ShelteringTransfersStore
 }
 
 package Configuration <<Rectangle>> {
   class Fees
   class Roles
+  class Config
+}
+
+package Utilities <<Rectangle>> {
+  class Time
+  class Ownable
+  class ConstructorOwnable
+  class Math
+  class SafeMath
+  class SafeMathExtensions
 }
 
 package Middleware <<Rectangle>> {
   class Sheltering
+  class ValidatorProxy
 }
 
 package Boilerplate <<Rectangle>> {
   class Head
   class Context
   class Base
+  class Catalogue
+  class StorageCatalogue
 }
 
-Stakes *-- KycWhitelist
-Stakes *-- StakeStore
-Stakes *-- Sheltering
-Challenges *-- Sheltering
-ShelteringTransfers *-- Sheltering
-ShelteringTransfers o-- Transfer
-Uploads *-- Sheltering
-Challenges o-- Challenge
-
-Payouts *-- PayoutStorage
-Challenges *-- Payouts
-
-ShelteringTransfers ..> Fees
-Uploads ..> Fees
-Challenges ..> Fees
-StakeStore ..> Fees
-
-StakeStore o-- Stake
-Sheltering *-- BundleStore
-Sheltering *-- StakeStore
-BundleStore o-- Bundle
-
-class Stakes {
-  depositStake(role) payable
-  releaseStake(sheltererId)
+package Testing <<Rectangle>> {
+  class SafeMathExtensionsAdapter
+  class SuperSpeedTime
+  class SuperSpeedConfig
+  class CalledContract
+  class CallerContract
+  class MockContext
+  class TimeMock
+  class AtlasStakeStoreMock
+  class ChallengesStoreMock
 }
 
-class Stake #lightgray {
-  amount: uint
-  storageLimit: uint
-  storageLeft: uint
-  role: {HERMES, ATLAS, APOLLO}
+package Front <<Rectangle>> {
+  class KycWhitelist
+  class Roles
+  class Uploads
+  class Challenges
+  class Payouts
+  class ShelteringTransfers
 }
 
-class Uploads {
-  registerBundle()  
-}
+ValidatorSet ..|> ConstructorOwnable
+ValidatorSet ..|> ValidatorSetBase
+BlockRewards ..|> ConstructorOwnable
+BlockRewards ..|> BlockRewardsBase
+BlockRewards *-- SafeMath
+ValidatorProxy *-- ValidatorSet
+ValidatorProxy *-- BlockRewards
 
-class Payouts {
-  withdraw(implicit beneficiaryId)
-  available(implicit beneficiaryId, period)
-  grantChallengeResolutionReward(beneficiaryId, bundleId) payable
-  revokeChallengeResolutionReward(beneficiaryId, bundleId, refundAddress)
-}
-
-class PayoutStorage {
-  withdraw(beneficiaryId)
-  available(beneficiaryId, period)
-  grantForPeriods(beneficiaryId, periodStart, periodEnd) payable
-  revokeForPeriods(beneficiaryId, periodStart, periodEnd, amount, refundAddress)
-}
-
-class StakeStore {
-  depositStake(role) payable
-  releaseStake(sheltererId)
-  slash(sheltererId)
-  isStaking(sheltererId)
-  canStore(sheltererId)
-  isShelteringAny(sheltererId)
-}
-
-class Sheltering {
-  registerBundle(bundleId, creatorId, time) payable
-  removeBundle(sheltererId, bundleId);
-  isSheltering(sheltererId, bundleId);
-  addSheltering(sheltererId, bundleId);
-  removeSheltering(sheltererId, bundleId);
-}
-
-class BundleStore {    
-  getBundle(bundleId);
-  store(bundleId, creatorId);
-}
-
-class Bundle #lightgray {
-  shelterer: address[]
-  bundleId: bytes32
-  uploadDate: uint
-  storagePeriods: uint
-}
-
-class Challenges {
-  start(sheltererId, bundleId, implicit challengerId) payable
-  startForSystem(sheltererId, bundleId, numChallenges) payable
-  resolve(sheltererId, bundleId)
-  storeChallenge(sheltererId, bundleId, challengerId, fee)
-  removeChallenge(sheltererId, bundleId)
-  inProgress(sheltererId, bundleId)
-}
-
-class Challenge #lightgray {
-  shelterer : address;
-  bundle : byte32;
-  creator: address;
-  fee: uint;
-  activeCount: uint;
-}
-
-class ShelteringTransfers {
-  transfer(bundleId, implicit sheltererId)
-  resolve(sheltererId, bundleId, implicit atlasId)
-  store(sheltererId, bundleId)
-  removeTransfer(sheltererId, bundleId)
-}
-
-class Transfer #lightgray {
-  sheltererId: address
-  bundleId: bytes32
-}
-
-class KycWhitelist {
-  add(candidateId)
-  isWhitelisted(candidateId) : bool
-}
-
-class Fees {
-  getFeeFor(time, typeOfOperation)
-  splitFee() payable
-  calculatePenalty(n)
-}
-
-class Roles {
-  canStake(amount, role);
-  getStorageLimit(amount, role);
-}
-
-class Head {
-  context: Context
-  owner: Owner
-  setContext(context) onlyOwner
-}
-
+Head ..|> ConstructorOwnable
 Head *-- Context
 Context *-- Base
+Context *-- Catalogue
+Context *-- StorageCatalogue
 
-class Context {
-  bundleStore: BundleStore
-  roles: Roles
-  fees: Fees
-  stakeStore: StakeStore
-  kycWhitelist: KycWhitelist
-  shelteringTransfers: ShelteringTransfers
-  challenges: Challenges
-  sheltering: Sheltering
-  bundleStore: BundleStore
-  stakeStore: StakeStore
-  uploads: Uploads
-  stakes: Stakes
-  canCall()
-  Context(bundleStore, ..., stakes)
-}
+Catalogue *-- KycWhitelist 
+Catalogue *-- Roles 
+Catalogue *-- Fees
+Catalogue *-- Challenges 
+Catalogue *-- Payouts 
+Catalogue *-- ShelteringTransfers 
+Catalogue *-- Sheltering 
+Catalogue *-- Uploads 
+Catalogue *-- Config 
+Catalogue *-- ValidatorProxy
+Catalogue *-- Time
 
+StorageCatalogue *-- ApolloDepositStore
+StorageCatalogue *-- AtlasStakeStore
+StorageCatalogue *-- BundleStore
+StorageCatalogue *-- ChallengesStore
+StorageCatalogue *-- KycWhitelistStore
+StorageCatalogue *-- PayoutsStore
+StorageCatalogue *-- RolesStore
+StorageCatalogue *-- ShelteringTransfersStore
 
-class Base {
-  _canCall()
-  context()
-}
+Fees ..|> Ownable
+Fees *-- Config
+Fees *-- Time
+
+Time *-- SafeMath
+Time *-- SafeMathExtensions
+
+Challenges *-- SafeMath
+Challenges *-- SafeMathExtensions
+
+Challenges *-- Time
+Challenges *-- Sheltering
+Challenges *-- AtlasStakeStore 
+Challenges *-- Config 
+Challenges *-- Fees 
+Challenges *-- ChallengesStore
+
+KycWhitelist ..|> Ownable
+KycWhitelist *-- KycWhitelistStore
+KycWhitelist *-- Config
+
+Payouts *-- SafeMath
+Payouts *-- SafeMathExtensions
+Payouts *-- Time
+Payouts *-- PayoutsStore
+Payouts *-- Config
+
+Roles *-- AtlasStakeStore
+Roles *-- RolesStore 
+Roles *-- ApolloDepositStore 
+Roles *-- ValidatorProxy 
+Roles *-- KycWhitelist 
+Roles *-- Config 
+
+ShelteringTransfers *-- Sheltering
+ShelteringTransfers *-- ShelteringTransfersStore
+ShelteringTransfers *-- Challenges
+
+Uploads *-- SafeMath
+Uploads *-- Config
+Uploads *-- Fees
+Uploads *-- Sheltering
+Uploads *-- Challenges
+
+Sheltering *-- SafeMath
+Sheltering *-- SafeMathExtensions
+Sheltering *-- Time 
+Sheltering *-- AtlasStakeStore 
+Sheltering *-- BundleStore 
+Sheltering *-- Payouts 
+Sheltering *-- RolesStore 
+Sheltering *-- Fees 
+Sheltering *-- Config
+
+AtlasStakeStore *-- SafeMath
+AtlasStakeStore *-- SafeMathExtensions
+
+BundleStore *-- SafeMath
+BundleStore *-- SafeMathExtensions
+
+ChallengesStore *-- SafeMath
+ChallengesStore *-- SafeMathExtensions
+
+KycWhitelistStore *-- Consts
+
+PayoutsStore *-- SafeMath
+PayoutsStore *-- SafeMathExtensions
+
+RolesStore *-- Consts
+
+AtlasStakeStoreMock ..|> AtlasStakeStore
+ChallengesStoreMock ..|> ChallengesStore
+SafeMathExtensionsAdapter *-- SafeMathExtensions
+TimeMock ..|> Time
 
 @enduml
