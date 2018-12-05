@@ -27,6 +27,7 @@ describe('Block rewards contract', () => {
   const transferOwnership = async (contract, sender, newOwner) => contract.methods.transferOwnership(newOwner).send({...standardOptions, from: sender});
   const addBeneficiary = async (contract, sender, beneficiary, share) => contract.methods.addBeneficiary(beneficiary, share).send({from: sender});
   const removeBeneficiary = async (contract, sender, beneficiary) => contract.methods.removeBeneficiary(beneficiary).send({from: sender});
+  const setBaseReward = async (contract, sender, baseReward) => contract.methods.setBaseReward(baseReward).send({from: sender});
   const isBeneficiary = async (contract, sender, beneficiary) => contract.methods.isBeneficiary(beneficiary).call({from: sender});
   const beneficiaryShare = async (contract, sender, beneficiary) => contract.methods.beneficiaryShare(beneficiary).call({from: sender});
   const beneficiaryCount = async (contract, sender) => contract.methods.beneficiaryCount().call({from: sender});
@@ -178,6 +179,20 @@ describe('Block rewards contract', () => {
 
     it('can only be called by owner', async () => {
       await expect(removeBeneficiary(contract, otherUser, exampleBeneficiaries[0])).to.eventually.be.rejected;
+    });
+  });
+
+  describe('setBaseReward', () => {
+    const exampleDifferentBaseReward = '2000000000000001234';
+
+    it('changes base reward correctly', async () => {
+      expect(await baseReward(contract, owner)).to.equal(exampleBaseReward);
+      await expect(setBaseReward(contract, owner, exampleDifferentBaseReward)).to.eventually.be.fulfilled;
+      expect(await baseReward(contract, owner)).to.equal(exampleDifferentBaseReward);
+    });
+
+    it('can only be called by owner', async () => {
+      await expect(setBaseReward(contract, otherUser, exampleDifferentBaseReward)).to.eventually.be.rejected;
     });
   });
 
