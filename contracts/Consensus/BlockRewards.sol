@@ -92,6 +92,10 @@ contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
         delete shares[beneficiary];
     }
 
+    function setBaseReward(uint256 _baseReward) public onlyOwner {
+        baseReward = _baseReward;
+    }
+
     function isBeneficiary(address beneficiary) public view returns(bool) {
         return shares[beneficiary] > 0;
     }
