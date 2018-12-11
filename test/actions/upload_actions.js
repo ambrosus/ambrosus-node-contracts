@@ -23,8 +23,16 @@ describe('Upload Actions', () => {
   let uploadsWrapperStub;
   let feesWrapperStub;
   let shelteringWrapperStub;
+  let blockchainStateWrapperStub;
+  const timestamp = 1544536774;
+  const blockNumber = 138;
+  const bundleId = '0xABCD';
+  const uploadReceipt = {
+    blockNumber,
+    transactionHash: '0x123'
+  };
 
-  before(() => {
+  beforeEach(() => {
     uploadsWrapperStub = {
       registerBundle: sinon.stub(),
       getUploadData: sinon.stub()
@@ -35,26 +43,23 @@ describe('Upload Actions', () => {
     shelteringWrapperStub = {
       getBundleUploadBlockNumber: sinon.stub()
     };
-    uploadActions = new UploadActions(uploadsWrapperStub, feesWrapperStub, shelteringWrapperStub);
-  });
-
-  afterEach(() => {
-    uploadsWrapperStub.registerBundle.reset();
-    uploadsWrapperStub.getUploadData.reset();
-    feesWrapperStub.feeForUpload.reset();
-    shelteringWrapperStub.getBundleUploadBlockNumber.reset();
+    blockchainStateWrapperStub = {
+      getBlockTimestamp: sinon.stub()
+    };
+    uploadActions = new UploadActions(uploadsWrapperStub, feesWrapperStub, shelteringWrapperStub, blockchainStateWrapperStub);
   });
 
   it('uploadBundle', async () => {
-    const bundleId = '0xABCD';
     const storagePeriods = 2;
     const fee = new BN(12345);
 
     feesWrapperStub.feeForUpload.resolves(fee);
-    uploadsWrapperStub.registerBundle.resolves();
+    uploadsWrapperStub.registerBundle.resolves(uploadReceipt);
+    blockchainStateWrapperStub.getBlockTimestamp.withArgs(blockNumber).resolves(timestamp);
 
-    await uploadActions.uploadBundle(bundleId, storagePeriods);
+    const uploadResult = await uploadActions.uploadBundle(bundleId, storagePeriods);
 
+    expect(uploadResult).to.deep.equal({...uploadReceipt, timestamp});
     expect(feesWrapperStub.feeForUpload).to.have.been.calledOnceWith(storagePeriods);
     expect(uploadsWrapperStub.registerBundle).to.have.been.calledOnceWith(
       bundleId,
@@ -64,18 +69,13 @@ describe('Upload Actions', () => {
   });
 
   describe('getBundleUploadData', () => {
-    const bundleId = '0xABCD';
-    const blockNumber = '2';
-    const exampleUploadData = {
-      blockNumber,
-      transactionHash: '0x123'
-    };
 
     it('gets block number and returns upload data', async () => {
       shelteringWrapperStub.getBundleUploadBlockNumber.resolves(blockNumber);
-      uploadsWrapperStub.getUploadData.resolves(exampleUploadData);
+      uploadsWrapperStub.getUploadData.resolves(uploadReceipt);
+      blockchainStateWrapperStub.getBlockTimestamp.withArgs(blockNumber).resolves(timestamp);
 
-      expect(await uploadActions.getBundleUploadData(bundleId)).to.deep.equal(exampleUploadData);
+      expect(await uploadActions.getBundleUploadData(bundleId)).to.deep.equal({...uploadReceipt, timestamp});
     });
 
     it('returns null if bundle was not uploaded', async () => {
