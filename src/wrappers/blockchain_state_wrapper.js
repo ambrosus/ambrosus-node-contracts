@@ -17,4 +17,8 @@ export default class BlockchainStateWrapper {
     const {timestamp} = blockData;
     return timestamp;
   }
+
+  async isAddressAContract(address) {
+    return await this.web3.eth.getCode(address) !== '0x0';
+  }
 }

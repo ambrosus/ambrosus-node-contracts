@@ -47,6 +47,12 @@ export default class HeadWrapper {
     return catalogue.methods[`${contractName}()`]().call();
   }
 
+  async setContext(address) {
+    await this.head.methods.setContext(address).send({
+      from: this.defaultAddress
+    });
+  }
+
   async context() {
     const contextAddress = await this.head
       .methods
@@ -62,5 +68,9 @@ export default class HeadWrapper {
       .catalogue()
       .call();
     return loadContract(this.web3, contractJsons.catalogue.abi, catalogueAddress);
+  }
+
+  async getOwner() {
+    return this.head.methods.owner().call();
   }
 }

@@ -24,6 +24,7 @@ describe('Head Wrapper', () => {
   let catalogue;
   let storageCatalogue;
   let headWrapper;
+  const exampleAddress = '0x97E12BD75bdee72d4975D6df410D2d145b3d8457';
   const deployedMockContracts = {};
 
   const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor');
@@ -51,11 +52,12 @@ describe('Head Wrapper', () => {
     catalogue = await deployContract(web3, contractJsons.catalogue, addressesForCatalogueConstructor);
     storageCatalogue = await deployContract(web3, contractJsons.storageCatalogue, addressesForStorageCatalogueConstructor);
     context = await deployContract(web3, contractJsons.context, [addressesForCatalogueConstructor, catalogue.options.address, storageCatalogue.options.address]);
-    await head.methods.setContext(context.options.address).send({
-      from: ownerAddress
-    });
 
     headWrapper = new HeadWrapper(head.options.address, web3, ownerAddress);
+  });
+
+  beforeEach(async () => {
+    await headWrapper.setContext(context.options.address);
   });
 
   it('does not allow to get nonexistent contract address', async () => {
@@ -64,6 +66,27 @@ describe('Head Wrapper', () => {
 
   it('does not allow to get internal contract address', async () => {
     await expect(headWrapper.contractAddressByName('bundleStore')).to.be.eventually.rejectedWith(Error);
+  });
+
+  it('setContext method changes the context address', async () => {
+    await headWrapper.setContext(exampleAddress);
+    expect((await headWrapper.context()).options.address).to.equal(exampleAddress);
+  });
+
+  it('getOwner method returns the contract owner', async () => {
+    expect(await headWrapper.getOwner()).to.equal(ownerAddress);
+  });
+
+  it('context method returns the context contract instance', async () => {
+    const receivedContext = await headWrapper.context();
+    expect(receivedContext instanceof web3.eth.Contract).to.be.true;
+    expect(receivedContext.options.address).to.equal(context.options.address);
+  });
+
+  it('catalogue method returns the catalogue contract instance', async () => {
+    const receivedCatalogue = await headWrapper.catalogue();
+    expect(receivedCatalogue instanceof web3.eth.Contract).to.be.true;
+    expect(receivedCatalogue.options.address).to.equal(catalogue.options.address);
   });
 
   describe('Gets available contracts addresses', () => {
