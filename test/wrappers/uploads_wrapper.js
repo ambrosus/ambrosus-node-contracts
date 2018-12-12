@@ -25,7 +25,9 @@ describe('Uploads Wrapper', () => {
     const storagePeriods = 23;
     const defaultAccount = '0x123';
     const fee = '100';
-    const exampleData = '0xda7a';
+    const blockNumber = 1267;
+    const transactionHash = '0x55434';
+    const exampleData = {blockNumber, transactionHash};
     let contractMock;
     let registerBundleStub;
     let registerBundleSendStub;
@@ -54,7 +56,9 @@ describe('Uploads Wrapper', () => {
       });
 
       it('calls contract method with correct arguments', async () => {
-        await uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
+        const receipt = await uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
+        expect(receipt.blockNumber).to.equal(blockNumber);
+        expect(receipt.transactionHash).to.equal(transactionHash);
         expect(registerBundleStub).to.be.calledOnceWith(bundleId, storagePeriods);
         expect(registerBundleSendStub).to.be.calledOnceWith({from: defaultAccount, value: fee});
       });

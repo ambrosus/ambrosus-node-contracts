@@ -16,6 +16,7 @@ import KycWhitelistWrapper from './wrappers/kyc_whitelist_wrapper';
 import RolesWrapper from './wrappers/roles_wrapper';
 import ShelteringWrapper from './wrappers/sheltering_wrapper';
 import UploadsWrapper from './wrappers/uploads_wrapper';
+import BlockchainStateWrapper from './wrappers/blockchain_state_wrapper';
 import WhitelistActions from './actions/whitelist_actions';
 import OnboardActions from './actions/onboard_actions';
 import UploadActions from './actions/upload_actions';
@@ -34,6 +35,7 @@ module.exports = {
   RolesWrapper,
   ShelteringWrapper,
   UploadsWrapper,
+  BlockchainStateWrapper,
   WhitelistActions,
   OnboardActions,
   UploadActions,

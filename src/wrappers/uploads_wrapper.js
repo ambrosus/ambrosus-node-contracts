@@ -16,7 +16,7 @@ export default class UploadsWrapper extends ContractWrapper {
 
   async registerBundle(bundleId, fee, storagePeriods) {
     const contract = await this.contract();
-    const {blockNumber, transactionHash} = contract.methods.registerBundle(bundleId, storagePeriods).send({from: this.defaultAddress, value: fee});
+    const {blockNumber, transactionHash} = await contract.methods.registerBundle(bundleId, storagePeriods).send({from: this.defaultAddress, value: fee});
     return {blockNumber, transactionHash};
   }
 
