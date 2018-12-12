@@ -26,22 +26,20 @@ describe('Uploads Wrapper', () => {
     const defaultAccount = '0x123';
     const fee = '100';
     const exampleData = '0xda7a';
-    const encodeAbiStub = sinon.stub().resolves(exampleData);
     let contractMock;
     let registerBundleStub;
     let registerBundleSendStub;
 
     before(async () => {
       registerBundleStub = sinon.stub();
-      registerBundleSendStub = sinon.stub();
+      registerBundleSendStub = sinon.stub().resolves(exampleData);
       contractMock = {
         methods: {
           registerBundle: registerBundleStub
         }
       };
       registerBundleStub.returns({
-        send: registerBundleSendStub,
-        encodeABI: encodeAbiStub
+        send: registerBundleSendStub
       });
     });
 
@@ -59,20 +57,6 @@ describe('Uploads Wrapper', () => {
         await uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
         expect(registerBundleStub).to.be.calledOnceWith(bundleId, storagePeriods);
         expect(registerBundleSendStub).to.be.calledOnceWith({from: defaultAccount, value: fee});
-      });
-    });
-
-    describe('sendTransactions = false', () => {
-      before(() => {
-        uploadsWrapper = new UploadsWrapper({}, {}, defaultAccount, false);
-        sinon.stub(uploadsWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('returns data', async () => {
-        expect(await uploadsWrapper.registerBundle(bundleId, fee, storagePeriods)).to.equal(exampleData);
-        expect(registerBundleStub).to.be.calledWith(bundleId, storagePeriods);
-        expect(registerBundleSendStub).to.be.not.called;
-        expect(encodeAbiStub).to.be.calledOnceWith();
       });
     });
   });

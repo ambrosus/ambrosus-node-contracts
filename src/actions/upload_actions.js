@@ -8,16 +8,19 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class UploadActions {
-  constructor(uploadsWrapper, feesWrapper, shelteringWrapper) {
+  constructor(uploadsWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper) {
     this.uploadsWrapper = uploadsWrapper;
     this.feesWrapper = feesWrapper;
     this.shelteringWrapper = shelteringWrapper;
+    this.blockchainStateWrapper = blockchainStateWrapper;
   }
 
   async uploadBundle(bundleId, storagePeriods) {
     const {uploadsWrapper: uploads, feesWrapper: fees} = this;
     const value = await fees.feeForUpload(storagePeriods);
-    return uploads.registerBundle(bundleId, value, storagePeriods);
+    const {blockNumber, transactionHash} = await uploads.registerBundle(bundleId, value, storagePeriods);
+    const timestamp = await this.blockchainStateWrapper.getBlockTimestamp(blockNumber);
+    return {blockNumber, transactionHash, timestamp};
   }
 
   async getBundleUploadData(bundleId) {
@@ -25,6 +28,8 @@ export default class UploadActions {
     if (!uploadBlock) {
       return null;
     }
-    return this.uploadsWrapper.getUploadData(bundleId, uploadBlock);
+    const timestamp = await this.blockchainStateWrapper.getBlockTimestamp(uploadBlock);
+    const {transactionHash} = await this.uploadsWrapper.getUploadData(bundleId, uploadBlock);
+    return {blockNumber: uploadBlock, transactionHash, timestamp};
   }
 }
