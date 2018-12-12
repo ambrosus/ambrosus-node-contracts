@@ -69,7 +69,6 @@ describe('Upload Actions', () => {
   });
 
   describe('getBundleUploadData', () => {
-
     it('gets block number and returns upload data', async () => {
       shelteringWrapperStub.getBundleUploadBlockNumber.resolves(blockNumber);
       uploadsWrapperStub.getUploadData.resolves(uploadReceipt);
