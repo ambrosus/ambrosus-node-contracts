@@ -41,7 +41,7 @@ describe('BlockchainStateWrapper', () => {
       expect(await wrapper.isAddressAContract(contractAddress)).to.be.true;
     });
 
-    it('returns false if no contract is deployed under the address', async () => {
+    it('returns false if for regular wallets', async () => {
       // Randomly copied from etherscan
       const randomAddress = '0x78b5C928Baa639bDC1E48670b450EB8717BB746a';
       expect(await wrapper.isAddressAContract(randomAddress)).to.be.false;
