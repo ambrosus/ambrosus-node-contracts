@@ -24,6 +24,7 @@ import Deployer from './deployer';
 import contractJsons from './contract_jsons.js';
 import FeesActions from './actions/fees_actions';
 import DeployActions from './actions/deploy_actions';
+import AdministrativeActions from './actions/admin_actions';
 const constants = require('./constants');
 
 module.exports = {
@@ -40,6 +41,7 @@ module.exports = {
   OnboardActions,
   UploadActions,
   FeesActions,
+  AdministrativeActions,
   Deployer,
   DeployActions,
   constants,
