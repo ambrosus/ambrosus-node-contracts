@@ -36,7 +36,7 @@ describe('BlockchainStateWrapper', () => {
   });
 
   describe('isAddressAContract', () => {
-    it('returns true if a contract is deployed under the address', async () => {
+    it('returns true for contracts', async () => {
       const contractAddress = (await deployContract(web3, contractJsons.config)).options.address;
       expect(await wrapper.isAddressAContract(contractAddress)).to.be.true;
     });
