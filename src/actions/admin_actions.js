@@ -18,7 +18,7 @@ export default class AdministrativeActions {
       throw new Error('You need to be the owner of the Head contract to perform a context switch');
     }
     if (!await this.blockchainStateWrapper.isAddressAContract(newContextAddress)) {
-      throw new Error('Provided context address is not a contract address');
+      throw new Error('Provided address is not a contract');
     }
     await this.headWrapper.setContext(newContextAddress);
   }
