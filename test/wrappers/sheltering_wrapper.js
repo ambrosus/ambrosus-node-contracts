@@ -78,7 +78,7 @@ describe('Sheltering Wrapper', () => {
     let igetBundleUploadBlockNumberCallStub;
     const bundleId = 'bundle';
     const defaultAddress = '0x123';
-    const blockNumber = '23';
+    const blockNumber = 23;
 
     beforeEach(async () => {
       getBundleUploadBlockNumberStub = sinon.stub();
@@ -86,7 +86,7 @@ describe('Sheltering Wrapper', () => {
       const contractMock = {
         methods: {
           getBundleUploadBlockNumber: getBundleUploadBlockNumberStub.returns({
-            call: igetBundleUploadBlockNumberCallStub.resolves(blockNumber)
+            call: igetBundleUploadBlockNumberCallStub.resolves(`${blockNumber}`)
           })
         }
       };

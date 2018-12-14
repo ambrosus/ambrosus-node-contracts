@@ -27,7 +27,7 @@ export default class ShelteringWrapper extends ContractWrapper {
   async getBundleUploadBlockNumber(bundleId) {
     const contract = await this.contract();
     const uploadBlockNumber = await contract.methods.getBundleUploadBlockNumber(bundleId).call();
-    return uploadBlockNumber === '0' ? null : uploadBlockNumber;
+    return uploadBlockNumber === '0' ? null : parseInt(uploadBlockNumber, 10);
   }
 
   async getBundleUploader(bundleId) {
