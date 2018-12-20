@@ -31,7 +31,7 @@ contract Config {
 
     uint constant public ATLAS1_STORAGE_LIMIT = 100000;
     uint constant public ATLAS2_STORAGE_LIMIT = 400000;
-    uint constant public ATLAS3_STORAGE_LIMIT = 1000000;
+    uint constant public ATLAS3_STORAGE_LIMIT = 1200000;
 
     uint constant public SHELTERING_CAP_ATLASES_PERCENTAGE = 80;
     uint constant public SHELTERING_CAP_ATLAS_NUMBER_THRESHOLD = 8;
