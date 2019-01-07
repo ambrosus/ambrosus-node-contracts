@@ -19,40 +19,40 @@ const {expect} = chai;
 describe('Head Wrapper', () => {
   let web3;
   let ownerAddress;
-  let head;
   let context;
   let catalogue;
   let storageCatalogue;
   let headWrapper;
+  let addressesForCatalogueConstructor;
   const exampleAddress = '0x97E12BD75bdee72d4975D6df410D2d145b3d8457';
   const deployedMockContracts = {};
 
   const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor');
   const generateAddress = () => web3.eth.accounts.create().address;
+  const deployCatalogueWithMockedContracts = async () => {
+    const catalogueConstructorParams = getContractConstructor(contractJsons.catalogue)
+      .inputs
+      .map((input) => input.name.slice(1));
+    for (const paramName of catalogueConstructorParams) {
+      deployedMockContracts[paramName] = generateAddress();
+    }
+    addressesForCatalogueConstructor = catalogueConstructorParams.map((paramName) => deployedMockContracts[paramName]);
+    return await deployContract(web3, contractJsons.catalogue, addressesForCatalogueConstructor);
+  };
+  const deployStorageCatalogueWithNullArguments = async () => {
+    const addressesForStorageCatalogueConstructor = getContractConstructor(contractJsons.storageCatalogue)
+      .inputs
+      .map(() => null);
+    return await deployContract(web3, contractJsons.storageCatalogue, addressesForStorageCatalogueConstructor);
+  };
 
   before(async () => {
     web3 = await createWeb3();
     ownerAddress = getDefaultAddress(web3);
-    head = await deployContract(web3, contractJsons.head, [ownerAddress]);
-
-    const catalogueConstructorParams = getContractConstructor(contractJsons.catalogue)
-      .inputs
-      .map((input) => input.name.slice(1));
-    const storageCatalogueConstructorParams = getContractConstructor(contractJsons.storageCatalogue)
-      .inputs
-      .map((input) => input.name.slice(1));
-
-    for (const paramName of catalogueConstructorParams) {
-      deployedMockContracts[paramName] = generateAddress();
-    }
-
-    const addressesForCatalogueConstructor = catalogueConstructorParams.map((paramName) => deployedMockContracts[paramName]);
-    const addressesForStorageCatalogueConstructor = storageCatalogueConstructorParams.map((paramName) => deployedMockContracts[paramName]);
-
-    catalogue = await deployContract(web3, contractJsons.catalogue, addressesForCatalogueConstructor);
-    storageCatalogue = await deployContract(web3, contractJsons.storageCatalogue, addressesForStorageCatalogueConstructor);
+    storageCatalogue = await deployStorageCatalogueWithNullArguments();
+    catalogue = await deployCatalogueWithMockedContracts();
     context = await deployContract(web3, contractJsons.context, [addressesForCatalogueConstructor, catalogue.options.address, storageCatalogue.options.address]);
-
+    const head = await deployContract(web3, contractJsons.head, [ownerAddress]);
     headWrapper = new HeadWrapper(head.options.address, web3, ownerAddress);
   });
 
@@ -89,41 +89,58 @@ describe('Head Wrapper', () => {
     expect(receivedCatalogue.options.address).to.equal(catalogue.options.address);
   });
 
-  describe('Gets available contracts addresses', () => {
-    it('kycWhitelist', async () => {
-      expect(await headWrapper.contractAddressByName('kycWhitelist')).to.equal(deployedMockContracts.kycWhitelist);
-    });
+  describe('Gets available contracts addresses and saves to cache', () => {
+    const availableContractsNames = [
+      'kycWhitelist',
+      'roles',
+      'fees',
+      'challenges',
+      'payouts',
+      'shelteringTransfers',
+      'sheltering',
+      'uploads',
+      'config'
+    ];
 
-    it('roles', async () => {
-      expect(await headWrapper.contractAddressByName('roles')).to.equal(deployedMockContracts.roles);
-    });
-
-    it('fees', async () => {
-      expect(await headWrapper.contractAddressByName('fees')).to.equal(deployedMockContracts.fees);
-    });
-
-    it('challenges', async () => {
-      expect(await headWrapper.contractAddressByName('challenges')).to.equal(deployedMockContracts.challenges);
-    });
-
-    it('payouts', async () => {
-      expect(await headWrapper.contractAddressByName('payouts')).to.equal(deployedMockContracts.payouts);
-    });
-
-    it('shelteringTransfers', async () => {
-      expect(await headWrapper.contractAddressByName('shelteringTransfers')).to.equal(deployedMockContracts.shelteringTransfers);
-    });
-
-    it('sheltering', async () => {
-      expect(await headWrapper.contractAddressByName('sheltering')).to.equal(deployedMockContracts.sheltering);
-    });
-
-    it('uploads', async () => {
-      expect(await headWrapper.contractAddressByName('uploads')).to.equal(deployedMockContracts.uploads);
-    });
-
-    it('config', async () => {
-      expect(await headWrapper.contractAddressByName('config')).to.equal(deployedMockContracts.config);
+    availableContractsNames.forEach((contractName) => {
+      it(contractName, async () => {
+        expect(await headWrapper.contractAddressByName(contractName)).to.equal(deployedMockContracts[`${contractName}`]);
+        expect(await headWrapper.cachedAddresses[`${contractName}`]).to.equal(deployedMockContracts[`${contractName}`]);
+      });
     });
   });
+
+  describe('Caching contract addresses', () => {
+    it('Updates catalogue in cache after redeploy', async () => {
+      await makeSureCatalogueIsCached();
+      const originalCatalogue = await headWrapper.catalogue();
+      await deployContextWithNewCatalogue(generateAddress());
+
+      const catalogueAfterRedeploy = await headWrapper.catalogue();
+
+      expect(catalogueAfterRedeploy.options.address).to.not.be.eq(originalCatalogue.options.address);
+    });
+
+    it('Updates contracts in cache after redeploy', async () => {
+      const originalFeesAddress = await headWrapper.contractAddressByName('fees');
+
+      const newCatalogue = await deployCatalogueWithMockedContracts();
+      await deployContextWithNewCatalogue(newCatalogue.options.address);
+
+      const feesAddressAfterRedeploy = await headWrapper.contractAddressByName('fees');
+
+      expect(feesAddressAfterRedeploy).to.not.be.eq(originalFeesAddress);
+    });
+
+    async function deployContextWithNewCatalogue(newCatalogueAddress) {
+      const newContext = await deployContract(web3, contractJsons.context, [addressesForCatalogueConstructor, newCatalogueAddress, storageCatalogue.options.address]);
+      await headWrapper.setContext(newContext.options.address);
+    }
+
+    async function makeSureCatalogueIsCached() {
+      await headWrapper.contractAddressByName('fees');
+    }
+  });
 });
+
+
