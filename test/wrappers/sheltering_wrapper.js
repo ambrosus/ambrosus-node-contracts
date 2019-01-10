@@ -75,18 +75,18 @@ describe('Sheltering Wrapper', () => {
 
   describe('getBundleUploadBlockNumber', () => {
     let getBundleUploadBlockNumberStub;
-    let igetBundleUploadBlockNumberCallStub;
+    let getBundleUploadBlockNumberCallStub;
     const bundleId = 'bundle';
     const defaultAddress = '0x123';
     const blockNumber = 23;
 
     beforeEach(async () => {
       getBundleUploadBlockNumberStub = sinon.stub();
-      igetBundleUploadBlockNumberCallStub = sinon.stub();
+      getBundleUploadBlockNumberCallStub = sinon.stub();
       const contractMock = {
         methods: {
           getBundleUploadBlockNumber: getBundleUploadBlockNumberStub.returns({
-            call: igetBundleUploadBlockNumberCallStub.resolves(`${blockNumber}`)
+            call: getBundleUploadBlockNumberCallStub.resolves(`${blockNumber}`)
           })
         }
       };
@@ -97,12 +97,38 @@ describe('Sheltering Wrapper', () => {
     it('calls contract method with correct arguments', async () => {
       expect(await shelteringWrapper.getBundleUploadBlockNumber(bundleId)).to.equal(blockNumber);
       expect(getBundleUploadBlockNumberStub).to.be.calledOnceWith(bundleId);
-      expect(igetBundleUploadBlockNumberCallStub).to.be.calledOnce;
+      expect(getBundleUploadBlockNumberCallStub).to.be.calledOnce;
     });
 
     it('returns null if upload block number is 0', async () => {
-      igetBundleUploadBlockNumberCallStub.resolves('0');
+      getBundleUploadBlockNumberCallStub.resolves('0');
       expect(await shelteringWrapper.getBundleUploadBlockNumber(bundleId)).to.be.null;
+    });
+  });
+
+  describe('bundleStoragePeriods', () => {
+    let getBundleStoragePeriodsCountStub;
+    let getBundleStoragePeriodsCountCallStub;
+    const bundleId = 'bundle';
+
+    beforeEach(async () => {
+      getBundleStoragePeriodsCountStub = sinon.stub();
+      getBundleStoragePeriodsCountCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getBundleStoragePeriodsCount: getBundleStoragePeriodsCountStub.returns({
+            call: getBundleStoragePeriodsCountCallStub.resolves(4)
+          })
+        }
+      };
+      shelteringWrapper = new ShelteringWrapper({}, {}, null);
+      sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await shelteringWrapper.bundleStoragePeriods(bundleId)).to.equal(4);
+      expect(getBundleStoragePeriodsCountStub).to.be.calledOnceWith(bundleId);
+      expect(getBundleStoragePeriodsCountCallStub).to.be.calledOnce;
     });
   });
 

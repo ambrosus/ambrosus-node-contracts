@@ -24,6 +24,11 @@ export default class ShelteringWrapper extends ContractWrapper {
     return contract.methods.getShelteringExpirationDate(bundleId, this.defaultAddress).call();
   }
 
+  async bundleStoragePeriods(bundleId) {
+    const contract = await this.contract();
+    return contract.methods.getBundleStoragePeriodsCount(bundleId).call();
+  }
+
   async getBundleUploadBlockNumber(bundleId) {
     const contract = await this.contract();
     const uploadBlockNumber = await contract.methods.getBundleUploadBlockNumber(bundleId).call();
