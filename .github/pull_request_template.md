@@ -8,3 +8,4 @@
 - [ ] Automatic tests pass
 - [ ] Sanity check passed
 - [ ] Self-review passed
+- [ ] Version updated

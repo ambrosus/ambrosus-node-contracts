@@ -20,6 +20,7 @@ export default class HeadWrapper {
     this.web3 = web3;
     this.defaultAddress = defaultAddress;
     this.head = loadContract(this.web3, contractJsons.head.abi, headContractAddress);
+    this.clearContractAddressCache();
   }
 
   setDefaultAddress(defaultAddress) {
@@ -42,9 +43,11 @@ export default class HeadWrapper {
     if (!availableContracts.includes(contractName)) {
       throw new Error('Requested contract does not exist');
     }
-
     const catalogue = await this.catalogue();
-    return catalogue.methods[`${contractName}()`]().call();
+    if (this.isNotInContractAddressCache(contractName)) {
+      this.updateContractAddressCache(contractName, await catalogue.methods[`${contractName}()`]().call());
+    }
+    return this.cachedAddresses[`${contractName}`];
   }
 
   async setContext(address) {
@@ -58,19 +61,41 @@ export default class HeadWrapper {
       .methods
       .context()
       .call();
+    if (this.cachedContractAddressHasChanged(contextAddress, 'context')) {
+      this.clearContractAddressCache();
+      this.updateContractAddressCache('context', contextAddress);
+    }
     return loadContract(this.web3, contractJsons.context.abi, contextAddress);
   }
 
   async catalogue() {
     const context = await this.context();
-    const catalogueAddress = await context
-      .methods
-      .catalogue()
-      .call();
-    return loadContract(this.web3, contractJsons.catalogue.abi, catalogueAddress);
+    if (this.isNotInContractAddressCache('catalogue')) {
+      this.updateContractAddressCache('catalogue', await context
+        .methods
+        .catalogue()
+        .call());
+    }
+    return loadContract(this.web3, contractJsons.catalogue.abi, this.cachedAddresses.catalogue);
   }
 
   async getOwner() {
     return this.head.methods.owner().call();
+  }
+
+  clearContractAddressCache() {
+    this.cachedAddresses = {};
+  }
+
+  isNotInContractAddressCache(contractName) {
+    return !(`${contractName}` in this.cachedAddresses);
+  }
+
+  cachedContractAddressHasChanged(contractAddress, contractName) {
+    return contractAddress !== this.cachedAddresses[`${contractName}`];
+  }
+
+  updateContractAddressCache(contractName, contractAddress) {
+    this.cachedAddresses[`${contractName}`] = contractAddress;
   }
 }
