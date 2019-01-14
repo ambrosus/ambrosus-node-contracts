@@ -10,15 +10,15 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import PayoutWrapper from '../../src/wrappers/payout_wrapper';
+import PayoutsWrapper from '../../src/wrappers/payouts_wrapper';
 import sinon from 'sinon';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe('Payout wrapper', () => {
-  let payoutWrapper;
+describe('Payouts wrapper', () => {
+  let payoutsWrapper;
   const defaultAddress = '0x6789';
 
   describe('Available payout amount', () => {
@@ -37,12 +37,12 @@ describe('Payout wrapper', () => {
           })
         }
       };
-      payoutWrapper = new PayoutWrapper({}, {}, defaultAddress);
-      sinon.stub(payoutWrapper, 'contract').resolves(contractMock);
+      payoutsWrapper = new PayoutsWrapper({}, {}, defaultAddress);
+      sinon.stub(payoutsWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
-      await expect(payoutWrapper.availablePayoutAmountAtPeriod(payoutPeriod)).to.eventually.equal(availableAmount);
+      await expect(payoutsWrapper.availablePayoutAmountAtPeriod(payoutPeriod)).to.eventually.equal(availableAmount);
       expect(availableStub).to.be.calledOnceWith(payoutPeriod);
       expect(availableCallStub).to.be.calledOnce;
     });
@@ -71,12 +71,12 @@ describe('Payout wrapper', () => {
 
     describe('sendTransactions = true', () => {
       beforeEach(() => {
-        payoutWrapper = new PayoutWrapper({}, {}, defaultAddress, true);
-        sinon.stub(payoutWrapper, 'contract').resolves(contractMock);
+        payoutsWrapper = new PayoutsWrapper({}, {}, defaultAddress, true);
+        sinon.stub(payoutsWrapper, 'contract').resolves(contractMock);
       });
 
       it('calls contract method with correct arguments', async () => {
-        await payoutWrapper.withdraw();
+        await payoutsWrapper.withdraw();
         expect(withdrawStub).to.be.calledWith(defaultAddress);
         expect(withdrawSendStub).to.be.calledWith({from: defaultAddress});
       });
@@ -84,12 +84,12 @@ describe('Payout wrapper', () => {
 
     describe('sendTransactions = false', () => {
       beforeEach(() => {
-        payoutWrapper = new PayoutWrapper({}, {}, defaultAddress, false);
-        sinon.stub(payoutWrapper, 'contract').resolves(contractMock);
+        payoutsWrapper = new PayoutsWrapper({}, {}, defaultAddress, false);
+        sinon.stub(payoutsWrapper, 'contract').resolves(contractMock);
       });
 
       it('returns data', async () => {
-        expect(await payoutWrapper.withdraw()).to.equal(exampleData);
+        expect(await payoutsWrapper.withdraw()).to.equal(exampleData);
         expect(withdrawStub).to.be.calledWith(defaultAddress);
         expect(withdrawSendStub).to.be.not.called;
         expect(encodeAbiStub).to.be.calledOnceWith();

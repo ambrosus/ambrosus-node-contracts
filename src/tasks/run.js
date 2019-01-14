@@ -27,7 +27,7 @@ import NodeServiceTask from './node_service';
 import NodeServiceActions from '../actions/node_service';
 import PayoutsActions from '../actions/payouts_actions';
 import TimeWrapper from '../wrappers/time_wrapper';
-import PayoutWrapper from '../wrappers/payout_wrapper';
+import PayoutsWrapper from '../wrappers/payouts_wrapper';
 import PayoutsTask from './payouts';
 
 const runTask = async () => {
@@ -41,7 +41,7 @@ const runTask = async () => {
   const kycWhitelistWrapper = new KycWhitelistWrapper(headWrapper, web3, nodeAddress);
   const shelteringWrapper = new ShelteringWrapper(headWrapper, web3, nodeAddress);
   const timeWrapper = new TimeWrapper(headWrapper, web3, nodeAddress);
-  const payoutsWrapper = new PayoutWrapper(headWrapper, web3, nodeAddress);
+  const payoutsWrapper = new PayoutsWrapper(headWrapper, web3, nodeAddress);
 
   const whitelistActions = new WhitelistActions(kycWhitelistWrapper);
   const onboardActions = new OnboardActions(kycWhitelistWrapper, rolesWrapper);

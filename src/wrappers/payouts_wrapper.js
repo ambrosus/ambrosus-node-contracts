@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import ContractWrapper from './contract_wrapper';
 
-export default class PayoutWrapper extends ContractWrapper {
+export default class PayoutsWrapper extends ContractWrapper {
   get getContractName() {
     return 'payouts';
   }
