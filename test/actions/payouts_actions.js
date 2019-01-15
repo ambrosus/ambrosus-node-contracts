@@ -30,7 +30,7 @@ describe('Payouts actions', () => {
       currentPayoutPeriod: sinon.stub().resolves(exampleTimePeriod)
     };
     payoutsWrapperMock = {
-      availablePayoutAmountAtPeriod: sinon.stub(),
+      availablePayoutAmountInPeriod: sinon.stub(),
       withdraw: sinon.stub()
     };
     payoutsActions = new PayoutsActions(timeWrapperMock, payoutsWrapperMock);
@@ -48,18 +48,18 @@ describe('Payouts actions', () => {
 
   describe('getTotalAvailablePayout', () => {
     beforeEach(() => {
-      payoutsWrapperMock.availablePayoutAmountAtPeriod.callsFake(async (period) => (period - FIRST_MEANINGFUL_PERIOD).toString());
+      payoutsWrapperMock.availablePayoutAmountInPeriod.callsFake(async (period) => (period - FIRST_MEANINGFUL_PERIOD).toString());
     });
 
     it('returns sum of all payouts from FIRST_MEANINGFUL_PERIOD to (currentPayout - 1)', async () => {
       expect(await payoutsActions.getTotalAvailablePayout()).to.equal('66'); // ∑ 1 to 11
     });
 
-    it('calls payoutsWrapperMock.availablePayoutAmountAtPeriod for each period before current one', async () => {
+    it('calls payoutsWrapperMock.availablePayoutAmountInPeriod for each period before current one', async () => {
       await payoutsActions.getTotalAvailablePayout();
-      expect(payoutsWrapperMock.availablePayoutAmountAtPeriod).to.have.callCount(12);
+      expect(payoutsWrapperMock.availablePayoutAmountInPeriod).to.have.callCount(12);
       for (let ind = FIRST_MEANINGFUL_PERIOD; ind < exampleTimePeriod; ind++) {
-        expect(payoutsWrapperMock.availablePayoutAmountAtPeriod).to.be.calledWith(ind);
+        expect(payoutsWrapperMock.availablePayoutAmountInPeriod).to.be.calledWith(ind);
       }
     });
   });

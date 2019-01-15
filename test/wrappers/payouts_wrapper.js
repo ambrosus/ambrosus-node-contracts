@@ -42,7 +42,7 @@ describe('Payouts wrapper', () => {
     });
 
     it('calls contract method with correct arguments', async () => {
-      await expect(payoutsWrapper.availablePayoutAmountAtPeriod(payoutPeriod)).to.eventually.equal(availableAmount);
+      await expect(payoutsWrapper.availablePayoutAmountInPeriod(payoutPeriod)).to.eventually.equal(availableAmount);
       expect(availableStub).to.be.calledOnceWith(payoutPeriod);
       expect(availableCallStub).to.be.calledOnce;
     });

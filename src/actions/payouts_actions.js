@@ -25,7 +25,7 @@ export default class PayoutsActions {
     const currentPayout = parseInt(await this.currentPayoutPeriod(), 10);
     let availablePayout = new BN('0');
     for (let ind = FIRST_MEANINGFUL_PERIOD; ind < currentPayout; ind++) {
-      availablePayout = availablePayout.add(new BN(await this.payoutsWrapper.availablePayoutAmountAtPeriod(ind)));
+      availablePayout = availablePayout.add(new BN(await this.payoutsWrapper.availablePayoutAmountInPeriod(ind)));
     }
     return availablePayout.toString();
   }

@@ -43,15 +43,14 @@ export default class PayoutsTask extends TaskBase {
 
   async withdraw() {
     try {
-      if (await await this.payoutsActions.getTotalAvailablePayout() === '0') {
+      const totalAvailablePayout = await this.payoutsActions.getTotalAvailablePayout();
+      if (totalAvailablePayout === '0') {
         console.log('Nothing to withdraw :(');
         return;
       }
-      const balanceBefore = this.web3.utils.toBN(await this.web3.eth.getBalance(this.sender));
       await this.payoutsActions.withdraw();
-      const balanceAfter = this.web3.utils.toBN(await this.web3.eth.getBalance(this.sender));
-      const balanceDiff = this.web3.utils.fromWei(balanceAfter.sub(balanceBefore), 'ether');
-      console.log(`${balanceDiff} have been sent to your account`);
+      const payoutInAMB = this.web3.utils.fromWei(totalAvailablePayout, 'ether');
+      console.log(`${payoutInAMB} AMB have been sent to your account`);
     } catch (err) {
       console.error(err.message);
       process.exit(1);

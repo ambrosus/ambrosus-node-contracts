@@ -15,7 +15,7 @@ export default class PayoutsWrapper extends ContractWrapper {
   }
 
   // Resolves in AMB * 10^(-18) units
-  async availablePayoutAmountAtPeriod(payoutPeriod) {
+  async availablePayoutAmountInPeriod(payoutPeriod) {
     const contract = await this.contract();
     return contract.methods.available(payoutPeriod).call();
   }
