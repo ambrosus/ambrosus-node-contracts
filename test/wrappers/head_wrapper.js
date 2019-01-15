@@ -99,7 +99,8 @@ describe('Head Wrapper', () => {
       'shelteringTransfers',
       'sheltering',
       'uploads',
-      'config'
+      'config',
+      'time'
     ];
 
     availableContractsNames.forEach((contractName) => {

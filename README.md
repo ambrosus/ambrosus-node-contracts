@@ -38,6 +38,7 @@ yarn task stake deposit [role] [amount]
 yarn task stake release
 yarn task stake check
 yarn task upload [bundleId] [storagePeriods]
+yarn task payouts [period/total/withdraw]
 ```
 
 ## Testing

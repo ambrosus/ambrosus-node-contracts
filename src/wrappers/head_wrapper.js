@@ -37,7 +37,8 @@ export default class HeadWrapper {
       'shelteringTransfers',
       'sheltering',
       'uploads',
-      'config'
+      'config',
+      'time'
     ];
 
     if (!availableContracts.includes(contractName)) {
