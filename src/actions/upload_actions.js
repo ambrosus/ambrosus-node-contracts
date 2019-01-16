@@ -20,19 +20,26 @@ export default class UploadActions {
   }
 
   async uploadBundle(bundleId, storagePeriods) {
-    const {uploadsWrapper: uploads, feesWrapper: fees} = this;
-    const fee = await fees.feeForUpload(storagePeriods);
-    const balance = new BN(await this.blockchainStateWrapper.getBalance(this.uploadsWrapper.defaultAddress));
+    const fee = await this.getFee(storagePeriods);
+    const balance = await this.getBalance();
     if (balance.lte(new BN(fee))) {
-      return {error: `Not enough balance to to upload bundle. Balance: ${utils.fromWei(balance, 'ether')}`};
+      return {error: `Insufficient funds: need at least ${utils.fromWei(fee, 'ether')} to upload the bundle. Balance: ${utils.fromWei(balance, 'ether')}`};
     }
-    const {blockNumber, transactionHash} = await uploads.registerBundle(bundleId, fee, storagePeriods);
+    const {blockNumber, transactionHash} = await this.uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
     const timestamp = await this.blockchainStateWrapper.getBlockTimestamp(blockNumber);
     const uploadResult = {blockNumber, transactionHash, timestamp};
     if (balance.lte(this.lowFundsWarningAmount)) {
       return {...uploadResult, warning: `Hermes low balance warning triggered. Balance: ${utils.fromWei(balance, 'ether')}`};
     }
     return uploadResult;
+  }
+
+  async getBalance() {
+    return new BN(await this.blockchainStateWrapper.getBalance(this.uploadsWrapper.defaultAddress));
+  }
+
+  async getFee(storagePeriods) {
+    return await this.feesWrapper.feeForUpload(storagePeriods);
   }
 
   async getBundleUploadData(bundleId) {

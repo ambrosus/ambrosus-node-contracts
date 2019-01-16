@@ -58,7 +58,7 @@ describe('Upload Actions', () => {
 
     beforeEach(() => {
       fee = utils.toWei('1000', 'ether');
-      blockchainStateWrapperStub.getBalance.resolves(utils.toWei('999999999'));
+      blockchainStateWrapperStub.getBalance.resolves(utils.toWei('999999999', 'ether'));
       feesWrapperStub.feeForUpload.resolves(fee);
       uploadsWrapperStub.registerBundle.resolves(uploadReceipt);
       blockchainStateWrapperStub.getBlockTimestamp.withArgs(blockNumber).resolves(timestamp);
@@ -101,7 +101,7 @@ describe('Upload Actions', () => {
       blockchainStateWrapperStub.getBalance.resolves(utils.toWei('900', 'ether'));
       const uploadResult = await uploadActions.uploadBundle(bundleId, storagePeriods);
       expect(uploadResult).to.deep.equal({
-        error: 'Not enough balance to to upload bundle. Balance: 900'
+        error: 'Insufficient funds: need at least 1000 to upload the bundle. Balance: 900'
       });
       expect(uploadsWrapperStub.registerBundle).to.be.not.called;
     });

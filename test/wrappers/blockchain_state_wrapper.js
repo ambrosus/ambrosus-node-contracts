@@ -64,7 +64,7 @@ describe('BlockchainStateWrapper', () => {
     });
 
     it('return balance of the account', async () => {
-      expect(await wrapper.getBalance(exampleAddress, 42)).to.equal(currentBalance);
+      expect(await wrapper.getBalance(exampleAddress)).to.equal(currentBalance);
     });
   });
 });
