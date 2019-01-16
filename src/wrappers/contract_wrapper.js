@@ -19,6 +19,10 @@ export default class ContractWrapper {
     this.sendTransactions = sendTransactions;
   }
 
+  async address() {
+    return this.headWrapper.contractAddressByName(this.getContractName);
+  }
+
   async contract() {
     const contractAddress = await this.headWrapper.contractAddressByName(this.getContractName);
     return loadContract(this.web3, contractJsons[this.getContractName].abi, contractAddress);

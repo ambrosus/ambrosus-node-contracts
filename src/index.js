@@ -13,6 +13,9 @@ import PayoutsWrapper from './wrappers/payouts_wrapper';
 import ConfigWrapper from './wrappers/config_wrapper';
 import FeesWrapper from './wrappers/fees_wrapper';
 import HeadWrapper from './wrappers/head_wrapper';
+import ValidatorSetWrapper from './wrappers/validator_set_wrapper';
+import BlockRewardsWrapper from './wrappers/block_rewards_wrapper';
+import ValidatorProxyWrapper from './wrappers/validator_proxy_wrapper';
 import KycWhitelistWrapper from './wrappers/kyc_whitelist_wrapper';
 import TimeWrapper from './wrappers/time_wrapper';
 import RolesWrapper from './wrappers/roles_wrapper';
@@ -37,6 +40,9 @@ module.exports = {
   ConfigWrapper,
   FeesWrapper,
   HeadWrapper,
+  ValidatorSetWrapper,
+  BlockRewardsWrapper,
+  ValidatorProxyWrapper,
   KycWhitelistWrapper,
   RolesWrapper,
   ShelteringWrapper,

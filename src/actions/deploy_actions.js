@@ -16,9 +16,13 @@ import contractJsons, {contractSuperSpeedJsons} from '../contract_jsons';
 const DEFAULT_BLOCK_REWARD = '1146237435108134836';
 
 export default class DeployActions {
-  constructor(deployer) {
+  constructor(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper) {
     this.deployer = deployer;
     this.sender = this.deployer.sender;
+    this.headWrapper = headWrapper;
+    this.validatorSetWrapper = validatorSetWrapper;
+    this.blockRewardsWrapper = blockRewardsWrapper;
+    this.validatorProxyWrapper = validatorProxyWrapper;
   }
 
   async deployGenesis(initialValidators, baseReward = DEFAULT_BLOCK_REWARD) {
@@ -29,19 +33,59 @@ export default class DeployActions {
     return {head, validatorSet, blockRewards};
   }
 
-  validateGenesisAddresses(addresses) {
-    const isAddress = (address) => /0x[a-f0-9]{40}/i.exec(address);
-    ['head', 'validatorSet', 'blockRewards'].forEach((contractName) => {
-      if (!isAddress(addresses[contractName])) {
-        throw new Error(`${contractName} address ${addresses[contractName]} is not a valid Ethereum address`);
-      }
-    });
-  }
-
-  async deployAll(head, validatorSet, blockRewards, turbo = false) {
-    this.validateGenesisAddresses({head, validatorSet, blockRewards});
+  async deployInitial(turbo = false) {
     const overrides = turbo ? contractSuperSpeedJsons : {};
     const contractsToDeploy = {...contractJsons, ...overrides};
-    return this.deployer.deploy(contractsToDeploy, {head, validatorSet, blockRewards});
+    const genesisContracts = {
+      head: this.headWrapper.address(),
+      validatorSet: this.validatorSetWrapper.address(),
+      blockRewards: this.blockRewardsWrapper.address()
+    };
+    return this.deployer.deploy(contractsToDeploy, genesisContracts);
+  }
+
+  async deployUpdate(turbo = false) {
+    const overrides = turbo ? contractSuperSpeedJsons : {};
+    const contractsToDeploy = {...contractJsons, ...overrides};
+    const recycledContracts = await this.recycleStorageContracts();
+    const genesisContracts = {
+      head: this.headWrapper.address(),
+      validatorSet: this.validatorSetWrapper.address(),
+      blockRewards: this.blockRewardsWrapper.address()
+    };
+    await this.regainGenesisContractsOwnership();
+    return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts});
+  }
+
+  async recycleStorageContracts() {
+    const storageContractNames = this.headWrapper.availableStorageCatalogueContracts;
+    const recycled = {};
+    for (const contractName of storageContractNames) {
+      recycled[contractName] = await this.headWrapper.contractAddressByName(contractName);
+    }
+    return recycled;
+  }
+
+  async regainGenesisContractsOwnership() {
+    const validatorProxyOwner = await this.validatorProxyWrapper.getOwner();
+    const validatorProxyAddress = await this.validatorProxyWrapper.address();
+
+    const validatorSetOwner = await this.validatorSetWrapper.getOwner();
+    if (validatorSetOwner === this.sender) {
+      // nothing to do
+    } else if (validatorProxyOwner === this.sender && validatorSetOwner === validatorProxyAddress) {
+      await this.validatorProxyWrapper.transferOwnershipForValidatorSet(this.sender);
+    } else {
+      throw `Failed to regain ownership for validator set contract from it's current owner: ${validatorSetOwner}`;
+    }
+
+    const blockRewardsOwner = await this.blockRewardsWrapper.getOwner();
+    if (blockRewardsOwner === this.sender) {
+      // nothing to do
+    } else if (validatorProxyOwner === this.sender && blockRewardsOwner === validatorProxyAddress) {
+      await this.validatorProxyWrapper.transferOwnershipForBlockRewards(this.sender);
+    } else {
+      throw `Failed to regain ownership for block rewards contract from it's current owner: ${blockRewardsOwner}`;
+    }
   }
 }

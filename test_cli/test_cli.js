@@ -89,7 +89,7 @@ startGanacheServer(
     let failed = false;
     try {
       const deployEnvFile = `${__dirname}/test_cli_head.env`;
-      await execute(`yarn task deploy --genesis --save ${deployEnvFile}`, envForUser(adminUser));
+      await execute(`yarn task deployGenesis --save ${deployEnvFile}`, envForUser(adminUser));
       const deployConfig = dotenv.parse(fs.readFileSync(deployEnvFile));
       const adminEnv = {
         ...envForUser(adminUser),
@@ -108,14 +108,7 @@ startGanacheServer(
         ...deployConfig
       };
 
-      const verifyNodeState = async (address, whitelistedRole, onboardedRole, stake, url) => {
-        const ret = await execute(`yarn task whitelist get ${address}`, adminEnv);
-        const regexStr = `Address ${address} is whitelisted for the ${whitelistedRole} role with ${stake} AMB deposit\/stake\\W+Address ${address} is onboarded for the ${onboardedRole} role with url:\\W*${url}`;
-        const regex = new RegExp(regexStr, 'g');
-        if (!regex.test(ret)) {
-          throw new Error('Expected whitelist/onboard state not present');
-        }
-      };
+      await execute(`yarn task deploy initial`, adminEnv);
 
       const verifyFails = async (work) => {
         let failed = false;
@@ -126,6 +119,22 @@ startGanacheServer(
         }
         if (!failed) {
           throw new Error('Should have failed');
+        }
+      };
+
+      console.log('------ test deploy update ------');
+      await execute(`yarn task deploy update`, adminEnv);
+
+      await verifyFails(async () => {
+        await execute(`yarn task deploy update`, apolloEnv);
+      });
+
+      const verifyNodeState = async (address, whitelistedRole, onboardedRole, stake, url) => {
+        const ret = await execute(`yarn task whitelist get ${address}`, adminEnv);
+        const regexStr = `Address ${address} is whitelisted for the ${whitelistedRole} role with ${stake} AMB deposit\/stake\\W+Address ${address} is onboarded for the ${onboardedRole} role with url:\\W*${url}`;
+        const regex = new RegExp(regexStr, 'g');
+        if (!regex.test(ret)) {
+          throw new Error('Expected whitelist/onboard state not present');
         }
       };
 
@@ -157,15 +166,6 @@ startGanacheServer(
       await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://example.com');
       await execute(`yarn task nodeService setUrl http://google.com`, hermesEnv);
       await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://google.com');
-
-      console.log('------ test deploy owner checks ------');
-      await verifyFails(async () => {
-        await execute(
-          `yarn task deploy --head=${deployConfig.HEAD_CONTRACT_ADDRESS}` +
-          ` --validatorSet=${deployConfig.VALIDATOR_SET_CONTRACT_ADDRESS}` +
-          ` --blockRewards=${deployConfig.BLOCK_REWARDS_CONTRACT_ADDRESS}`,
-          envForUser(adminUser));
-      });
     } catch (err) {
       printError(err);
       failed = true;

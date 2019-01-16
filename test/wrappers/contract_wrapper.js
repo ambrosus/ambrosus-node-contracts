@@ -24,6 +24,7 @@ describe('Contract Wrapper', () => {
   let contractNameStub;
   const defaultAddress = '0xdeadface';
   const exampleContractName = 'fees';
+  const exampleContractAddress = 'fees';
 
   before(() => {
     mockWeb3 = {
@@ -35,9 +36,24 @@ describe('Contract Wrapper', () => {
       }
     };
     mockHeadWrapper = {
-      contractAddressByName: sinon.stub()
+      contractAddressByName: sinon.stub().resolves(exampleContractAddress)
     };
     contractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
+  });
+
+  describe('getting address', () => {
+    before(async () => {
+      contractNameStub = sinon.stub(contractWrapper, 'getContractName').get(() => (exampleContractName));
+    });
+
+    after(() => {
+      contractNameStub.restore();
+    });
+
+    it('proxies the contract address received from the headWrapper', async () => {
+      expect(contractWrapper.address()).to.eventually.equal(exampleContractAddress);
+      expect(mockHeadWrapper.contractAddressByName).to.have.been.calledWith(exampleContractName);
+    });
   });
 
   describe('getting contract', () => {

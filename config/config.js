@@ -10,5 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 module.exports = Object.freeze({
   web3Rpc: process.env.WEB3_RPC,
   nodePrivateKey: process.env.WEB3_NODEPRIVATEKEY,
-  headContractAddress: process.env.HEAD_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000f10'
+  headContractAddress: process.env.HEAD_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000F10',
+  validatorSetContractAddress: process.env.VALIDATOR_SET_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000F00',
+  blockRewardsContractAddress: process.env.BLOCK_REWARDS_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000F01'
 });

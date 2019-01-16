@@ -21,6 +21,35 @@ export default class HeadWrapper {
     this.defaultAddress = defaultAddress;
     this.head = loadContract(this.web3, contractJsons.head.abi, headContractAddress);
     this.clearContractAddressCache();
+
+    this.availableCatalogueContracts = [
+      'kycWhitelist',
+      'roles',
+      'fees',
+      'time',
+      'challenges',
+      'payouts',
+      'shelteringTransfers',
+      'sheltering',
+      'uploads',
+      'config',
+      'validatorProxy'
+    ];
+
+    this.availableStorageCatalogueContracts = [
+      'apolloDepositStore',
+      'atlasStakeStore',
+      'bundleStore',
+      'challengesStore',
+      'kycWhitelistStore',
+      'payoutsStore',
+      'rolesStore',
+      'shelteringTransfersStore'
+    ];
+  }
+
+  address() {
+    return this.head.options.address;
   }
 
   setDefaultAddress(defaultAddress) {
@@ -28,25 +57,18 @@ export default class HeadWrapper {
   }
 
   async contractAddressByName(contractName) {
-    const availableContracts = [
-      'kycWhitelist',
-      'roles',
-      'fees',
-      'challenges',
-      'payouts',
-      'shelteringTransfers',
-      'sheltering',
-      'uploads',
-      'config',
-      'time'
-    ];
-
-    if (!availableContracts.includes(contractName)) {
+    if (this.availableCatalogueContracts.includes(contractName)) {
+      const catalogue = await this.catalogue();
+      if (this.isNotInContractAddressCache(contractName)) {
+        this.updateContractAddressCache(contractName, await catalogue.methods[`${contractName}()`]().call());
+      }
+    } else if (this.availableStorageCatalogueContracts.includes(contractName)) {
+      const storageCatalogue = await this.storageCatalogue();
+      if (this.isNotInContractAddressCache(contractName)) {
+        this.updateContractAddressCache(contractName, await storageCatalogue.methods[`${contractName}()`]().call());
+      }
+    } else {
       throw new Error('Requested contract does not exist');
-    }
-    const catalogue = await this.catalogue();
-    if (this.isNotInContractAddressCache(contractName)) {
-      this.updateContractAddressCache(contractName, await catalogue.methods[`${contractName}()`]().call());
     }
     return this.cachedAddresses[`${contractName}`];
   }
@@ -78,6 +100,17 @@ export default class HeadWrapper {
         .call());
     }
     return loadContract(this.web3, contractJsons.catalogue.abi, this.cachedAddresses.catalogue);
+  }
+
+  async storageCatalogue() {
+    const context = await this.context();
+    if (this.isNotInContractAddressCache('storageCatalogue')) {
+      this.updateContractAddressCache('storageCatalogue', await context
+        .methods
+        .storageCatalogue()
+        .call());
+    }
+    return loadContract(this.web3, contractJsons.storageCatalogue.abi, this.cachedAddresses.storageCatalogue);
   }
 
   async getOwner() {
