@@ -11,10 +11,8 @@ import TaskBase from './base/task_base';
 import commandLineArgs from 'command-line-args';
 
 export default class DeployTask extends TaskBase {
-  constructor(web3, sender, deployActions) {
+  constructor(deployActions) {
     super();
-    this.web3 = web3;
-    this.sender = sender;
     this.deployActions = deployActions;
   }
 

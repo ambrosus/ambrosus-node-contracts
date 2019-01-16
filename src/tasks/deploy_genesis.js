@@ -12,10 +12,9 @@ import commandLineArgs from 'command-line-args';
 import {writeFile} from '../utils/file';
 
 export default class DeployGenesisTask extends TaskBase {
-  constructor(web3, sender, deployActions) {
+  constructor(web3, deployActions) {
     super();
     this.web3 = web3;
-    this.sender = sender;
     this.deployActions = deployActions;
   }
 
