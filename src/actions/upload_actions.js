@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import BN from 'bn.js';
 import {InsufficientFundsToUploadBundleError} from '../errors/errors';
+import {utils} from '../utils/web3_tools';
 
 export default class UploadActions {
   constructor(uploadsWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper, lowFundsWarningAmount = '0') {
@@ -16,7 +17,7 @@ export default class UploadActions {
     this.feesWrapper = feesWrapper;
     this.shelteringWrapper = shelteringWrapper;
     this.blockchainStateWrapper = blockchainStateWrapper;
-    this.lowFundsWarningAmount = new BN(lowFundsWarningAmount);
+    this.lowFundsWarningAmount = new BN(utils.toWei(lowFundsWarningAmount));
   }
 
   async uploadBundle(bundleId, storagePeriods) {

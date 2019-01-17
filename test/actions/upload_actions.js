@@ -12,7 +12,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import UploadActions from '../../src/actions/upload_actions';
-import {utils} from 'web3';
+import {utils} from '../../src/utils/web3_tools';
 import {InsufficientFundsToUploadBundleError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
@@ -26,7 +26,7 @@ describe('Upload Actions', () => {
   let shelteringWrapperStub;
   let blockchainStateWrapperStub;
 
-  const lowBalanceWarningAmount = utils.toWei('10000', 'ether');
+  const lowBalanceWarningAmount = '10000';
   const timestamp = 1544536774;
   const blockNumber = 138;
   const bundleId = '0xABCD';
