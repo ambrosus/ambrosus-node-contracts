@@ -21,24 +21,37 @@ export WEB3_RPC=http://localhost:8545
 export WEB3_NODEPRIVATEKEY="COPIED_PRIVATE_KEY"
 ```
 
-Then deploy contracts and save outcome to an environment file
+Then deploy genesis contracts and save outcome to an environment file
 ```bash
-yarn task deploy --save <path to file>
+yarn task deployGenesis --save <path to file>
+```
+
+Finally deploy the cryptoeconomy contracts:
+```bash
+yarn task deploy initial
+```
+
+Or deploy an update to the cryptoeconomy contracts:
+```bash
+yarn task deploy update
 ```
 
 You are ready to play.
 
 The following administrative tasks are available: 
 ```bash
-yarn task deploy
+yarn task deployGenesis (only for testing purposes as this are normally included in the genesis block)
+yarn task deploy initial [turbo mode flag] 
+yarn task deploy update [turbo mode flag] 
 yarn task whitelist add [address] [node type] [required stake/deposit]
 yarn task whitelist remove [address]
-yarn task whitelist check
-yarn task stake deposit [role] [amount]
-yarn task stake release
-yarn task stake check
+yarn task whitelist get [address]
+yarn task onboard [node type]
 yarn task upload [bundleId] [storagePeriods]
-yarn task payouts [period/total/withdraw]
+yarn task nodeService setUrl [new node url]
+yarn task payouts period
+yarn task payouts total
+yarn task payouts withdraw
 ```
 
 ## Testing

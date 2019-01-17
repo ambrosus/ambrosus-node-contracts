@@ -11,12 +11,16 @@ import {loadContract} from '../utils/web3_tools';
 import contractJsons from '../contract_jsons';
 
 /** @abstract */
-export default class ContractWrapper {
+export default class ManagedContractWrapper {
   constructor(headWrapper, web3, defaultAddress, sendTransactions = true) {
     this.headWrapper = headWrapper;
     this.web3 = web3;
     this.defaultAddress = defaultAddress;
     this.sendTransactions = sendTransactions;
+  }
+
+  async address() {
+    return this.headWrapper.contractAddressByName(this.getContractName);
   }
 
   async contract() {

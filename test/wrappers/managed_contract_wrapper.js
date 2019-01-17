@@ -11,19 +11,20 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import ContractWrapper from '../../src/wrappers/contract_wrapper';
+import ManagedContractWrapper from '../../src/wrappers/managed_contract_wrapper';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe('Contract Wrapper', () => {
+describe('Managed Contract Wrapper', () => {
   let contractWrapper;
   let mockHeadWrapper;
   let mockWeb3;
   let contractNameStub;
   const defaultAddress = '0xdeadface';
   const exampleContractName = 'fees';
+  const exampleContractAddress = 'fees';
 
   before(() => {
     mockWeb3 = {
@@ -35,9 +36,24 @@ describe('Contract Wrapper', () => {
       }
     };
     mockHeadWrapper = {
-      contractAddressByName: sinon.stub()
+      contractAddressByName: sinon.stub().resolves(exampleContractAddress)
     };
-    contractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
+    contractWrapper = new ManagedContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
+  });
+
+  describe('getting address', () => {
+    before(async () => {
+      contractNameStub = sinon.stub(contractWrapper, 'getContractName').get(() => (exampleContractName));
+    });
+
+    after(() => {
+      contractNameStub.restore();
+    });
+
+    it('proxies the contract address received from the headWrapper', async () => {
+      expect(contractWrapper.address()).to.eventually.equal(exampleContractAddress);
+      expect(mockHeadWrapper.contractAddressByName).to.have.been.calledWith(exampleContractName);
+    });
   });
 
   describe('getting contract', () => {
@@ -77,24 +93,24 @@ describe('Contract Wrapper', () => {
     });
 
     it('sendTransactions is true by default', async () => {
-      expect(new ContractWrapper().sendTransactions).to.be.true;
+      expect(new ManagedContractWrapper().sendTransactions).to.be.true;
     });
 
     it('sends transaction when sendTransactions is true', async () => {
-      const sendingContractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
+      const sendingContractWrapper = new ManagedContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
       await sendingContractWrapper.processTransaction(mockTransactionObject);
       expect(mockTransactionObject.send).to.be.calledOnceWith({from: defaultAddress});
     });
 
     it('sets custom send params', async () => {
-      const sendingContractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
+      const sendingContractWrapper = new ManagedContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
       const otherAddress = '0xabcdef';
       await sendingContractWrapper.processTransaction(mockTransactionObject, {from: otherAddress, value: 2});
       expect(mockTransactionObject.send).to.be.calledOnceWith({from: otherAddress, value: 2});
     });
 
     it('returns data when sendTransactions is false', async () => {
-      const notSendingContractWrapper = new ContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, false);
+      const notSendingContractWrapper = new ManagedContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, false);
       expect(await notSendingContractWrapper.processTransaction(mockTransactionObject)).to.equal(exampleTxData);
       expect(mockTransactionObject.encodeABI).to.be.calledOnceWith();
       expect(mockTransactionObject.send).to.be.not.called;

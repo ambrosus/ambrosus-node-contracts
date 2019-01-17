@@ -9,13 +9,19 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import ManagedContractWrapper from './managed_contract_wrapper';
 
-export default class TimeWrapper extends ManagedContractWrapper {
-  get getContractName() {
-    return 'time';
+/** @abstract */
+export default class ManagedOwnableContractWrapper extends ManagedContractWrapper {
+  constructor(headWrapper, web3, defaultAddress, sendTransactions = true) {
+    super(headWrapper, web3, defaultAddress, sendTransactions);
   }
 
-  async currentPayoutPeriod() {
+  async getOwner() {
     const contract = await this.contract();
-    return contract.methods.currentPayoutPeriod().call();
+    return contract.methods.owner().call();
+  }
+
+  async transferOwnership(newOwnerAddress) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.transferOwnership(newOwnerAddress));
   }
 }

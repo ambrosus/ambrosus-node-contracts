@@ -7,26 +7,20 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-/* eslint-disable new-cap */
-import ManagedContractWrapper from './managed_contract_wrapper';
+import ManagedOwnableContractWrapper from './managed_ownable_contract_wrapper';
 
-export default class ConfigWrapper extends ManagedContractWrapper {
+export default class ValidatorProxyWrapper extends ManagedOwnableContractWrapper {
   get getContractName() {
-    return 'config';
+    return 'validatorProxy';
   }
 
-  async atlas1Stake() {
+  async transferOwnershipForValidatorSet(newOwner) {
     const contract = await this.contract();
-    return contract.methods.ATLAS1_STAKE().call();
+    return this.processTransaction(contract.methods.transferOwnershipForValidatorSet(newOwner));
   }
 
-  async challengeDuration() {
+  async transferOwnershipForBlockRewards(newOwner) {
     const contract = await this.contract();
-    return contract.methods.CHALLENGE_DURATION().call();
-  }
-
-  async bundleSizeLimit() {
-    const contract = await this.contract();
-    return contract.methods.BUNDLE_SIZE_LIMIT().call();
+    return this.processTransaction(contract.methods.transferOwnershipForBlockRewards(newOwner));
   }
 }

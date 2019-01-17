@@ -7,15 +7,11 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import ManagedContractWrapper from './managed_contract_wrapper';
+import contractJsons from '../contract_jsons';
+import GenesisContractWrapper from './genesis_contract_wrapper';
 
-export default class TimeWrapper extends ManagedContractWrapper {
-  get getContractName() {
-    return 'time';
-  }
-
-  async currentPayoutPeriod() {
-    const contract = await this.contract();
-    return contract.methods.currentPayoutPeriod().call();
+export default class BlockRewardsWrapper extends GenesisContractWrapper {
+  constructor(blockRewardsContractAddress, web3, defaultAddress) {
+    super(blockRewardsContractAddress, contractJsons.blockRewards, web3, defaultAddress);
   }
 }
