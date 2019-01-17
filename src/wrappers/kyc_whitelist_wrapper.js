@@ -7,21 +7,11 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import ManagedContractWrapper from './managed_contract_wrapper';
+import ManagedOwnableContractWrapper from './managed_ownable_contract_wrapper';
 
-export default class KycWhitelistWrapper extends ManagedContractWrapper {
+export default class KycWhitelistWrapper extends ManagedOwnableContractWrapper {
   get getContractName() {
     return 'kycWhitelist';
-  }
-
-  async getOwner() {
-    const contract = await this.contract();
-    return contract.methods.owner().call();
-  }
-
-  async transferOwnership(newOwnerAddress) {
-    const contract = await this.contract();
-    return this.processTransaction(contract.methods.transferOwnership(newOwnerAddress));
   }
 
   async add(address, role, requiredDeposit) {
