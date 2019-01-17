@@ -76,4 +76,32 @@ describe('Fees Wrapper', () => {
       expect(getFeeForUploadCallStub).to.be.calledOnce;
     });
   });
+
+  describe('feeForChallenge', () => {
+    const storagePeriods = 23;
+    const fee = '100';
+    let getFeeForChallengeStub;
+    let getFeeForChallengeCallStub;
+
+    beforeEach(async () => {
+      getFeeForChallengeStub = sinon.stub();
+      getFeeForChallengeCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getFeeForChallenge: getFeeForChallengeStub
+        }
+      };
+      getFeeForChallengeStub.returns({
+        call: getFeeForChallengeCallStub.resolves(fee)
+      });
+      feesWrapper = new FeesWrapper({}, {}, null);
+      sinon.stub(feesWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await feesWrapper.feeForChallenge(storagePeriods)).to.equal(fee);
+      expect(getFeeForChallengeStub).to.be.calledOnceWith(storagePeriods);
+      expect(getFeeForChallengeCallStub).to.be.calledOnce;
+    });
+  });
 });

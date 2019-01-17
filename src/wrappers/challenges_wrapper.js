@@ -39,9 +39,29 @@ export default class ChallengesWrapper extends ManagedContractWrapper {
     return this.processTransaction(contract.methods.resolve(challengeId));
   }
 
+  async start(sheltererId, bundleId, fee) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.start(sheltererId, bundleId), {value: fee});
+  }
+
+  async markAsExpired(challengeId) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.markAsExpired(challengeId));
+  }
+
+  async challengeIsTimedOut(challengeId) {
+    const contract = await this.contract();
+    return contract.methods.challengeIsTimedOut(challengeId).call();
+  }
+
   async canResolve(challengeId) {
     const contract = await this.contract();
     return contract.methods.canResolve(this.defaultAddress, challengeId).call();
+  }
+
+  async getChallengeId(sheltererId, bundleId) {
+    const contract = await this.contract();
+    return contract.methods.getChallengeId(sheltererId, bundleId).call();
   }
 
   async isInProgress(challengeId) {

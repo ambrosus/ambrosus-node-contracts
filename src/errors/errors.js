@@ -22,3 +22,9 @@ export class InsufficientFundsToUploadBundleError extends AmbrosusError {
     super(`Insufficient funds: need at least ${utils.fromWei(fee, 'ether')} to upload the bundle. Balance: ${utils.fromWei(balance, 'ether')}`);
   }
 }
+
+export class InsufficientFundsToStartChallengeError extends AmbrosusError {
+  constructor(fee, balance) {
+    super(`Insufficient funds: need at least ${utils.fromWei(fee, 'ether')} to start a challenge. Balance: ${utils.fromWei(balance, 'ether')}`);
+  }
+}
