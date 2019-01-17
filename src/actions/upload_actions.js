@@ -27,12 +27,20 @@ export default class UploadActions {
     }
     const {blockNumber, transactionHash} = await this.uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
     const timestamp = await this.blockchainStateWrapper.getBlockTimestamp(blockNumber);
-    return {blockNumber, transactionHash, timestamp, lowBalanceWarning: new BN(balance).lt(this.lowFundsWarningAmount)};
+    return {
+      blockNumber,
+      transactionHash,
+      timestamp,
+      lowBalanceWarning: new BN(balance).lt(this.lowFundsWarningAmount),
+      approximateBalanceAfterUpload: new BN(balance).sub(new BN(fee))
+        .toString()
+    };
   }
 
   async getBalance() {
     return await this.blockchainStateWrapper.getBalance(this.uploadsWrapper.defaultAddress);
   }
+
   async getBundleUploadData(bundleId) {
     const uploadBlock = await this.shelteringWrapper.getBundleUploadBlockNumber(bundleId);
     if (!uploadBlock) {

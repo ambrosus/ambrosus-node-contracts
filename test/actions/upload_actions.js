@@ -26,7 +26,7 @@ describe('Upload Actions', () => {
   let shelteringWrapperStub;
   let blockchainStateWrapperStub;
 
-  const lowBalanceWarningAmount = utils.toWei('10000');
+  const lowBalanceWarningAmount = utils.toWei('10000', 'ether');
   const timestamp = 1544536774;
   const blockNumber = 138;
   const bundleId = '0xABCD';
@@ -59,7 +59,7 @@ describe('Upload Actions', () => {
 
     beforeEach(() => {
       fee = utils.toWei('1000', 'ether');
-      blockchainStateWrapperStub.getBalance.resolves(utils.toWei('999999999', 'ether'));
+      blockchainStateWrapperStub.getBalance.resolves(utils.toWei('90000', 'ether'));
       feesWrapperStub.feeForUpload.resolves(fee);
       uploadsWrapperStub.registerBundle.resolves(uploadReceipt);
       blockchainStateWrapperStub.getBlockTimestamp.withArgs(blockNumber).resolves(timestamp);
@@ -68,7 +68,7 @@ describe('Upload Actions', () => {
     it('calls registerBundle method of upload wrapper', async () => {
       const uploadResult = await uploadActions.uploadBundle(bundleId, storagePeriods);
 
-      expect(uploadResult).to.deep.equal({...uploadReceipt, timestamp, lowBalanceWarning: false});
+      expect(uploadResult).to.deep.equal({...uploadReceipt, timestamp, lowBalanceWarning: false, approximateBalanceAfterUpload: '89000000000000000000000'});
       expect(feesWrapperStub.feeForUpload).to.have.been.calledOnceWith(storagePeriods);
       expect(uploadsWrapperStub.registerBundle).to.have.been.calledOnceWith(
         bundleId,
@@ -82,7 +82,7 @@ describe('Upload Actions', () => {
 
       const uploadResult = await uploadActions.uploadBundle(bundleId, storagePeriods);
       expect(uploadResult).to.deep.equal({
-        ...uploadReceipt, timestamp, lowBalanceWarning: true
+        ...uploadReceipt, timestamp, lowBalanceWarning: true, approximateBalanceAfterUpload: '4000000000000000000000'
       });
     });
 
