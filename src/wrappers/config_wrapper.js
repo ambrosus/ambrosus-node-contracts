@@ -8,9 +8,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 /* eslint-disable new-cap */
-import ContractWrapper from './contract_wrapper';
+import ManagedContractWrapper from './managed_contract_wrapper';
 
-export default class ConfigWrapper extends ContractWrapper {
+export default class ConfigWrapper extends ManagedContractWrapper {
   get getContractName() {
     return 'config';
   }

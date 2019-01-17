@@ -8,9 +8,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {MIN_BLOCK_TIME} from '../constants';
-import ContractWrapper from './contract_wrapper';
+import ManagedContractWrapper from './managed_contract_wrapper';
 
-export default class ChallengesWrapper extends ContractWrapper {
+export default class ChallengesWrapper extends ManagedContractWrapper {
   get getContractName() {
     return 'challenges';
   }

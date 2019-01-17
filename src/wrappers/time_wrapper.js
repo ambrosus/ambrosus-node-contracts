@@ -7,9 +7,9 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import ContractWrapper from './contract_wrapper';
+import ManagedContractWrapper from './managed_contract_wrapper';
 
-export default class TimeWrapper extends ContractWrapper {
+export default class TimeWrapper extends ManagedContractWrapper {
   get getContractName() {
     return 'time';
   }
