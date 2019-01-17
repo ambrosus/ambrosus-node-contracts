@@ -11,10 +11,6 @@ import ManagedContractWrapper from './managed_contract_wrapper';
 
 /** @abstract */
 export default class ManagedOwnableContractWrapper extends ManagedContractWrapper {
-  constructor(headWrapper, web3, defaultAddress, sendTransactions = true) {
-    super(headWrapper, web3, defaultAddress, sendTransactions);
-  }
-
   async getOwner() {
     const contract = await this.contract();
     return contract.methods.owner().call();

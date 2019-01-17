@@ -7,29 +7,26 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import chai from 'chai';
-import sinon, {resetHistory} from 'sinon';
+import chai, {expect} from 'chai';
+import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import ChallengesWrapper from '../../src/wrappers/challenges_wrapper';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
-const {expect} = chai;
 
 describe('Challenges Wrapper', () => {
   let challengesWrapper;
   let web3Mock;
   const defaultAddress = '0xdeadface';
-  const exampleData = '0xda7a';
-  const encodeAbiStub = sinon.stub().resolves(exampleData);
 
   describe('earliestMeaningfulBlock', () => {
     const blockNumber = 1752205;
     const challengeDuration = 4 * 24 * 60 * 60;
 
     beforeEach(async () => {
-      web3Mock =  {
+      web3Mock = {
         eth: {
           getBlockNumber: sinon.stub().resolves(blockNumber)
         }
@@ -117,45 +114,21 @@ describe('Challenges Wrapper', () => {
       resolveChallengeStub = sinon.stub();
       resolveChallengeSendStub = sinon.stub();
       resolveChallengeStub.returns({
-        send: resolveChallengeSendStub,
-        encodeABI: encodeAbiStub
+        send: resolveChallengeSendStub
       });
       contractMock = {
         methods: {
           resolve: resolveChallengeStub
         }
       };
+      challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress);
+      sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
     });
 
-    afterEach(() => {
-      resetHistory(contractMock);
-    });
-
-    describe('sendTransactions = true', () => {
-      beforeEach(() => {
-        challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress, true);
-        sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('calls contract method with correct arguments', async () => {
-        await challengesWrapper.resolve(challengeId);
-        expect(resolveChallengeStub).to.be.calledWith(challengeId);
-        expect(resolveChallengeSendStub).to.be.calledWith({from: defaultAddress});
-      });
-    });
-
-    describe('sendTransactions = false', () => {
-      beforeEach(() => {
-        challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress, false);
-        sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('returns data', async () => {
-        expect(await challengesWrapper.resolve(challengeId)).to.equal(exampleData);
-        expect(resolveChallengeStub).to.be.calledWith(challengeId);
-        expect(resolveChallengeSendStub).to.be.not.called;
-        expect(encodeAbiStub).to.be.calledOnceWith();
-      });
+    it('calls contract method with correct arguments', async () => {
+      await challengesWrapper.resolve(challengeId);
+      expect(resolveChallengeStub).to.be.calledWith(challengeId);
+      expect(resolveChallengeSendStub).to.be.calledWith({from: defaultAddress});
     });
   });
 

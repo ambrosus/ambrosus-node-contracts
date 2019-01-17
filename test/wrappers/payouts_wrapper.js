@@ -51,49 +51,26 @@ describe('Payouts wrapper', () => {
   describe('Withdraw', () => {
     let withdrawStub;
     let withdrawSendStub;
-    let encodeAbiStub;
     let contractMock;
-    const exampleData = '0xdata';
 
     beforeEach(() => {
       withdrawSendStub = sinon.stub();
-      encodeAbiStub = sinon.stub().resolves(exampleData);
       withdrawStub = sinon.stub().returns({
-        send: withdrawSendStub,
-        encodeABI: encodeAbiStub
+        send: withdrawSendStub
       });
       contractMock = {
         methods: {
           withdraw: withdrawStub
         }
       };
+      payoutsWrapper = new PayoutsWrapper({}, {}, defaultAddress);
+      sinon.stub(payoutsWrapper, 'contract').resolves(contractMock);
     });
 
-    describe('sendTransactions = true', () => {
-      beforeEach(() => {
-        payoutsWrapper = new PayoutsWrapper({}, {}, defaultAddress, true);
-        sinon.stub(payoutsWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('calls contract method with correct arguments', async () => {
-        await payoutsWrapper.withdraw();
-        expect(withdrawStub).to.be.calledWith(defaultAddress);
-        expect(withdrawSendStub).to.be.calledWith({from: defaultAddress});
-      });
-    });
-
-    describe('sendTransactions = false', () => {
-      beforeEach(() => {
-        payoutsWrapper = new PayoutsWrapper({}, {}, defaultAddress, false);
-        sinon.stub(payoutsWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('returns data', async () => {
-        expect(await payoutsWrapper.withdraw()).to.equal(exampleData);
-        expect(withdrawStub).to.be.calledWith(defaultAddress);
-        expect(withdrawSendStub).to.be.not.called;
-        expect(encodeAbiStub).to.be.calledOnceWith();
-      });
+    it('calls contract method with correct arguments', async () => {
+      await payoutsWrapper.withdraw();
+      expect(withdrawStub).to.be.calledWith(defaultAddress);
+      expect(withdrawSendStub).to.be.calledWith({from: defaultAddress});
     });
   });
 });

@@ -65,7 +65,7 @@ describe('Managed Ownable Contract Wrapper', () => {
     });
 
     before(() => {
-      wrapper = new ManagedOwnableContractWrapper({}, {}, defaultAddress, true);
+      wrapper = new ManagedOwnableContractWrapper({}, {}, defaultAddress);
       sinon.stub(wrapper, 'contract').resolves(contractMock);
     });
 
