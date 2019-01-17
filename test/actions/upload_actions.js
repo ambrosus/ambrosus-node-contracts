@@ -13,6 +13,7 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import UploadActions from '../../src/actions/upload_actions';
 import {utils} from 'web3';
+import {InsufficientFundsToUploadBundleError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -25,7 +26,7 @@ describe('Upload Actions', () => {
   let shelteringWrapperStub;
   let blockchainStateWrapperStub;
 
-  const lowBalanceWarning = utils.toWei('10000');
+  const lowBalanceWarningAmount = utils.toWei('10000');
   const timestamp = 1544536774;
   const blockNumber = 138;
   const bundleId = '0xABCD';
@@ -49,7 +50,7 @@ describe('Upload Actions', () => {
       getBlockTimestamp: sinon.stub(),
       getBalance: sinon.stub()
     };
-    uploadActions = new UploadActions(uploadsWrapperStub, feesWrapperStub, shelteringWrapperStub, blockchainStateWrapperStub, lowBalanceWarning);
+    uploadActions = new UploadActions(uploadsWrapperStub, feesWrapperStub, shelteringWrapperStub, blockchainStateWrapperStub, lowBalanceWarningAmount);
   });
 
   describe('uploadBundle', () => {
@@ -67,7 +68,7 @@ describe('Upload Actions', () => {
     it('calls registerBundle method of upload wrapper', async () => {
       const uploadResult = await uploadActions.uploadBundle(bundleId, storagePeriods);
 
-      expect(uploadResult).to.deep.equal({...uploadReceipt, timestamp});
+      expect(uploadResult).to.deep.equal({...uploadReceipt, timestamp, lowBalanceWarning: false});
       expect(feesWrapperStub.feeForUpload).to.have.been.calledOnceWith(storagePeriods);
       expect(uploadsWrapperStub.registerBundle).to.have.been.calledOnceWith(
         bundleId,
@@ -81,8 +82,7 @@ describe('Upload Actions', () => {
 
       const uploadResult = await uploadActions.uploadBundle(bundleId, storagePeriods);
       expect(uploadResult).to.deep.equal({
-        ...uploadReceipt, timestamp,
-        warning: 'Hermes low balance warning triggered. Balance: 5000'
+        ...uploadReceipt, timestamp, lowBalanceWarning: true
       });
     });
 
@@ -99,11 +99,7 @@ describe('Upload Actions', () => {
 
     it('returns error when funds are less than fee', async () => {
       blockchainStateWrapperStub.getBalance.resolves(utils.toWei('900', 'ether'));
-      const uploadResult = await uploadActions.uploadBundle(bundleId, storagePeriods);
-      expect(uploadResult).to.deep.equal({
-        error: 'Insufficient funds: need at least 1000 to upload the bundle. Balance: 900'
-      });
-      expect(uploadsWrapperStub.registerBundle).to.be.not.called;
+      await expect(uploadActions.uploadBundle(bundleId, storagePeriods)).to.eventually.be.rejectedWith(InsufficientFundsToUploadBundleError, 'Insufficient funds: need at least 1000 to upload the bundle. Balance: 900');
     });
   });
 
