@@ -33,10 +33,6 @@ describe('Block Rewards Wrapper', () => {
   it('getOwner returns the owner address', async () => {
     await expect(wrapper.getOwner()).to.eventually.equal(ownerAddress);
   });
-
-  it('address returns the contract address', async () => {
-    expect(wrapper.address()).to.equal(contract.options.address);
-  });
 });
 
 

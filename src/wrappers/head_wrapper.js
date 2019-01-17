@@ -8,18 +8,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 
-import {loadContract} from '../utils/web3_tools';
 import contractJsons from '../contract_jsons';
+import {loadContract} from '../utils/web3_tools';
+import GenesisContractWrapper from './genesis_contract_wrapper';
 
-export default class HeadWrapper {
+
+export default class HeadWrapper extends GenesisContractWrapper {
   constructor(headContractAddress, web3, defaultAddress) {
-    if (headContractAddress === undefined) {
-      throw new Error('Head contract address is not configured');
-    }
-
-    this.web3 = web3;
-    this.defaultAddress = defaultAddress;
-    this.head = loadContract(this.web3, contractJsons.head.abi, headContractAddress);
+    super(headContractAddress, contractJsons.head, web3, defaultAddress);
     this.clearContractAddressCache();
 
     this.availableCatalogueContracts = [
@@ -48,14 +44,6 @@ export default class HeadWrapper {
     ];
   }
 
-  address() {
-    return this.head.options.address;
-  }
-
-  setDefaultAddress(defaultAddress) {
-    this.defaultAddress = defaultAddress;
-  }
-
   async contractAddressByName(contractName) {
     if (this.availableCatalogueContracts.includes(contractName)) {
       const catalogue = await this.catalogue();
@@ -74,13 +62,13 @@ export default class HeadWrapper {
   }
 
   async setContext(address) {
-    await this.head.methods.setContext(address).send({
+    await this.contract.methods.setContext(address).send({
       from: this.defaultAddress
     });
   }
 
   async context() {
-    const contextAddress = await this.head
+    const contextAddress = await this.contract
       .methods
       .context()
       .call();
@@ -111,10 +99,6 @@ export default class HeadWrapper {
         .call());
     }
     return loadContract(this.web3, contractJsons.storageCatalogue.abi, this.cachedAddresses.storageCatalogue);
-  }
-
-  async getOwner() {
-    return this.head.methods.owner().call();
   }
 
   clearContractAddressCache() {

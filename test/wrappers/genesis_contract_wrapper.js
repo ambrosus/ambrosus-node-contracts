@@ -10,31 +10,42 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai, {expect} from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
-import contractJsons from '../../src/contract_jsons';
-import ValidatorSetWrapper from '../../src/wrappers/validator_set_wrapper';
+import ConstructorOwnableJson from '../../src/contracts/ConstructorOwnable.json';
+import GenesisContractWrapper from '../../src/wrappers/genesis_contract_wrapper';
 
 chai.use(chaiAsPromised);
 
-describe('ValidatorSet Wrapper', () => {
+describe('Genesis Contract Wrapper', () => {
   let web3;
   let ownerAddress;
+  let otherAddress;
   let contract;
   let wrapper;
 
-  const generateValidatorSet = (num) => Array(num)
-    .fill(null)
-    .map(() => web3.eth.accounts.create().address);
-  const deploy = async (web3, sender) => deployContract(web3, contractJsons.validatorSet, [sender, generateValidatorSet(3), sender], {from: sender});
+  const deploy = async (web3, sender) => deployContract(web3, ConstructorOwnableJson, [sender], {from: sender});
 
   before(async () => {
     web3 = await createWeb3();
     ownerAddress = getDefaultAddress(web3);
+    otherAddress = web3.eth.accounts.create().address;
+  });
+
+  beforeEach(async () => {
     contract = await deploy(web3, ownerAddress);
-    wrapper = new ValidatorSetWrapper(contract.options.address, web3, ownerAddress);
+    wrapper = new GenesisContractWrapper(contract.options.address, ConstructorOwnableJson, web3, ownerAddress);
   });
 
   it('getOwner returns the owner address', async () => {
     await expect(wrapper.getOwner()).to.eventually.equal(ownerAddress);
+  });
+
+  it('address returns the contract address', async () => {
+    expect(wrapper.address()).to.equal(contract.options.address);
+  });
+
+  it('transferOwnership changes the owner of the contract', async () => {
+    await expect(wrapper.transferOwnership(otherAddress)).to.be.fulfilled;
+    await expect(wrapper.getOwner()).to.eventually.equal(otherAddress);
   });
 });
 
