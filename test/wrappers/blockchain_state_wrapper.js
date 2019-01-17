@@ -11,6 +11,7 @@ import chai from 'chai';
 import BlockchainStateWrapper from '../../src/wrappers/blockchain_state_wrapper';
 import chaiAsPromised from 'chai-as-promised';
 import contractJsons from '../../src/contract_jsons';
+import sinon from 'sinon';
 
 const {expect} = chai;
 
@@ -20,7 +21,7 @@ describe('BlockchainStateWrapper', () => {
   let web3;
   let wrapper;
 
-  before(async () => {
+  beforeEach(async () => {
     web3 = await createWeb3();
     wrapper = new BlockchainStateWrapper(web3);
   });
@@ -45,6 +46,25 @@ describe('BlockchainStateWrapper', () => {
       // Randomly copied from etherscan
       const randomAddress = '0x78b5C928Baa639bDC1E48670b450EB8717BB746a';
       expect(await wrapper.isAddressAContract(randomAddress)).to.be.false;
+    });
+  });
+
+  describe('getBalance', () => {
+    const currentBalance = '42';
+    const exampleAddress = '0xc0ffee';
+
+    beforeEach(() => {
+      web3 = {
+        eth: {
+          getBalance: sinon.stub().withArgs(exampleAddress)
+            .resolves(currentBalance)
+        }
+      };
+      wrapper = new BlockchainStateWrapper(web3);
+    });
+
+    it('return balance of the account', async () => {
+      expect(await wrapper.getBalance(exampleAddress)).to.equal(currentBalance);
     });
   });
 });

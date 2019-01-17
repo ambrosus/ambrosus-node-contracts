@@ -10,6 +10,11 @@
         "polyfill": false,
         "regenerator": true
       }
+    ],
+    [
+      "babel-plugin-transform-builtin-extend", {
+        "globals": ["Error"]
+      }
     ]
   ],
   "env": {
