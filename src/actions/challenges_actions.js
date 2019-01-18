@@ -24,7 +24,7 @@ export default class ChallengesActions {
     }
     const challengeId = await this.challengesWrapper.getChallengeId(sheltererId, bundleId);
     if (await this.challengesWrapper.isInProgress(challengeId)) {
-      throw new Error('Could not start a challenge: same challenge is in progress');
+      throw new Error('Could not start a challenge: same challenge is currently in progress');
     }
     const storagePeriods = await this.shelteringWrapper.bundleStoragePeriods(bundleId);
     const fee = await this.feeWrapper.feeForChallenge(storagePeriods);

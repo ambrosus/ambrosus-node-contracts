@@ -31,7 +31,8 @@ import FeesActions from './actions/fees_actions';
 import DeployActions from './actions/deploy_actions';
 import AdministrativeActions from './actions/admin_actions';
 import PayoutsActions from './actions/payouts_actions';
-import {InsufficientFundsToUploadBundleError} from './errors/errors';
+import ChallengesActions from './actions/challenges_actions';
+import {InsufficientFundsToStartChallengeError, InsufficientFundsToUploadBundleError} from './errors/errors';
 const constants = require('./constants');
 
 module.exports = {
@@ -57,7 +58,9 @@ module.exports = {
   Deployer,
   DeployActions,
   PayoutsActions,
+  ChallengesActions,
   constants,
   contractJsons,
-  InsufficientFundsToUploadBundleError
+  InsufficientFundsToUploadBundleError,
+  InsufficientFundsToStartChallengeError
 };

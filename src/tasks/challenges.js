@@ -57,17 +57,34 @@ Options:
     this.validateAddress(sheltererId);
     this.validateId(bundleId);
     const {transactionHash, challengeId} = await this.challengesActions.startChallenge(sheltererId, bundleId);
-    console.log(transactionHash, challengeId);
+    console.log(`Challenge with ID = ${challengeId} has been created. 
+Transaction ID - ${transactionHash}`);
   }
 
   async expire(challengeId) {
     this.validateId(challengeId);
-    await this.challengesActions.markAsExpired(challengeId);
+    const {transactionHash} = await this.challengesActions.markAsExpired(challengeId);
+    console.log(`Challenge successfully marked as expired.
+Transaction ID - ${transactionHash}`);
   }
 
   async status(challengeId) {
     this.validateId(challengeId);
-    console.log(await this.challengesActions.challengeStatus(challengeId));
+    const status = await this.challengesActions.challengeStatus(challengeId);
+    if (!status.isInProgress) {
+      console.log(`There is no challenge with ID = ${challengeId} being in progress right now`);
+      return;
+    }
+    console.log(`Challenge with ID = ${challengeId} is in progress.`);
+    if (status.canResolve) {
+      console.log('And it can be resolved by you.');
+    } else {
+      console.log('However, it cannot be resolved by you at the moment.');
+    }
+    if (status.isTimedOut) {
+      console.log(`This challenge is past its expiration date and nobody has resolved it :(. 
+Mark it as expired to punish the shelterer.`);
+    }
   }
 
   help() {

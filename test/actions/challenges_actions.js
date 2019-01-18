@@ -82,7 +82,7 @@ describe('Challenges actions', () => {
 
     it('throws and does not perform transaction if challenge with same id is already in progress', async () => {
       mockChallengesWrapper.isInProgress.withArgs(exampleChallengeId).resolves(true);
-      await expect(challengesActions.startChallenge(exampleSheltererId, exampleBundleId)).to.be.rejectedWith('Could not start a challenge: same challenge is in progress');
+      await expect(challengesActions.startChallenge(exampleSheltererId, exampleBundleId)).to.be.rejectedWith('Could not start a challenge: same challenge is currently in progress');
       expect(mockChallengesWrapper.start).to.be.not.called;
     });
 
