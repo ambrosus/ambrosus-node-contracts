@@ -57,7 +57,7 @@ contract KycWhitelist is Ownable {
 
     function requireCorrectDeposit(Consts.NodeType role, uint deposit) private view {
         if (role == Consts.NodeType.APOLLO) {
-            require(deposit > 0);
+            require(deposit >= config.APOLLO_DEPOSIT());
         } else if (role == Consts.NodeType.ATLAS) {
             require(deposit == config.ATLAS1_STAKE() || deposit == config.ATLAS2_STAKE() || deposit == config.ATLAS3_STAKE());
         }
