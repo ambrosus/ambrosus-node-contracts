@@ -14,9 +14,9 @@ export default class ShelteringWrapper extends ManagedContractWrapper {
     return 'sheltering';
   }
 
-  async isSheltering(bundleId) {
+  async isSheltering(bundleId, shelterer = this.defaultAddress) {
     const contract = await this.contract();
-    return contract.methods.isSheltering(bundleId, this.defaultAddress).call();
+    return contract.methods.isSheltering(bundleId, shelterer).call();
   }
 
   async shelteringExpirationDate(bundleId) {

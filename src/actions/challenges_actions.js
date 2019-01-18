@@ -19,17 +19,24 @@ export default class ChallengesActions {
   }
 
   async startChallenge(sheltererId, bundleId) {
+    if (!await this.shelteringWrapper.isSheltering(bundleId, sheltererId)) {
+      throw new Error(`${sheltererId} is not holding ${bundleId}`);
+    }
+    const challengeId = await this.challengesWrapper.getChallengeId(sheltererId, bundleId);
+    if (await this.challengesWrapper.isInProgress(challengeId)) {
+      throw new Error('Could not start a challenge: same challenge is in progress');
+    }
     const storagePeriods = await this.shelteringWrapper.bundleStoragePeriods(bundleId);
     const fee = await this.feeWrapper.feeForChallenge(storagePeriods);
     const balance = await this.getBalance();
     if (new BN(balance).lte(new BN(fee))) {
       throw new InsufficientFundsToStartChallengeError(fee, balance);
     }
-    const {blockNumber, transactionHash} = await this.challengesWrapper.start(sheltererId, bundleId);
+    const {blockNumber, transactionHash} = await this.challengesWrapper.start(sheltererId, bundleId, fee);
     return {
       blockNumber,
       transactionHash,
-      challengeId: await this.challengesWrapper.getChallengeId(sheltererId, bundleId)
+      challengeId
     };
   }
 
@@ -41,6 +48,17 @@ export default class ChallengesActions {
       throw new Error(`Challenge ${challengeId} cannot be marked as expired yet`);
     }
     return this.challengesWrapper.markAsExpired(challengeId);
+  }
+
+  async challengeStatus(challengeId) {
+    if (!await this.challengesWrapper.isInProgress(challengeId)) {
+      return {isInProgress: false};
+    }
+    return {
+      isInProgress: true,
+      canResolve: await this.challengesWrapper.canResolve(challengeId),
+      isTimedOut: await this.challengesWrapper.challengeIsTimedOut(challengeId)
+    };
   }
 
   /** @private */

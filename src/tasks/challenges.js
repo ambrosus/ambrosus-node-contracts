@@ -8,9 +8,72 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import TaskBase from './base/task_base';
+import {utils} from '../utils/web3_tools';
 
-class ChallengesTask extends TaskBase {
-  constructor(web3) {
+export default class ChallengesTask extends TaskBase {
+  constructor(challengesActions) {
     super();
+    this.challengesActions = challengesActions;
+  }
+
+
+  async execute([command, ...options]) {
+    if (command === 'start') {
+      await this.start(options[0], options[1]);
+    } else if (command === 'expire') {
+      await this.expire(options[0]);
+    } else if (command === 'status') {
+      await this.status(options[0]);
+    } else if (command === 'help') {
+      this.printUsage();
+    } else {
+      console.error('Unknown sub-command, see yarn task challenges help');
+      process.exit(1);
+    }
+  }
+
+  validateAddress(address) {
+    if (!utils.isAddress(address)) {
+      throw `Invalid address: ${address}`;
+    }
+  }
+
+  validateId(validatedId) {
+    if (!/^0x[0-9a-f]{64}$/i.exec(validatedId)) {
+      throw `Invalid Id: ${validatedId}`;
+    }
+  }
+
+  printUsage() {
+    console.log(`
+Usage: yarn task challenges [start/expire/status]
+Options:
+  - start [sheltererAddress bundleId]
+  - expire [challengeId]
+  - status [challengeId]`);
+  }
+
+  async start(sheltererId, bundleId) {
+    this.validateAddress(sheltererId);
+    this.validateId(bundleId);
+    const {transactionHash, challengeId} = await this.challengesActions.startChallenge(sheltererId, bundleId);
+    console.log(transactionHash, challengeId);
+  }
+
+  async expire(challengeId) {
+    this.validateId(challengeId);
+    await this.challengesActions.markAsExpired(challengeId);
+  }
+
+  async status(challengeId) {
+    this.validateId(challengeId);
+    console.log(await this.challengesActions.challengeStatus(challengeId));
+  }
+
+  help() {
+    return {
+      options: '[start sheltererAddress bundleId], [expire/status challengeId]',
+      description: 'creates and manages challenges'
+    };
   }
 }

@@ -25,6 +25,7 @@ describe('Sheltering Wrapper', () => {
     let isShelteringCallStub;
     const bundleId = 'bundle';
     const defaultAddress = '0x123';
+    const sheltererAddress = '0xc0ffee';
 
     beforeEach(async () => {
       isShelteringStub = sinon.stub();
@@ -41,6 +42,12 @@ describe('Sheltering Wrapper', () => {
     });
 
     it('calls contract method with correct arguments', async () => {
+      expect(await shelteringWrapper.isSheltering(bundleId, sheltererAddress)).to.equal(true);
+      expect(isShelteringStub).to.be.calledOnceWith(bundleId, sheltererAddress);
+      expect(isShelteringCallStub).to.be.calledOnce;
+    });
+
+    it('assumes shelterer is the default address when not provided', async () => {
       expect(await shelteringWrapper.isSheltering(bundleId)).to.equal(true);
       expect(isShelteringStub).to.be.calledOnceWith(bundleId, defaultAddress);
       expect(isShelteringCallStub).to.be.calledOnce;
