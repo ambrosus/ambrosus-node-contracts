@@ -18,7 +18,7 @@ export default class PayoutsActions {
   }
 
   async currentPayoutPeriod() {
-    return await this.timeWrapper.currentPayoutPeriod();
+    return this.timeWrapper.currentPayoutPeriod();
   }
 
   async getTotalAvailablePayout() {

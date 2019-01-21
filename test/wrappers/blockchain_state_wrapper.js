@@ -56,15 +56,32 @@ describe('BlockchainStateWrapper', () => {
     beforeEach(() => {
       web3 = {
         eth: {
-          getBalance: sinon.stub().withArgs(exampleAddress)
-            .resolves(currentBalance)
+          getBalance: sinon.stub()
+        }
+      };
+      web3.eth.getBalance.withArgs(exampleAddress).resolves(currentBalance);
+      wrapper = new BlockchainStateWrapper(web3);
+    });
+
+    it('return balance of the account', async () => {
+      expect(await wrapper.getBalance(exampleAddress)).to.equal(currentBalance);
+    });
+  });
+
+  describe('getLatestBlockNumber', () => {
+    const currentBlockNumber = '2137';
+
+    beforeEach(() => {
+      web3 = {
+        eth: {
+          getBlockNumber: sinon.stub().resolves(currentBlockNumber)
         }
       };
       wrapper = new BlockchainStateWrapper(web3);
     });
 
     it('return balance of the account', async () => {
-      expect(await wrapper.getBalance(exampleAddress)).to.equal(currentBalance);
+      expect(await wrapper.getCurrentBlockNumber()).to.equal(currentBlockNumber);
     });
   });
 });

@@ -25,4 +25,8 @@ export default class BlockchainStateWrapper {
   async getBalance(address) {
     return this.web3.eth.getBalance(address);
   }
+
+  async getCurrentBlockNumber() {
+    return this.web3.eth.getBlockNumber();
+  }
 }
