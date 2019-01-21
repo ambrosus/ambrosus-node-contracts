@@ -27,6 +27,6 @@ export default class BlockchainStateWrapper {
   }
 
   async getCurrentBlockNumber() {
-    return await this.web3.eth.getBlockNumber();
+    return this.web3.eth.getBlockNumber();
   }
 }

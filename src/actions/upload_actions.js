@@ -38,7 +38,7 @@ export default class UploadActions {
   }
 
   async getBalance() {
-    return await this.blockchainStateWrapper.getBalance(this.uploadsWrapper.defaultAddress);
+    return this.blockchainStateWrapper.getBalance(this.uploadsWrapper.defaultAddress);
   }
 
   async getBundleUploadData(bundleId) {
