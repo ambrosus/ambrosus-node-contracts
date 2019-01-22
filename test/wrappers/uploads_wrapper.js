@@ -7,15 +7,14 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import chai from 'chai';
-import sinon, {resetHistory} from 'sinon';
+import chai, {expect} from 'chai';
+import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import UploadsWrapper from '../../src/wrappers/uploads_wrapper';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
-const {expect} = chai;
 
 describe('Uploads Wrapper', () => {
   let uploadsWrapper;
@@ -43,25 +42,16 @@ describe('Uploads Wrapper', () => {
       registerBundleStub.returns({
         send: registerBundleSendStub
       });
+      uploadsWrapper = new UploadsWrapper({}, {}, defaultAccount);
+      sinon.stub(uploadsWrapper, 'contract').resolves(contractMock);
     });
 
-    afterEach(() => {
-      resetHistory(contractMock);
-    });
-
-    describe('sendTransactions = true', () => {
-      before(() => {
-        uploadsWrapper = new UploadsWrapper({}, {}, defaultAccount, true);
-        sinon.stub(uploadsWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('calls contract method with correct arguments', async () => {
-        const receipt = await uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
-        expect(receipt.blockNumber).to.equal(blockNumber);
-        expect(receipt.transactionHash).to.equal(transactionHash);
-        expect(registerBundleStub).to.be.calledOnceWith(bundleId, storagePeriods);
-        expect(registerBundleSendStub).to.be.calledOnceWith({from: defaultAccount, value: fee});
-      });
+    it('calls contract method with correct arguments', async () => {
+      const receipt = await uploadsWrapper.registerBundle(bundleId, fee, storagePeriods);
+      expect(receipt.blockNumber).to.equal(blockNumber);
+      expect(receipt.transactionHash).to.equal(transactionHash);
+      expect(registerBundleStub).to.be.calledOnceWith(bundleId, storagePeriods);
+      expect(registerBundleSendStub).to.be.calledOnceWith({from: defaultAccount, value: fee});
     });
   });
 

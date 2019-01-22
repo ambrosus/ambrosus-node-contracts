@@ -83,20 +83,14 @@ describe('Managed Contract Wrapper', () => {
 
   describe('process transaction', () => {
     let mockTransactionObject;
-    const exampleTxData = '0x123';
 
     beforeEach(() => {
       mockTransactionObject = {
-        send: sinon.stub().resolves(),
-        encodeABI: sinon.stub().returns(exampleTxData)
+        send: sinon.stub().resolves()
       };
     });
 
-    it('sendTransactions is true by default', async () => {
-      expect(new ManagedContractWrapper().sendTransactions).to.be.true;
-    });
-
-    it('sends transaction when sendTransactions is true', async () => {
+    it('invokes the web3 send method', async () => {
       const sendingContractWrapper = new ManagedContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, true);
       await sendingContractWrapper.processTransaction(mockTransactionObject);
       expect(mockTransactionObject.send).to.be.calledOnceWith({from: defaultAddress});
@@ -107,13 +101,6 @@ describe('Managed Contract Wrapper', () => {
       const otherAddress = '0xabcdef';
       await sendingContractWrapper.processTransaction(mockTransactionObject, {from: otherAddress, value: 2});
       expect(mockTransactionObject.send).to.be.calledOnceWith({from: otherAddress, value: 2});
-    });
-
-    it('returns data when sendTransactions is false', async () => {
-      const notSendingContractWrapper = new ManagedContractWrapper(mockHeadWrapper, mockWeb3, defaultAddress, false);
-      expect(await notSendingContractWrapper.processTransaction(mockTransactionObject)).to.equal(exampleTxData);
-      expect(mockTransactionObject.encodeABI).to.be.calledOnceWith();
-      expect(mockTransactionObject.send).to.be.not.called;
     });
   });
 });

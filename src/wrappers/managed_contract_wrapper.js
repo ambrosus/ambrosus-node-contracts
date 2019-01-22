@@ -12,11 +12,10 @@ import contractJsons from '../contract_jsons';
 
 /** @abstract */
 export default class ManagedContractWrapper {
-  constructor(headWrapper, web3, defaultAddress, sendTransactions = true) {
+  constructor(headWrapper, web3, defaultAddress) {
     this.headWrapper = headWrapper;
     this.web3 = web3;
     this.defaultAddress = defaultAddress;
-    this.sendTransactions = sendTransactions;
   }
 
   async address() {
@@ -33,10 +32,7 @@ export default class ManagedContractWrapper {
   }
 
   async processTransaction(transactionObject, sendParams = {}) {
-    if (this.sendTransactions) {
-      return transactionObject.send({from: this.defaultAddress, ...sendParams});
-    }
-    return transactionObject.encodeABI();
+    return transactionObject.send({from: this.defaultAddress, ...sendParams});
   }
 
   setDefaultAddress(defaultAddress) {

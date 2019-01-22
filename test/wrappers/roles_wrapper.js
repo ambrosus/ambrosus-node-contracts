@@ -7,21 +7,18 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import chai from 'chai';
-import sinon, {resetHistory} from 'sinon';
+import chai, {expect} from 'chai';
+import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import RolesWrapper from '../../src/wrappers/roles_wrapper';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
-const {expect} = chai;
 
 describe('Roles Wrapper', () => {
   const exampleAddress = '0xc0ffee';
   const defaultAddress = '0x1234';
-  const exampleData = '0xda7a';
-  const encodeAbiStub = sinon.stub().resolves(exampleData);
   let rolesWrapper;
 
   describe('onboardedRole', () => {
@@ -90,43 +87,21 @@ describe('Roles Wrapper', () => {
       contractMock = {
         methods: {
           setUrl: setNodeUrlStub.returns({
-            send: setNodeUrlSendStub.resolves(),
-            encodeABI: encodeAbiStub
+            send: setNodeUrlSendStub.resolves()
           })
         }
       };
+
+      rolesWrapper = new RolesWrapper({}, {}, defaultAddress);
+      sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
     });
 
-    afterEach(() => {
-      resetHistory(contractMock);
-    });
 
-    describe('sendTransactions = true', () => {
-      before(() => {
-        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, true);
-        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('calls contract method with correct arguments', async () => {
-        await rolesWrapper.setNodeUrl(exampleAddress, nodeUrl);
-        expect(setNodeUrlStub).to.be.calledOnceWith(nodeUrl);
-        expect(setNodeUrlSendStub).to.be.calledOnceWith({
-          from: exampleAddress
-        });
-      });
-    });
-
-    describe('sendTransactions = false', () => {
-      before(() => {
-        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, false);
-        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('returns data', async () => {
-        expect(await rolesWrapper.setNodeUrl(exampleAddress, nodeUrl)).to.equal(exampleData);
-        expect(setNodeUrlStub).to.be.calledOnceWith();
-        expect(setNodeUrlSendStub).to.be.not.called;
-        expect(encodeAbiStub).to.be.calledOnceWith();
+    it('calls contract method with correct arguments', async () => {
+      await rolesWrapper.setNodeUrl(exampleAddress, nodeUrl);
+      expect(setNodeUrlStub).to.be.calledOnceWith(nodeUrl);
+      expect(setNodeUrlSendStub).to.be.calledOnceWith({
+        from: exampleAddress
       });
     });
   });
@@ -143,44 +118,21 @@ describe('Roles Wrapper', () => {
       contractMock = {
         methods: {
           onboardAsApollo: onboardAsApolloStub.returns({
-            send: onboardAsApolloSendStub.resolves(),
-            encodeABI: encodeAbiStub
+            send: onboardAsApolloSendStub.resolves()
           })
         }
       };
+
+      rolesWrapper = new RolesWrapper({}, {}, defaultAddress);
+      sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
     });
 
-    afterEach(() => {
-      resetHistory(contractMock);
-    });
-
-    describe('sendTransactions = true', () => {
-      before(() => {
-        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, true);
-        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('calls contract method with correct arguments', async () => {
-        await rolesWrapper.onboardAsApollo(exampleAddress, deposit);
-        expect(onboardAsApolloStub).to.be.calledOnceWith();
-        expect(onboardAsApolloSendStub).to.be.calledOnceWith({
-          from: exampleAddress,
-          value: deposit
-        });
-      });
-    });
-
-    describe('sendTransactions = false', () => {
-      before(() => {
-        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, false);
-        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('returns data', async () => {
-        expect(await rolesWrapper.onboardAsApollo(exampleAddress, deposit)).to.equal(exampleData);
-        expect(onboardAsApolloStub).to.be.calledOnceWith();
-        expect(onboardAsApolloSendStub).to.be.not.called;
-        expect(encodeAbiStub).to.be.calledOnceWith();
+    it('calls contract method with correct arguments', async () => {
+      await rolesWrapper.onboardAsApollo(exampleAddress, deposit);
+      expect(onboardAsApolloStub).to.be.calledOnceWith();
+      expect(onboardAsApolloSendStub).to.be.calledOnceWith({
+        from: exampleAddress,
+        value: deposit
       });
     });
   });
@@ -198,44 +150,20 @@ describe('Roles Wrapper', () => {
       contractMock = {
         methods: {
           onboardAsAtlas: onboardAsAtlasStub.returns({
-            send: onboardAsAtlasSendStub.resolves(),
-            encodeABI: encodeAbiStub
+            send: onboardAsAtlasSendStub.resolves()
           })
         }
       };
+      rolesWrapper = new RolesWrapper({}, {}, defaultAddress);
+      sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
     });
 
-    afterEach(() => {
-      resetHistory(contractMock);
-    });
-
-    describe('sendTransactions = true', () => {
-      before(() => {
-        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, true);
-        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('calls contract method with correct arguments', async () => {
-        await rolesWrapper.onboardAsAtlas(exampleAddress, stake, url);
-        expect(onboardAsAtlasStub).to.be.calledOnceWith(url);
-        expect(onboardAsAtlasSendStub).to.be.calledOnceWith({
-          from: exampleAddress,
-          value: stake
-        });
-      });
-    });
-
-    describe('sendTransactions = false', () => {
-      before(() => {
-        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, false);
-        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('returns data', async () => {
-        expect(await rolesWrapper.onboardAsAtlas(exampleAddress, stake, url)).to.equal(exampleData);
-        expect(onboardAsAtlasStub).to.be.calledOnceWith(url);
-        expect(onboardAsAtlasSendStub).to.be.not.called;
-        expect(encodeAbiStub).to.be.calledOnceWith();
+    it('calls contract method with correct arguments', async () => {
+      await rolesWrapper.onboardAsAtlas(exampleAddress, stake, url);
+      expect(onboardAsAtlasStub).to.be.calledOnceWith(url);
+      expect(onboardAsAtlasSendStub).to.be.calledOnceWith({
+        from: exampleAddress,
+        value: stake
       });
     });
   });
@@ -252,43 +180,20 @@ describe('Roles Wrapper', () => {
       contractMock = {
         methods: {
           onboardAsHermes: onboardAsHermesStub.returns({
-            send: onboardAsHermesSendStub.resolves(),
-            encodeABI: encodeAbiStub
+            send: onboardAsHermesSendStub.resolves()
           })
         }
       };
+
+      rolesWrapper = new RolesWrapper({}, {}, defaultAddress);
+      sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
     });
 
-    afterEach(() => {
-      resetHistory(contractMock);
-    });
-
-    describe('sendTransactions = true', () => {
-      before(() => {
-        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, true);
-        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('calls contract method with correct arguments', async () => {
-        await rolesWrapper.onboardAsHermes(exampleAddress, url);
-        expect(onboardAsHermesStub).to.be.calledOnceWith(url);
-        expect(onboardAsHermesSendStub).to.be.calledOnceWith({
-          from: exampleAddress
-        });
-      });
-    });
-
-    describe('sendTransactions = false', () => {
-      before(() => {
-        rolesWrapper = new RolesWrapper({}, {}, defaultAddress, false);
-        sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
-      });
-
-      it('returns data', async () => {
-        expect(await rolesWrapper.onboardAsHermes(exampleAddress, url)).to.equal(exampleData);
-        expect(onboardAsHermesStub).to.be.calledOnceWith(url);
-        expect(onboardAsHermesSendStub).to.be.not.called;
-        expect(encodeAbiStub).to.be.calledOnceWith();
+    it('calls contract method with correct arguments', async () => {
+      await rolesWrapper.onboardAsHermes(exampleAddress, url);
+      expect(onboardAsHermesStub).to.be.calledOnceWith(url);
+      expect(onboardAsHermesSendStub).to.be.calledOnceWith({
+        from: exampleAddress
       });
     });
   });
