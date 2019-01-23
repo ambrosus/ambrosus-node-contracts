@@ -46,6 +46,7 @@ describe('Challenges Wrapper', () => {
 
   describe('challenges', () => {
     const fromBlock = 4;
+    const toBlock = 6;
     const eventsStub = 'events';
     let getPastEventsStub;
 
@@ -59,13 +60,14 @@ describe('Challenges Wrapper', () => {
     });
 
     it('gets past events', async () => {
-      expect(await challengesWrapper.challenges(fromBlock)).to.equal(eventsStub);
-      expect(getPastEventsStub).to.be.calledWith('ChallengeCreated', {fromBlock});
+      expect(await challengesWrapper.challenges(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(getPastEventsStub).to.be.calledWith('ChallengeCreated', {fromBlock, toBlock});
     });
   });
 
   describe('resolvedChallenges', () => {
     const fromBlock = 4;
+    const toBlock = 6;
     const eventsStub = 'events';
     let getPastEventsStub;
 
@@ -79,13 +81,14 @@ describe('Challenges Wrapper', () => {
     });
 
     it('gets past events', async () => {
-      expect(await challengesWrapper.resolvedChallenges(fromBlock)).to.equal(eventsStub);
-      expect(getPastEventsStub).to.be.calledWith('ChallengeResolved', {fromBlock});
+      expect(await challengesWrapper.resolvedChallenges(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(getPastEventsStub).to.be.calledWith('ChallengeResolved', {fromBlock, toBlock});
     });
   });
 
   describe('timedOutChallenges', () => {
     const fromBlock = 4;
+    const toBlock = 6;
     const eventsStub = 'events';
     let getPastEventsStub;
 
@@ -99,8 +102,8 @@ describe('Challenges Wrapper', () => {
     });
 
     it('gets past events', async () => {
-      expect(await challengesWrapper.timedOutChallenges(fromBlock)).to.equal(eventsStub);
-      expect(getPastEventsStub).to.be.calledWith('ChallengeTimeout', {fromBlock});
+      expect(await challengesWrapper.timedOutChallenges(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(getPastEventsStub).to.be.calledWith('ChallengeTimeout', {fromBlock, toBlock});
     });
   });
 
