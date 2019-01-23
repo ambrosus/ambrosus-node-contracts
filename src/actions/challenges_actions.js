@@ -20,7 +20,7 @@ export default class ChallengesActions {
 
   async startChallenge(sheltererId, bundleId) {
     if (!await this.shelteringWrapper.isSheltering(bundleId, sheltererId)) {
-      throw new Error(`${sheltererId} is not holding ${bundleId}`);
+      throw new Error(`${sheltererId} is not sherltering ${bundleId}`);
     }
     const challengeId = await this.challengesWrapper.getChallengeId(sheltererId, bundleId);
     if (await this.challengesWrapper.isInProgress(challengeId)) {
