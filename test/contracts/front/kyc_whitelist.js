@@ -19,6 +19,7 @@ import BN from 'bn.js';
 const ATLAS1_STAKE_BN = new BN(ATLAS1_STAKE);
 const ATLAS2_STAKE_BN = new BN(ATLAS2_STAKE);
 const ATLAS3_STAKE_BN = new BN(ATLAS3_STAKE);
+const APOLLO_DEPOSIT_BN = new BN(APOLLO_DEPOSIT);
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -126,8 +127,8 @@ describe('KYC Whitelist Contract', () => {
     await expect(addToWhitelist(other, 420, APOLLO_DEPOSIT)).to.be.eventually.rejected;
   });
 
-  it('throws if trying to whitelist Apollo with 0 deposit', async () => {
-    await expect(addToWhitelist(other, APOLLO, 0)).to.be.eventually.rejected;
+  it('throws if trying to whitelist Apollo for a deposit smaller than the minimal required value', async () => {
+    await expect(addToWhitelist(other, APOLLO, APOLLO_DEPOSIT_BN.sub(ONE))).to.be.eventually.rejected;
   });
 
   it('throws if trying to whitelist Atlas with a stake not included in config', async () => {

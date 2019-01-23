@@ -2,7 +2,7 @@
   "name": "ambrosus-node-contracts",
   "author": "Ambrosus",
   "description": "Smart contracts used in AMB-NET",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "license": "MPL-2.0-no-copyleft-exception",
   "repository": "git@github.com:ambrosus/ambrosus-node-contracts.git",
   "main": "dist/index.js",
