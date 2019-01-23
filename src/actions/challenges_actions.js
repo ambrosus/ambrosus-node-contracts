@@ -45,7 +45,7 @@ export default class ChallengesActions {
       throw new Error(`Challenge ${challengeId} not found`);
     }
     if (!await this.challengesWrapper.challengeIsTimedOut(challengeId)) {
-      throw new Error(`Challenge ${challengeId} cannot be marked as expired yet`);
+      throw new Error(`Challenge ${challengeId} cannot be marked as expired`);
     }
     return this.challengesWrapper.markAsExpired(challengeId);
   }
@@ -63,6 +63,6 @@ export default class ChallengesActions {
 
   /** @private */
   async getBalance() {
-    return await this.blockchainStateWrapper.getBalance(this.challengesWrapper.defaultAddress);
+    return this.blockchainStateWrapper.getBalance(this.challengesWrapper.defaultAddress);
   }
 }

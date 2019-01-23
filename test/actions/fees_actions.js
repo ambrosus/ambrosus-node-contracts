@@ -30,6 +30,7 @@ describe('Fees Actions', () => {
       defaultAddress,
       setBaseUploadFee: sinon.stub(),
       feeForUpload: sinon.stub(),
+      feeForChallenge: sinon.stub(),
       transferOwnership: sinon.stub()
     };
 
@@ -57,6 +58,15 @@ describe('Fees Actions', () => {
       feesWrapperMock.feeForUpload.resolves(exampleFee);
       expect(await feesActions.feeForUpload(storagePeriods)).to.equal(exampleFee);
       expect(feesWrapperMock.feeForUpload).to.be.calledOnceWith(storagePeriods);
+    });
+  });
+
+  describe('feeForChallenge', () => {
+    const storagePeriods = 42;
+    it('gets fee from wrapper', async () => {
+      feesWrapperMock.feeForChallenge.resolves(exampleFee);
+      expect(await feesActions.feeForChallenge(storagePeriods)).to.equal(exampleFee);
+      expect(feesWrapperMock.feeForChallenge).to.be.calledOnceWith(storagePeriods);
     });
   });
 

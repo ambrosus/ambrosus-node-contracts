@@ -71,7 +71,7 @@ describe('Challenges actions', () => {
         ...exampleTxResult,
         challengeId: exampleChallengeId
       });
-      expect(mockChallengesWrapper.start).to.be.calledOnceWith(exampleSheltererId, exampleBundleId);
+      expect(mockChallengesWrapper.start).to.be.calledOnce;
     });
 
     it('throws and does not perform transaction if bundle is not sheltered by this shelterer', async () => {
@@ -119,7 +119,7 @@ describe('Challenges actions', () => {
 
     it('throws when challenge is not timed out', async () => {
       mockChallengesWrapper.challengeIsTimedOut.withArgs(exampleChallengeId).resolves(false);
-      await expect(challengesActions.markAsExpired(exampleChallengeId)).to.be.rejectedWith('Challenge 0x12345 cannot be marked as expired yet');
+      await expect(challengesActions.markAsExpired(exampleChallengeId)).to.be.rejectedWith('Challenge 0x12345 cannot be marked as expired');
     });
   });
 

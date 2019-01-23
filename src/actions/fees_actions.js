@@ -36,6 +36,6 @@ export default class FeesActions {
   }
 
   async feeForChallenge(storagePeriods) {
-    return this.feesWrapper.feeForUpload(storagePeriods);
+    return this.feesWrapper.feeForChallenge(storagePeriods);
   }
 }

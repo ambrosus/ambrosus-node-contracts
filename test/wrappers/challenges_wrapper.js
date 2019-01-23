@@ -182,7 +182,7 @@ describe('Challenges Wrapper', () => {
           markAsExpired: markAsExpiredStub
         }
       };
-      challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress, true);
+      challengesWrapper = new ChallengesWrapper({}, {}, defaultAddress);
       sinon.stub(challengesWrapper, 'contract').resolves(contractMock);
     });
 

@@ -82,8 +82,8 @@ Transaction ID - ${transactionHash}`);
       console.log('However, it cannot be resolved by you at the moment.');
     }
     if (status.isTimedOut) {
-      console.log(`This challenge is past its expiration date and nobody has resolved it :(. 
-Mark it as expired to punish the shelterer.`);
+      console.log(`This challenge is past its expiration date and has not been resolved :(. 
+You can now mark it as expired.`);
     }
   }
 
