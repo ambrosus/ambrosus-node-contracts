@@ -50,4 +50,31 @@ describe('Time Wrapper', () => {
       expect(currentPayoutPeriodCallStub).to.be.calledOnce;
     });
   });
+
+  describe('Payout period start', () => {
+    let payoutPeriodStartStub;
+    let payoutPeriodStartCallStub;
+    const periodStart = '1548333077';
+    const examplePeriod = '12';
+
+    before(async () => {
+      payoutPeriodStartStub = sinon.stub();
+      payoutPeriodStartCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          payoutPeriodStart: payoutPeriodStartStub.returns({
+            call: payoutPeriodStartCallStub.resolves(periodStart)
+          })
+        }
+      };
+      timeWrapper = new TimeWrapper();
+      sinon.stub(timeWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await expect(timeWrapper.payoutPeriodStart(examplePeriod)).to.eventually.equal(periodStart);
+      expect(payoutPeriodStartStub).to.be.calledOnceWith(examplePeriod);
+      expect(payoutPeriodStartCallStub).to.be.calledOnce;
+    });
+  });
 });
