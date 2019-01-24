@@ -54,6 +54,7 @@ describe('Fees Actions', () => {
 
   describe('feeForUpload', () => {
     const storagePeriods = 42;
+
     it('gets fee from wrapper', async () => {
       feesWrapperMock.feeForUpload.resolves(exampleFee);
       expect(await feesActions.feeForUpload(storagePeriods)).to.equal(exampleFee);
