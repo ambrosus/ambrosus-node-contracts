@@ -11,16 +11,16 @@ import chai from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import ChallengesActions from '../../src/actions/challenges_actions';
+import ChallengeActions from '../../src/actions/challenge_actions';
 import {InsufficientFundsToStartChallengeError} from '../../src/errors/errors';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const {expect} = chai;
 
-describe('Challenges actions', () => {
-  let challengesActions;
-  let mockChallengesWrapper;
+describe('Challenge actions', () => {
+  let challengeActions;
+  let mockChallengeWrapper;
   let mockFeesWrapper;
   let mockShelteringWrapper;
   let mockBlockchainStateWrapper;
@@ -39,7 +39,7 @@ describe('Challenges actions', () => {
     const defaultAddress = '0xADD';
 
     beforeEach(() => {
-      mockChallengesWrapper = {
+      mockChallengeWrapper = {
         start: sinon.stub(),
         getChallengeId: sinon.stub(),
         isInProgress: sinon.stub(),
@@ -55,97 +55,97 @@ describe('Challenges actions', () => {
         isSheltering: sinon.stub(),
         bundleStoragePeriods: sinon.stub()
       };
-      mockChallengesWrapper.start.withArgs(exampleSheltererId, exampleBundleId).resolves(exampleTxResult);
-      mockChallengesWrapper.getChallengeId.withArgs(exampleSheltererId, exampleBundleId).resolves(exampleChallengeId);
-      mockChallengesWrapper.isInProgress.withArgs(exampleChallengeId).resolves(false);
+      mockChallengeWrapper.start.withArgs(exampleSheltererId, exampleBundleId).resolves(exampleTxResult);
+      mockChallengeWrapper.getChallengeId.withArgs(exampleSheltererId, exampleBundleId).resolves(exampleChallengeId);
+      mockChallengeWrapper.isInProgress.withArgs(exampleChallengeId).resolves(false);
       mockShelteringWrapper.isSheltering.withArgs(exampleBundleId, exampleSheltererId).resolves(true);
       mockFeesWrapper.feeForChallenge.withArgs(exampleStoragePeriods).resolves(exampleFee);
       mockBlockchainStateWrapper.getBalance.withArgs(defaultAddress).resolves(exampleBalance);
       mockShelteringWrapper.bundleStoragePeriods.withArgs(exampleBundleId).resolves(exampleStoragePeriods);
 
-      challengesActions = new ChallengesActions(mockChallengesWrapper, mockFeesWrapper, mockShelteringWrapper, mockBlockchainStateWrapper);
+      challengeActions = new ChallengeActions(mockChallengeWrapper, mockFeesWrapper, mockShelteringWrapper, mockBlockchainStateWrapper);
     });
 
     it('calls start method of wrapper, returns correct data', async () => {
-      expect(await challengesActions.startChallenge(exampleSheltererId, exampleBundleId)).to.deep.equal({
+      expect(await challengeActions.startChallenge(exampleSheltererId, exampleBundleId)).to.deep.equal({
         ...exampleTxResult,
         challengeId: exampleChallengeId
       });
-      expect(mockChallengesWrapper.start).to.be.calledOnce;
+      expect(mockChallengeWrapper.start).to.be.calledOnce;
     });
 
     it('throws and does not perform transaction if bundle is not sheltered by this shelterer', async () => {
       mockShelteringWrapper.isSheltering.withArgs(exampleBundleId, exampleSheltererId).resolves(false);
-      await expect(challengesActions.startChallenge(exampleSheltererId, exampleBundleId)).to.be.rejectedWith('0xc0ffee is not holding 0xbeef');
-      expect(mockChallengesWrapper.start).to.be.not.called;
+      await expect(challengeActions.startChallenge(exampleSheltererId, exampleBundleId)).to.be.rejectedWith('0xc0ffee is not sherltering 0xbeef');
+      expect(mockChallengeWrapper.start).to.be.not.called;
     });
 
     it('throws and does not perform transaction if challenge with same id is already in progress', async () => {
-      mockChallengesWrapper.isInProgress.withArgs(exampleChallengeId).resolves(true);
-      await expect(challengesActions.startChallenge(exampleSheltererId, exampleBundleId)).to.be.rejectedWith('Could not start a challenge: same challenge is currently in progress');
-      expect(mockChallengesWrapper.start).to.be.not.called;
+      mockChallengeWrapper.isInProgress.withArgs(exampleChallengeId).resolves(true);
+      await expect(challengeActions.startChallenge(exampleSheltererId, exampleBundleId)).to.be.rejectedWith('Could not start a challenge: same challenge is currently in progress');
+      expect(mockChallengeWrapper.start).to.be.not.called;
     });
 
     it('throws and does not perform transaction if funds are insufficient', async () => {
       mockBlockchainStateWrapper.getBalance.withArgs(defaultAddress).resolves('10');
-      await expect(challengesActions.startChallenge(exampleSheltererId, exampleBundleId)).to.be.rejectedWith(InsufficientFundsToStartChallengeError, 'Insufficient funds: need at least 0.0000000000000001 to start a challenge. Balance: 0.00000000000000001');
-      expect(mockChallengesWrapper.start).to.be.not.called;
+      await expect(challengeActions.startChallenge(exampleSheltererId, exampleBundleId)).to.be.rejectedWith(InsufficientFundsToStartChallengeError, 'Insufficient funds: need at least 0.0000000000000001 to start a challenge. Balance: 0.00000000000000001');
+      expect(mockChallengeWrapper.start).to.be.not.called;
     });
   });
 
   describe('Marking as expired', () => {
     beforeEach(() => {
-      mockChallengesWrapper = {
+      mockChallengeWrapper = {
         isInProgress: sinon.stub(),
         challengeIsTimedOut: sinon.stub(),
         markAsExpired: sinon.stub()
       };
-      mockChallengesWrapper.isInProgress.withArgs(exampleChallengeId).resolves(true);
-      mockChallengesWrapper.challengeIsTimedOut.withArgs(exampleChallengeId).resolves(true);
-      mockChallengesWrapper.markAsExpired.withArgs(exampleChallengeId).resolves(exampleTxResult);
+      mockChallengeWrapper.isInProgress.withArgs(exampleChallengeId).resolves(true);
+      mockChallengeWrapper.challengeIsTimedOut.withArgs(exampleChallengeId).resolves(true);
+      mockChallengeWrapper.markAsExpired.withArgs(exampleChallengeId).resolves(exampleTxResult);
 
-      challengesActions = new ChallengesActions(mockChallengesWrapper);
+      challengeActions = new ChallengeActions(mockChallengeWrapper);
     });
 
     it('calls markAsExpired method of wrapper', async () => {
-      expect(await challengesActions.markAsExpired(exampleChallengeId)).to.equal(exampleTxResult);
-      expect(mockChallengesWrapper.isInProgress).to.be.calledOnceWith(exampleChallengeId);
+      expect(await challengeActions.markAsExpired(exampleChallengeId)).to.equal(exampleTxResult);
+      expect(mockChallengeWrapper.isInProgress).to.be.calledOnceWith(exampleChallengeId);
     });
 
     it('throws when challenge is not in progress', async () => {
-      mockChallengesWrapper.isInProgress.withArgs(exampleChallengeId).resolves(false);
-      await expect(challengesActions.markAsExpired(exampleChallengeId)).to.be.rejectedWith('Challenge 0x12345 not found');
+      mockChallengeWrapper.isInProgress.withArgs(exampleChallengeId).resolves(false);
+      await expect(challengeActions.markAsExpired(exampleChallengeId)).to.be.rejectedWith('Challenge 0x12345 not found');
     });
 
     it('throws when challenge is not timed out', async () => {
-      mockChallengesWrapper.challengeIsTimedOut.withArgs(exampleChallengeId).resolves(false);
-      await expect(challengesActions.markAsExpired(exampleChallengeId)).to.be.rejectedWith('Challenge 0x12345 cannot be marked as expired');
+      mockChallengeWrapper.challengeIsTimedOut.withArgs(exampleChallengeId).resolves(false);
+      await expect(challengeActions.markAsExpired(exampleChallengeId)).to.be.rejectedWith('Challenge 0x12345 cannot be marked as expired');
     });
   });
 
   describe('Challenge status', () => {
     beforeEach(() => {
-      mockChallengesWrapper = {
+      mockChallengeWrapper = {
         isInProgress: sinon.stub(),
         challengeIsTimedOut: sinon.stub(),
         canResolve: sinon.stub()
       };
-      mockChallengesWrapper.isInProgress.withArgs(exampleChallengeId).resolves(true);
-      mockChallengesWrapper.challengeIsTimedOut.withArgs(exampleChallengeId).resolves(true);
-      mockChallengesWrapper.canResolve.withArgs(exampleChallengeId).resolves(false);
+      mockChallengeWrapper.isInProgress.withArgs(exampleChallengeId).resolves(true);
+      mockChallengeWrapper.challengeIsTimedOut.withArgs(exampleChallengeId).resolves(true);
+      mockChallengeWrapper.canResolve.withArgs(exampleChallengeId).resolves(false);
 
-      challengesActions = new ChallengesActions(mockChallengesWrapper);
+      challengeActions = new ChallengeActions(mockChallengeWrapper);
     });
 
     it('ignores challenge status when it is not in progress', async () => {
-      mockChallengesWrapper.isInProgress.withArgs(exampleChallengeId).resolves(false);
-      expect(await challengesActions.challengeStatus(exampleChallengeId)).to.deep.equal({isInProgress: false});
-      expect(mockChallengesWrapper.challengeIsTimedOut).to.be.not.called;
-      expect(mockChallengesWrapper.canResolve).to.be.not.called;
+      mockChallengeWrapper.isInProgress.withArgs(exampleChallengeId).resolves(false);
+      expect(await challengeActions.challengeStatus(exampleChallengeId)).to.deep.equal({isInProgress: false});
+      expect(mockChallengeWrapper.challengeIsTimedOut).to.be.not.called;
+      expect(mockChallengeWrapper.canResolve).to.be.not.called;
     });
 
     it('when challenge is in progress, returns resolution and timeout statuses', async () => {
-      expect(await challengesActions.challengeStatus(exampleChallengeId)).to.deep.equal({
+      expect(await challengeActions.challengeStatus(exampleChallengeId)).to.deep.equal({
         isInProgress: true,
         canResolve: false,
         isTimedOut: true

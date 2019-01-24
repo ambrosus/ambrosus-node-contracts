@@ -10,10 +10,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import TaskBase from './base/task_base';
 import {utils} from '../utils/web3_tools';
 
-export default class ChallengesTask extends TaskBase {
-  constructor(challengesActions) {
+export default class ChallengeTask extends TaskBase {
+  constructor(challengeActions) {
     super();
-    this.challengesActions = challengesActions;
+    this.challengeActions = challengeActions;
   }
 
 
@@ -32,6 +32,10 @@ export default class ChallengesTask extends TaskBase {
     }
   }
 
+  is64DigitsHexString(value) {
+    return /^0x[0-9a-f]{64}$/i.exec(value) !== null;
+  }
+
   validateAddress(address) {
     if (!utils.isAddress(address)) {
       throw `Invalid address: ${address}`;
@@ -39,7 +43,7 @@ export default class ChallengesTask extends TaskBase {
   }
 
   validateId(validatedId) {
-    if (!/^0x[0-9a-f]{64}$/i.exec(validatedId)) {
+    if (!this.is64DigitsHexString(validatedId)) {
       throw `Invalid Id: ${validatedId}`;
     }
   }
@@ -56,21 +60,21 @@ Options:
   async start(sheltererId, bundleId) {
     this.validateAddress(sheltererId);
     this.validateId(bundleId);
-    const {transactionHash, challengeId} = await this.challengesActions.startChallenge(sheltererId, bundleId);
+    const {transactionHash, challengeId} = await this.challengeActions.startChallenge(sheltererId, bundleId);
     console.log(`Challenge with ID = ${challengeId} has been created. 
 Transaction ID - ${transactionHash}`);
   }
 
   async expire(challengeId) {
     this.validateId(challengeId);
-    const {transactionHash} = await this.challengesActions.markAsExpired(challengeId);
+    const {transactionHash} = await this.challengeActions.markAsExpired(challengeId);
     console.log(`Challenge successfully marked as expired.
 Transaction ID - ${transactionHash}`);
   }
 
   async status(challengeId) {
     this.validateId(challengeId);
-    const status = await this.challengesActions.challengeStatus(challengeId);
+    const status = await this.challengeActions.challengeStatus(challengeId);
     if (!status.isInProgress) {
       console.log(`There is no challenge with ID = ${challengeId} being in progress right now`);
       return;
@@ -82,7 +86,7 @@ Transaction ID - ${transactionHash}`);
       console.log('However, it cannot be resolved by you at the moment.');
     }
     if (status.isTimedOut) {
-      console.log(`This challenge is past its expiration date and has not been resolved :(. 
+      console.log(`This challenge is past its expiration date and has not been resolved. 
 You can now mark it as expired.`);
     }
   }

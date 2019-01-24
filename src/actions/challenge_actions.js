@@ -10,9 +10,9 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import BN from 'bn.js';
 import {InsufficientFundsToStartChallengeError} from '../errors/errors';
 
-export default class ChallengesActions {
-  constructor(challengesWrapper, feeWrapper, shelteringWrapper, blockchainStateWrapper) {
-    this.challengesWrapper = challengesWrapper;
+export default class ChallengeActions {
+  constructor(challengeWrapper, feeWrapper, shelteringWrapper, blockchainStateWrapper) {
+    this.challengeWrapper = challengeWrapper;
     this.feeWrapper = feeWrapper;
     this.shelteringWrapper = shelteringWrapper;
     this.blockchainStateWrapper = blockchainStateWrapper;
@@ -22,8 +22,8 @@ export default class ChallengesActions {
     if (!await this.shelteringWrapper.isSheltering(bundleId, sheltererId)) {
       throw new Error(`${sheltererId} is not sherltering ${bundleId}`);
     }
-    const challengeId = await this.challengesWrapper.getChallengeId(sheltererId, bundleId);
-    if (await this.challengesWrapper.isInProgress(challengeId)) {
+    const challengeId = await this.challengeWrapper.getChallengeId(sheltererId, bundleId);
+    if (await this.challengeWrapper.isInProgress(challengeId)) {
       throw new Error('Could not start a challenge: same challenge is currently in progress');
     }
     const storagePeriods = await this.shelteringWrapper.bundleStoragePeriods(bundleId);
@@ -32,7 +32,7 @@ export default class ChallengesActions {
     if (new BN(balance).lte(new BN(fee))) {
       throw new InsufficientFundsToStartChallengeError(fee, balance);
     }
-    const {blockNumber, transactionHash} = await this.challengesWrapper.start(sheltererId, bundleId, fee);
+    const {blockNumber, transactionHash} = await this.challengeWrapper.start(sheltererId, bundleId, fee);
     return {
       blockNumber,
       transactionHash,
@@ -41,28 +41,28 @@ export default class ChallengesActions {
   }
 
   async markAsExpired(challengeId) {
-    if (!await this.challengesWrapper.isInProgress(challengeId)) {
+    if (!await this.challengeWrapper.isInProgress(challengeId)) {
       throw new Error(`Challenge ${challengeId} not found`);
     }
-    if (!await this.challengesWrapper.challengeIsTimedOut(challengeId)) {
+    if (!await this.challengeWrapper.challengeIsTimedOut(challengeId)) {
       throw new Error(`Challenge ${challengeId} cannot be marked as expired`);
     }
-    return this.challengesWrapper.markAsExpired(challengeId);
+    return this.challengeWrapper.markAsExpired(challengeId);
   }
 
   async challengeStatus(challengeId) {
-    if (!await this.challengesWrapper.isInProgress(challengeId)) {
+    if (!await this.challengeWrapper.isInProgress(challengeId)) {
       return {isInProgress: false};
     }
     return {
       isInProgress: true,
-      canResolve: await this.challengesWrapper.canResolve(challengeId),
-      isTimedOut: await this.challengesWrapper.challengeIsTimedOut(challengeId)
+      canResolve: await this.challengeWrapper.canResolve(challengeId),
+      isTimedOut: await this.challengeWrapper.challengeIsTimedOut(challengeId)
     };
   }
 
   /** @private */
   async getBalance() {
-    return this.blockchainStateWrapper.getBalance(this.challengesWrapper.defaultAddress);
+    return this.blockchainStateWrapper.getBalance(this.challengeWrapper.defaultAddress);
   }
 }

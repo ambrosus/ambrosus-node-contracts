@@ -8,7 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 
-import ChallengesWrapper from './wrappers/challenges_wrapper';
+import ChallengeWrapper from './wrappers/challenge_wrapper';
 import PayoutsWrapper from './wrappers/payouts_wrapper';
 import ConfigWrapper from './wrappers/config_wrapper';
 import FeesWrapper from './wrappers/fees_wrapper';
@@ -31,14 +31,14 @@ import FeesActions from './actions/fees_actions';
 import DeployActions from './actions/deploy_actions';
 import AdministrativeActions from './actions/admin_actions';
 import PayoutsActions from './actions/payouts_actions';
-import ChallengesActions from './actions/challenges_actions';
+import ChallengeActions from './actions/challenge_actions';
 import {InsufficientFundsToStartChallengeError, InsufficientFundsToUploadBundleError} from './errors/errors';
 const constants = require('./constants');
 
 module.exports = {
   PayoutsWrapper,
   TimeWrapper,
-  ChallengesWrapper,
+  ChallengeWrapper,
   ConfigWrapper,
   FeesWrapper,
   HeadWrapper,
@@ -58,7 +58,7 @@ module.exports = {
   Deployer,
   DeployActions,
   PayoutsActions,
-  ChallengesActions,
+  ChallengeActions,
   constants,
   contractJsons,
   InsufficientFundsToUploadBundleError,

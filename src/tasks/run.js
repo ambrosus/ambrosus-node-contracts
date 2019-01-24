@@ -16,7 +16,7 @@ import OnboardingTask from './onboard';
 import TaskList from './base/task_list';
 import UploadTask from './upload';
 import PayoutsTask from './payouts';
-import ChallengesTask from './challenges';
+import ChallengeTask from './challenge';
 import HeadWrapper from '../wrappers/head_wrapper';
 import ValidatorSetWrapper from '../wrappers/validator_set_wrapper';
 import BlockRewardsWrapper from '../wrappers/block_rewards_wrapper';
@@ -36,8 +36,8 @@ import NodeServiceActions from '../actions/node_service';
 import PayoutsActions from '../actions/payouts_actions';
 import TimeWrapper from '../wrappers/time_wrapper';
 import PayoutsWrapper from '../wrappers/payouts_wrapper';
-import ChallengesActions from '../actions/challenges_actions';
-import ChallengesWrapper from '../wrappers/challenges_wrapper';
+import ChallengeActions from '../actions/challenge_actions';
+import ChallengeWrapper from '../wrappers/challenge_wrapper';
 import BlockchainStateWrapper from '../wrappers/blockchain_state_wrapper';
 
 const runTask = async () => {
@@ -57,7 +57,7 @@ const runTask = async () => {
   const shelteringWrapper = new ShelteringWrapper(headWrapper, web3, nodeAddress);
   const timeWrapper = new TimeWrapper(headWrapper, web3, nodeAddress);
   const payoutsWrapper = new PayoutsWrapper(headWrapper, web3, nodeAddress);
-  const challengesWrapper = new ChallengesWrapper(headWrapper, web3, nodeAddress);
+  const challengeWrapper = new ChallengeWrapper(headWrapper, web3, nodeAddress);
   const blockchainStateWrapper = new BlockchainStateWrapper(web3);
 
   const deployActions = new DeployActions(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper);
@@ -66,7 +66,7 @@ const runTask = async () => {
   const uploadActions = new UploadActions(uploadsWrapper, feesWrapper, shelteringWrapper);
   const nodeServiceActions = new NodeServiceActions(rolesWrapper);
   const payoutsActions = new PayoutsActions(timeWrapper, payoutsWrapper);
-  const challengesActions = new ChallengesActions(challengesWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper);
+  const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper);
 
   const list = new TaskList();
   const args = process.argv.slice(2);
@@ -77,7 +77,7 @@ const runTask = async () => {
   list.add('upload', new UploadTask(uploadActions));
   list.add('nodeService', new NodeServiceTask(nodeAddress, nodeServiceActions));
   list.add('payouts', new PayoutsTask(web3, nodeAddress, payoutsActions));
-  list.add('challenges', new ChallengesTask(challengesActions));
+  list.add('challenge', new ChallengeTask(challengeActions));
 
   await list.run(args[0], args.slice(1));
 };
