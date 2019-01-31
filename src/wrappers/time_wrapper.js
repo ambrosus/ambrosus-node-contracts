@@ -18,4 +18,9 @@ export default class TimeWrapper extends ManagedContractWrapper {
     const contract = await this.contract();
     return contract.methods.currentPayoutPeriod().call();
   }
+
+  async payoutPeriodStart(payoutPeriod) {
+    const contract = await this.contract();
+    return contract.methods.payoutPeriodStart(payoutPeriod).call();
+  }
 }

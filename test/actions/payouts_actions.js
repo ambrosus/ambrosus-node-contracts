@@ -24,10 +24,12 @@ describe('Payouts actions', () => {
   let payoutsWrapperMock;
   let timeWrapperMock;
   const exampleTimePeriod = (FIRST_MEANINGFUL_PERIOD + 12).toString();
+  const exampleTimestamp = '1548334446';
 
   beforeEach(() => {
     timeWrapperMock = {
-      currentPayoutPeriod: sinon.stub().resolves(exampleTimePeriod)
+      currentPayoutPeriod: sinon.stub().resolves(exampleTimePeriod),
+      payoutPeriodStart: sinon.stub().resolves(exampleTimestamp)
     };
     payoutsWrapperMock = {
       availablePayoutAmountInPeriod: sinon.stub(),
@@ -39,6 +41,11 @@ describe('Payouts actions', () => {
   it('currentPayoutPeriod calls corresponding method from timeWrapper', async () => {
     expect(await payoutsActions.currentPayoutPeriod()).to.equal(exampleTimePeriod);
     expect(timeWrapperMock.currentPayoutPeriod).to.be.calledOnce;
+  });
+
+  it('nextPayoutPeriodStart returns timestamp of next payout period', async () => {
+    expect(await payoutsActions.nextPayoutPeriodStart()).to.equal(exampleTimestamp);
+    expect(timeWrapperMock.payoutPeriodStart).to.be.calledOnceWith(FIRST_MEANINGFUL_PERIOD + 13);
   });
 
   it('withdraw calls corresponding method from payoutsWrapper', async () => {

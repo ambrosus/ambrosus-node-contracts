@@ -21,6 +21,11 @@ export default class PayoutsActions {
     return this.timeWrapper.currentPayoutPeriod();
   }
 
+  async nextPayoutPeriodStart() {
+    const nextPayoutPeriod = parseInt(await this.currentPayoutPeriod(), 10) + 1;
+    return this.timeWrapper.payoutPeriodStart(nextPayoutPeriod);
+  }
+
   async getTotalAvailablePayout() {
     const currentPayout = parseInt(await this.currentPayoutPeriod(), 10);
     let availablePayout = new BN('0');
