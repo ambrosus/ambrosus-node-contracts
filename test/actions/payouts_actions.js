@@ -43,7 +43,7 @@ describe('Payouts actions', () => {
     expect(timeWrapperMock.currentPayoutPeriod).to.be.calledOnce;
   });
 
-  it('nextPayoutPeriodStart returns timestamp of next payouts period', async () => {
+  it('nextPayoutPeriodStart returns timestamp of next payout period', async () => {
     expect(await payoutsActions.nextPayoutPeriodStart()).to.equal(exampleTimestamp);
     expect(timeWrapperMock.payoutPeriodStart).to.be.calledOnceWith(FIRST_MEANINGFUL_PERIOD + 13);
   });
