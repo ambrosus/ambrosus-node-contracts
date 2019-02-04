@@ -31,9 +31,6 @@ export default class DeployTask extends TaskBase {
   async deploy(initial, args) {
     console.log(`Deploying ${initial ? 'initial set of contracts' : 'contracts update'}. This may take some time...`);
     const options = this.parseOptions(args);
-    if (options === null) {
-      return;
-    }
 
     if (options.turbo) {
       console.log('⚡️ Deploying in super speed mode. ⚡️');
@@ -60,7 +57,7 @@ export default class DeployTask extends TaskBase {
     const unknownOptions = options._unknown;
     if (unknownOptions && unknownOptions.length > 0) {
       console.error(`Unknown options: ${unknownOptions.join(', ')}`);
-      return null;
+      process.exit(1);
     }
 
     return options;
