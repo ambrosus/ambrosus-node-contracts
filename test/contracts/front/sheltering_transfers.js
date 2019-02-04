@@ -41,7 +41,6 @@ describe('ShelteringTransfers Contract', () => {
   let transferId;
   const bundleId = utils.keccak256('bundleId');
   const storagePeriods = 1;
-  const storageLimit = 10;
   const totalReward = 1000000;
   let snapshotId;
   const bundleUploadTimestamp = PAYOUT_PERIOD_UNIT * 12.6;
@@ -62,8 +61,7 @@ describe('ShelteringTransfers Contract', () => {
   const isSheltering = async (sheltererId, bundleId) => sheltering.methods.isSheltering(sheltererId, bundleId).call();
   const getShelteringExpirationDate = async (bundleId, sheltererId) => sheltering.methods.getShelteringExpirationDate(bundleId, sheltererId).call();
   const storeBundle = async (bundleId, uploader, storagePeriods, sender = deployer) => sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
-  const setStorageUsed = async (sheltererId, storageUsed, sender = deployer) => atlasStakeStore.methods.setStorageUsed(sheltererId, storageUsed).send({from: sender});
-  const depositStake = async (atlasId, storageLimit, value, sender = deployer) => atlasStakeStore.methods.depositStake(atlasId, storageLimit).send({from: sender, value});
+  const depositStake = async (atlasId, value, sender = deployer) => atlasStakeStore.methods.depositStake(atlasId).send({from: sender, value});
   const currentPayoutPeriod = async () => time.methods.currentPayoutPeriod().call();
   const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
   const setTimestamp = async (timestamp, sender = deployer) => time.methods.setCurrentTimestamp(timestamp).send({from: sender});
@@ -96,8 +94,8 @@ describe('ShelteringTransfers Contract', () => {
     await setRole(hermes, HERMES);
     await setRole(atlas, ATLAS);
     await setRole(notSheltering, ATLAS);
-    await depositStake(atlas, storageLimit, ATLAS1_STAKE);
-    await depositStake(notSheltering, storageLimit, ATLAS1_STAKE);
+    await depositStake(atlas, ATLAS1_STAKE);
+    await depositStake(notSheltering, ATLAS1_STAKE);
     await storeBundle(bundleId, hermes, storagePeriods);
     await addShelterer(bundleId, atlas, totalReward);
     transferId = await getTransferId(atlas, bundleId);
@@ -161,10 +159,7 @@ describe('ShelteringTransfers Contract', () => {
     });
 
     describe('Resolving a transfer', () => {
-      const storageUsed = 1;
-
       beforeEach(async () => {
-        await setStorageUsed(notSheltering, storageUsed);
         await setTimestamp(transferTimestamp);
         await startTransfer(bundleId, atlas);
       });
@@ -175,11 +170,6 @@ describe('ShelteringTransfers Contract', () => {
 
       it('Fails to resolve if recipient is already sheltering this bundle', async () => {
         await addShelterer(bundleId, notSheltering, totalReward);
-        await expect(resolveTransfer(transferId, notSheltering)).to.be.eventually.rejected;
-      });
-
-      it('Fails to resolve if recipient has no sheltering capacity', async () => {
-        await setStorageUsed(notSheltering, storageLimit);
         await expect(resolveTransfer(transferId, notSheltering)).to.be.eventually.rejected;
       });
 

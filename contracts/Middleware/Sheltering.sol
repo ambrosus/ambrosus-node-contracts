@@ -87,7 +87,7 @@ contract Sheltering is Base {
         uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
         uint totalReward = bundleStore.getTotalShelteringReward(bundleId, shelterer);
 
-        atlasStakeStore.decrementStorageUsed(shelterer);
+        atlasStakeStore.decrementShelteredBundlesCount(shelterer);
         bundleStore.removeShelterer(bundleId, shelterer);
 
         uint64 payoutPeriods = storagePeriods.mul(time.PAYOUT_TO_STORAGE_PERIOD_MULTIPLIER()).castTo64();
@@ -149,7 +149,8 @@ contract Sheltering is Base {
     }
 
     function addSheltererInternal(bytes32 bundleId, address shelterer, uint reward, uint64 payoutPeriodReduction) private {
-        atlasStakeStore.incrementStorageUsed(shelterer);
+        require(atlasStakeStore.isStaking(shelterer));
+        atlasStakeStore.incrementShelteredBundlesCount(shelterer);
         bundleStore.addShelterer(bundleId, shelterer, reward, payoutPeriodReduction, time.currentTimestamp());
 
         uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);

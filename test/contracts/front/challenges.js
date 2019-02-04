@@ -15,8 +15,7 @@ import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import BN from 'bn.js';
 import {
   ATLAS,
-  ATLAS1_STAKE,
-  ATLAS1_STORAGE_LIMIT
+  ATLAS1_STAKE
 } from '../../../src/constants';
 import {ONE, DAY, SYSTEM_CHALLENGES_COUNT} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
@@ -83,8 +82,7 @@ describe('Challenges Contract', () => {
   const storeBundle = async (bundleId, sheltererId, storagePeriods, currentTimestamp) => bundleStore.methods.store(bundleId, sheltererId, storagePeriods, currentTimestamp).send({from: context});
   const addSheltererToBundle = async (bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp) =>
     bundleStore.methods.addShelterer(bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp).send({from: context});
-  const depositStake = async (stakerId, storageLimit, stakeValue) => atlasStakeStore.methods.depositStake(stakerId, storageLimit).send({from: context, value: stakeValue});
-  const setStorageUsed = async (nodeId, storageUsed) => atlasStakeStore.methods.setStorageUsed(nodeId, storageUsed).send({from: context});
+  const depositStake = async (stakerId, stakeValue) => atlasStakeStore.methods.depositStake(stakerId).send({from: context, value: stakeValue});
   const setStake = async (nodeId, stake) => atlasStakeStore.methods.setStakeAmount(nodeId, stake).send({from: context});
   const setNumberOfStakers = async (numberOfStakers) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from: context});
   const addShelterer = async (bundleId, sheltererId, shelteringReward) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from: context, value: shelteringReward});
@@ -244,7 +242,7 @@ describe('Challenges Contract', () => {
 
   describe('Starting user challenge', () => {
     beforeEach(async () => {
-      await depositStake(shelterer, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
+      await depositStake(shelterer, ATLAS1_STAKE);
       await addShelterer(bundleId, shelterer, totalReward);
     });
 
@@ -373,7 +371,7 @@ describe('Challenges Contract', () => {
 
     beforeEach(async () => {
       await atlasOnboarding(resolver);
-      await depositStake(shelterer, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
+      await depositStake(shelterer, ATLAS1_STAKE);
       await addShelterer(bundleId, shelterer, totalReward);
       await startChallenge(shelterer, bundleId, challenger, userChallengeFee);
       challengeId = await lastChallengeId();
@@ -456,12 +454,6 @@ describe('Challenges Contract', () => {
       await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.rejected;
     });
 
-    it(`Fails if resolver can't store more bundles`, async () => {
-      await setStorageUsed(resolver, ATLAS1_STORAGE_LIMIT);
-      expect(await canResolve(resolver, challengeId)).to.equal(false);
-      await expect(resolveChallenge(challengeId, resolver)).to.be.eventually.rejected;
-    });
-
     it('Fails to resolve if resolver has no stake', async () => {
       await setStake(resolver, '0');
       await expect(resolveChallenge(challengeId, resolver)).to.be.rejected;
@@ -499,7 +491,7 @@ describe('Challenges Contract', () => {
     const challengeTimeout = 3 * DAY;
 
     beforeEach(async () => {
-      await depositStake(shelterer, ATLAS1_STORAGE_LIMIT, ATLAS1_STAKE);
+      await depositStake(shelterer, ATLAS1_STAKE);
       await addShelterer(bundleId, shelterer, userChallengeFee);
 
       await startChallenge(shelterer, bundleId, challenger, userChallengeFee);

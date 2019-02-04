@@ -29,17 +29,15 @@ describe('AtlasStakeStore Contract', () => {
   let snapshotId;
 
   const isStaking = async (sheltererId) => atlasStakeStore.methods.isStaking(sheltererId).call();
-  const canStore = async (sheltererId) => atlasStakeStore.methods.canStore(sheltererId).call();
   const isShelteringAny = async (sheltererId) => atlasStakeStore.methods.isShelteringAny(sheltererId).call();
-  const depositStake = async (sheltererId, storageLimit, stake, sender = deployer) => atlasStakeStore.methods.depositStake(sheltererId, storageLimit).send({from: sender, value: stake});
+  const depositStake = async (sheltererId, stake, sender = deployer) => atlasStakeStore.methods.depositStake(sheltererId).send({from: sender, value: stake});
   const releaseStake = async (sheltererId, refundAddress, sender = deployer, options = {}) => atlasStakeStore.methods.releaseStake(sheltererId, refundAddress).send({from: sender, ...options});
   const slash = async (sheltererId, refundAddress, penalty, sender = deployer) => atlasStakeStore.methods.slash(sheltererId, refundAddress, penalty).send({from: sender});
   const getStake = async (sheltererId) => atlasStakeStore.methods.getStake(sheltererId).call();
-  const getStorageLimit = async (sheltererId) => atlasStakeStore.methods.getStorageLimit(sheltererId).call();
-  const getStorageUsed = async (sheltererId) => atlasStakeStore.methods.getStorageUsed(sheltererId).call();
+  const getShelteredBundlesCount = async (sheltererId) => atlasStakeStore.methods.getShelteredBundlesCount(sheltererId).call();
   const getNumberOfStakers = async () => atlasStakeStore.methods.getNumberOfStakers().call();
-  const incrementStorageUsed = async (sheltererId, sender = deployer) => atlasStakeStore.methods.incrementStorageUsed(sheltererId).send({from: sender});
-  const decrementStorageUsed = async (sheltererId, sender = deployer) => atlasStakeStore.methods.decrementStorageUsed(sheltererId).send({from: sender});
+  const incrementShelteredBundlesCount = async (sheltererId, sender = deployer) => atlasStakeStore.methods.incrementShelteredBundlesCount(sheltererId).send({from: sender});
+  const decrementShelteredBundlesCount = async (sheltererId, sender = deployer) => atlasStakeStore.methods.decrementShelteredBundlesCount(sheltererId).send({from: sender});
   const getPenaltiesHistory = async (sheltererId) => atlasStakeStore.methods.getPenaltiesHistory(sheltererId).call();
   const setPenaltyHistory = async (sheltererId, penaltiesCount, currentTimestamp, sender = deployer) => atlasStakeStore.methods.setPenaltyHistory(sheltererId, penaltiesCount, currentTimestamp).send({from: sender});
   const updateLastChallengeResolvedSequenceNumber = async (sheltererId, sequenceNumber, sender = deployer) => atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(sheltererId, sequenceNumber).send({from: sender});
@@ -70,9 +68,8 @@ describe('AtlasStakeStore Contract', () => {
   describe('Deployment', () => {
     it('properly initialized', async () => {
       expect(await isStaking(shelterer)).to.be.false;
-      expect(await canStore(shelterer)).to.be.false;
       expect(await isShelteringAny(shelterer)).to.be.false;
-      expect(await getStorageUsed(shelterer)).to.be.eq('0');
+      expect(await getShelteredBundlesCount(shelterer)).to.be.eq('0');
     });
   });
 
@@ -82,22 +79,20 @@ describe('AtlasStakeStore Contract', () => {
     const exampleChallengeSequenceNumber = '10';
 
     it('can not stake if already staking', async () => {
-      await depositStake(shelterer, 1, 1);
-      await expect(depositStake(shelterer, 1, 2)).to.be.eventually.rejected;
+      await depositStake(shelterer, 1);
+      await expect(depositStake(shelterer, 2)).to.be.eventually.rejected;
       expect(await getStake(shelterer)).to.eq('1');
     });
 
     it('reject if not context internal call', async () => {
-      await expect(depositStake(shelterer, 1, 1, otherAddress)).to.be.eventually.rejected;
+      await expect(depositStake(shelterer, 1, otherAddress)).to.be.eventually.rejected;
     });
 
     it('initiate stake', async () => {
-      await depositStake(shelterer, 1, 2);
+      await depositStake(shelterer, 2);
       expect(await isStaking(shelterer)).to.be.true;
-      expect(await canStore(shelterer)).to.be.true;
       expect(await isShelteringAny(shelterer)).to.be.false;
-      expect(await getStorageUsed(shelterer)).to.be.eq('0');
-      expect(await getStorageLimit(shelterer)).to.eq('1');
+      expect(await getShelteredBundlesCount(shelterer)).to.be.eq('0');
       expect(await getPenaltiesHistory(shelterer)).to.deep.include({
         lastPenaltyTime: '0',
         penaltiesCount: '0'
@@ -106,12 +101,12 @@ describe('AtlasStakeStore Contract', () => {
     });
 
     it('depositing stake doesn’t change the penalty and cooldown data', async () => {
-      await depositStake(shelterer, 1, 2);
+      await depositStake(shelterer, 2);
       await setPenaltyHistory(shelterer, examplePenaltyCount, examplePenaltyTimestamp);
       await updateLastChallengeResolvedSequenceNumber(shelterer, exampleChallengeSequenceNumber);
 
       await releaseStake(shelterer, otherAddress);
-      await depositStake(shelterer, 1, 2);
+      await depositStake(shelterer, 2);
 
       const penaltiesHistory = await getPenaltiesHistory(shelterer);
       expect(penaltiesHistory.penaltiesCount).to.be.equal(examplePenaltyCount);
@@ -123,9 +118,9 @@ describe('AtlasStakeStore Contract', () => {
 
     it('increments the number of stakers', async () => {
       expect(await getNumberOfStakers()).to.equal('0');
-      await depositStake(shelterer, 1, 2);
+      await depositStake(shelterer, 2);
       expect(await getNumberOfStakers()).to.equal('1');
-      await depositStake(otherAddress, 1, 2);
+      await depositStake(otherAddress, 2);
       expect(await getNumberOfStakers()).to.equal('2');
     });
   });
@@ -136,12 +131,12 @@ describe('AtlasStakeStore Contract', () => {
     });
 
     it('reject if not context internal call', async () => {
-      await depositStake(shelterer, 1, 1);
+      await depositStake(shelterer, 1);
       await expect(updateLastChallengeResolvedSequenceNumber(shelterer, 1, otherAddress)).to.be.eventually.rejected;
     });
 
     it('updates last challenge resolved sequence number', async () => {
-      await depositStake(shelterer, 1, 1);
+      await depositStake(shelterer, 1);
       await expect(updateLastChallengeResolvedSequenceNumber(shelterer, 100)).to.be.eventually.fulfilled;
       expect(await getLastChallengeResolvedSequenceNumber(shelterer)).to.equal('100');
     });
@@ -149,48 +144,41 @@ describe('AtlasStakeStore Contract', () => {
 
   describe('Increment storage used', () => {
     beforeEach(async () => {
-      await depositStake(shelterer, 1, 1);
+      await depositStake(shelterer, 1);
     });
 
     it('properly updates contract state', async () => {
-      await incrementStorageUsed(shelterer);
+      await incrementShelteredBundlesCount(shelterer);
       expect(await isStaking(shelterer)).to.be.true;
-      expect(await canStore(shelterer)).to.be.false;
       expect(await isShelteringAny(shelterer)).to.be.true;
-      expect(await getStorageUsed(shelterer)).to.be.eq('1');
+      expect(await getShelteredBundlesCount(shelterer)).to.be.eq('1');
     });
 
     it('reject if not context internal call', async () => {
-      await expect(incrementStorageUsed(shelterer, otherAddress)).to.be.eventually.rejected;
-    });
-
-    it('reject if run out of limit reached', async () => {
-      await incrementStorageUsed(shelterer);
-      await expect(incrementStorageUsed(shelterer)).to.be.eventually.rejected;
+      await expect(incrementShelteredBundlesCount(shelterer, otherAddress)).to.be.eventually.rejected;
     });
   });
 
   describe('Decrement storage used', () => {
     beforeEach(async () => {
-      await depositStake(shelterer, 1, 1);
-      await incrementStorageUsed(shelterer);
+      await depositStake(shelterer, 1);
+      await incrementShelteredBundlesCount(shelterer);
     });
 
     it('properly updates contract state', async () => {
-      await decrementStorageUsed(shelterer);
+      await decrementShelteredBundlesCount(shelterer);
       expect(await isStaking(shelterer)).to.be.true;
-      expect(await canStore(shelterer)).to.be.true;
       expect(await isShelteringAny(shelterer)).to.be.false;
-      expect(await getStorageUsed(shelterer)).to.be.eq('0');
+      expect(await getShelteredBundlesCount(shelterer)).to.be.eq('0');
     });
 
     it('reject if not context internal call', async () => {
-      await expect(decrementStorageUsed(shelterer, otherAddress)).to.be.eventually.rejected;
+      await expect(decrementShelteredBundlesCount(shelterer, otherAddress)).to.be.eventually.rejected;
     });
 
     it('reject if nothing is stored', async () => {
-      await decrementStorageUsed(shelterer);
-      await expect(decrementStorageUsed(shelterer)).to.be.eventually.rejected;
+      await decrementShelteredBundlesCount(shelterer);
+      await expect(decrementShelteredBundlesCount(shelterer)).to.be.eventually.rejected;
     });
   });
 
@@ -201,15 +189,14 @@ describe('AtlasStakeStore Contract', () => {
     const exampleChallengeSequenceNumber = '10';
 
     beforeEach(async () => {
-      await depositStake(shelterer, 1, stake);
+      await depositStake(shelterer, stake);
     });
 
     it('properly updates contract state', async () => {
       await releaseStake(shelterer, otherAddress);
       expect(await isStaking(shelterer)).to.be.false;
-      expect(await canStore(shelterer)).to.be.false;
       expect(await isShelteringAny(shelterer)).to.be.false;
-      expect(await getStorageUsed(shelterer)).to.be.eq('0');
+      expect(await getShelteredBundlesCount(shelterer)).to.be.eq('0');
       expect(await getStake(shelterer)).to.be.eq('0');
     });
 
@@ -240,7 +227,7 @@ describe('AtlasStakeStore Contract', () => {
     });
 
     it('can not release a stake if storing', async () => {
-      await incrementStorageUsed(shelterer);
+      await incrementShelteredBundlesCount(shelterer);
       await expect(releaseStake(shelterer, otherAddress)).to.be.eventually.rejected;
     });
 
@@ -264,7 +251,7 @@ describe('AtlasStakeStore Contract', () => {
     const penalty = stake / 100;
 
     beforeEach(async () => {
-      await depositStake(shelterer, 10, stake);
+      await depositStake(shelterer, stake);
     });
 
     it('can not slash if not staking', async () => {

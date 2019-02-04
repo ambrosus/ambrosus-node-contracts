@@ -130,7 +130,6 @@ contract Challenges is Base {
         return challengeIsInProgress(challengeId) &&
         !sheltering.isSheltering(bundleId, resolverId) &&
         !isOnCooldown(resolverId, challengeId) &&
-        atlasStakeStore.canStore(resolverId) &&
         atlasStakeStore.getStake(resolverId) > 0;
     }
 
