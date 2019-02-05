@@ -90,7 +90,8 @@ describe('Roles Contract', () => {
         apolloDepositStore: true,
         validatorProxy: true,
         validatorSet: true,
-        blockRewards: true
+        blockRewards: true,
+        rolesEventEmitter: true
       },
       params: {
         validatorSet: {

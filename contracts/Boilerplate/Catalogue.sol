@@ -9,17 +9,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-import "../Front/KycWhitelist.sol";
-import "../Front/Roles.sol";
 import "../Configuration/Fees.sol";
 import "../Configuration/Time.sol";
-import "../Front/Challenges.sol";
+import "../Configuration/Config.sol";
+import "../Front/KycWhitelist.sol";
+import "../Front/Roles.sol";
 import "../Front/Payouts.sol";
 import "../Front/ShelteringTransfers.sol";
+import "../Front/Challenges.sol";
+import "../Front/Uploads.sol";
 import "../Middleware/Sheltering.sol";
 import "../Middleware/ValidatorProxy.sol";
-import "../Front/Uploads.sol";
-import "../Configuration/Config.sol";
 
 import "../Storage/ApolloDepositStore.sol";
 import "../Storage/AtlasStakeStore.sol";
@@ -29,6 +29,9 @@ import "../Storage/KycWhitelistStore.sol";
 import "../Storage/PayoutsStore.sol";
 import "../Storage/RolesStore.sol";
 import "../Storage/ShelteringTransfersStore.sol";
+import "../Storage/RolesEventEmitter.sol";
+import "../Storage/TransfersEventEmitter.sol";
+import "../Storage/ChallengesEventEmitter.sol";
 
 
 contract Catalogue {
@@ -81,6 +84,9 @@ contract StorageCatalogue {
     PayoutsStore public payoutsStore;
     RolesStore public rolesStore;
     ShelteringTransfersStore public shelteringTransfersStore;
+    RolesEventEmitter public rolesEventEmitter;
+    TransfersEventEmitter public transfersEventEmitter;
+    ChallengesEventEmitter public challengesEventEmitter;
 
     constructor(
         ApolloDepositStore _apolloDepositStore,
@@ -90,7 +96,10 @@ contract StorageCatalogue {
         KycWhitelistStore _kycWhitelistStore,
         PayoutsStore _payoutsStore,
         RolesStore _rolesStore,
-        ShelteringTransfersStore _shelteringTransfersStore
+        ShelteringTransfersStore _shelteringTransfersStore,
+        RolesEventEmitter _rolesEventEmitter,
+        TransfersEventEmitter _transfersEventEmitter,
+        ChallengesEventEmitter _challengesEventEmitter
     ) public {
         apolloDepositStore = _apolloDepositStore;
         atlasStakeStore = _atlasStakeStore;
@@ -100,5 +109,8 @@ contract StorageCatalogue {
         payoutsStore = _payoutsStore;
         rolesStore = _rolesStore;
         shelteringTransfersStore = _shelteringTransfersStore;
+        rolesEventEmitter = _rolesEventEmitter;
+        transfersEventEmitter = _transfersEventEmitter;
+        challengesEventEmitter = _challengesEventEmitter;
     }
 }

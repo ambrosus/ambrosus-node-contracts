@@ -10,9 +10,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
+import "../Front/Challenges.sol";
 import "../Middleware/Sheltering.sol";
 import "../Storage/ShelteringTransfersStore.sol";
-import "../Front/Challenges.sol";
+import "../Storage/TransfersEventEmitter.sol";
 
 
 contract ShelteringTransfers is Base {
@@ -22,18 +23,18 @@ contract ShelteringTransfers is Base {
         bytes32 bundleId;
     }
 
-    event TransferStarted(bytes32 transferId, address donorId, bytes32 bundleId);
-    event TransferResolved(address donorId, address recipientId, bytes32 bundleId);
-    event TransferCancelled(bytes32 transferId, address donorId, bytes32 bundleId);
-
     Sheltering private sheltering;
     ShelteringTransfersStore private shelteringTransfersStore;
     Challenges private challenges;
+    TransfersEventEmitter private transfersEventEmitter;
 
-    constructor(Head _head, Sheltering _sheltering, ShelteringTransfersStore _shelteringTransfersStore, Challenges _challenges) public Base(_head) {
+    constructor(Head _head, Sheltering _sheltering, ShelteringTransfersStore _shelteringTransfersStore,
+        Challenges _challenges, TransfersEventEmitter _transfersEventEmitter)
+    public Base(_head) {
         sheltering = _sheltering;
         shelteringTransfersStore = _shelteringTransfersStore;
         challenges = _challenges;
+        transfersEventEmitter = _transfersEventEmitter;
     }
 
     function() public payable {}
@@ -41,7 +42,7 @@ contract ShelteringTransfers is Base {
     function start(bytes32 bundleId) public {
         requireTransferPossible(msg.sender, bundleId);
         bytes32 transferId = shelteringTransfersStore.store(msg.sender, bundleId);
-        emit TransferStarted(transferId, msg.sender, bundleId);
+        transfersEventEmitter.transferStarted(transferId, msg.sender, bundleId);
     }
 
     function resolve(bytes32 transferId) public {
@@ -50,14 +51,14 @@ contract ShelteringTransfers is Base {
 
         sheltering.transferSheltering(bundleId, donorId, msg.sender);
 
-        emit TransferResolved(donorId, msg.sender, bundleId);
+        transfersEventEmitter.transferResolved(transferId, donorId, bundleId, msg.sender);
         shelteringTransfersStore.remove(transferId);
     }
 
     function cancel(bytes32 transferId) public {
         (address donorId, bytes32 bundleId) = shelteringTransfersStore.getTransfer(transferId);
         require(msg.sender == donorId);
-        emit TransferCancelled(transferId, donorId, bundleId);
+        transfersEventEmitter.transferCancelled(transferId, donorId, bundleId);
         shelteringTransfersStore.remove(transferId);
     }
 

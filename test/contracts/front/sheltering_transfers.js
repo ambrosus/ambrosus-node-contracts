@@ -87,7 +87,10 @@ describe('ShelteringTransfers Contract', () => {
         rolesStore: true,
         challenges: true,
         challengesStore: true,
-        fees: true
+        fees: true,
+        rolesEventEmitter: true,
+        transfersEventEmitter: true,
+        challengesEventEmitter: true
       }
     }));
     await setTimestamp(bundleUploadTimestamp);
@@ -124,15 +127,6 @@ describe('ShelteringTransfers Contract', () => {
       const userChallengeFee = new BN(await getFeeForChallenge(storagePeriods));
       await startChallenge(atlas, bundleId, notSheltering, userChallengeFee);
       await expect(startTransfer(bundleId, atlas)).to.be.eventually.rejected;
-    });
-
-    it('Initializes transfer and emits an event', async () => {
-      expect(await startTransfer(bundleId, atlas)).to.emitEvent('TransferStarted').withArgs(
-        {
-          transferId,
-          donorId: atlas,
-          bundleId
-        });
     });
 
     it('Transfer is in progress after successfully started', async () => {
@@ -175,14 +169,6 @@ describe('ShelteringTransfers Contract', () => {
 
       it('Fails to resolve if recipient did not deposit stake', async () => {
         await expect(resolveTransfer(transferId, notStaking)).to.be.eventually.rejected;
-      });
-
-      it('Emits ShelteringTransferred event', async () => {
-        expect(await resolveTransfer(transferId, notSheltering)).to.emitEvent('TransferResolved').withArgs({
-          donorId: atlas,
-          recipientId: notSheltering,
-          bundleId
-        });
       });
 
       it('Removes donor from shelterers of the bundle', async () => {
@@ -232,14 +218,6 @@ describe('ShelteringTransfers Contract', () => {
       expect(await transferIsInProgress(transferId)).to.be.false;
       expect(await getDonor(transferId)).to.equal('0x0000000000000000000000000000000000000000');
       expect(utils.hexToUtf8(await getTransferredBundle(transferId))).to.equal('');
-    });
-
-    it('Emits TransferCancelled event', async () => {
-      expect(await cancelTransfer(transferId, atlas)).to.emitEvent('TransferCancelled').withArgs({
-        transferId,
-        donorId: atlas,
-        bundleId
-      });
     });
 
     it('Fails if the transfer does not exist', async () => {

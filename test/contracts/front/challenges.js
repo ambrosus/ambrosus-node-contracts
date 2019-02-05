@@ -35,6 +35,7 @@ describe('Challenges Contract', () => {
   let web3;
   let challenges;
   let challengesStore;
+  let challengesEventEmitter;
   let bundleStore;
   let sheltering;
   let config;
@@ -101,7 +102,7 @@ describe('Challenges Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [context, challenger, uploader, resolver, shelterer, totalStranger] = await web3.eth.getAccounts();
-    ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles, config} = await deploy({
+    ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles, config, challengesEventEmitter} = await deploy({
       web3,
       contracts: {
         challenges: true,
@@ -118,7 +119,9 @@ describe('Challenges Contract', () => {
         config: true,
         payouts: true,
         payoutsStore: true,
-        rolesStore: true
+        rolesStore: true,
+        challengesEventEmitter: true,
+        rolesEventEmitter: true
       }}));
     await setTimestamp(now);
     await storeBundle(bundleId, uploader, storagePeriods, now);
@@ -142,12 +145,6 @@ describe('Challenges Contract', () => {
     it('Is context internal', async () => {
       await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, challenger, systemChallengeFee)).to.be.eventually.rejected;
       await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to.be.eventually.fulfilled;
-    });
-
-    it('Should emit event', async () => {
-      expect(await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to
-        .emitEvent('ChallengeCreated')
-        .withArgs({sheltererId: uploader, bundleId, challengeId: systemChallengeId, count: SYSTEM_CHALLENGES_COUNT.toString()});
     });
 
     it(`Should increase nextChallengeSequenceNumber by challengesCount`, async () => {
@@ -189,7 +186,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails if added same challenge twice', async () => {
-      await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to.be.eventually.fulfilled;
+      expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to.be.eventually.fulfilled;
       await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to.be.eventually.rejected;
     });
 
@@ -202,7 +199,7 @@ describe('Challenges Contract', () => {
       beforeEach(async () => {
         await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
         challengeBlockTimestamp = now;
-        [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+        [challengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
         ({challengeId} = challengeCreationEvent.returnValues);
       });
 
@@ -250,12 +247,6 @@ describe('Challenges Contract', () => {
       expect(await challengeIsInProgress(challengeId)).to.equal(false);
     });
 
-    it('Creates a challenge and emits an event', async () => {
-      expect(await startChallenge(shelterer, bundleId, challenger, userChallengeFee)).to
-        .emitEvent('ChallengeCreated')
-        .withArgs({sheltererId: shelterer, bundleId, challengeId, count: '1'});
-    });
-
     it(`Should increase nextChallengeSequenceNumber by 1`, async () => {
       await setNumberOfStakers(13);
       await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
@@ -292,7 +283,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails if added same challenge twice', async () => {
-      expect(await startChallenge(shelterer, bundleId, challenger, userChallengeFee)).to.emitEvent('ChallengeCreated');
+      expect(startChallenge(shelterer, bundleId, challenger, userChallengeFee)).to.be.eventually.fulfilled;
       await expect(startChallenge(shelterer, bundleId, challenger, userChallengeFee)).to.be.eventually.rejected;
     });
 
@@ -315,7 +306,7 @@ describe('Challenges Contract', () => {
       beforeEach(async () => {
         await startChallenge(shelterer, bundleId, challenger, userChallengeFee);
         challengeBlockTimestamp = now;
-        [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+        [challengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
         ({challengeId} = challengeCreationEvent.returnValues);
       });
 
@@ -365,7 +356,7 @@ describe('Challenges Contract', () => {
     };
 
     const lastChallengeId = async () => {
-      const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      const [challengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
       return challengeCreationEvent.returnValues.challengeId;
     };
 
@@ -392,12 +383,6 @@ describe('Challenges Contract', () => {
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
       await resolveChallenge(challengeId, resolver);
       expect(await getLastChallengeResolvedSequenceNumber(resolver)).to.equal(sequenceNumber);
-    });
-
-    it('Emits an event', async () => {
-      expect(await resolveChallenge(challengeId, resolver)).to
-        .emitEvent('ChallengeResolved')
-        .withArgs({sheltererId: shelterer, bundleId, challengeId, resolverId: resolver});
     });
 
     it('Removes challenge if active count was 1', async () => {
@@ -513,14 +498,6 @@ describe('Challenges Contract', () => {
       await expect(markChallengeAsExpired(challengeId, challenger)).to.be.eventually.rejected;
     });
 
-    it(`Emits event when marked as expired successfully`, async () => {
-      await setTimestamp(now + challengeTimeout + 1);
-      const penalty = utils.toWei('100', 'ether');
-      expect(await markChallengeAsExpired(challengeId, challenger)).to
-        .emitEvent('ChallengeTimeout')
-        .withArgs({sheltererId: shelterer, bundleId, challengeId, penalty});
-    });
-
     it(`Can be called by anyone`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
       await expect(markChallengeAsExpired(challengeId, totalStranger)).to.be.fulfilled;
@@ -570,7 +547,7 @@ describe('Challenges Contract', () => {
     beforeEach(async () => {
       systemFee = userChallengeFee.mul(new BN('5'));
       await startChallengeForSystem(uploader, bundleId, 5, context, systemFee);
-      [systemChallengeCreationEvent] = await challenges.getPastEvents('allEvents');
+      [systemChallengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
       systemChallengeId = systemChallengeCreationEvent.returnValues.challengeId;
     });
 

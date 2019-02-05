@@ -11,14 +11,15 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "../Boilerplate/Head.sol";
-import "../Middleware/Sheltering.sol";
 import "../Configuration/Fees.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
-import "../Storage/AtlasStakeStore.sol";
 import "../Lib/SafeMathExtensions.sol";
+import "../Boilerplate/Head.sol";
+import "../Middleware/Sheltering.sol";
+import "../Storage/AtlasStakeStore.sol";
 import "../Storage/ChallengesStore.sol";
+import "../Storage/ChallengesEventEmitter.sol";
 
 
 contract Challenges is Base {
@@ -28,19 +29,16 @@ contract Challenges is Base {
     using SafeMath for uint64;
     using SafeMathExtensions for uint;
 
-    event ChallengeCreated(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint count);
-    event ChallengeResolved(address sheltererId, bytes32 bundleId, bytes32 challengeId, address resolverId);
-    event ChallengeTimeout(address sheltererId, bytes32 bundleId, bytes32 challengeId, uint penalty);
-
     Time private time;
     Sheltering private sheltering;
     AtlasStakeStore private atlasStakeStore;
     Config private config;
     Fees private fees;
     ChallengesStore private challengesStore;
+    ChallengesEventEmitter private challengesEventEmitter;
 
     constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
-        Fees _fees, ChallengesStore _challengesStore)
+        Fees _fees, ChallengesStore _challengesStore, ChallengesEventEmitter _challengesEventEmitter)
     public Base(_head)
     {
         time = _time;
@@ -49,6 +47,7 @@ contract Challenges is Base {
         config = _config;
         fees = _fees;
         challengesStore = _challengesStore;
+        challengesEventEmitter = _challengesEventEmitter;
     }
 
     function() public payable {}
@@ -66,7 +65,7 @@ contract Challenges is Base {
             1
         );
 
-        emit ChallengeCreated(sheltererId, bundleId, challengeId, 1);
+        challengesEventEmitter.challengeCreated(sheltererId, bundleId, challengeId, 1);
     }
 
     function startForSystem(address uploaderId, bytes32 bundleId, uint8 challengesCount) public onlyContextInternalCalls payable {
@@ -82,7 +81,7 @@ contract Challenges is Base {
             challengesCount
         );
 
-        emit ChallengeCreated(uploaderId, bundleId, challengeId, challengesCount);
+        challengesEventEmitter.challengeCreated(uploaderId, bundleId, challengeId, challengesCount);
     }
 
     function resolve(bytes32 challengeId) public {
@@ -93,7 +92,7 @@ contract Challenges is Base {
         sheltering.addShelterer.value(feePerChallenge)(bundleId, msg.sender);
         atlasStakeStore.updateLastChallengeResolvedSequenceNumber(msg.sender, sequenceNumber);
 
-        emit ChallengeResolved(sheltererId, bundleId, challengeId, msg.sender);
+        challengesEventEmitter.challengeResolved(sheltererId, bundleId, challengeId, msg.sender);
 
         removeChallengeOrDecreaseActiveCount(challengeId);
     }
@@ -117,7 +116,7 @@ contract Challenges is Base {
         }
 
         uint feeToReturn = feePerChallenge.mul(activeCount);
-        emit ChallengeTimeout(sheltererId, bundleId, challengeId, penalty);
+        challengesEventEmitter.challengeTimeout(sheltererId, bundleId, challengeId, penalty);
         challengesStore.remove(challengeId);
         challengesStore.transferFee(this, feeToReturn);
         refundAddress.transfer(feeToReturn + revokedReward + penalty);
