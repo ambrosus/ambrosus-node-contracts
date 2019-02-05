@@ -29,16 +29,16 @@ contract Roles is Base {
     Config private config;
 
     constructor(
-        Head _head, 
-        AtlasStakeStore _atlasStakeStore, 
-        RolesStore _rolesStore, 
-        ApolloDepositStore _apolloDepositStore, 
-        ValidatorProxy _validatorProxy, 
+        Head _head,
+        AtlasStakeStore _atlasStakeStore,
+        RolesStore _rolesStore,
+        ApolloDepositStore _apolloDepositStore,
+        ValidatorProxy _validatorProxy,
         KycWhitelist _kycWhitelist,
         Config _config
-    ) 
-        public Base(_head) 
-    { 
+    )
+        public Base(_head)
+    {
         atlasStakeStore = _atlasStakeStore;
         rolesStore = _rolesStore;
         apolloDepositStore = _apolloDepositStore;
@@ -52,11 +52,8 @@ contract Roles is Base {
     function onboardAsAtlas(string nodeUrl) public payable {
         require(canOnboard(msg.sender, Consts.NodeType.ATLAS, msg.value));
 
-        uint storageLimit = getStorageLimitForAtlas(msg.value);
-        atlasStakeStore.depositStake.value(msg.value)(msg.sender, storageLimit);
-
+        atlasStakeStore.depositStake.value(msg.value)(msg.sender);
         rolesStore.setRole(msg.sender, Consts.NodeType.ATLAS);
-
         rolesStore.setUrl(msg.sender, nodeUrl);
     }
 
@@ -108,17 +105,6 @@ contract Roles is Base {
 
     function canOnboard(address node, Consts.NodeType role, uint amount) public view returns (bool) {
         return kycWhitelist.hasRoleAssigned(node, role) && amount == kycWhitelist.getRequiredDeposit(node);
-    }
-
-    function getStorageLimitForAtlas(uint amount) public view returns (uint) {
-        if (amount == config.ATLAS3_STAKE()) {
-            return config.ATLAS3_STORAGE_LIMIT();
-        } else if (amount == config.ATLAS2_STAKE()) {
-            return config.ATLAS2_STORAGE_LIMIT();
-        } else if (amount == config.ATLAS1_STAKE()) {
-            return config.ATLAS1_STORAGE_LIMIT();
-        }
-        return 0;
     }
 
     function retire(address node, Consts.NodeType role) private {

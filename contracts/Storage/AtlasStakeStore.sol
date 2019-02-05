@@ -23,8 +23,7 @@ contract AtlasStakeStore is Base {
     struct Stake {
         uint initialAmount;
         uint amount;
-        uint storageLimit;
-        uint storageUsed;
+        uint shelteredBundlesCount;
         uint64 lastPenaltyTime;
         uint penaltiesCount;
         uint lastChallengeResolvedSequenceNumber;
@@ -43,16 +42,8 @@ contract AtlasStakeStore is Base {
         return numberOfStakers;
     }
 
-    function canStore(address node) public view returns (bool) {
-        return stakes[node].storageUsed < stakes[node].storageLimit;
-    }
-
-    function getStorageUsed(address node) public view returns (uint) {
-        return stakes[node].storageUsed;
-    }
-
-    function getStorageLimit(address node) public view returns (uint) {
-        return stakes[node].storageLimit;
+    function getShelteredBundlesCount(address node) public view returns (uint) {
+        return stakes[node].shelteredBundlesCount;
     }
 
     function getStake(address node) public view returns (uint) {
@@ -60,20 +51,19 @@ contract AtlasStakeStore is Base {
     }
 
     function isShelteringAny(address node) public view returns (bool) {
-        return stakes[node].storageUsed > 0;
+        return stakes[node].shelteredBundlesCount > 0;
     }
 
     function getBasicStake(address node) public view returns (uint) {
         return stakes[node].initialAmount;
     }
 
-    function depositStake(address _who, uint _storageLimit) public payable onlyContextInternalCalls {
+    function depositStake(address _who) public payable onlyContextInternalCalls {
         require(!isStaking(_who));
 
         stakes[_who].initialAmount = msg.value;
         stakes[_who].amount = msg.value;
-        stakes[_who].storageLimit = _storageLimit;
-        stakes[_who].storageUsed = 0;
+        stakes[_who].shelteredBundlesCount = 0;
         numberOfStakers = numberOfStakers.add(1).castTo32();
     }
 
@@ -84,8 +74,7 @@ contract AtlasStakeStore is Base {
         uint amount = stakes[node].amount;
         stakes[node].initialAmount = 0;
         stakes[node].amount = 0;
-        stakes[node].storageLimit = 0;
-        stakes[node].storageUsed = 0;
+        stakes[node].shelteredBundlesCount = 0;
         numberOfStakers = numberOfStakers.sub(1).castTo32();
         refundAddress.transfer(amount);
         return amount;
@@ -107,14 +96,13 @@ contract AtlasStakeStore is Base {
         return slashedAmount;
     }
 
-    function decrementStorageUsed(address node) public onlyContextInternalCalls {
+    function decrementShelteredBundlesCount(address node) public onlyContextInternalCalls {
         require(isShelteringAny(node));
-        stakes[node].storageUsed = stakes[node].storageUsed.sub(1);
+        stakes[node].shelteredBundlesCount = stakes[node].shelteredBundlesCount.sub(1);
     }
 
-    function incrementStorageUsed(address node) public onlyContextInternalCalls {
-        require(canStore(node));
-        stakes[node].storageUsed = stakes[node].storageUsed.add(1);
+    function incrementShelteredBundlesCount(address node) public onlyContextInternalCalls {
+        stakes[node].shelteredBundlesCount = stakes[node].shelteredBundlesCount.add(1);
     }
 
     function getPenaltiesHistory(address node) public view returns (uint penaltiesCount, uint64 lastPenaltyTime) {

@@ -22,7 +22,3 @@ export const ATLAS1_STAKE = utils.toWei('10000');
 export const ATLAS2_STAKE = utils.toWei('30000');
 export const ATLAS3_STAKE = utils.toWei('75000');
 export const APOLLO_DEPOSIT = utils.toWei('250000');
-
-export const ATLAS1_STORAGE_LIMIT = '100000';
-export const ATLAS2_STORAGE_LIMIT = '400000';
-export const ATLAS3_STORAGE_LIMIT = '1000000';

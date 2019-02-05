@@ -66,11 +66,11 @@ describe('Sheltering Contract', () => {
   const setRole = async (targetId, role, sender = deployer) =>
     rolesStore.methods.setRole(targetId, role).send({from: sender});
   const getShelterers = async (bundleId) => bundleStore.methods.getShelterers(bundleId).call();
-  const getStorageUsed = async (staker) => atlasStakeStore.methods.getStorageUsed(staker).call();
+  const getShelteredBundlesCount = async (staker) => atlasStakeStore.methods.getShelteredBundlesCount(staker).call();
   const getStake = async (staker) => atlasStakeStore.methods.getStake(staker).call();
   const getPenaltiesHistory = async (staker) => atlasStakeStore.methods.getPenaltiesHistory(staker).call();
-  const depositStake = async (staker, storageLimit, value, sender = deployer) =>
-    atlasStakeStore.methods.depositStake(staker, storageLimit).send({from: sender, value});
+  const depositStake = async (staker, value, sender = deployer) =>
+    atlasStakeStore.methods.depositStake(staker).send({from: sender, value});
   const injectBundleWithBundleStore = async (bundleId, uploader, storagePeriods, currentTimestamp, sender = deployer) =>
     bundleStore.methods.store(bundleId, uploader, storagePeriods, currentTimestamp).send({from: sender});
   const injectSheltererWithBundleStore = async (bundleId, shelterer, reward, payoutPeriodsReduction, currentTimestamp, sender = deployer) =>
@@ -105,8 +105,8 @@ describe('Sheltering Contract', () => {
     await setRole(hermes, HERMES);
     await setRole(atlas, ATLAS);
     await setTimestamp(bundleUploadTimestamp);
-    await depositStake(atlas, 1, atlasStake);
-    await depositStake(atlas2, 1, atlasStake);
+    await depositStake(atlas, atlasStake);
+    await depositStake(atlas2, atlasStake);
   });
 
   beforeEach(async () => {
@@ -198,17 +198,17 @@ describe('Sheltering Contract', () => {
       await expect(addShelterer(bundleId, atlas, totalReward)).to.be.eventually.rejected;
     });
 
-    it('fails if not a atlas', async () => {
+    it('fails if not an atlas', async () => {
       await expect(addShelterer(bundleId, other, totalReward)).to.be.eventually.rejected;
     });
 
     it(`increments storage used`, async () => {
-      expect(await getStorageUsed(atlas)).to.equal('0');
+      expect(await getShelteredBundlesCount(atlas)).to.equal('0');
       await addShelterer(bundleId, atlas, totalReward);
-      expect(await getStorageUsed(atlas)).to.equal('1');
+      expect(await getShelteredBundlesCount(atlas)).to.equal('1');
     });
 
-    it('cannot shelter if the storage limit is 0', async () => {
+    it('cannot add not atlas as a shelterer', async () => {
       await expect(addShelterer(bundleId, other, totalReward)).to.be.eventually.rejected;
     });
 
@@ -235,9 +235,9 @@ describe('Sheltering Contract', () => {
     });
 
     it(`decrements storage used`, async () => {
-      expect(await getStorageUsed(atlas)).to.equal('1');
+      expect(await getShelteredBundlesCount(atlas)).to.equal('1');
       await removeShelterer(bundleId, atlas, atlas);
-      expect(await getStorageUsed(atlas)).to.equal('0');
+      expect(await getShelteredBundlesCount(atlas)).to.equal('0');
     });
 
     it('removes grant and returns funds to provided address', async () => {
