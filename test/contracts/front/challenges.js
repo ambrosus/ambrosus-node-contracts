@@ -23,6 +23,7 @@ import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.
 import ChallengesStoreMockJson from '../../../src/contracts/ChallengesStoreMock.json';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
+import observeEventEmission from '../../helpers/web3EventObserver';
 
 chai.use(chaiEmitEvents);
 
@@ -147,6 +148,14 @@ describe('Challenges Contract', () => {
       await expect(startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee)).to.be.eventually.fulfilled;
     });
 
+    it('Emits proper event', async () => {
+      const events = await observeEventEmission(web3, () => startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee), challengesEventEmitter, 'ChallengeCreated');
+      expect(events.length).to.equal(1);
+      expect(events[0].returnValues.sheltererId).to.equal(uploader);
+      expect(events[0].returnValues.bundleId).to.equal(bundleId);
+      expect(events[0].returnValues.count).to.equal(SYSTEM_CHALLENGES_COUNT.toString());
+    });
+
     it(`Should increase nextChallengeSequenceNumber by challengesCount`, async () => {
       await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
       expect(await nextChallengeSequenceNumber()).to.equal((SYSTEM_CHALLENGES_COUNT + 1).toString());
@@ -241,6 +250,14 @@ describe('Challenges Contract', () => {
     beforeEach(async () => {
       await depositStake(shelterer, ATLAS1_STAKE);
       await addShelterer(bundleId, shelterer, totalReward);
+    });
+
+    it('Emits proper event', async () => {
+      const events = await observeEventEmission(web3, () => startChallenge(shelterer, bundleId, challenger, userChallengeFee), challengesEventEmitter, 'ChallengeCreated');
+      expect(events.length).to.equal(1);
+      expect(events[0].returnValues.sheltererId).to.equal(shelterer);
+      expect(events[0].returnValues.bundleId).to.equal(bundleId);
+      expect(events[0].returnValues.count).to.equal('1');
     });
 
     it('Challenge is not in progress until started', async () => {
@@ -370,6 +387,14 @@ describe('Challenges Contract', () => {
       cooldown = parseInt(await getCooldown(), 10);
     });
 
+    it('Emits proper event', async () => {
+      const events = await observeEventEmission(web3, () => resolveChallenge(challengeId, resolver), challengesEventEmitter, 'ChallengeResolved');
+      expect(events.length).to.equal(1);
+      expect(events[0].returnValues.sheltererId).to.equal(shelterer);
+      expect(events[0].returnValues.bundleId).to.equal(bundleId);
+      expect(events[0].returnValues.resolverId).to.equal(resolver);
+    });
+
     it('canResolve returns true if challenge can be resolved', async () => {
       expect(await canResolve(resolver, challengeId)).to.equal(true);
     });
@@ -480,6 +505,14 @@ describe('Challenges Contract', () => {
       await addShelterer(bundleId, shelterer, userChallengeFee);
 
       await startChallenge(shelterer, bundleId, challenger, userChallengeFee);
+    });
+
+    it('Emits proper event', async () => {
+      await setTimestamp(now + challengeTimeout + 1);
+      const events = await observeEventEmission(web3, () => markChallengeAsExpired(challengeId, challenger), challengesEventEmitter, 'ChallengeTimeout');
+      expect(events.length).to.equal(1);
+      expect(events[0].returnValues.sheltererId).to.equal(shelterer);
+      expect(events[0].returnValues.bundleId).to.equal(bundleId);
     });
 
     it(`Fails if challenge does not exist`, async () => {

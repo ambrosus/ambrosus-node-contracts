@@ -23,6 +23,7 @@ import {
   HERMES
 } from '../../../src/constants';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
+import observeEventEmission from '../../helpers/web3EventObserver';
 import BN from 'bn.js';
 
 const APOLLO_DEPOSIT_BN = new BN(APOLLO_DEPOSIT);
@@ -38,6 +39,7 @@ const {expect} = chai;
 describe('Roles Contract', () => {
   let web3;
   let roles;
+  let rolesEventEmitter;
   let kycWhitelist;
   let atlasStakeStore;
   let apolloDepositStore;
@@ -75,7 +77,7 @@ describe('Roles Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [owner, apollo, initialApollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
-    ({roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards} = await deploy({
+    ({roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards, rolesEventEmitter} = await deploy({
       web3,
       sender : owner,
       contracts: {
@@ -194,6 +196,15 @@ describe('Roles Contract', () => {
         await expect(onboardAsAtlas(url, atlas3, ATLAS3_STAKE_BN.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(atlas3)).to.equal('0');
       });
+
+      it('emits proper event', async () => {
+        const events = await observeEventEmission(web3, () => onboardAsAtlas(url, atlas2, ATLAS2_STAKE), rolesEventEmitter, 'MasternodeOnboarded');
+        expect(events.length).to.equal(1);
+        expect(events[0].returnValues.nodeAddress).to.equal(atlas2);
+        expect(events[0].returnValues.placedDeposit).to.equal(ATLAS2_STAKE);
+        expect(events[0].returnValues.nodeUrl).to.equal(url);
+        expect(events[0].returnValues.role).to.equal(ATLAS);
+      });
     });
 
     describe('Hermes', () => {
@@ -207,6 +218,15 @@ describe('Roles Contract', () => {
       it('throws if address has not been whitelisted for hermes role', async () => {
         await expect(onboardAsHermes(url, atlas1)).to.be.eventually.rejected;
         expect(await getRole(atlas1)).to.equal('0');
+      });
+
+      it('emits proper event', async () => {
+        const events = await observeEventEmission(web3, () => onboardAsHermes(url, hermes), rolesEventEmitter, 'MasternodeOnboarded');
+        expect(events.length).to.equal(1);
+        expect(events[0].returnValues.nodeAddress).to.equal(hermes);
+        expect(events[0].returnValues.placedDeposit).to.equal('0');
+        expect(events[0].returnValues.nodeUrl).to.equal(url);
+        expect(events[0].returnValues.role).to.equal(HERMES);
       });
     });
 
@@ -233,6 +253,15 @@ describe('Roles Contract', () => {
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT_BN.sub(ONE))).to.be.eventually.rejected;
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT_BN.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(apollo)).to.equal('0');
+      });
+
+      it('emits proper event', async () => {
+        const events = await observeEventEmission(web3, () => onboardAsApollo(apollo, APOLLO_DEPOSIT), rolesEventEmitter, 'MasternodeOnboarded');
+        expect(events.length).to.equal(1);
+        expect(events[0].returnValues.nodeAddress).to.equal(apollo);
+        expect(events[0].returnValues.placedDeposit).to.equal(APOLLO_DEPOSIT);
+        expect(events[0].returnValues.nodeUrl).to.equal('');
+        expect(events[0].returnValues.role).to.equal(APOLLO);
       });
     });
   });
@@ -271,6 +300,14 @@ describe('Roles Contract', () => {
         await expect(retireAtlas(hermes)).to.be.eventually.rejected;
         await expect(retireAtlas(apollo)).to.be.eventually.rejected;
       });
+
+      it('emits proper event', async () => {
+        const events = await observeEventEmission(web3, () => retireAtlas(atlas1), rolesEventEmitter, 'MasternodeRetired');
+        expect(events.length).to.equal(1);
+        expect(events[0].returnValues.nodeAddress).to.equal(atlas1);
+        expect(events[0].returnValues.releasedDeposit).to.equal(ATLAS1_STAKE);
+        expect(events[0].returnValues.role).to.equal(ATLAS);
+      });
     });
 
     describe('Apollo', () => {
@@ -295,6 +332,14 @@ describe('Roles Contract', () => {
         await expect(retireApollo(hermes)).to.be.eventually.rejected;
         await expect(retireApollo(atlas1)).to.be.eventually.rejected;
       });
+
+      it('emits proper event', async () => {
+        const events = await observeEventEmission(web3, () => retireApollo(apollo), rolesEventEmitter, 'MasternodeRetired');
+        expect(events.length).to.equal(1);
+        expect(events[0].returnValues.nodeAddress).to.equal(apollo);
+        expect(events[0].returnValues.releasedDeposit).to.equal(APOLLO_DEPOSIT);
+        expect(events[0].returnValues.role).to.equal(APOLLO);
+      });
     });
 
     describe('Hermes', () => {
@@ -311,6 +356,14 @@ describe('Roles Contract', () => {
       it('throws if not a hermes', async () => {
         await expect(retireHermes(atlas1)).to.be.eventually.rejected;
         await expect(retireHermes(apollo)).to.be.eventually.rejected;
+      });
+
+      it('emits proper event', async () => {
+        const events = await observeEventEmission(web3, () => retireHermes(hermes), rolesEventEmitter, 'MasternodeRetired');
+        expect(events.length).to.equal(1);
+        expect(events[0].returnValues.nodeAddress).to.equal(hermes);
+        expect(events[0].returnValues.releasedDeposit).to.equal('0');
+        expect(events[0].returnValues.role).to.equal(HERMES);
       });
     });
   });
@@ -343,6 +396,15 @@ describe('Roles Contract', () => {
 
     it('does not allow unonboarded address to set Url', async () => {
       await expect(setUrl(atlas1, newUrl)).to.be.eventually.rejected;
+    });
+
+    it('emits proper event', async () => {
+      onboardAsAtlas(oldUrl, atlas1, ATLAS1_STAKE);
+      const events = await observeEventEmission(web3, () => setUrl(atlas1, newUrl), rolesEventEmitter, 'MasternodeUrlChanged');
+      expect(events.length).to.equal(1);
+      expect(events[0].returnValues.nodeAddress).to.equal(atlas1);
+      expect(events[0].returnValues.oldNodeUrl).to.equal(oldUrl);
+      expect(events[0].returnValues.newNodeUrl).to.equal(newUrl);
     });
   });
 });

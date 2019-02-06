@@ -17,6 +17,7 @@ import {ATLAS1_STAKE, HERMES, ATLAS} from '../../../src/constants';
 import {PAYOUT_PERIOD_UNIT} from '../../helpers/consts';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import BN from 'bn.js';
+import observeEventEmission from '../../helpers/web3EventObserver';
 
 chai.use(chaiAsPromised);
 chai.use(chaiEmitEvents);
@@ -26,6 +27,7 @@ const {expect} = chai;
 describe('ShelteringTransfers Contract', () => {
   let web3;
   let shelteringTransfers;
+  let transfersEventEmitter;
   let sheltering;
   let rolesStore;
   let challenges;
@@ -71,7 +73,7 @@ describe('ShelteringTransfers Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [deployer, hermes, atlas, notSheltering, notStaking] = await web3.eth.getAccounts();
-    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees} = await deploy({
+    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees, transfersEventEmitter} = await deploy({
       web3,
       sender: deployer,
       contracts: {
@@ -138,6 +140,13 @@ describe('ShelteringTransfers Contract', () => {
       expect(await transferIsInProgress(transferId)).to.equal(false);
     });
 
+    it('Emits proper event', async () => {
+      const events = await observeEventEmission(web3, () => startTransfer(bundleId, atlas), transfersEventEmitter, 'TransferStarted');
+      expect(events.length).to.equal(1);
+      expect(events[0].returnValues.donorId).to.equal(atlas);
+      expect(events[0].returnValues.bundleId).to.equal(bundleId);
+    });
+
     describe('Stores transfer correctly', () => {
       beforeEach(async () => {
         await startTransfer(bundleId, atlas);
@@ -183,6 +192,14 @@ describe('ShelteringTransfers Contract', () => {
         expect(await isSheltering(bundleId, notSheltering)).to.be.true;
       });
 
+      it('Emits proper event', async () => {
+        const events = await observeEventEmission(web3, () => resolveTransfer(transferId, notSheltering), transfersEventEmitter, 'TransferResolved');
+        expect(events.length).to.equal(1);
+        expect(events[0].returnValues.donorId).to.equal(atlas);
+        expect(events[0].returnValues.bundleId).to.equal(bundleId);
+        expect(events[0].returnValues.recipientId).to.equal(notSheltering);
+      });
+
       it('Removes the transfer from store', async () => {
         await resolveTransfer(transferId, notSheltering);
         expect(await getDonor(transferId)).to.equal('0x0000000000000000000000000000000000000000');
@@ -218,6 +235,13 @@ describe('ShelteringTransfers Contract', () => {
       expect(await transferIsInProgress(transferId)).to.be.false;
       expect(await getDonor(transferId)).to.equal('0x0000000000000000000000000000000000000000');
       expect(utils.hexToUtf8(await getTransferredBundle(transferId))).to.equal('');
+    });
+
+    it('Emits proper event', async () => {
+      const events = await observeEventEmission(web3, () => cancelTransfer(transferId, atlas), transfersEventEmitter, 'TransferCancelled');
+      expect(events.length).to.equal(1);
+      expect(events[0].returnValues.donorId).to.equal(atlas);
+      expect(events[0].returnValues.bundleId).to.equal(bundleId);
     });
 
     it('Fails if the transfer does not exist', async () => {
