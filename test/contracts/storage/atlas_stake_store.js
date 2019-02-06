@@ -24,6 +24,7 @@ describe('AtlasStakeStore Contract', () => {
   let web3;
   let deployer;
   let shelterer;
+  let moreShelterers;
   let otherAddress;
   let atlasStakeStore;
   let snapshotId;
@@ -36,6 +37,9 @@ describe('AtlasStakeStore Contract', () => {
   const getStake = async (sheltererId) => atlasStakeStore.methods.getStake(sheltererId).call();
   const getShelteredBundlesCount = async (sheltererId) => atlasStakeStore.methods.getShelteredBundlesCount(sheltererId).call();
   const getNumberOfStakers = async () => atlasStakeStore.methods.getNumberOfStakers().call();
+  const getNumberOfStakersWithStake = async (amount) => atlasStakeStore.methods.getNumberOfStakersWithStake(amount).call();
+  const getStakerAtIndex = async (inx) => atlasStakeStore.methods.getStakerAtIndex(inx).call();
+  const getStakerWithStakeAtIndex = async (amount, inx) => atlasStakeStore.methods.getStakerWithStakeAtIndex(amount, inx).call();
   const incrementShelteredBundlesCount = async (sheltererId, sender = deployer) => atlasStakeStore.methods.incrementShelteredBundlesCount(sheltererId).send({from: sender});
   const decrementShelteredBundlesCount = async (sheltererId, sender = deployer) => atlasStakeStore.methods.decrementShelteredBundlesCount(sheltererId).send({from: sender});
   const getPenaltiesHistory = async (sheltererId) => atlasStakeStore.methods.getPenaltiesHistory(sheltererId).call();
@@ -47,7 +51,7 @@ describe('AtlasStakeStore Contract', () => {
 
   before(async () => {
     web3 = await createWeb3();
-    [deployer, shelterer, otherAddress] = await web3.eth.getAccounts();
+    [deployer, shelterer, otherAddress, ...moreShelterers] = await web3.eth.getAccounts();
     ({atlasStakeStore} = await deploy({
       web3,
       sender: deployer,
@@ -114,14 +118,12 @@ describe('AtlasStakeStore Contract', () => {
       expect(await getLastChallengeResolvedSequenceNumber(shelterer)).to.be.equal(exampleChallengeSequenceNumber);
     });
 
-
-
-    it('increments the number of stakers', async () => {
+    it('keeps track of the number of stakers', async () => {
       expect(await getNumberOfStakers()).to.equal('0');
+      expect(await getNumberOfStakersWithStake(2)).to.equal('0');
       await depositStake(shelterer, 2);
       expect(await getNumberOfStakers()).to.equal('1');
-      await depositStake(otherAddress, 2);
-      expect(await getNumberOfStakers()).to.equal('2');
+      expect(await getNumberOfStakersWithStake(2)).to.equal('1');
     });
   });
 
@@ -241,8 +243,10 @@ describe('AtlasStakeStore Contract', () => {
 
     it('decrement the number of stakers', async () => {
       expect(await getNumberOfStakers()).to.equal('1');
+      expect(await getNumberOfStakersWithStake(stake)).to.equal('1');
       await releaseStake(shelterer, otherAddress);
       expect(await getNumberOfStakers()).to.equal('0');
+      expect(await getNumberOfStakersWithStake(stake)).to.equal('0');
     });
   });
 
@@ -299,6 +303,71 @@ describe('AtlasStakeStore Contract', () => {
       await expect(
         setPenaltyHistory(shelterer, penaltiesCount, currentTimestamp, otherAddress)
       ).to.be.eventually.rejected;
+    });
+  });
+
+  describe('Index', () => {
+    const STAKE1 = 34;
+    const STAKE2 = 1267;
+
+    it('keeps track of the number of stakers', async () => {
+      const expectCount = async (all, stake1, stake2) => {
+        expect(await getNumberOfStakers()).to.equal(all);
+        expect(await getNumberOfStakersWithStake(STAKE1)).to.equal(stake1);
+        expect(await getNumberOfStakersWithStake(STAKE2)).to.equal(stake2);
+      };
+
+      await expectCount('0', '0', '0');
+      await depositStake(shelterer, STAKE1);
+      await expectCount('1', '1', '0');
+      await depositStake(otherAddress, STAKE2);
+      await expectCount('2', '1', '1');
+      await releaseStake(shelterer, otherAddress);
+      await expectCount('1', '0', '1');
+      await releaseStake(otherAddress, otherAddress);
+      await expectCount('0', '0', '0');
+    });
+
+    it('provides sequential access to stakers', async () => {
+      await depositStake(moreShelterers[0], STAKE1);
+      await depositStake(moreShelterers[1], STAKE1);
+      await depositStake(moreShelterers[2], STAKE2);
+      await depositStake(moreShelterers[3], STAKE1);
+      await depositStake(moreShelterers[4], STAKE2);
+
+      expect(await getStakerAtIndex(0)).to.equal(moreShelterers[0]);
+      expect(await getStakerAtIndex(1)).to.equal(moreShelterers[1]);
+      expect(await getStakerAtIndex(2)).to.equal(moreShelterers[2]);
+      expect(await getStakerAtIndex(3)).to.equal(moreShelterers[3]);
+      expect(await getStakerAtIndex(4)).to.equal(moreShelterers[4]);
+    });
+
+    it('provides sequential access to stakers with given amount', async () => {
+      await depositStake(moreShelterers[0], STAKE1);
+      await depositStake(moreShelterers[1], STAKE1);
+      await depositStake(moreShelterers[2], STAKE2);
+      await depositStake(moreShelterers[3], STAKE1);
+      await depositStake(moreShelterers[4], STAKE2);
+
+      expect(await getStakerWithStakeAtIndex(STAKE1, 0)).to.equal(moreShelterers[0]);
+      expect(await getStakerWithStakeAtIndex(STAKE1, 1)).to.equal(moreShelterers[1]);
+      expect(await getStakerWithStakeAtIndex(STAKE1, 2)).to.equal(moreShelterers[3]);
+      expect(await getStakerWithStakeAtIndex(STAKE2, 0)).to.equal(moreShelterers[2]);
+      expect(await getStakerWithStakeAtIndex(STAKE2, 1)).to.equal(moreShelterers[4]);
+    });
+
+    it('handles removals correctly', async () => {
+      await depositStake(moreShelterers[0], STAKE1);
+      await depositStake(moreShelterers[1], STAKE1);
+      await depositStake(moreShelterers[2], STAKE2);
+      await depositStake(moreShelterers[3], STAKE1);
+      await depositStake(moreShelterers[4], STAKE2);
+      await releaseStake(moreShelterers[1], otherAddress);
+      await releaseStake(moreShelterers[4], otherAddress);
+
+      expect(await getStakerWithStakeAtIndex(STAKE1, 0)).to.equal(moreShelterers[0]);
+      expect(await getStakerWithStakeAtIndex(STAKE1, 1)).to.equal(moreShelterers[3]);
+      expect(await getStakerWithStakeAtIndex(STAKE2, 0)).to.equal(moreShelterers[2]);
     });
   });
 });

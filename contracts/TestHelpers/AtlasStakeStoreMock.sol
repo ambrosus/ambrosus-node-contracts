@@ -14,11 +14,17 @@ import "../Storage/AtlasStakeStore.sol";
 
 contract AtlasStakeStoreMock is AtlasStakeStore {
 
+    uint32 numberOfStakers;
+
     constructor(Head _head) public AtlasStakeStore(_head) {
     }
 
     function setNumberOfStakers(uint32 _numberOfStakers) public {
         numberOfStakers = _numberOfStakers;
+    }
+
+    function getNumberOfStakers() public view returns (uint32) {
+        return numberOfStakers;
     }
 
     function setStakeAmount(address node, uint amount) public {
