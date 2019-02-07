@@ -30,7 +30,8 @@ contract AtlasStakeStore is Base {
     }
 
     mapping (address => Stake) stakes;
-    uint32 numberOfStakers;
+    address[] stakesIndex;
+    mapping (uint => address[]) stakesIndexGrouped;
 
     constructor(Head _head) public Base(_head) {}
 
@@ -39,7 +40,19 @@ contract AtlasStakeStore is Base {
     }
 
     function getNumberOfStakers() public view returns (uint32) {
-        return numberOfStakers;
+        return stakesIndex.length.castTo32();
+    }
+
+    function getNumberOfStakersWithStake(uint initialAmount) public view returns (uint32) {
+        return stakesIndexGrouped[initialAmount].length.castTo32();
+    }
+
+    function getStakerAtIndex(uint32 inx) public view returns (address) {
+        return stakesIndex[inx];
+    }
+
+    function getStakerWithStakeAtIndex(uint initialAmount, uint32 inx) public view returns (address) {
+        return stakesIndexGrouped[initialAmount][inx];
     }
 
     function getShelteredBundlesCount(address node) public view returns (uint) {
@@ -64,18 +77,37 @@ contract AtlasStakeStore is Base {
         stakes[_who].initialAmount = msg.value;
         stakes[_who].amount = msg.value;
         stakes[_who].shelteredBundlesCount = 0;
-        numberOfStakers = numberOfStakers.add(1).castTo32();
+        stakesIndex.push(_who);
+        stakesIndexGrouped[msg.value].push(_who);
     }
 
     function releaseStake(address node, address refundAddress) public onlyContextInternalCalls returns(uint) {
         require(isStaking(node));
         require(refundAddress != address(0));
         require(!isShelteringAny(node));
+
         uint amount = stakes[node].amount;
+        
+        for (uint inx1 = 0; inx1 < stakesIndex.length; ++inx1) {
+            if (stakesIndex[inx1] == node) {
+                stakesIndex[inx1] = stakesIndex[stakesIndex.length-1];
+                break;
+            }
+        }
+        --stakesIndex.length;
+
+        address[] storage indexGroup = stakesIndexGrouped[stakes[node].initialAmount];
+        for (uint inx2 = 0; inx2 < indexGroup.length; ++inx2) {
+            if (indexGroup[inx2] == node) {
+                indexGroup[inx2] = indexGroup[indexGroup.length-1];
+                break;
+            }
+        }
+        --indexGroup.length;
+
         stakes[node].initialAmount = 0;
         stakes[node].amount = 0;
-        stakes[node].shelteredBundlesCount = 0;
-        numberOfStakers = numberOfStakers.sub(1).castTo32();
+        stakes[node].shelteredBundlesCount = 0;        
         refundAddress.transfer(amount);
         return amount;
     }
