@@ -23,7 +23,7 @@ import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.
 import ChallengesStoreMockJson from '../../../src/contracts/ChallengesStoreMock.json';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
-import observeEventEmission from '../../helpers/web3EventObserver';
+import {expectEventEmission} from '../../helpers/web3EventObserver';
 
 chai.use(chaiEmitEvents);
 
@@ -149,11 +149,17 @@ describe('Challenges Contract', () => {
     });
 
     it('Emits proper event', async () => {
-      const events = await observeEventEmission(web3, () => startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee), challengesEventEmitter, 'ChallengeCreated');
-      expect(events.length).to.equal(1);
-      expect(events[0].returnValues.sheltererId).to.equal(uploader);
-      expect(events[0].returnValues.bundleId).to.equal(bundleId);
-      expect(events[0].returnValues.count).to.equal(SYSTEM_CHALLENGES_COUNT.toString());
+      await expectEventEmission(
+        web3,
+        () => startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee),
+        challengesEventEmitter,
+        'ChallengeCreated',
+        {
+          sheltererId: uploader,
+          bundleId,
+          count: SYSTEM_CHALLENGES_COUNT.toString()
+        }
+      );
     });
 
     it(`Should increase nextChallengeSequenceNumber by challengesCount`, async () => {
@@ -253,11 +259,16 @@ describe('Challenges Contract', () => {
     });
 
     it('Emits proper event', async () => {
-      const events = await observeEventEmission(web3, () => startChallenge(shelterer, bundleId, challenger, userChallengeFee), challengesEventEmitter, 'ChallengeCreated');
-      expect(events.length).to.equal(1);
-      expect(events[0].returnValues.sheltererId).to.equal(shelterer);
-      expect(events[0].returnValues.bundleId).to.equal(bundleId);
-      expect(events[0].returnValues.count).to.equal('1');
+      await expectEventEmission(
+        web3,
+        () => startChallenge(shelterer, bundleId, challenger, userChallengeFee),
+        challengesEventEmitter,
+        'ChallengeCreated',
+        {
+          sheltererId: shelterer,
+          bundleId,
+          count: '1'
+        });
     });
 
     it('Challenge is not in progress until started', async () => {
@@ -388,11 +399,15 @@ describe('Challenges Contract', () => {
     });
 
     it('Emits proper event', async () => {
-      const events = await observeEventEmission(web3, () => resolveChallenge(challengeId, resolver), challengesEventEmitter, 'ChallengeResolved');
-      expect(events.length).to.equal(1);
-      expect(events[0].returnValues.sheltererId).to.equal(shelterer);
-      expect(events[0].returnValues.bundleId).to.equal(bundleId);
-      expect(events[0].returnValues.resolverId).to.equal(resolver);
+      await expectEventEmission(web3,
+        () => resolveChallenge(challengeId, resolver),
+        challengesEventEmitter,
+        'ChallengeResolved',
+        {
+          sheltererId: shelterer,
+          bundleId,
+          resolverId: resolver
+        });
     });
 
     it('canResolve returns true if challenge can be resolved', async () => {
@@ -509,10 +524,15 @@ describe('Challenges Contract', () => {
 
     it('Emits proper event', async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      const events = await observeEventEmission(web3, () => markChallengeAsExpired(challengeId, challenger), challengesEventEmitter, 'ChallengeTimeout');
-      expect(events.length).to.equal(1);
-      expect(events[0].returnValues.sheltererId).to.equal(shelterer);
-      expect(events[0].returnValues.bundleId).to.equal(bundleId);
+      await expectEventEmission(
+        web3,
+        () => markChallengeAsExpired(challengeId, challenger),
+        challengesEventEmitter,
+        'ChallengeTimeout',
+        {
+          sheltererId: shelterer,
+          bundleId
+        });
     });
 
     it(`Fails if challenge does not exist`, async () => {
