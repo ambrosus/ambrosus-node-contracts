@@ -25,6 +25,7 @@ describe('Upload Actions', () => {
   let feesWrapperStub;
   let shelteringWrapperStub;
   let blockchainStateWrapperStub;
+  let challengesEventEmitterStub;
 
   const lowBalanceWarningAmount = utils.toWei('10000', 'ether');
   const timestamp = 1544536774;
@@ -34,11 +35,16 @@ describe('Upload Actions', () => {
     blockNumber,
     transactionHash: '0x123'
   };
+  const challengeCreatedEvent = {
+    ...uploadReceipt,
+    returnedValues: {
+      bundleId
+    }
+  };
 
   beforeEach(() => {
     uploadsWrapperStub = {
-      registerBundle: sinon.stub(),
-      getUploadData: sinon.stub()
+      registerBundle: sinon.stub()
     };
     feesWrapperStub = {
       feeForUpload: sinon.stub()
@@ -50,7 +56,11 @@ describe('Upload Actions', () => {
       getBlockTimestamp: sinon.stub(),
       getBalance: sinon.stub()
     };
-    uploadActions = new UploadActions(uploadsWrapperStub, feesWrapperStub, shelteringWrapperStub, blockchainStateWrapperStub, lowBalanceWarningAmount);
+    challengesEventEmitterStub = {
+      challenges: sinon.stub()
+    };
+
+    uploadActions = new UploadActions(uploadsWrapperStub, feesWrapperStub, shelteringWrapperStub, blockchainStateWrapperStub, challengesEventEmitterStub, lowBalanceWarningAmount);
   });
 
   describe('uploadBundle', () => {
@@ -106,7 +116,7 @@ describe('Upload Actions', () => {
   describe('getBundleUploadData', () => {
     it('gets block number and returns upload data', async () => {
       shelteringWrapperStub.getBundleUploadBlockNumber.resolves(blockNumber);
-      uploadsWrapperStub.getUploadData.resolves(uploadReceipt);
+      challengesEventEmitterStub.challenges.resolves([challengeCreatedEvent]);
       blockchainStateWrapperStub.getBlockTimestamp.withArgs(blockNumber).resolves(timestamp);
 
       expect(await uploadActions.getBundleUploadData(bundleId)).to.deep.equal({...uploadReceipt, timestamp});

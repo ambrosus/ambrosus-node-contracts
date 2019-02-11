@@ -19,22 +19,4 @@ export default class UploadsWrapper extends ManagedContractWrapper {
     const {blockNumber, transactionHash} = await contract.methods.registerBundle(bundleId, storagePeriods).send({from: this.defaultAddress, value: fee});
     return {blockNumber, transactionHash};
   }
-
-  /**
-   * @returns {Object} bundle blockchain data
-   * @property {number} blockNumber block number when the bundle was uploaded
-   * @property {string} transactionHash bundle upload transaction hash
-   */
-  async getUploadData(bundleId, blockNumber) {
-    const contract = await this.contract();
-    const bundleUploadEvents = (await contract.getPastEvents('BundleUploaded', {fromBlock: blockNumber, toBlock: blockNumber})).filter(({returnValues}) => returnValues.bundleId === bundleId);
-    if (bundleUploadEvents.length === 0) {
-      return null;
-    }
-    const [{transactionHash}] = bundleUploadEvents;
-    return {
-      transactionHash,
-      blockNumber
-    };
-  }
 }

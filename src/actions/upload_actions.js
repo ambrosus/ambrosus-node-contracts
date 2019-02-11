@@ -11,11 +11,12 @@ import BN from 'bn.js';
 import {InsufficientFundsToUploadBundleError} from '../errors/errors';
 
 export default class UploadActions {
-  constructor(uploadsWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper, lowFundsWarningAmount = '0') {
+  constructor(uploadsWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper, challengesEventEmitterWrapper, lowFundsWarningAmount = '0') {
     this.uploadsWrapper = uploadsWrapper;
     this.feesWrapper = feesWrapper;
     this.shelteringWrapper = shelteringWrapper;
     this.blockchainStateWrapper = blockchainStateWrapper;
+    this.challengesEventEmitterWrapper = challengesEventEmitterWrapper;
     this.lowFundsWarningAmount = new BN(lowFundsWarningAmount);
   }
 
@@ -47,7 +48,8 @@ export default class UploadActions {
       return null;
     }
     const timestamp = await this.blockchainStateWrapper.getBlockTimestamp(uploadBlock);
-    const {transactionHash} = await this.uploadsWrapper.getUploadData(bundleId, uploadBlock);
+    const events = await this.challengesEventEmitterWrapper.challenges(uploadBlock, uploadBlock);
+    const [{transactionHash}] = events.filter(({returnedValues}) => returnedValues.bundleId === bundleId);
     return {blockNumber: uploadBlock, transactionHash, timestamp};
   }
 }

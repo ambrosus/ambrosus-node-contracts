@@ -19,21 +19,6 @@ export default class ChallengeWrapper extends ManagedContractWrapper {
     return Math.max(0, await this.web3.eth.getBlockNumber() - Math.ceil(challengeDuration / MIN_BLOCK_TIME));
   }
 
-  async challenges(fromBlock, toBlock) {
-    const contract = await this.contract();
-    return contract.getPastEvents('ChallengeCreated', {fromBlock, toBlock});
-  }
-
-  async resolvedChallenges(fromBlock, toBlock) {
-    const contract = await this.contract();
-    return contract.getPastEvents('ChallengeResolved', {fromBlock, toBlock});
-  }
-
-  async timedOutChallenges(fromBlock, toBlock) {
-    const contract = await this.contract();
-    return contract.getPastEvents('ChallengeTimeout', {fromBlock, toBlock});
-  }
-
   async resolve(challengeId) {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.resolve(challengeId));
