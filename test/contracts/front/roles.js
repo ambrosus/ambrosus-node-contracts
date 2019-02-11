@@ -198,7 +198,7 @@ describe('Roles Contract', () => {
       });
 
       it('emits proper event', async () => {
-        const events = await observeEventEmission(web3, () => onboardAsAtlas(url, atlas2, ATLAS2_STAKE), rolesEventEmitter, 'MasternodeOnboarded');
+        const events = await observeEventEmission(web3, () => onboardAsAtlas(url, atlas2, ATLAS2_STAKE), rolesEventEmitter, 'NodeOnboarded');
         expect(events.length).to.equal(1);
         expect(events[0].returnValues.nodeAddress).to.equal(atlas2);
         expect(events[0].returnValues.placedDeposit).to.equal(ATLAS2_STAKE);
@@ -221,7 +221,7 @@ describe('Roles Contract', () => {
       });
 
       it('emits proper event', async () => {
-        const events = await observeEventEmission(web3, () => onboardAsHermes(url, hermes), rolesEventEmitter, 'MasternodeOnboarded');
+        const events = await observeEventEmission(web3, () => onboardAsHermes(url, hermes), rolesEventEmitter, 'NodeOnboarded');
         expect(events.length).to.equal(1);
         expect(events[0].returnValues.nodeAddress).to.equal(hermes);
         expect(events[0].returnValues.placedDeposit).to.equal('0');
@@ -256,7 +256,7 @@ describe('Roles Contract', () => {
       });
 
       it('emits proper event', async () => {
-        const events = await observeEventEmission(web3, () => onboardAsApollo(apollo, APOLLO_DEPOSIT), rolesEventEmitter, 'MasternodeOnboarded');
+        const events = await observeEventEmission(web3, () => onboardAsApollo(apollo, APOLLO_DEPOSIT), rolesEventEmitter, 'NodeOnboarded');
         expect(events.length).to.equal(1);
         expect(events[0].returnValues.nodeAddress).to.equal(apollo);
         expect(events[0].returnValues.placedDeposit).to.equal(APOLLO_DEPOSIT);
@@ -302,7 +302,7 @@ describe('Roles Contract', () => {
       });
 
       it('emits proper event', async () => {
-        const events = await observeEventEmission(web3, () => retireAtlas(atlas1), rolesEventEmitter, 'MasternodeRetired');
+        const events = await observeEventEmission(web3, () => retireAtlas(atlas1), rolesEventEmitter, 'NodeRetired');
         expect(events.length).to.equal(1);
         expect(events[0].returnValues.nodeAddress).to.equal(atlas1);
         expect(events[0].returnValues.releasedDeposit).to.equal(ATLAS1_STAKE);
@@ -334,7 +334,7 @@ describe('Roles Contract', () => {
       });
 
       it('emits proper event', async () => {
-        const events = await observeEventEmission(web3, () => retireApollo(apollo), rolesEventEmitter, 'MasternodeRetired');
+        const events = await observeEventEmission(web3, () => retireApollo(apollo), rolesEventEmitter, 'NodeRetired');
         expect(events.length).to.equal(1);
         expect(events[0].returnValues.nodeAddress).to.equal(apollo);
         expect(events[0].returnValues.releasedDeposit).to.equal(APOLLO_DEPOSIT);
@@ -359,7 +359,7 @@ describe('Roles Contract', () => {
       });
 
       it('emits proper event', async () => {
-        const events = await observeEventEmission(web3, () => retireHermes(hermes), rolesEventEmitter, 'MasternodeRetired');
+        const events = await observeEventEmission(web3, () => retireHermes(hermes), rolesEventEmitter, 'NodeRetired');
         expect(events.length).to.equal(1);
         expect(events[0].returnValues.nodeAddress).to.equal(hermes);
         expect(events[0].returnValues.releasedDeposit).to.equal('0');
@@ -400,7 +400,7 @@ describe('Roles Contract', () => {
 
     it('emits proper event', async () => {
       onboardAsAtlas(oldUrl, atlas1, ATLAS1_STAKE);
-      const events = await observeEventEmission(web3, () => setUrl(atlas1, newUrl), rolesEventEmitter, 'MasternodeUrlChanged');
+      const events = await observeEventEmission(web3, () => setUrl(atlas1, newUrl), rolesEventEmitter, 'NodeUrlChanged');
       expect(events.length).to.equal(1);
       expect(events[0].returnValues.nodeAddress).to.equal(atlas1);
       expect(events[0].returnValues.oldNodeUrl).to.equal(oldUrl);

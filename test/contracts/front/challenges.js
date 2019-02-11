@@ -300,7 +300,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails if added same challenge twice', async () => {
-      expect(startChallenge(shelterer, bundleId, challenger, userChallengeFee)).to.be.eventually.fulfilled;
+      await expect(startChallenge(shelterer, bundleId, challenger, userChallengeFee)).to.be.eventually.fulfilled;
       await expect(startChallenge(shelterer, bundleId, challenger, userChallengeFee)).to.be.eventually.rejected;
     });
 

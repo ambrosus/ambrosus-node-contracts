@@ -60,7 +60,7 @@ contract Roles is Base {
         rolesStore.setRole(msg.sender, Consts.NodeType.ATLAS);
         rolesStore.setUrl(msg.sender, nodeUrl);
 
-        rolesEventEmitter.masternodeOnboarded(msg.sender, msg.value, nodeUrl, Consts.NodeType.ATLAS);
+        rolesEventEmitter.nodeOnboarded(msg.sender, msg.value, nodeUrl, Consts.NodeType.ATLAS);
     }
 
     function onboardAsApollo() public payable {
@@ -70,7 +70,7 @@ contract Roles is Base {
         rolesStore.setRole(msg.sender, Consts.NodeType.APOLLO);
         validatorProxy.addValidator(msg.sender, msg.value);
 
-        rolesEventEmitter.masternodeOnboarded(msg.sender, msg.value, "", Consts.NodeType.APOLLO);
+        rolesEventEmitter.nodeOnboarded(msg.sender, msg.value, "", Consts.NodeType.APOLLO);
     }
 
     function onboardAsHermes(string nodeUrl) public {
@@ -79,7 +79,7 @@ contract Roles is Base {
         rolesStore.setRole(msg.sender, Consts.NodeType.HERMES);
         rolesStore.setUrl(msg.sender, nodeUrl);
 
-        rolesEventEmitter.masternodeOnboarded(msg.sender, 0, nodeUrl, Consts.NodeType.HERMES);
+        rolesEventEmitter.nodeOnboarded(msg.sender, 0, nodeUrl, Consts.NodeType.HERMES);
     }
 
     function retireAtlas() public {
@@ -87,7 +87,7 @@ contract Roles is Base {
 
         uint amountToTransfer = atlasStakeStore.releaseStake(msg.sender, this);
 
-        rolesEventEmitter.masternodeRetired(msg.sender, amountToTransfer, Consts.NodeType.ATLAS);
+        rolesEventEmitter.nodeRetired(msg.sender, amountToTransfer, Consts.NodeType.ATLAS);
 
         msg.sender.transfer(amountToTransfer);
     }
@@ -98,7 +98,7 @@ contract Roles is Base {
         uint amountToTransfer = apolloDepositStore.releaseDeposit(msg.sender, this);
         validatorProxy.removeValidator(msg.sender);
 
-        rolesEventEmitter.masternodeRetired(msg.sender, amountToTransfer, Consts.NodeType.APOLLO);
+        rolesEventEmitter.nodeRetired(msg.sender, amountToTransfer, Consts.NodeType.APOLLO);
 
         msg.sender.transfer(amountToTransfer);
     }
@@ -106,7 +106,7 @@ contract Roles is Base {
     function retireHermes() public {
         retire(msg.sender, Consts.NodeType.HERMES);
 
-        rolesEventEmitter.masternodeRetired(msg.sender, 0, Consts.NodeType.HERMES);
+        rolesEventEmitter.nodeRetired(msg.sender, 0, Consts.NodeType.HERMES);
     }
 
     function getOnboardedRole(address node) public view returns (Consts.NodeType) {
@@ -121,7 +121,7 @@ contract Roles is Base {
         string memory oldUrl = getUrl(msg.sender);
         rolesStore.setUrl(msg.sender, nodeUrl);
         string memory newUrl = getUrl(msg.sender);
-        rolesEventEmitter.masternodeUrlChanged(msg.sender, oldUrl, newUrl);
+        rolesEventEmitter.nodeUrlChanged(msg.sender, oldUrl, newUrl);
     }
 
     function canOnboard(address node, Consts.NodeType role, uint amount) public view returns (bool) {

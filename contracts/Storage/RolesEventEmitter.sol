@@ -17,19 +17,19 @@ contract RolesEventEmitter is Base {
 
     constructor(Head _head) Base(_head) public {}
 
-    event MasternodeOnboarded(address nodeAddress, uint placedDeposit, string nodeUrl, Consts.NodeType role);
-    event MasternodeRetired(address nodeAddress, uint releasedDeposit, Consts.NodeType role);
-    event MasternodeUrlChanged(address nodeAddress, string oldNodeUrl, string newNodeUrl);
+    event NodeOnboarded(address nodeAddress, uint placedDeposit, string nodeUrl, Consts.NodeType role);
+    event NodeRetired(address nodeAddress, uint releasedDeposit, Consts.NodeType role);
+    event NodeUrlChanged(address nodeAddress, string oldNodeUrl, string newNodeUrl);
 
-    function masternodeOnboarded(address nodeAddress, uint placedDeposit, string nodeUrl, Consts.NodeType role) public onlyContextInternalCalls {
-        emit MasternodeOnboarded(nodeAddress, placedDeposit, nodeUrl, role);
+    function nodeOnboarded(address nodeAddress, uint placedDeposit, string nodeUrl, Consts.NodeType role) public onlyContextInternalCalls {
+        emit NodeOnboarded(nodeAddress, placedDeposit, nodeUrl, role);
     }
 
-    function masternodeRetired(address nodeAddress, uint releasedDeposit, Consts.NodeType role) public onlyContextInternalCalls {
-        emit MasternodeRetired(nodeAddress, releasedDeposit, role);
+    function nodeRetired(address nodeAddress, uint releasedDeposit, Consts.NodeType role) public onlyContextInternalCalls {
+        emit NodeRetired(nodeAddress, releasedDeposit, role);
     }
 
-    function masternodeUrlChanged(address nodeAddress, string oldNodeUrl, string newNodeUrl) public onlyContextInternalCalls {
-        emit MasternodeUrlChanged(nodeAddress, oldNodeUrl, newNodeUrl);
+    function nodeUrlChanged(address nodeAddress, string oldNodeUrl, string newNodeUrl) public onlyContextInternalCalls {
+        emit NodeUrlChanged(nodeAddress, oldNodeUrl, newNodeUrl);
     }
 }
