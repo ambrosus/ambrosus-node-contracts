@@ -11,7 +11,7 @@ import chai from 'chai';
 
 const {expect} = chai;
 
-const observeEventEmission = async (web3, codeBlock, contract, eventName) => {
+const captureEventEmission = async (web3, codeBlock, contract, eventName) => {
   const fromBlock = await web3.eth.getBlockNumber();
   await codeBlock();
   const toBlock = await web3.eth.getBlockNumber();
@@ -19,11 +19,11 @@ const observeEventEmission = async (web3, codeBlock, contract, eventName) => {
 };
 
 const expectEventEmission = async (web3, codeBlock, contract, eventName, eventArguments) => {
-  const events = await observeEventEmission(web3, codeBlock, contract, eventName);
+  const events = await captureEventEmission(web3, codeBlock, contract, eventName);
   expect(events.length).to.equal(1);
   Object.keys(eventArguments).forEach((eventArgumentName) => {
-    expect(events[0].returnValues[`${eventArgumentName}`]).to.equal(eventArguments[`${eventArgumentName}`]);
+    expect(events[0].returnValues[eventArgumentName]).to.equal(eventArguments[eventArgumentName]);
   });
 };
 
-export {observeEventEmission, expectEventEmission};
+export {captureEventEmission, expectEventEmission};
