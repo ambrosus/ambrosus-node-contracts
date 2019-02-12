@@ -23,6 +23,7 @@ import {
   HERMES
 } from '../../../src/constants';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
+import {expectEventEmission} from '../../helpers/web3EventObserver';
 import BN from 'bn.js';
 
 const APOLLO_DEPOSIT_BN = new BN(APOLLO_DEPOSIT);
@@ -38,6 +39,7 @@ const {expect} = chai;
 describe('Roles Contract', () => {
   let web3;
   let roles;
+  let rolesEventEmitter;
   let kycWhitelist;
   let atlasStakeStore;
   let apolloDepositStore;
@@ -75,7 +77,7 @@ describe('Roles Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [owner, apollo, initialApollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
-    ({roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards} = await deploy({
+    ({roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards, rolesEventEmitter} = await deploy({
       web3,
       sender : owner,
       contracts: {
@@ -90,7 +92,8 @@ describe('Roles Contract', () => {
         apolloDepositStore: true,
         validatorProxy: true,
         validatorSet: true,
-        blockRewards: true
+        blockRewards: true,
+        rolesEventEmitter: true
       },
       params: {
         validatorSet: {
@@ -193,6 +196,21 @@ describe('Roles Contract', () => {
         await expect(onboardAsAtlas(url, atlas3, ATLAS3_STAKE_BN.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(atlas3)).to.equal('0');
       });
+
+      it('emits proper event', async () => {
+        await expectEventEmission(
+          web3,
+          () => onboardAsAtlas(url, atlas2, ATLAS2_STAKE),
+          rolesEventEmitter,
+          'NodeOnboarded',
+          {
+            nodeAddress: atlas2,
+            placedDeposit: ATLAS2_STAKE,
+            nodeUrl: url,
+            role: ATLAS
+          }
+        );
+      });
     });
 
     describe('Hermes', () => {
@@ -206,6 +224,21 @@ describe('Roles Contract', () => {
       it('throws if address has not been whitelisted for hermes role', async () => {
         await expect(onboardAsHermes(url, atlas1)).to.be.eventually.rejected;
         expect(await getRole(atlas1)).to.equal('0');
+      });
+
+      it('emits proper event', async () => {
+        await expectEventEmission(
+          web3,
+          () => onboardAsHermes(url, hermes),
+          rolesEventEmitter,
+          'NodeOnboarded',
+          {
+            nodeAddress: hermes,
+            placedDeposit: '0',
+            nodeUrl: url,
+            role: HERMES
+          }
+        );
       });
     });
 
@@ -232,6 +265,21 @@ describe('Roles Contract', () => {
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT_BN.sub(ONE))).to.be.eventually.rejected;
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT_BN.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(apollo)).to.equal('0');
+      });
+
+      it('emits proper event', async () => {
+        await expectEventEmission(
+          web3,
+          () => onboardAsApollo(apollo, APOLLO_DEPOSIT),
+          rolesEventEmitter,
+          'NodeOnboarded',
+          {
+            nodeAddress: apollo,
+            placedDeposit: APOLLO_DEPOSIT,
+            nodeUrl: '',
+            role: APOLLO
+          }
+        );
       });
     });
   });
@@ -270,6 +318,20 @@ describe('Roles Contract', () => {
         await expect(retireAtlas(hermes)).to.be.eventually.rejected;
         await expect(retireAtlas(apollo)).to.be.eventually.rejected;
       });
+
+      it('emits proper event', async () => {
+        await expectEventEmission(
+          web3,
+          () => retireAtlas(atlas1),
+          rolesEventEmitter,
+          'NodeRetired',
+          {
+            nodeAddress: atlas1,
+            releasedDeposit: ATLAS1_STAKE,
+            role: ATLAS
+          }
+        );
+      });
     });
 
     describe('Apollo', () => {
@@ -294,6 +356,20 @@ describe('Roles Contract', () => {
         await expect(retireApollo(hermes)).to.be.eventually.rejected;
         await expect(retireApollo(atlas1)).to.be.eventually.rejected;
       });
+
+      it('emits proper event', async () => {
+        await expectEventEmission(
+          web3,
+          () => retireApollo(apollo),
+          rolesEventEmitter,
+          'NodeRetired',
+          {
+            nodeAddress: apollo,
+            releasedDeposit: APOLLO_DEPOSIT,
+            role: APOLLO
+          }
+        );
+      });
     });
 
     describe('Hermes', () => {
@@ -310,6 +386,20 @@ describe('Roles Contract', () => {
       it('throws if not a hermes', async () => {
         await expect(retireHermes(atlas1)).to.be.eventually.rejected;
         await expect(retireHermes(apollo)).to.be.eventually.rejected;
+      });
+
+      it('emits proper event', async () => {
+        await expectEventEmission(
+          web3,
+          () => retireHermes(hermes),
+          rolesEventEmitter,
+          'NodeRetired',
+          {
+            nodeAddress: hermes,
+            releasedDeposit: '0',
+            role: HERMES
+          }
+        );
       });
     });
   });
@@ -342,6 +432,21 @@ describe('Roles Contract', () => {
 
     it('does not allow unonboarded address to set Url', async () => {
       await expect(setUrl(atlas1, newUrl)).to.be.eventually.rejected;
+    });
+
+    it('emits proper event', async () => {
+      onboardAsAtlas(oldUrl, atlas1, ATLAS1_STAKE);
+      await expectEventEmission(
+        web3,
+        () => setUrl(atlas1, newUrl),
+        rolesEventEmitter,
+        'NodeUrlChanged',
+        {
+          nodeAddress: atlas1,
+          oldNodeUrl: oldUrl,
+          newNodeUrl: newUrl
+        }
+      );
     });
   });
 });

@@ -40,7 +40,8 @@ export default class HeadWrapper extends GenesisContractWrapper {
       'kycWhitelistStore',
       'payoutsStore',
       'rolesStore',
-      'shelteringTransfersStore'
+      'shelteringTransfersStore',
+      'challengesEventEmitter'
     ];
   }
 

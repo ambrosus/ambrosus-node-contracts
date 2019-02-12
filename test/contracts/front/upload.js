@@ -33,7 +33,7 @@ const bundleId = utils.keccak256('bundleId');
 describe('Upload Contract', () => {
   let web3;
   let uploads;
-  let challenges;
+  let challengesEventEmitter;
   let rolesStore;
   let bundleStore;
   let fees;
@@ -47,7 +47,7 @@ describe('Upload Contract', () => {
 
   before(async () => {
     web3 = await createWeb3();
-    ({uploads, fees, challenges, bundleStore, rolesStore} = await deploy({
+    ({uploads, fees, challengesEventEmitter, bundleStore, rolesStore} = await deploy({
       web3,
       contracts: {
         rolesStore: true,
@@ -58,7 +58,8 @@ describe('Upload Contract', () => {
         time: true,
         fees: true,
         config: true,
-        bundleStore: true}
+        bundleStore: true,
+        challengesEventEmitter: true}
     }));
     [hermes, atlas, other] = await web3.eth.getAccounts();
     fee = new BN(await fees.methods.getFeeForUpload(1).call());
@@ -72,12 +73,6 @@ describe('Upload Contract', () => {
 
   afterEach(async () => {
     await restoreSnapshot(web3, snapshotId);
-  });
-
-  it('emits event on upload', async () => {
-    expect(await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee}))
-      .to.emitEvent('BundleUploaded')
-      .withArgs({bundleId, storagePeriods: '1'});
   });
 
   it(`saves as uploader`, async () => {
@@ -120,7 +115,7 @@ describe('Upload Contract', () => {
 
   it('Starts system challanges', async () => {
     await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
-    const events = await challenges.getPastEvents('ChallengeCreated');
+    const events = await challengesEventEmitter.getPastEvents('ChallengeCreated');
     expect(events.length).to.eq(1);
     expect(events[0].returnValues).to.deep.include({
       bundleId,

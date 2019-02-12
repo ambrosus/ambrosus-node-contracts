@@ -44,69 +44,6 @@ describe('Challenge Wrapper', () => {
     });
   });
 
-  describe('challenges', () => {
-    const fromBlock = 4;
-    const toBlock = 6;
-    const eventsStub = 'events';
-    let getPastEventsStub;
-
-    beforeEach(async () => {
-      getPastEventsStub = sinon.stub().returns(eventsStub);
-      const contractMock = {
-        getPastEvents: getPastEventsStub
-      };
-      challengeWrapper = new ChallengeWrapper();
-      sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
-    });
-
-    it('gets past events', async () => {
-      expect(await challengeWrapper.challenges(fromBlock, toBlock)).to.equal(eventsStub);
-      expect(getPastEventsStub).to.be.calledWith('ChallengeCreated', {fromBlock, toBlock});
-    });
-  });
-
-  describe('resolvedChallenges', () => {
-    const fromBlock = 4;
-    const toBlock = 6;
-    const eventsStub = 'events';
-    let getPastEventsStub;
-
-    beforeEach(async () => {
-      getPastEventsStub = sinon.stub().returns(eventsStub);
-      const contractMock = {
-        getPastEvents: getPastEventsStub
-      };
-      challengeWrapper = new ChallengeWrapper();
-      sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
-    });
-
-    it('gets past events', async () => {
-      expect(await challengeWrapper.resolvedChallenges(fromBlock, toBlock)).to.equal(eventsStub);
-      expect(getPastEventsStub).to.be.calledWith('ChallengeResolved', {fromBlock, toBlock});
-    });
-  });
-
-  describe('timedOutChallenges', () => {
-    const fromBlock = 4;
-    const toBlock = 6;
-    const eventsStub = 'events';
-    let getPastEventsStub;
-
-    beforeEach(async () => {
-      getPastEventsStub = sinon.stub().returns(eventsStub);
-      const contractMock = {
-        getPastEvents: getPastEventsStub
-      };
-      challengeWrapper = new ChallengeWrapper();
-      sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
-    });
-
-    it('gets past events', async () => {
-      expect(await challengeWrapper.timedOutChallenges(fromBlock, toBlock)).to.equal(eventsStub);
-      expect(getPastEventsStub).to.be.calledWith('ChallengeTimeout', {fromBlock, toBlock});
-    });
-  });
-
   describe('resolve', () => {
     const challengeId = '0x123';
     let resolveChallengeStub;

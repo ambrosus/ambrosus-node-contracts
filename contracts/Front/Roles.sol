@@ -9,14 +9,15 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
-import "../Boilerplate/Head.sol";
 import "../Configuration/Consts.sol";
 import "../Configuration/Config.sol";
-import "../Storage/AtlasStakeStore.sol";
+import "../Boilerplate/Head.sol";
 import "../Front/KycWhitelist.sol";
+import "../Middleware/ValidatorProxy.sol";
+import "../Storage/AtlasStakeStore.sol";
 import "../Storage/RolesStore.sol";
 import "../Storage/ApolloDepositStore.sol";
-import "../Middleware/ValidatorProxy.sol";
+import "../Storage/RolesEventEmitter.sol";
 
 
 contract Roles is Base {
@@ -27,6 +28,7 @@ contract Roles is Base {
     ValidatorProxy private validatorProxy;
     KycWhitelist private kycWhitelist;
     Config private config;
+    RolesEventEmitter private rolesEventEmitter;
 
     constructor(
         Head _head,
@@ -35,16 +37,18 @@ contract Roles is Base {
         ApolloDepositStore _apolloDepositStore,
         ValidatorProxy _validatorProxy,
         KycWhitelist _kycWhitelist,
-        Config _config
-    )
-        public Base(_head)
-    {
+        Config _config,
+        RolesEventEmitter _rolesEventEmitter
+    ) 
+        public Base(_head) 
+    { 
         atlasStakeStore = _atlasStakeStore;
         rolesStore = _rolesStore;
         apolloDepositStore = _apolloDepositStore;
         validatorProxy = _validatorProxy;
         kycWhitelist = _kycWhitelist;
         config = _config;
+        rolesEventEmitter = _rolesEventEmitter;
     }
 
     function() public payable {}
@@ -55,6 +59,8 @@ contract Roles is Base {
         atlasStakeStore.depositStake.value(msg.value)(msg.sender);
         rolesStore.setRole(msg.sender, Consts.NodeType.ATLAS);
         rolesStore.setUrl(msg.sender, nodeUrl);
+
+        rolesEventEmitter.nodeOnboarded(msg.sender, msg.value, nodeUrl, Consts.NodeType.ATLAS);
     }
 
     function onboardAsApollo() public payable {
@@ -63,6 +69,8 @@ contract Roles is Base {
         apolloDepositStore.storeDeposit.value(msg.value)(msg.sender);
         rolesStore.setRole(msg.sender, Consts.NodeType.APOLLO);
         validatorProxy.addValidator(msg.sender, msg.value);
+
+        rolesEventEmitter.nodeOnboarded(msg.sender, msg.value, "", Consts.NodeType.APOLLO);
     }
 
     function onboardAsHermes(string nodeUrl) public {
@@ -70,12 +78,17 @@ contract Roles is Base {
 
         rolesStore.setRole(msg.sender, Consts.NodeType.HERMES);
         rolesStore.setUrl(msg.sender, nodeUrl);
+
+        rolesEventEmitter.nodeOnboarded(msg.sender, 0, nodeUrl, Consts.NodeType.HERMES);
     }
 
     function retireAtlas() public {
         retire(msg.sender, Consts.NodeType.ATLAS);
 
         uint amountToTransfer = atlasStakeStore.releaseStake(msg.sender, this);
+
+        rolesEventEmitter.nodeRetired(msg.sender, amountToTransfer, Consts.NodeType.ATLAS);
+
         msg.sender.transfer(amountToTransfer);
     }
 
@@ -84,11 +97,16 @@ contract Roles is Base {
 
         uint amountToTransfer = apolloDepositStore.releaseDeposit(msg.sender, this);
         validatorProxy.removeValidator(msg.sender);
+
+        rolesEventEmitter.nodeRetired(msg.sender, amountToTransfer, Consts.NodeType.APOLLO);
+
         msg.sender.transfer(amountToTransfer);
     }
 
     function retireHermes() public {
         retire(msg.sender, Consts.NodeType.HERMES);
+
+        rolesEventEmitter.nodeRetired(msg.sender, 0, Consts.NodeType.HERMES);
     }
 
     function getOnboardedRole(address node) public view returns (Consts.NodeType) {
@@ -100,7 +118,10 @@ contract Roles is Base {
     }
 
     function setUrl(string nodeUrl) public {
+        string memory oldUrl = getUrl(msg.sender);
         rolesStore.setUrl(msg.sender, nodeUrl);
+        string memory newUrl = getUrl(msg.sender);
+        rolesEventEmitter.nodeUrlChanged(msg.sender, oldUrl, newUrl);
     }
 
     function canOnboard(address node, Consts.NodeType role, uint amount) public view returns (bool) {

@@ -17,6 +17,7 @@ import {ATLAS1_STAKE, HERMES, ATLAS} from '../../../src/constants';
 import {PAYOUT_PERIOD_UNIT} from '../../helpers/consts';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import BN from 'bn.js';
+import {expectEventEmission} from '../../helpers/web3EventObserver';
 
 chai.use(chaiAsPromised);
 chai.use(chaiEmitEvents);
@@ -26,6 +27,7 @@ const {expect} = chai;
 describe('ShelteringTransfers Contract', () => {
   let web3;
   let shelteringTransfers;
+  let transfersEventEmitter;
   let sheltering;
   let rolesStore;
   let challenges;
@@ -71,7 +73,7 @@ describe('ShelteringTransfers Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [deployer, hermes, atlas, notSheltering, notStaking] = await web3.eth.getAccounts();
-    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees} = await deploy({
+    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees, transfersEventEmitter} = await deploy({
       web3,
       sender: deployer,
       contracts: {
@@ -87,7 +89,10 @@ describe('ShelteringTransfers Contract', () => {
         rolesStore: true,
         challenges: true,
         challengesStore: true,
-        fees: true
+        fees: true,
+        rolesEventEmitter: true,
+        transfersEventEmitter: true,
+        challengesEventEmitter: true
       }
     }));
     await setTimestamp(bundleUploadTimestamp);
@@ -126,15 +131,6 @@ describe('ShelteringTransfers Contract', () => {
       await expect(startTransfer(bundleId, atlas)).to.be.eventually.rejected;
     });
 
-    it('Initializes transfer and emits an event', async () => {
-      expect(await startTransfer(bundleId, atlas)).to.emitEvent('TransferStarted').withArgs(
-        {
-          transferId,
-          donorId: atlas,
-          bundleId
-        });
-    });
-
     it('Transfer is in progress after successfully started', async () => {
       await startTransfer(bundleId, atlas);
       expect(await transferIsInProgress(transferId)).to.equal(true);
@@ -142,6 +138,19 @@ describe('ShelteringTransfers Contract', () => {
 
     it('Transfer is not in progress until started', async () => {
       expect(await transferIsInProgress(transferId)).to.equal(false);
+    });
+
+    it('Emits proper event', async () => {
+      await expectEventEmission(
+        web3,
+        () => startTransfer(bundleId, atlas),
+        transfersEventEmitter,
+        'TransferStarted',
+        {
+          donorId: atlas,
+          bundleId
+        }
+      );
     });
 
     describe('Stores transfer correctly', () => {
@@ -177,14 +186,6 @@ describe('ShelteringTransfers Contract', () => {
         await expect(resolveTransfer(transferId, notStaking)).to.be.eventually.rejected;
       });
 
-      it('Emits ShelteringTransferred event', async () => {
-        expect(await resolveTransfer(transferId, notSheltering)).to.emitEvent('TransferResolved').withArgs({
-          donorId: atlas,
-          recipientId: notSheltering,
-          bundleId
-        });
-      });
-
       it('Removes donor from shelterers of the bundle', async () => {
         expect(await isSheltering(bundleId, atlas)).to.be.true;
         await resolveTransfer(transferId, notSheltering);
@@ -195,6 +196,20 @@ describe('ShelteringTransfers Contract', () => {
         expect(await isSheltering(bundleId, notSheltering)).to.be.false;
         await resolveTransfer(transferId, notSheltering);
         expect(await isSheltering(bundleId, notSheltering)).to.be.true;
+      });
+
+      it('Emits proper event', async () => {
+        await expectEventEmission(
+          web3,
+          () => resolveTransfer(transferId, notSheltering),
+          transfersEventEmitter,
+          'TransferResolved',
+          {
+            donorId: atlas,
+            bundleId,
+            recipientId: notSheltering
+          }
+        );
       });
 
       it('Removes the transfer from store', async () => {
@@ -234,12 +249,17 @@ describe('ShelteringTransfers Contract', () => {
       expect(utils.hexToUtf8(await getTransferredBundle(transferId))).to.equal('');
     });
 
-    it('Emits TransferCancelled event', async () => {
-      expect(await cancelTransfer(transferId, atlas)).to.emitEvent('TransferCancelled').withArgs({
-        transferId,
-        donorId: atlas,
-        bundleId
-      });
+    it('Emits proper event', async () => {
+      await expectEventEmission(
+        web3,
+        () => cancelTransfer(transferId, atlas),
+        transfersEventEmitter,
+        'TransferCancelled',
+        {
+          donorId: atlas,
+          bundleId
+        }
+      );
     });
 
     it('Fails if the transfer does not exist', async () => {

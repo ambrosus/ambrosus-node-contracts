@@ -34,8 +34,6 @@ contract Uploads is Base {
         challenges = _challenges;
     }
 
-    event BundleUploaded(bytes32 bundleId, uint storagePeriods);
-
     function registerBundle(bytes32 bundleId, uint64 storagePeriods) public payable {
         uint fee = fees.getFeeForUpload(storagePeriods);
 
@@ -46,7 +44,5 @@ contract Uploads is Base {
         (uint challengeFee, uint validatorsFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
         challenges.startForSystem.value(challengeFee)(msg.sender, bundleId, SYSTEM_CHALLENGES_COUNT);
-
-        emit BundleUploaded(bundleId, storagePeriods);
     }
 }
