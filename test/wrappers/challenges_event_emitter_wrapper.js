@@ -16,8 +16,8 @@ import ChallengesEventEmitterWrapper from '../../src/wrappers/challenges_event_e
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
-describe('Challenge Wrapper', () => {
-  let challengeWrapper;
+describe('Challenge Event Emitter Wrapper', () => {
+  let challengeEventEmitterWrapper;
 
   describe('challenges', () => {
     const fromBlock = 4;
@@ -30,12 +30,12 @@ describe('Challenge Wrapper', () => {
       const contractMock = {
         getPastEvents: getPastEventsStub
       };
-      challengeWrapper = new ChallengesEventEmitterWrapper();
-      sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
+      challengeEventEmitterWrapper = new ChallengesEventEmitterWrapper();
+      sinon.stub(challengeEventEmitterWrapper, 'contract').resolves(contractMock);
     });
 
     it('gets past events', async () => {
-      expect(await challengeWrapper.challenges(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(await challengeEventEmitterWrapper.challenges(fromBlock, toBlock)).to.equal(eventsStub);
       expect(getPastEventsStub).to.be.calledWith('ChallengeCreated', {fromBlock, toBlock});
     });
   });
@@ -51,12 +51,12 @@ describe('Challenge Wrapper', () => {
       const contractMock = {
         getPastEvents: getPastEventsStub
       };
-      challengeWrapper = new ChallengesEventEmitterWrapper();
-      sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
+      challengeEventEmitterWrapper = new ChallengesEventEmitterWrapper();
+      sinon.stub(challengeEventEmitterWrapper, 'contract').resolves(contractMock);
     });
 
     it('gets past events', async () => {
-      expect(await challengeWrapper.resolvedChallenges(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(await challengeEventEmitterWrapper.resolvedChallenges(fromBlock, toBlock)).to.equal(eventsStub);
       expect(getPastEventsStub).to.be.calledWith('ChallengeResolved', {fromBlock, toBlock});
     });
   });
@@ -72,12 +72,12 @@ describe('Challenge Wrapper', () => {
       const contractMock = {
         getPastEvents: getPastEventsStub
       };
-      challengeWrapper = new ChallengesEventEmitterWrapper();
-      sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
+      challengeEventEmitterWrapper = new ChallengesEventEmitterWrapper();
+      sinon.stub(challengeEventEmitterWrapper, 'contract').resolves(contractMock);
     });
 
     it('gets past events', async () => {
-      expect(await challengeWrapper.timedOutChallenges(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(await challengeEventEmitterWrapper.timedOutChallenges(fromBlock, toBlock)).to.equal(eventsStub);
       expect(getPastEventsStub).to.be.calledWith('ChallengeTimeout', {fromBlock, toBlock});
     });
   });

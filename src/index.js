@@ -23,6 +23,7 @@ import ShelteringWrapper from './wrappers/sheltering_wrapper';
 import UploadsWrapper from './wrappers/uploads_wrapper';
 import BlockchainStateWrapper from './wrappers/blockchain_state_wrapper';
 import ChallengesEventEmitterWrapper from './wrappers/challenges_event_emitter_wrapper';
+import BundleStoreWrapper from './wrappers/bundle_store_wrapper';
 import WhitelistActions from './actions/whitelist_actions';
 import OnboardActions from './actions/onboard_actions';
 import UploadActions from './actions/upload_actions';
@@ -64,5 +65,6 @@ module.exports = {
   constants,
   contractJsons,
   InsufficientFundsToUploadBundleError,
-  InsufficientFundsToStartChallengeError
+  InsufficientFundsToStartChallengeError,
+  BundleStoreWrapper
 };
