@@ -11,7 +11,7 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 import BundleStoreWrapper from '../../src/wrappers/bundle_store_wrapper';
 
-describe.only('Bundle Store Wrapper', () => {
+describe('Bundle Store Wrapper', () => {
   let bundleStoreWrapper;
 
   describe('bundlesStored', () => {
