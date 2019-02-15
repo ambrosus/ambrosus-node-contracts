@@ -11,7 +11,7 @@ import ManagedContractWrapper from './managed_contract_wrapper';
 
 export default class BundleStoreWrapper extends ManagedContractWrapper {
   get getContractName() {
-    return 'BundleStore';
+    return 'bundleStore';
   }
 
   async bundlesStored(fromBlock, toBlock) {
