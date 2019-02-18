@@ -53,4 +53,19 @@ export default class RolesWrapper extends ManagedContractWrapper {
       from: address
     });
   }
+
+  async retireAtlas() {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.retireAtlas());
+  }
+
+  async retireApollo() {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.retireApollo());
+  }
+
+  async retireHermes() {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.retireHermes());
+  }
 }

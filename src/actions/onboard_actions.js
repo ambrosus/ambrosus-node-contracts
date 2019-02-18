@@ -7,12 +7,13 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {ATLAS, HERMES, APOLLO, ROLE_REVERSE_CODES} from '../constants';
+import {APOLLO, ATLAS, HERMES, ROLE_REVERSE_CODES} from '../constants';
 
 export default class OnboardActions {
-  constructor(kycWhitelistWrapper, rolesWrapper) {
+  constructor(kycWhitelistWrapper, rolesWrapper, atlasStakeWrapper) {
     this.kycWhitelistWrapper = kycWhitelistWrapper;
     this.rolesWrapper = rolesWrapper;
+    this.atlasStakeWrapper = atlasStakeWrapper;
   }
 
   async onboardAsAtlas(address, stakeAmount, url) {
@@ -58,5 +59,21 @@ export default class OnboardActions {
     if (requiredAmount !== amount) {
       throw new Error(`Address ${address} requires a deposit of ${requiredAmount} but ${amount} provided.`);
     }
+  }
+
+  async retire() {
+    const role = await this.rolesWrapper.onboardedRole(this.rolesWrapper.defaultAddress);
+    switch (role) {
+      case ATLAS:
+        if (await this.atlasStakeWrapper.isShelteringAny(this.atlasStakeWrapper.defaultAddress)) {
+          throw new Error('Cannot retire while sheltering a bundle');
+        }
+        return this.rolesWrapper.retireAtlas();
+      case APOLLO:
+        return this.rolesWrapper.retireApollo();
+      case HERMES:
+        return this.rolesWrapper.retireHermes();
+    }
+    throw new Error('The node is not onboarded');
   }
 }

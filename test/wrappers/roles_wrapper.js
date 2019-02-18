@@ -197,4 +197,91 @@ describe('Roles Wrapper', () => {
       });
     });
   });
+
+  describe('retireAtlas', () => {
+    let retireAtlasStub;
+    let retireAtlasSendStub;
+    let contractMock;
+
+    before(async () => {
+      retireAtlasStub = sinon.stub();
+      retireAtlasSendStub = sinon.stub();
+      contractMock = {
+        methods: {
+          retireAtlas: retireAtlasStub.returns({
+            send: retireAtlasSendStub.resolves()
+          })
+        }
+      };
+
+      rolesWrapper = new RolesWrapper({}, {}, defaultAddress);
+      sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await rolesWrapper.retireAtlas();
+      expect(retireAtlasStub).to.be.calledOnceWith();
+      expect(retireAtlasSendStub).to.be.calledOnceWith({
+        from: defaultAddress
+      });
+    });
+  });
+
+  describe('retireApollo', () => {
+    let retireApolloStub;
+    let retireApolloSendStub;
+    let contractMock;
+
+    before(async () => {
+      retireApolloStub = sinon.stub();
+      retireApolloSendStub = sinon.stub();
+      contractMock = {
+        methods: {
+          retireApollo: retireApolloStub.returns({
+            send: retireApolloSendStub.resolves()
+          })
+        }
+      };
+
+      rolesWrapper = new RolesWrapper({}, {}, defaultAddress);
+      sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await rolesWrapper.retireApollo();
+      expect(retireApolloStub).to.be.calledOnceWith();
+      expect(retireApolloSendStub).to.be.calledOnceWith({
+        from: defaultAddress
+      });
+    });
+  });
+
+  describe('retireHermes', () => {
+    let retireHermesStub;
+    let retireHermesSendStub;
+    let contractMock;
+
+    before(async () => {
+      retireHermesStub = sinon.stub();
+      retireHermesSendStub = sinon.stub();
+      contractMock = {
+        methods: {
+          retireHermes: retireHermesStub.returns({
+            send: retireHermesSendStub.resolves()
+          })
+        }
+      };
+
+      rolesWrapper = new RolesWrapper({}, {}, defaultAddress);
+      sinon.stub(rolesWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await rolesWrapper.retireHermes();
+      expect(retireHermesStub).to.be.calledOnceWith();
+      expect(retireHermesSendStub).to.be.calledOnceWith({
+        from: defaultAddress
+      });
+    });
+  });
 });

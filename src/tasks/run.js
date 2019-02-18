@@ -40,6 +40,8 @@ import ChallengeActions from '../actions/challenge_actions';
 import ChallengeWrapper from '../wrappers/challenge_wrapper';
 import BlockchainStateWrapper from '../wrappers/blockchain_state_wrapper';
 import ChallengesEventEmitterWrapper from '../wrappers/challenges_event_emitter_wrapper';
+import AtlasStakeStoreWrapper from '../wrappers/atlas_stake_store_wrapper';
+import RetiringTask from './retire';
 
 const runTask = async () => {
   const web3 = await createWeb3();
@@ -61,10 +63,11 @@ const runTask = async () => {
   const challengeWrapper = new ChallengeWrapper(headWrapper, web3, nodeAddress);
   const challengesEventEmitterWrapper = new ChallengesEventEmitterWrapper(headWrapper, web3, nodeAddress);
   const blockchainStateWrapper = new BlockchainStateWrapper(web3);
+  const atlasStakeStoreWrapper = new AtlasStakeStoreWrapper(headWrapper, web3, nodeAddress);
 
   const deployActions = new DeployActions(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper);
   const whitelistActions = new WhitelistActions(kycWhitelistWrapper);
-  const onboardActions = new OnboardActions(kycWhitelistWrapper, rolesWrapper);
+  const onboardActions = new OnboardActions(kycWhitelistWrapper, rolesWrapper, atlasStakeStoreWrapper);
   const uploadActions = new UploadActions(uploadsWrapper, feesWrapper, shelteringWrapper, challengesEventEmitterWrapper);
   const nodeServiceActions = new NodeServiceActions(rolesWrapper);
   const payoutsActions = new PayoutsActions(timeWrapper, payoutsWrapper);
@@ -80,6 +83,7 @@ const runTask = async () => {
   list.add('nodeService', new NodeServiceTask(nodeAddress, nodeServiceActions));
   list.add('payouts', new PayoutsTask(web3, nodeAddress, payoutsActions));
   list.add('challenge', new ChallengeTask(challengeActions));
+  list.add('retire', new RetiringTask(onboardActions));
 
   await list.run(args[0], args.slice(1));
 };
