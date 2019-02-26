@@ -157,7 +157,7 @@ describe('Roles Contract', () => {
       expect(await canOnboardAsApollo(apollo, 0)).to.be.false;
       expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT_BN.sub(ONE).toString())).to.be.false;
       expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT_BN)).to.be.true;
-      expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT_BN.add(ONE).toString())).to.be.false;
+      expect(await canOnboardAsApollo(apollo, APOLLO_DEPOSIT_BN.add(ONE).toString())).to.be.true;
       expect(await canOnboardAsApollo(atlas1, APOLLO_DEPOSIT_BN)).to.be.false;
     });
   });
@@ -249,6 +249,13 @@ describe('Roles Contract', () => {
         expect(await getRole(apollo)).to.equal(APOLLO.toString());
       });
 
+      it('allows to onboard with bigger stake', async () => {
+        await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT_BN.add(ONE))).to.eventually.be.fulfilled;
+        expect(await isDepositing(apollo)).to.be.true;
+        expect(await getRole(apollo)).to.equal(APOLLO.toString());
+        expect(await beneficiaryShare(apollo)).to.equal(APOLLO_DEPOSIT_BN.add(ONE).toString());
+      });
+
       it('adds node to validator set and block rewards', async () => {
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT)).to.eventually.be.fulfilled;
         expect(await getValidators()).to.include(apollo);
@@ -261,9 +268,8 @@ describe('Roles Contract', () => {
         expect(await getRole(atlas1)).to.equal('0');
       });
 
-      it('throws if value sent does not equal the stake required during kyc', async () => {
+      it('throws if value sent is smaller than the stake required during kyc', async () => {
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT_BN.sub(ONE))).to.be.eventually.rejected;
-        await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT_BN.add(ONE))).to.be.eventually.rejected;
         expect(await getRole(apollo)).to.equal('0');
       });
 
