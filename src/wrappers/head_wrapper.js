@@ -41,7 +41,8 @@ export default class HeadWrapper extends GenesisContractWrapper {
       'payoutsStore',
       'rolesStore',
       'shelteringTransfersStore',
-      'challengesEventEmitter'
+      'challengesEventEmitter',
+      'rolesEventEmitter'
     ];
   }
 
