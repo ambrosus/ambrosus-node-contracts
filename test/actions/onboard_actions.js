@@ -197,7 +197,7 @@ describe('Onboard Actions', () => {
     it('throws when atlas is sheltering a bundle when trying to retire', async () => {
       rolesWrapperMock.onboardedRole.resolves(ATLAS);
       atlasStakeWrapperMock.isShelteringAny.withArgs(defaultAddress).resolves(true);
-      await expect(callSubject()).to.be.rejectedWith('Cannot retire while sheltering a bundle');
+      await expect(callSubject()).to.be.rejectedWith('Cannot retire while still sheltering bundles');
     });
   });
 });

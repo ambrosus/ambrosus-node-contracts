@@ -66,7 +66,7 @@ export default class OnboardActions {
     switch (role) {
       case ATLAS:
         if (await this.atlasStakeWrapper.isShelteringAny(this.atlasStakeWrapper.defaultAddress)) {
-          throw new Error('Cannot retire while sheltering a bundle');
+          throw new Error('Cannot retire while still sheltering bundles');
         }
         return this.rolesWrapper.retireAtlas();
       case APOLLO:
