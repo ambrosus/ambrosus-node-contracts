@@ -150,6 +150,8 @@ startGanacheServer(
       await verifyNodeState(apolloUser.address, 'APOLLO', 'NONE', '250000', '');
       await execute(`yarn task onboard APOLLO 250000`, apolloEnv);
       await verifyNodeState(apolloUser.address, 'APOLLO', 'APOLLO', '250000', '');
+      await execute(`yarn task retire`, apolloEnv);
+      await verifyNodeState(apolloUser.address, 'APOLLO', 'NONE', '250000', '');
 
       console.log('------ test ATLAS onboarding ------');
       await execute(`yarn task whitelist add ${atlasUser.address} ATLAS 75000`, adminEnv);
@@ -158,6 +160,8 @@ startGanacheServer(
       await verifyNodeState(atlasUser.address, 'ATLAS', 'ATLAS', '75000', 'http://example.com');
       await execute(`yarn task nodeService setUrl http://amazon.com`, atlasEnv);
       await verifyNodeState(atlasUser.address, 'ATLAS', 'ATLAS', '75000', 'http://amazon.com');
+      await execute(`yarn task retire`, atlasEnv);
+      await verifyNodeState(atlasUser.address, 'ATLAS', 'NONE', '75000', '');
 
       console.log('------ test HERMES onboarding ------');
       await execute(`yarn task whitelist add ${hermesUser.address} HERMES 0`, adminEnv);
@@ -166,6 +170,8 @@ startGanacheServer(
       await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://example.com');
       await execute(`yarn task nodeService setUrl http://google.com`, hermesEnv);
       await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://google.com');
+      await execute(`yarn task retire`, hermesEnv);
+      await verifyNodeState(hermesUser.address, 'HERMES', 'NONE', '0', '');
     } catch (err) {
       printError(err);
       failed = true;
