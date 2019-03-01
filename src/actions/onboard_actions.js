@@ -54,7 +54,7 @@ export default class OnboardActions {
   }
 
   async validateAtlasStakeAmount(address, amount) {
-    const requiredAmount = this.requiredAmount(address);
+    const requiredAmount = await this.requiredAmount(address);
 
     if (!requiredAmount.eq(utils.toBN(amount))) {
       throw new Error(`Address ${address} requires a stake of ${requiredAmount} but ${amount} provided.`);
@@ -62,7 +62,7 @@ export default class OnboardActions {
   }
 
   async validateApolloDepositAmount(address, amount) {
-    const requiredAmount = this.requiredAmount(address);
+    const requiredAmount = await this.requiredAmount(address);
 
     if (requiredAmount.gt(utils.toBN(amount))) {
       throw new Error(`Address ${address} requires a minimum deposit of ${requiredAmount} but ${amount} provided.`);
