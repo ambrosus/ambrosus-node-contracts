@@ -68,7 +68,7 @@ describe('Onboard Actions', () => {
     });
 
     it('fails if the stakeAmount is not matching the whitlisted pledge', async () => {
-      kycWhitelistWrapperMock.getRequiredDeposit.resolves('456780');
+      kycWhitelistWrapperMock.getRequiredDeposit.resolves('45678');
 
       await expect(callSubject()).to.eventually.be.rejected;
 

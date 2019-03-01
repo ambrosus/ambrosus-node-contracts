@@ -54,8 +54,7 @@ export default class OnboardActions {
   }
 
   async validateAtlasStakeAmount(address, amount) {
-    const kyc = this.kycWhitelistWrapper;
-    const requiredAmount = utils.toBN(await kyc.getRequiredDeposit(address));
+    const requiredAmount = this.requiredAmount(address);
 
     if (!requiredAmount.eq(utils.toBN(amount))) {
       throw new Error(`Address ${address} requires a stake of ${requiredAmount} but ${amount} provided.`);
@@ -63,12 +62,15 @@ export default class OnboardActions {
   }
 
   async validateApolloDepositAmount(address, amount) {
-    const kyc = this.kycWhitelistWrapper;
-    const requiredAmount = utils.toBN(await kyc.getRequiredDeposit(address));
+    const requiredAmount = this.requiredAmount(address);
 
     if (requiredAmount.gt(utils.toBN(amount))) {
       throw new Error(`Address ${address} requires a minimum deposit of ${requiredAmount} but ${amount} provided.`);
     }
+  }
+
+  async requiredAmount(address) {
+    return utils.toBN(await this.kycWhitelistWrapper.getRequiredDeposit(address));
   }
 
   async retire() {
