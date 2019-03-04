@@ -125,6 +125,9 @@ contract Roles is Base {
     }
 
     function canOnboard(address node, Consts.NodeType role, uint amount) public view returns (bool) {
+        if (role == Consts.NodeType.APOLLO) {
+            return kycWhitelist.hasRoleAssigned(node, role) && amount >= kycWhitelist.getRequiredDeposit(node);
+        }
         return kycWhitelist.hasRoleAssigned(node, role) && amount == kycWhitelist.getRequiredDeposit(node);
     }
 

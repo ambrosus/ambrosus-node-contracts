@@ -134,7 +134,14 @@ describe('Onboard Actions', () => {
       expect(kycWhitelistWrapperMock.getRequiredDeposit).to.have.been.calledOnceWith(address);
     });
 
-    it('works otherwise', async () => {
+    it('works for exact depositAmount', async () => {
+      await expect(callSubject()).to.eventually.be.fulfilled;
+
+      expect(rolesWrapperMock.onboardAsApollo).to.have.been.calledOnceWith(address, depositAmount);
+    });
+
+    it('works for depositAmount bigger than necessary', async () => {
+      kycWhitelistWrapperMock.getRequiredDeposit.resolves('100');
       await expect(callSubject()).to.eventually.be.fulfilled;
 
       expect(rolesWrapperMock.onboardAsApollo).to.have.been.calledOnceWith(address, depositAmount);
