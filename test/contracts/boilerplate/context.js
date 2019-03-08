@@ -25,7 +25,7 @@ describe('Context Contract', () => {
   let trustedAddress;
   let catalogueAddress;
   let storageCatalogueAddress;
-  let untrustedAddress; 
+  let untrustedAddress;
 
   const deploy = async (sender, trustedAddresses, catalogue, storageCatalogue, versionTag) => deployContract(web3, ContextJson, [trustedAddresses, catalogue, storageCatalogue, versionTag], {from: sender});
   const isInternalToContext = async (contract, address) => contract.methods.isInternalToContext(address).call();
