@@ -25,12 +25,13 @@ describe('Context Contract', () => {
   let trustedAddress;
   let catalogueAddress;
   let storageCatalogueAddress;
-  let untrustedAddress;
+  let untrustedAddress; 
 
-  const deploy = async (sender, trustedAddresses, catalogue, storageCatalogue) => deployContract(web3, ContextJson, [trustedAddresses, catalogue, storageCatalogue], {from: sender});
+  const deploy = async (sender, trustedAddresses, catalogue, storageCatalogue, versionTag) => deployContract(web3, ContextJson, [trustedAddresses, catalogue, storageCatalogue, versionTag], {from: sender});
   const isInternalToContext = async (contract, address) => contract.methods.isInternalToContext(address).call();
   const catalogue = async (contract) => contract.methods.catalogue().call();
   const storageCatalogue = async (contract) => contract.methods.storageCatalogue().call();
+  const versionTag = async (contract) => contract.methods.versionTag().call();
 
   before(async () => {
     web3 = await createWeb3();
@@ -39,9 +40,10 @@ describe('Context Contract', () => {
 
   describe('constructor', () => {
     it('stores the catalogue provided in the constructor', async () => {
-      context = await expect(deploy(deployer, [trustedAddress], catalogueAddress, storageCatalogueAddress)).to.be.eventually.fulfilled;
+      context = await expect(deploy(deployer, [trustedAddress], catalogueAddress, storageCatalogueAddress, 15)).to.be.eventually.fulfilled;
       expect(await catalogue(context)).to.equal(catalogueAddress);
       expect(await storageCatalogue(context)).to.equal(storageCatalogueAddress);
+      expect(await versionTag(context)).to.equal('15');
     });
   });
 
@@ -50,24 +52,24 @@ describe('Context Contract', () => {
     const zeroAddress = '0x0000000000000000000000000000000000000000';
 
     it('throws if no storageCatalogue is provided', async () => {
-      context = await deploy(deployer, [trustedAddress], catalogueAddress, zeroAddress);
+      context = await deploy(deployer, [trustedAddress], catalogueAddress, zeroAddress, 0);
       await expect(catalogue(context)).to.be.eventually.rejected;
     });
 
     it('throws if no catalogue is provided', async () => {
-      context = await deploy(deployer, [trustedAddress], zeroAddress, storageCatalogueAddress);
+      context = await deploy(deployer, [trustedAddress], zeroAddress, storageCatalogueAddress, 0);
       await expect(catalogue(context)).to.be.eventually.rejected;
     });
 
     it('throws if trusted addresses are empty', async () => {
-      context = await deploy(deployer, [], catalogueAddress, storageCatalogueAddress);
+      context = await deploy(deployer, [], catalogueAddress, storageCatalogueAddress, 0);
       await expect(catalogue(context)).to.be.eventually.rejected;
     });
   });
 
   describe('isInternalToContext', () => {
     before(async () => {
-      context = await deploy(deployer, [trustedAddress], catalogueAddress, storageCatalogueAddress);
+      context = await deploy(deployer, [trustedAddress], catalogueAddress, storageCatalogueAddress, 0);
     });
 
     it('returns true if address is known', async () => {

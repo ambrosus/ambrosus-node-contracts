@@ -55,7 +55,7 @@ describe('Head Wrapper', () => {
     ownerAddress = getDefaultAddress(web3);
     await deployCatalogue();
     await deployStorageCatalogue();
-    context = await deployContract(web3, contractJsons.context, [[...addressesForCatalogueConstructor, ...addressesForStorageCatalogueConstructor], catalogue.options.address, storageCatalogue.options.address]);
+    context = await deployContract(web3, contractJsons.context, [[...addressesForCatalogueConstructor, ...addressesForStorageCatalogueConstructor], catalogue.options.address, storageCatalogue.options.address, 12]);
     headContract = await deployContract(web3, contractJsons.head, [ownerAddress]);
     headWrapper = new HeadWrapper(headContract.options.address, web3, ownerAddress);
   });
@@ -160,7 +160,7 @@ describe('Head Wrapper', () => {
     async function deployContextWithNewCatalogues() {
       await deployCatalogue();
       await deployStorageCatalogue();
-      const newContext = await deployContract(web3, contractJsons.context, [[...addressesForCatalogueConstructor, ...addressesForStorageCatalogueConstructor], catalogue.options.address, storageCatalogue.options.address]);
+      const newContext = await deployContract(web3, contractJsons.context, [[...addressesForCatalogueConstructor, ...addressesForStorageCatalogueConstructor], catalogue.options.address, storageCatalogue.options.address, 82]);
       await headWrapper.setContext(newContext.options.address);
     }
   });

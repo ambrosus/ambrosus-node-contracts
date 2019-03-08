@@ -124,13 +124,14 @@ export default class Deployer {
     return deployContract(this.web3, json, params, {from: this.sender});
   }
 
-  async deployContext(contextJson, contracts) {
+  async deployContext(contextJson, contracts, versionTag) {
     return this.deployContract(
       contextJson,
       [
         Object.values(contracts).map((contract) => contract.options.address),
         contracts.catalogue.options.address,
-        contracts.storageCatalogue.options.address
+        contracts.storageCatalogue.options.address,
+        versionTag
       ],
       []
     );
@@ -186,12 +187,12 @@ export default class Deployer {
     }
   }
 
-  async deploy(jsons, alreadyDeployed, skipDeployment = [], params = {}) {
+  async deploy(jsons, alreadyDeployed, skipDeployment = [], params = {}, versionTag = 0) {
     const libs = await this.deployLibs();
     const {context: contextJson, ...jsonsWithoutContext} = jsons;
     const contracts = await this.deployOrLoadContracts(jsonsWithoutContext, alreadyDeployed, skipDeployment, libs, params);
     await this.checkOwnership(contracts);
-    contracts.context = await this.deployContext(contextJson, contracts);
+    contracts.context = await this.deployContext(contextJson, contracts, versionTag);
     await this.updateContextPointer(contracts);
     await this.transferOwnerships(contracts);
 
