@@ -11,6 +11,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import contractJsons from '../contract_jsons';
 import {loadContract} from '../utils/web3_tools';
 import GenesisContractWrapper from './genesis_contract_wrapper';
+import {ZERO_ADDRESS} from '../constants';
 
 
 export default class HeadWrapper extends GenesisContractWrapper {
@@ -74,6 +75,9 @@ export default class HeadWrapper extends GenesisContractWrapper {
       .methods
       .context()
       .call();
+    if (contextAddress === ZERO_ADDRESS) {
+      throw 'Context address is not set in the head contract';
+    }
     if (this.cachedContractAddressHasChanged(contextAddress, 'context')) {
       this.clearContractAddressCache();
       this.updateContractAddressCache('context', contextAddress);
