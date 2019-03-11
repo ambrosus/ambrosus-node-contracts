@@ -22,3 +22,5 @@ export const ATLAS1_STAKE = utils.toWei('10000');
 export const ATLAS2_STAKE = utils.toWei('30000');
 export const ATLAS3_STAKE = utils.toWei('75000');
 export const APOLLO_DEPOSIT = utils.toWei('250000');
+
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';

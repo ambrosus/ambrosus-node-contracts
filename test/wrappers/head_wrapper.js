@@ -87,6 +87,11 @@ describe('Head Wrapper', () => {
     expect(receivedContext.options.address).to.equal(context.options.address);
   });
 
+  it('context method throws a meaningful error if context address is not set', async () => {
+    await headWrapper.setContext('0x0');
+    await expect(headWrapper.context()).to.eventually.be.rejectedWith('Context address is not set in the head contract');
+  });
+
   it('catalogue method returns the catalogue contract instance', async () => {
     const receivedCatalogue = await headWrapper.catalogue();
     expect(receivedCatalogue instanceof web3.eth.Contract).to.be.true;
