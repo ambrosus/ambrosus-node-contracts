@@ -49,7 +49,7 @@ describe('Base Contract', () => {
   });
 
   const deployContext = async (web3, sender, head, injected) => {
-    context = await deployContract(web3, ContextJson, [injected, catalogue, storageCatalogue], {from: sender});
+    context = await deployContract(web3, ContextJson, [injected, catalogue, storageCatalogue, 12], {from: sender});
     await head.methods.setContext(context.options.address).send({from: sender});
     return context;
   };

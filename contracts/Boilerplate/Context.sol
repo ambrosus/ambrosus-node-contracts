@@ -16,8 +16,9 @@ contract Context {
     mapping (address => bool) public trustedAddresses;
     Catalogue public catalogue;
     StorageCatalogue public storageCatalogue;
+    uint256 public versionTag;
 
-    constructor(address[] _trustedAddresses, Catalogue _catalogue, StorageCatalogue _storageCatalogue) public {
+    constructor(address[] _trustedAddresses, Catalogue _catalogue, StorageCatalogue _storageCatalogue, uint256 _versionTag) public {
         require(_trustedAddresses.length > 0);
         require(_catalogue != address(0));
         require(_storageCatalogue != address(0));
@@ -27,6 +28,7 @@ contract Context {
         }
         catalogue = _catalogue;
         storageCatalogue = _storageCatalogue;
+        versionTag = _versionTag;
     }
 
     function isInternalToContext(address contractAddress) view public returns (bool) {
