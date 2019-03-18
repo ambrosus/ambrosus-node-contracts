@@ -9,14 +9,14 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import ManagedOwnableContractWrapper from './managed_ownable_contract_wrapper';
 
-export default class ApproveCollectorWrapper extends ManagedOwnableContractWrapper {
+export default class ApprovesCollectorWrapper extends ManagedOwnableContractWrapper {
   get getContractName() {
-    return 'kycWhitelist';
+    return 'ApproveCollector';
   }
 
   async addTransaction(executor, transaction) {
     const contract = await this.contract();
-    return this.processTransaction(contract.methods.addTransaction(executor, transaction));
+    return this.processTransaction(contract.methods.executeTransaction(executor, transaction));
   }
 
   async approveTransaction(transactionId) {
@@ -24,9 +24,9 @@ export default class ApproveCollectorWrapper extends ManagedOwnableContractWrapp
     return this.processTransaction(contract.methods.approveTransaction(transactionId));
   }
 
-  async hasApproved(transactionId) {
+  async hasApproved(address, transactionId) {
     const contract = await this.contract();
-    return contract.methods.hasApproved(transactionId).call();
+    return contract.methods.hasApproved(address, transactionId).call();
   }
 
   async getPendingTransactions() {
@@ -49,6 +49,16 @@ export default class ApproveCollectorWrapper extends ManagedOwnableContractWrapp
     return this.processTransaction(contract.methods.deleteAdministrator(address));
   }
 
+  async addCriticalApprover(address) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.addCriticalApprover(address));
+  }
+
+  async deleteCriticalApprover(address) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.deleteCriticalApprover(address));
+  }
+
   async getMultiplexor() {
     const contract = await this.contract();
     return contract.methods.getMultiplexor().call();
@@ -56,6 +66,6 @@ export default class ApproveCollectorWrapper extends ManagedOwnableContractWrapp
 
   async updateMultiplexorContract(address) {
     const contract = await this.contract();
-    return this.processTransaction(contract.methods.updateMultiplexorContract(address));;
+    return this.processTransaction(contract.methods.updateMultiplexorContract(address));
   }
 }
