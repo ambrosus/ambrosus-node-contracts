@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, makeSnapshot, restoreSnapshot, getDefaultAddress} from '../../../src/utils/web3_tools';
+import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
 import {expectEventEmission, captureEventEmission} from '../../helpers/web3EventObserver';
 
@@ -28,11 +28,10 @@ describe('Approve Collector Contract', () => {
   let admin3;
   let totalStranger;
   let approvalCollector;
-  let multiplexingContract;
   let snapshotId;
 
-  let testTransaction = {'0':'0x0000000000000000000000000000000000000000', '1':'0xdeadbeef'};
-  let ContractClass = {"DEFAULT":0, "CRITICAL":1};
+  const testTransaction = {0:'0x0000000000000000000000000000000000000000', 1:'0xdeadbeef'};
+  const ContractClass = {DEFAULT:0, CRITICAL:1};
 
   const getMultiplexingContract = async () => approvalCollector.methods.getMultiplexingContract().call();
   const setMultiplexingContract = async (multiplexingContract, sender = owner) => approvalCollector.methods.updateMultiplexingContract(multiplexingContract).send({from: sender});
@@ -50,15 +49,13 @@ describe('Approve Collector Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [owner, other, totalStranger, admin1, admin2, admin3] = await web3.eth.getAccounts();
-    ({approvalCollector, multiplexingContract} = await deploy({
+    ({approvalCollector} = await deploy({
       web3,
       contracts: {
-        approvalCollector: true,
-        multiplexingContract: true
+        multiplexingContract: true,
+        approvalCollector: true
       }
     }));
-
-    await setMultiplexingContract(multiplexingContract._address);
   });
 
   beforeEach(async () => {
@@ -70,24 +67,24 @@ describe('Approve Collector Contract', () => {
   });
 
   it('Create transaction', async () => {
-    let events = await captureEventEmission(
+    const events = await captureEventEmission(
       web3,
       () => addTransaction(testTransaction['0'], testTransaction['1']),
       approvalCollector,
       'TransactionCreated'
     );
 
-    let transactions = await getPendingTransactions();
-    expect (events[0].returnValues['transactionId']).to.equal(transactions[0]);
+    const transactions = await getPendingTransactions();
+    expect (events[0].returnValues.transactionId).to.equal(transactions[0]);
 
-    let transactionInfo = await getTransactionInfo(transactions[0]);
+    const transactionInfo = await getTransactionInfo(transactions[0]);
     expect(transactionInfo['0']).to.equal(testTransaction['0']);
     expect(transactionInfo['1']).to.equal(testTransaction['1']);
   });
 
   it('Approve transaction', async () => {
     await addTransaction(testTransaction['0'], testTransaction['1']);
-    let transactions = await getPendingTransactions();
+    const transactions = await getPendingTransactions();
 
     await expectEventEmission(
       web3,
@@ -105,7 +102,7 @@ describe('Approve Collector Contract', () => {
 
   it('Approve transaction second time', async () => {
     await addTransaction(testTransaction['0'], testTransaction['1']);
-    let transactions = await getPendingTransactions();
+    const transactions = await getPendingTransactions();
 
     await expect(approveTransaction(transactions[0])).to.be.fulfilled;
     await expect(approveTransaction(transactions[0])).to.be.eventually.rejected;
@@ -113,14 +110,14 @@ describe('Approve Collector Contract', () => {
 
   it('Approve transaction from not admin account', async () => {
     await addTransaction(testTransaction['0'], testTransaction['1']);
-    let transactions = await getPendingTransactions();
+    const transactions = await getPendingTransactions();
 
     await expect(approveTransaction(transactions[0], totalStranger)).to.be.eventually.rejected;
   });
 
   it('Add new administrator', async () => {
     await addTransaction(testTransaction['0'], testTransaction['1']);
-    let transactions = await getPendingTransactions();
+    const transactions = await getPendingTransactions();
 
     await expect(approveTransaction(transactions[0], totalStranger)).to.be.eventually.rejected;
     await expect(addAdministrator(totalStranger)).to.be.fulfilled;
@@ -134,7 +131,7 @@ describe('Approve Collector Contract', () => {
   it('Delete administrator', async () => {
     await addTransaction(testTransaction['0'], testTransaction['1']);
     await addTransaction(testTransaction['0'], testTransaction['1']);
-    let transactions = await getPendingTransactions();
+    const transactions = await getPendingTransactions();
 
     await expect(addAdministrator(totalStranger)).to.be.fulfilled;
     await expect(approveTransaction(transactions[0], totalStranger)).to.be.fulfilled;
@@ -149,7 +146,7 @@ describe('Approve Collector Contract', () => {
 
   it('Perform transaction', async () => {
     await addTransaction(testTransaction['0'], testTransaction['1']);
-    let transactions = await getPendingTransactions();
+    const transactions = await getPendingTransactions();
 
     await expect(addAdministrator(admin1)).to.be.fulfilled;
     await expect(addAdministrator(admin2)).to.be.fulfilled;
@@ -181,14 +178,14 @@ describe('Approve Collector Contract', () => {
   });
 
   it('Set contract class', async () => {
-    await expect(setContractClass(testTransaction['0'], ContractClass['CRITICAL'])).to.be.fulfilled;
+    await expect(setContractClass(testTransaction['0'], ContractClass.CRITICAL)).to.be.fulfilled;
   });
 
   it('Perform critical transaction', async () => {
-    await expect(setContractClass(testTransaction['0'], ContractClass['CRITICAL'])).to.be.fulfilled;
+    await expect(setContractClass(testTransaction['0'], ContractClass.CRITICAL)).to.be.fulfilled;
 
     await addTransaction(testTransaction['0'], testTransaction['1']);
-    let transactions = await getPendingTransactions();
+    const transactions = await getPendingTransactions();
 
     await expect(addAdministrator(admin1)).to.be.fulfilled;
     await expect(addAdministrator(admin2)).to.be.fulfilled;
@@ -212,6 +209,4 @@ describe('Approve Collector Contract', () => {
     await expect(setMultiplexingContract('0x0000000000000000000000000000000000000000')).to.be.fulfilled;
     expect(await getMultiplexingContract()).to.equal('0x0000000000000000000000000000000000000000');
   });
-
-
 });

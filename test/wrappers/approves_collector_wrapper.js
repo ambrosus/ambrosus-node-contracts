@@ -18,12 +18,12 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Approves Collector Wrapper', () => {
-const defaultAddress = '0x6789';
-const testUser = '0x1234';
-const testContract = '0x3456';
-const testTransaction = {'0':'0x0000000000000000000000000000000000000000', '1':'0xdeadbeef'};
-const testTransactionInfo = {'0':'0x0000000000000000000000000000000000000000', '1':'0xdeadbeef', '2':'2', '3':'0'};
-const transactionId = '0x409780f9aaa9ccb5fd6f7aa506a830e24582101dac6f7adc73d53f1a9f49c646';
+  const defaultAddress = '0x6789';
+  const testUser = '0x1234';
+  const testContract = '0x3456';
+  const testTransaction = {0:'0x0000000000000000000000000000000000000000', 1:'0xdeadbeef'};
+  const testTransactionInfo = {0:'0x0000000000000000000000000000000000000000', 1:'0xdeadbeef', 2:'2', 3:'0'};
+  const transactionId = '0x409780f9aaa9ccb5fd6f7aa506a830e24582101dac6f7adc73d53f1a9f49c646';
 
   describe('addTransaction', () => {
     let addTransactionStub;
@@ -112,14 +112,14 @@ const transactionId = '0x409780f9aaa9ccb5fd6f7aa506a830e24582101dac6f7adc73d53f1
     });
 
     afterEach(() => {
-       resetHistory(contractMock);
+      resetHistory(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
-        const ret = await approvesCollectorWrapper.hasApproved(testUser, transactionId);
-        expect(hasApprovedStub).to.be.calledWith(testUser, transactionId);
-        expect(hasApprovedCallStub).to.be.calledOnce;
-        expect(ret).to.equal(true);
+      const ret = await approvesCollectorWrapper.hasApproved(testUser, transactionId);
+      expect(hasApprovedStub).to.be.calledWith(testUser, transactionId);
+      expect(hasApprovedCallStub).to.be.calledOnce;
+      expect(ret).to.equal(true);
     });
   });
 
@@ -351,7 +351,7 @@ const transactionId = '0x409780f9aaa9ccb5fd6f7aa506a830e24582101dac6f7adc73d53f1
     });
   });
 
-describe('setMultiplexingContract', () => {
+  describe('setMultiplexingContract', () => {
     let setMultiplexingContractStub;
     let setMultiplexingContractSendStub;
     let contractMock;

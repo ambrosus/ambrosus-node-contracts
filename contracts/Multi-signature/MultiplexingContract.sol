@@ -11,8 +11,13 @@ pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
+
 contract MultiplexingContract is Ownable {
 
-    function performTransaction(address executor, bytes memory transaction) public{
+    function performTransaction(address executor, bytes memory transaction) public {
+        bool res = executor.call(transaction);
+        if (!res) {
+            revert();
+        }
     }
 }

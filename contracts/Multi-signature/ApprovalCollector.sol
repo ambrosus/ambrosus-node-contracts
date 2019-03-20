@@ -1,8 +1,10 @@
 pragma solidity ^0.4.24;
 
-import 'openzeppelin-solidity/contracts/math/SafeMath.sol';
-import './MultiplexingContract.sol';
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./MultiplexingContract.sol";
+
+
 /**
  * @title DelegateERC20 smart contract
  * @dev Controls execution of ERC20 token transactions
@@ -10,14 +12,13 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 contract ApprovalCollector is Ownable {
     using SafeMath for uint256;
 
-    MultiplexingContract private _multiplexingContract;             //address of controlled contract
-    uint256 constant _callLifeTime = 300000;    //transaction lifetime in seconds
+    MultiplexingContract private multiplexingContract;             //address of controlled contract
+    uint256 constant CALL_LIFETIME = 300000;    //transaction lifetime in seconds
     uint256 private _transactionNonce = 0;
 
     enum ContractClass {DEFAULT, CRITICAL}
 
-    struct ContractClassParams
-    {
+    struct ContractClassParams {
         uint neededApprovals;
         uint neededCriticalApprovals;
     }
@@ -50,11 +51,11 @@ contract ApprovalCollector is Ownable {
 
     modifier onlyAdmin()
     {
-        require ((_administrators[msg.sender] || _criticalApprovers[msg.sender]), 'Approver address is not administrator');
+        require ((_administrators[msg.sender] || _criticalApprovers[msg.sender]), "Approver address is not administrator");
         _;
     }
 
-    constructor () public {
+    constructor (MultiplexingContract _multiplexingContract) public {
         _criticalApprovers[msg.sender] = true;
 
         _contractClassParams[uint(ContractClass.DEFAULT)].neededApprovals = 2;
@@ -62,6 +63,8 @@ contract ApprovalCollector is Ownable {
 
         _contractClassParams[uint(ContractClass.CRITICAL)].neededApprovals = 3;
         _contractClassParams[uint(ContractClass.CRITICAL)].neededCriticalApprovals = 1;
+
+        multiplexingContract = _multiplexingContract;
     }
 
     /**
@@ -72,16 +75,15 @@ contract ApprovalCollector is Ownable {
      * @return identifier of new transaction that should be approved
      */
     function executeTransaction( address executor, bytes memory transaction) public {
-        require (address(_multiplexingContract) != address(0x0), 'Multiplexing contract not set');
         bytes32 transactionId = keccak256(abi.encodePacked(executor, _transactionNonce, transaction));
 
-        require(_transactions[transactionId].timestamp == 0, 'Transaction already exists');
+        require(_transactions[transactionId].timestamp == 0, "Transaction already exists");
 
         _transactions[transactionId].timestamp = now;
         _transactions[transactionId].executor = executor;
         _transactions[transactionId].transaction = transaction;
 
-        _transactions[transactionId].classParams =  _contractClassParams[uint(_contractClass[executor])];
+        _transactions[transactionId].classParams = _contractClassParams[uint(_contractClass[executor])];
 
         _pendingTransactions.push(transactionId);
         _transactions[transactionId].arrayIndex = _pendingTransactions.length - 1;
@@ -97,21 +99,19 @@ contract ApprovalCollector is Ownable {
      *
      * @param transactionId Identifier of transaction to approve
      */
-    function approveTransaction(bytes32 transactionId) public onlyAdmin{
-        require(!_hasApproved(msg.sender, transactionId), 'Transaction already approved');
-        require(_transactions[transactionId].timestamp != 0, 'Transaction isn\'t exist or already performed');
-        require((now - _transactions[transactionId].timestamp) <= _callLifeTime, 'Transaction timeout');
+    function approveTransaction(bytes32 transactionId) public onlyAdmin {
+        require(!_hasApproved(msg.sender, transactionId), "Transaction already approved");
+        require(_transactions[transactionId].timestamp != 0, "Transaction isn\'t exist or already performed");
+        require((now - _transactions[transactionId].timestamp) <= CALL_LIFETIME, "Transaction timeout");
 
         _transactions[transactionId].approvers[msg.sender] = true;
 
         if (_transactions[transactionId].classParams.neededApprovals > 0) {
-            _transactions[transactionId].classParams.neededApprovals
-                = _transactions[transactionId].classParams.neededApprovals.sub(1);
+            _transactions[transactionId].classParams.neededApprovals = _transactions[transactionId].classParams.neededApprovals.sub(1);
         }
 
         if (_transactions[transactionId].classParams.neededCriticalApprovals > 0 && _criticalApprovers[msg.sender]) {
-            _transactions[transactionId].classParams.neededCriticalApprovals
-                = _transactions[transactionId].classParams.neededCriticalApprovals.sub(1);
+            _transactions[transactionId].classParams.neededCriticalApprovals = _transactions[transactionId].classParams.neededCriticalApprovals.sub(1);
         }
 
         emit ApprovalReceived(msg.sender, transactionId);
@@ -120,18 +120,8 @@ contract ApprovalCollector is Ownable {
             emit AllApprovalsReceived(transactionId);
             _removePendingTransaction(transactionId);
             _transactions[transactionId].timestamp = 0;
-            _multiplexingContract.performTransaction(_transactions[transactionId].executor, _transactions[transactionId].transaction);
+            multiplexingContract.performTransaction(_transactions[transactionId].executor, _transactions[transactionId].transaction);
         }
-    }
-
-    /**
-     * @dev Checks is account approved transaction
-     * @param approver Address of account
-     * @param transactionId Identifier of transaction
-     * @return true if approver approved transaction with transactionId, and false if not
-     */
-    function _hasApproved(address approver, bytes32 transactionId) internal view returns (bool) {
-        return _transactions[transactionId].approvers[approver];
     }
 
     /**
@@ -151,19 +141,6 @@ contract ApprovalCollector is Ownable {
      */
     function getPendingTransactions() public view returns (bytes32[] memory) {
         return _pendingTransactions;
-    }
-
-    /**
-     * @dev Internal function for removing transaction from list of pending transactions
-     * @dev Replaces transaction with given identifier with last transaction from array of pending transactions
-     * @param transactionId Identifier of transaction to remove
-     */
-    function _removePendingTransaction(bytes32 transactionId) internal {
-        uint index = _transactions[transactionId].arrayIndex;
-        _pendingTransactions[index] = _pendingTransactions[_pendingTransactions.length - 1];
-        _transactions[_pendingTransactions[index]].arrayIndex = index;
-        delete _pendingTransactions[_pendingTransactions.length - 1];
-        --_pendingTransactions.length;
     }
 
     /**
@@ -198,7 +175,7 @@ contract ApprovalCollector is Ownable {
         _administrators[approver] = false;
     }
 
-    function setContractClass(address _contract, ContractClass class) public onlyAdmin{
+    function setContractClass(address _contract, ContractClass class) public onlyAdmin {
         _contractClass[_contract] = class;
     }
 
@@ -206,10 +183,33 @@ contract ApprovalCollector is Ownable {
      * @dev Function for getting current controlled contract
      */
     function getMultiplexingContract() public view returns (MultiplexingContract) {
-        return _multiplexingContract;
+        return multiplexingContract;
     }
 
     function updateMultiplexingContract(MultiplexingContract newContractAddress) public onlyOwner {
-        _multiplexingContract = newContractAddress;
+        multiplexingContract = newContractAddress;
+    }
+
+    /**
+     * @dev Checks is account approved transaction
+     * @param approver Address of account
+     * @param transactionId Identifier of transaction
+     * @return true if approver approved transaction with transactionId, and false if not
+     */
+    function _hasApproved(address approver, bytes32 transactionId) internal view returns (bool) {
+        return _transactions[transactionId].approvers[approver];
+    }
+
+    /**
+     * @dev Internal function for removing transaction from list of pending transactions
+     * @dev Replaces transaction with given identifier with last transaction from array of pending transactions
+     * @param transactionId Identifier of transaction to remove
+     */
+    function _removePendingTransaction(bytes32 transactionId) internal {
+        uint index = _transactions[transactionId].arrayIndex;
+        _pendingTransactions[index] = _pendingTransactions[_pendingTransactions.length - 1];
+        _transactions[_pendingTransactions[index]].arrayIndex = index;
+        delete _pendingTransactions[_pendingTransactions.length - 1];
+        --_pendingTransactions.length;
     }
 }
