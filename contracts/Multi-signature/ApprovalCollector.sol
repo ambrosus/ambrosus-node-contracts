@@ -31,8 +31,8 @@ contract ApprovalCollector is Ownable {
 
         TransactionClassParams classParams;
 
-        bytes4 selector;
-        bytes args;  //function selector + encoded arguments
+        bytes4 selector;    //unction selector
+        bytes args;         //encoded arguments
     }
 
     bytes32[] pendingTransactions;
@@ -62,7 +62,7 @@ contract ApprovalCollector is Ownable {
     }
 
     constructor (MultiplexingContract _multiplexingContract) public {
-        addCriticalApprover(msg.sender);
+        addCriticalAdministrator(msg.sender);
 
         transactionClassParams[uint(TransactionClass.DEFAULT)].neededApprovals = 2;
         transactionClassParams[uint(TransactionClass.DEFAULT)].neededCriticalApprovals = 0;
@@ -165,21 +165,21 @@ contract ApprovalCollector is Ownable {
         administrators[newAdmin] = true;
     }
 
-    function deleteAdministrator(address approver) public onlyCriticalAdmin {
-        administrators[approver] = false;
+    function deleteAdministrator(address admin) public onlyCriticalAdmin {
+        administrators[admin] = false;
     }
 
-    function addCriticalApprover(address newApprover) public onlyOwner {
-        administrators[newApprover] = true;
-        criticalAdministrators[newApprover] = true;
+    function addCriticalAdministrator(address newAdmin) public onlyOwner {
+        administrators[newAdmin] = true;
+        criticalAdministrators[newAdmin] = true;
     }
 
-    function deleteCriticalApprover(address approver) public onlyOwner {
-        administrators[approver] = false;
-        criticalAdministrators[approver] = false;
+    function deleteCriticalAdministrator(address admin) public onlyOwner {
+        administrators[admin] = false;
+        criticalAdministrators[admin] = false;
     }
 
-    function setTransactionClass(bytes4 targetTransaction, TransactionClass class) public onlyOwner {
+    function setTransactionClass(bytes4 targetTransaction, TransactionClass class) public onlyCriticalAdmin {
         transactionClass[targetTransaction] = class;
     }
 

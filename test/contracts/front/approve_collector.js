@@ -43,7 +43,7 @@ describe('Approve Collector Contract', () => {
   const addAdministrator = async (newAdmin, sender = owner) => approvalCollector.methods.addAdministrator(newAdmin).send({from: sender});
   const deleteAdministrator = async (admin, sender = owner) => approvalCollector.methods.deleteAdministrator(admin).send({from: sender});
   const setTransactionClass = async (address, contractClass, sender = owner) => approvalCollector.methods.setTransactionClass(address, contractClass).send({from: sender});
-  const addCriticalApprover = async (address, sender = owner) => approvalCollector.methods.addCriticalApprover(address).send({from: sender});
+  const addCriticalAdmin = async (address, sender = owner) => approvalCollector.methods.addCriticalAdministrator(address).send({from: sender});
 
 
   before(async () => {
@@ -185,16 +185,16 @@ describe('Approve Collector Contract', () => {
   });
 
   it('Add new critical approver from stranger', async () => {
-    await expect(addCriticalApprover(totalStranger, other)).to.be.eventually.rejected;
+    await expect(addCriticalAdmin(totalStranger, other)).to.be.eventually.rejected;
   });
 
   it('Add new critical approver from administrator', async () => {
     await expect(addAdministrator(admin1)).to.be.fulfilled;
-    await expect(addCriticalApprover(admin1, admin1)).to.be.eventually.rejected;
+    await expect(addCriticalAdmin(admin1, admin1)).to.be.eventually.rejected;
   });
 
   it('Add new critical approver from owner', async () => {
-    await expect(addCriticalApprover(admin1)).to.be.fulfilled;
+    await expect(addCriticalAdmin(admin1)).to.be.fulfilled;
   });
 
   it('Set contract class', async () => {
@@ -209,7 +209,7 @@ describe('Approve Collector Contract', () => {
 
     await expect(addAdministrator(admin1)).to.be.fulfilled;
     await expect(addAdministrator(admin2)).to.be.fulfilled;
-    await expect(addCriticalApprover(admin3)).to.be.fulfilled;
+    await expect(addCriticalAdmin(admin3)).to.be.fulfilled;
 
     await expect(approveTransaction(transactions[0], admin1)).to.be.fulfilled;
     await expect(approveTransaction(transactions[0], admin2)).to.be.fulfilled;
