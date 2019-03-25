@@ -30,19 +30,19 @@ describe('Approve Collector Contract', () => {
   let approvalCollector;
   let snapshotId;
 
-  const testTransaction = {0:'0x0000000000000000000000000000000000000000', 1:'0xdeadbeef'};
-  const ContractClass = {DEFAULT:0, CRITICAL:1};
+  const testTransaction = {selector: '0xdeadbeef', args: '0x00'};
+  const transactionClass = {DEFAULT:0, CRITICAL:1};
 
   const getMultiplexingContract = async () => approvalCollector.methods.getMultiplexingContract().call();
   const setMultiplexingContract = async (multiplexingContract, sender = owner) => approvalCollector.methods.updateMultiplexingContract(multiplexingContract).send({from: sender});
-  const addTransaction = async (executor, transaction, sender = owner) => approvalCollector.methods.executeTransaction(executor, transaction).send({from: sender});
+  const addTransaction = async (selector, args, sender = owner) => approvalCollector.methods.addTransaction(selector, args).send({from: sender});
   const getPendingTransactions = async ()  => approvalCollector.methods.getPendingTransactions().call();
   const getTransactionInfo = async (transactionId) => approvalCollector.methods.getTransactionInfo(transactionId).call();
   const approveTransaction = async (transactionId, sender = owner) => approvalCollector.methods.approveTransaction(transactionId).send({from: sender});
   const hasApproved = async (approver, transactionId) => approvalCollector.methods.hasApproved(approver, transactionId).call();
   const addAdministrator = async (newAdmin, sender = owner) => approvalCollector.methods.addAdministrator(newAdmin).send({from: sender});
   const deleteAdministrator = async (admin, sender = owner) => approvalCollector.methods.deleteAdministrator(admin).send({from: sender});
-  const setContractClass = async (address, contractClass, sender = owner) => approvalCollector.methods.setContractClass(address, contractClass).send({from: sender});
+  const setTransactionClass = async (address, contractClass, sender = owner) => approvalCollector.methods.setTransactionClass(address, contractClass).send({from: sender});
   const addCriticalApprover = async (address, sender = owner) => approvalCollector.methods.addCriticalApprover(address).send({from: sender});
 
 
@@ -69,7 +69,7 @@ describe('Approve Collector Contract', () => {
   it('Create transaction', async () => {
     const events = await captureEventEmission(
       web3,
-      () => addTransaction(testTransaction['0'], testTransaction['1']),
+      () => addTransaction(testTransaction.selector, testTransaction.args),
       approvalCollector,
       'TransactionCreated'
     );
@@ -78,12 +78,11 @@ describe('Approve Collector Contract', () => {
     expect (events[0].returnValues.transactionId).to.equal(transactions[0]);
 
     const transactionInfo = await getTransactionInfo(transactions[0]);
-    expect(transactionInfo['0']).to.equal(testTransaction['0']);
-    expect(transactionInfo['1']).to.equal(testTransaction['1']);
+    expect(transactionInfo['0']).to.equal(testTransaction.selector);
   });
 
   it('Approve transaction', async () => {
-    await addTransaction(testTransaction['0'], testTransaction['1']);
+    await addTransaction(testTransaction.selector, testTransaction.args);
     const transactions = await getPendingTransactions();
 
     await expectEventEmission(
@@ -101,7 +100,7 @@ describe('Approve Collector Contract', () => {
   });
 
   it('Approve transaction second time', async () => {
-    await addTransaction(testTransaction['0'], testTransaction['1']);
+    await addTransaction(testTransaction.selector, testTransaction.args);
     const transactions = await getPendingTransactions();
 
     await expect(approveTransaction(transactions[0])).to.be.fulfilled;
@@ -109,14 +108,14 @@ describe('Approve Collector Contract', () => {
   });
 
   it('Approve transaction from not admin account', async () => {
-    await addTransaction(testTransaction['0'], testTransaction['1']);
+    await addTransaction(testTransaction.selector, testTransaction.args);
     const transactions = await getPendingTransactions();
 
     await expect(approveTransaction(transactions[0], totalStranger)).to.be.eventually.rejected;
   });
 
   it('Add new administrator', async () => {
-    await addTransaction(testTransaction['0'], testTransaction['1']);
+    await addTransaction(testTransaction.selector, testTransaction.args);
     const transactions = await getPendingTransactions();
 
     await expect(approveTransaction(transactions[0], totalStranger)).to.be.eventually.rejected;
@@ -129,8 +128,8 @@ describe('Approve Collector Contract', () => {
   });
 
   it('Delete administrator', async () => {
-    await addTransaction(testTransaction['0'], testTransaction['1']);
-    await addTransaction(testTransaction['0'], testTransaction['1']);
+    await addTransaction(testTransaction.selector, testTransaction.args);
+    await addTransaction(testTransaction.selector, testTransaction.args);
     const transactions = await getPendingTransactions();
 
     await expect(addAdministrator(totalStranger)).to.be.fulfilled;
@@ -144,8 +143,8 @@ describe('Approve Collector Contract', () => {
     await expect(deleteAdministrator(totalStranger, other)).to.be.eventually.rejected;
   });
 
-  it('Perform transaction', async () => {
-    await addTransaction(testTransaction['0'], testTransaction['1']);
+  it('Collect all approves', async () => {
+    await addTransaction(testTransaction.selector, testTransaction.args);
     const transactions = await getPendingTransactions();
 
     await expect(addAdministrator(admin1)).to.be.fulfilled;
@@ -164,6 +163,27 @@ describe('Approve Collector Contract', () => {
     );
   });
 
+  it('Perform approved transaction', async () => {
+    await addTransaction(testTransaction.selector, testTransaction.args);
+    const transactions = await getPendingTransactions();
+
+    await expect(addAdministrator(admin1)).to.be.fulfilled;
+    await expect(addAdministrator(admin2)).to.be.fulfilled;
+
+    await expect(approveTransaction(transactions[0], admin1)).to.be.fulfilled;
+
+    await expectEventEmission(
+      web3,
+      () => approveTransaction(transactions[0], admin2),
+      approvalCollector,
+      'TransactionExecuted',
+      {
+        transactionId: transactions[0],
+        result: '0xdeadbeef00'
+      }
+    );
+  });
+
   it('Add new critical approver from stranger', async () => {
     await expect(addCriticalApprover(totalStranger, other)).to.be.eventually.rejected;
   });
@@ -178,13 +198,13 @@ describe('Approve Collector Contract', () => {
   });
 
   it('Set contract class', async () => {
-    await expect(setContractClass(testTransaction['0'], ContractClass.CRITICAL)).to.be.fulfilled;
+    await expect(setTransactionClass(testTransaction.selector, transactionClass.CRITICAL)).to.be.fulfilled;
   });
 
-  it('Perform critical transaction', async () => {
-    await expect(setContractClass(testTransaction['0'], ContractClass.CRITICAL)).to.be.fulfilled;
+  it('Approve critical transaction', async () => {
+    await expect(setTransactionClass(testTransaction.selector, transactionClass.CRITICAL)).to.be.fulfilled;
 
-    await addTransaction(testTransaction['0'], testTransaction['1']);
+    await addTransaction(testTransaction.selector, testTransaction.args);
     const transactions = await getPendingTransactions();
 
     await expect(addAdministrator(admin1)).to.be.fulfilled;

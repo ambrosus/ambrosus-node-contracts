@@ -21,9 +21,10 @@ describe('Approves Collector Wrapper', () => {
   const defaultAddress = '0x6789';
   const testUser = '0x1234';
   const testContract = '0x3456';
-  const testTransaction = {0:'0x0000000000000000000000000000000000000000', 1:'0xdeadbeef'};
-  const testTransactionInfo = {0:'0x0000000000000000000000000000000000000000', 1:'0xdeadbeef', 2:'2', 3:'0'};
+  const testTransaction = {selector: '0xdeadbeef', args: '0x00'};
+  const testTransactionInfo = {0:'0xdeadbeef', 1:'0xaabbccdd', 2:'2', 3:'0'};
   const transactionId = '0x409780f9aaa9ccb5fd6f7aa506a830e24582101dac6f7adc73d53f1a9f49c646';
+  const testTransactionClass = 1;
 
   describe('addTransaction', () => {
     let addTransactionStub;
@@ -36,8 +37,8 @@ describe('Approves Collector Wrapper', () => {
       addTransactionSendStub = sinon.stub();
       contractMock = {
         methods: {
-          executeTransaction: addTransactionStub.returns({
-            send: addTransactionSendStub.resolves(transactionId)
+          addTransaction: addTransactionStub.returns({
+            send: addTransactionSendStub.resolves()
           })
         }
       };
@@ -51,10 +52,9 @@ describe('Approves Collector Wrapper', () => {
     });
 
     it('calls contract method with correct arguments', async () => {
-      const ret = await approvesCollectorWrapper.addTransaction(testTransaction['0'], testTransaction['1']);
-      expect(addTransactionStub).to.be.calledWith(testTransaction['0'], testTransaction['1']);
+      await approvesCollectorWrapper.addTransaction(testTransaction.selector, testTransaction.args);
+      expect(addTransactionStub).to.be.calledWith(testTransaction.selector, testTransaction.args);
       expect(addTransactionSendStub).to.be.calledOnceWith({from: defaultAddress});
-      expect(ret).to.equal(transactionId);
     });
   });
 
@@ -254,19 +254,19 @@ describe('Approves Collector Wrapper', () => {
     });
   });
 
-  describe('addCriticalApprover', () => {
-    let addCriticalApproverStub;
-    let addCriticalApproverSendStub;
+  describe('addCriticalAdministrator', () => {
+    let addCriticalAdministratorStub;
+    let addCriticalAdministratorSendStub;
     let contractMock;
     let approvesCollectorWrapper;
 
     before(async () => {
-      addCriticalApproverStub = sinon.stub();
-      addCriticalApproverSendStub = sinon.stub();
+      addCriticalAdministratorStub = sinon.stub();
+      addCriticalAdministratorSendStub = sinon.stub();
       contractMock = {
         methods: {
-          addCriticalApprover: addCriticalApproverStub.returns({
-            send: addCriticalApproverSendStub.resolves()
+          addCriticalAdministrator: addCriticalAdministratorStub.returns({
+            send: addCriticalAdministratorSendStub.resolves()
           })
         }
       };
@@ -280,25 +280,25 @@ describe('Approves Collector Wrapper', () => {
     });
 
     it('calls contract method with correct arguments', async () => {
-      await approvesCollectorWrapper.addCriticalApprover(testUser);
-      expect(addCriticalApproverStub).to.be.calledWith(testUser);
-      expect(addCriticalApproverSendStub).to.be.calledOnceWith({from: defaultAddress});
+      await approvesCollectorWrapper.addCriticalAdministrator(testUser);
+      expect(addCriticalAdministratorStub).to.be.calledWith(testUser);
+      expect(addCriticalAdministratorSendStub).to.be.calledOnceWith({from: defaultAddress});
     });
   });
 
   describe('deleteCriticalApprover', () => {
-    let deleteCriticalApproverStub;
-    let deleteCriticalApproverSendStub;
+    let deleteCriticalAdministratorStub;
+    let deleteCriticalAdministratorSendStub;
     let contractMock;
     let approvesCollectorWrapper;
 
     before(async () => {
-      deleteCriticalApproverStub = sinon.stub();
-      deleteCriticalApproverSendStub = sinon.stub();
+      deleteCriticalAdministratorStub = sinon.stub();
+      deleteCriticalAdministratorSendStub = sinon.stub();
       contractMock = {
         methods: {
-          deleteCriticalApprover: deleteCriticalApproverStub.returns({
-            send: deleteCriticalApproverSendStub.resolves()
+          deleteCriticalAdministrator: deleteCriticalAdministratorStub.returns({
+            send: deleteCriticalAdministratorSendStub.resolves()
           })
         }
       };
@@ -312,9 +312,9 @@ describe('Approves Collector Wrapper', () => {
     });
 
     it('calls contract method with correct arguments', async () => {
-      await approvesCollectorWrapper.deleteCriticalApprover(testUser);
-      expect(deleteCriticalApproverStub).to.be.calledWith(testUser);
-      expect(deleteCriticalApproverSendStub).to.be.calledOnceWith({from: defaultAddress});
+      await approvesCollectorWrapper.deleteCriticalAdministrator(testUser);
+      expect(deleteCriticalAdministratorStub).to.be.calledWith(testUser);
+      expect(deleteCriticalAdministratorSendStub).to.be.calledOnceWith({from: defaultAddress});
     });
   });
 
@@ -380,6 +380,38 @@ describe('Approves Collector Wrapper', () => {
       await approvesCollectorWrapper.updateMultiplexorContract(testContract);
       expect(setMultiplexingContractStub).to.be.calledOnceWith(testContract);
       expect(setMultiplexingContractSendStub).to.be.calledOnceWith({from: defaultAddress});
+    });
+  });
+
+  describe('setTransactionClass', () => {
+    let setTransactionClassStub;
+    let setTransactionClassSendStub;
+    let contractMock;
+    let approvesCollectorWrapper;
+
+    before(async () => {
+      setTransactionClassStub = sinon.stub();
+      setTransactionClassSendStub = sinon.stub();
+      contractMock = {
+        methods: {
+          setTransactionClass: setTransactionClassStub.returns({
+            send: setTransactionClassSendStub.resolves()
+          })
+        }
+      };
+
+      approvesCollectorWrapper = new ApprovesCollectorWrapper({}, {}, defaultAddress);
+      sinon.stub(approvesCollectorWrapper, 'contract').resolves(contractMock);
+    });
+
+    afterEach(() => {
+      resetHistory(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await approvesCollectorWrapper.setTransactionClass(testTransactionClass);
+      expect(setTransactionClassStub).to.be.calledOnceWith(testTransactionClass);
+      expect(setTransactionClassSendStub).to.be.calledOnceWith({from: defaultAddress});
     });
   });
 });

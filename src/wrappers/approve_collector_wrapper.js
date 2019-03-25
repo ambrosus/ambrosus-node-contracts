@@ -14,9 +14,9 @@ export default class ApprovesCollectorWrapper extends ManagedOwnableContractWrap
     return 'ApproveCollector';
   }
 
-  async addTransaction(executor, transaction) {
+  async addTransaction(selector, args) {
     const contract = await this.contract();
-    return this.processTransaction(contract.methods.executeTransaction(executor, transaction));
+    return this.processTransaction(contract.methods.addTransaction(selector, args));
   }
 
   async approveTransaction(transactionId) {
@@ -49,14 +49,14 @@ export default class ApprovesCollectorWrapper extends ManagedOwnableContractWrap
     return this.processTransaction(contract.methods.deleteAdministrator(address));
   }
 
-  async addCriticalApprover(address) {
+  async addCriticalAdministrator(address) {
     const contract = await this.contract();
-    return this.processTransaction(contract.methods.addCriticalApprover(address));
+    return this.processTransaction(contract.methods.addCriticalAdministrator(address));
   }
 
-  async deleteCriticalApprover(address) {
+  async deleteCriticalAdministrator(address) {
     const contract = await this.contract();
-    return this.processTransaction(contract.methods.deleteCriticalApprover(address));
+    return this.processTransaction(contract.methods.deleteCriticalAdministrator(address));
   }
 
   async getMultiplexor() {
@@ -67,5 +67,10 @@ export default class ApprovesCollectorWrapper extends ManagedOwnableContractWrap
   async updateMultiplexorContract(address) {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.updateMultiplexorContract(address));
+  }
+
+  async setTransactionClass(value) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.setTransactionClass(value));
   }
 }
