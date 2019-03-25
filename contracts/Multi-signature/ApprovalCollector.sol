@@ -75,10 +75,12 @@ contract ApprovalCollector is Ownable {
 
     /**
      * @dev Adding transaction for approve
+     * @param selector Target function selector
+     * @param args Encoded function arguments
      * @return identifier of new transaction that should be approved
      */
     function addTransaction(bytes4 selector, bytes memory args) public {
-        bytes32 transactionId = keccak256(abi.encodePacked(transactionNonce, selector, args));
+        bytes32 transactionId = _calculateTransactionId(selector, args);
 
         require(transactions[transactionId].timestamp == 0, "Transaction already exists");
 
@@ -161,35 +163,59 @@ contract ApprovalCollector is Ownable {
         );
     }
 
+    /**
+     * @dev Add new administrator, can be performed only by critical administrator
+     * @param newAdmin New administrator address
+     */
     function addAdministrator(address newAdmin) public onlyCriticalAdmin {
         administrators[newAdmin] = true;
     }
 
+    /**
+     * @dev Delete administrator, can be performed only by critical administrator
+     * @param admin Administrator address
+     */
     function deleteAdministrator(address admin) public onlyCriticalAdmin {
         administrators[admin] = false;
     }
 
+    /**
+     * @dev Add new critical administrator, can be performed only by contract owner
+     * @param newAdmin New administrator address
+     */
     function addCriticalAdministrator(address newAdmin) public onlyOwner {
         administrators[newAdmin] = true;
         criticalAdministrators[newAdmin] = true;
     }
 
+    /**
+     * @dev Delete critical administrator, can be performed only by contract owner
+     * @param admin Administrator address
+     */
     function deleteCriticalAdministrator(address admin) public onlyOwner {
         administrators[admin] = false;
         criticalAdministrators[admin] = false;
     }
 
+    /**
+     * @dev Set transaction class
+     * @param targetTransaction target function selector
+     * @param class Enum, defines how many approves of each types needed for performing transaction
+     */
     function setTransactionClass(bytes4 targetTransaction, TransactionClass class) public onlyCriticalAdmin {
         transactionClass[targetTransaction] = class;
     }
 
     /**
-     * @dev Function for getting current controlled contract
+     * @dev Obtain multiplexing contract address
      */
     function getMultiplexingContract() public view returns (MultiplexingContract) {
         return multiplexingContract;
     }
 
+    /**
+     * @dev Update multiplexing contract address
+     */
     function updateMultiplexingContract(MultiplexingContract _multiplexingContract) public onlyOwner {
         multiplexingContract = _multiplexingContract;
     }
@@ -215,5 +241,12 @@ contract ApprovalCollector is Ownable {
         transactions[pendingTransactions[index]].arrayIndex = index;
         delete pendingTransactions[pendingTransactions.length - 1];
         --pendingTransactions.length;
+    }
+
+    /**
+     * @dev Calculate transaction id based on target selector, arguments and nonce
+     */
+    function _calculateTransactionId(bytes4 selector, bytes args) internal returns (bytes32) {
+        return keccak256(abi.encodePacked(transactionNonce, selector, args));
     }
 }
