@@ -31,6 +31,7 @@ package Utilities <<Rectangle>> {
   class Math
   class SafeMath
   class SafeMathExtensions
+  class DMPalgorithm
 }
 
 package Middleware <<Rectangle>> {
@@ -109,8 +110,13 @@ Fees *-- Time
 Time *-- SafeMath
 Time *-- SafeMathExtensions
 
+DMPalgorithm *-- SafeMath
+DMPalgorithm *-- SafeMathExtensions
+DMPalgorithm *-- Config
+
 Challenges *-- SafeMath
 Challenges *-- SafeMathExtensions
+Challenges *-- DMPalgorithm
 
 Challenges *-- Time
 Challenges *-- Sheltering

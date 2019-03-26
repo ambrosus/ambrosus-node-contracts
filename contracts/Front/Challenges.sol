@@ -15,6 +15,7 @@ import "../Configuration/Fees.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 import "../Lib/SafeMathExtensions.sol";
+import "../Lib/DMPalgorithm.sol";
 import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
 import "../Storage/AtlasStakeStore.sol";
@@ -125,10 +126,9 @@ contract Challenges is Base {
     function canResolve(address resolverId, bytes32 challengeId) public view returns (bool) {
         bytes32 bundleId = getChallengedBundle(challengeId);
 
-        // solium-disable-next-line operator-whitespace
         return challengeIsInProgress(challengeId) &&
         !sheltering.isSheltering(bundleId, resolverId) &&
-        !isOnCooldown(resolverId, challengeId) &&
+        resolverId == getChallengeDesignatedShelterer(challengeId) &&
         atlasStakeStore.getStake(resolverId) > 0;
     }
 
@@ -150,6 +150,10 @@ contract Challenges is Base {
     function getChallenger(bytes32 challengeId) public view returns (address) {
         (,, address challengerId,,,,) = challengesStore.getChallenge(challengeId);
         return challengerId;
+    }
+
+    function getChallengeDesignatedShelterer(bytes32 challengeId) public view returns (address) {
+        return DMPalgorithm.getDMPshelterer(challengeId, getChallengeCreationTime(challengeId), getChallengeSequenceNumber(challengeId), config, atlasStakeStore);
     }
 
     function getChallengeFee(bytes32 challengeId) public view returns (uint) {
@@ -184,19 +188,6 @@ contract Challenges is Base {
         return challengesStore.getChallengeId(sheltererId, bundleId);
     }
 
-    function getCooldown() public view returns (uint) {
-        uint32 numberOfStakers = atlasStakeStore.getNumberOfStakers();
-        uint32 lowReduction = config.COOLDOWN_LOW_REDUCTION();
-        if (numberOfStakers < lowReduction) {
-            return 0;
-        }
-        uint32 threshold = config.COOLDOWN_SWITCH_THRESHOLD();
-        if (numberOfStakers < threshold) {
-            return numberOfStakers.sub(lowReduction).castTo32();
-        }
-        return numberOfStakers.mul(config.COOLDOWN_HIGH_PERCENTAGE()).div(100).add(1).castTo32();
-    }
-
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
         require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId)));
         require(sheltering.isSheltering(bundleId, sheltererId));
@@ -224,14 +215,5 @@ contract Challenges is Base {
         } else {
             challengesStore.decreaseActiveCount(challengeId);
         }
-    }
-
-    function isOnCooldown(address resolverId, bytes32 challengeId) private view returns (bool) {
-        uint lastResolvedSequenceNumber = atlasStakeStore.getLastChallengeResolvedSequenceNumber(resolverId);
-
-        // solium-disable-next-line operator-whitespace
-        return getChallengeCreationTime(challengeId).add(config.COOLDOWN_TIMEOUT()) > time.currentTimestamp() &&
-        lastResolvedSequenceNumber != 0 &&
-        lastResolvedSequenceNumber.add(getCooldown()) > getChallengeSequenceNumber(challengeId);
     }
 }

@@ -12,4 +12,5 @@ pragma solidity ^0.4.23;
 
 library Consts {
     enum NodeType {NONE, ATLAS, HERMES, APOLLO}
+    enum SecondaryNodeType {ZETA, SIGMA, OMEGA}
 }

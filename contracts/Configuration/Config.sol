@@ -16,18 +16,12 @@ contract Config {
     uint constant public FINISH_SHELTERING_REWARD_SPLIT = 22;
     uint constant public PENALTY_DIVIDER = 100;
     uint constant public BUNDLE_SIZE_LIMIT = 16384;
-    uint32 constant public COOLDOWN_SWITCH_THRESHOLD = 50;
-    uint32 constant public COOLDOWN_LOW_REDUCTION = 4;
-    uint32 constant public COOLDOWN_HIGH_PERCENTAGE = 90;
-
-    uint32 constant public COOLDOWN_AVAILABLE_TARGET_PERCENT = 90;
-
-    uint32 constant public COOLDOWN_TIMEOUT = 1 days;
 
     uint constant public APOLLO_DEPOSIT = 250000 ether;
-    uint constant public ATLAS1_STAKE = 10000 ether;
-    uint constant public ATLAS2_STAKE = 30000 ether;
-    uint constant public ATLAS3_STAKE = 75000 ether;
+
+    uint[3] public ATLAS_STAKE = [10000 ether, 30000 ether, 75000 ether];
+    uint[3] public ATLAS_NUMERATOR = [1, 2, 7];
+    uint constant public ATLAS_TYPES = 3;
 
     uint constant public SHELTERING_CAP_ATLASES_PERCENTAGE = 80;
     uint constant public SHELTERING_CAP_ATLAS_NUMBER_THRESHOLD = 8;
