@@ -37,7 +37,7 @@ describe('Upload Actions', () => {
   };
   const challengeCreatedEvent = {
     ...uploadReceipt,
-    returnedValues: {
+    returnValues: {
       bundleId
     }
   };

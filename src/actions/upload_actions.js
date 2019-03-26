@@ -49,7 +49,7 @@ export default class UploadActions {
     }
     const timestamp = await this.blockchainStateWrapper.getBlockTimestamp(uploadBlock);
     const events = await this.challengesEventEmitterWrapper.challenges(uploadBlock, uploadBlock);
-    const {transactionHash} = events.find(({returnedValues}) => returnedValues.bundleId === bundleId);
+    const {transactionHash} = events.find(({returnValues}) => returnValues.bundleId === bundleId);
     return {blockNumber: uploadBlock, transactionHash, timestamp};
   }
 }
