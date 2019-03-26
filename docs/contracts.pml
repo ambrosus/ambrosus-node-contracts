@@ -113,6 +113,7 @@ Time *-- SafeMathExtensions
 DMPalgorithm *-- SafeMath
 DMPalgorithm *-- SafeMathExtensions
 DMPalgorithm *-- Config
+DMPalgorithm *-- AtlasStakeStore
 
 Challenges *-- SafeMath
 Challenges *-- SafeMathExtensions
