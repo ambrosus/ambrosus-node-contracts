@@ -10,10 +10,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import TaskBase from './base/task_base';
 import {utils} from '../utils/web3_tools';
 
-export default class SetOwnershipTask extends TaskBase {
-  constructor(headWrapper) {
+export default class MoveOwnershipToMultiplexerTask extends TaskBase {
+  constructor(adminActions) {
     super();
-    this.headWrapper = headWrapper;
+    this.adminActions = adminActions;
   }
 
   async execute(args) {
@@ -21,18 +21,18 @@ export default class SetOwnershipTask extends TaskBase {
     if (utils.isAddress(newOwnerAddress)) {
       await this.setOwnerships(newOwnerAddress);
     } else {
-      console.error('Unknown sub-command, use: yarn task setOwnership [address]');
+      console.error('Wrong address, use: yarn task moveOwnershipToMultiplexer [address]');
       process.exit(1);
     }
   }
 
   async setOwnerships(newOwnerAddress) {
-    await this.headWrapper.transferOwnership(newOwnerAddress);
+    return this.adminActions.moveOwnershipsToMultiplexer(newOwnerAddress);
   }
 
   help() {
     return {
-      description: 'transfer contracts ownerships'
+      description: 'transfer contracts ownerships to the multiplexer contract'
     };
   }
 }

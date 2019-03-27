@@ -187,13 +187,6 @@ export default class Deployer {
     }
   }
 
-  async setMultiplexerAsAnOwner(contracts) {
-    if (!contracts.multiplexer) {
-      return;
-    }
-    await contracts.head.methods.transferOwnership(contracts.multiplexer.options.address).send({from: this.sender});
-  }
-
   async deploy(jsons, alreadyDeployed, skipDeployment = [], params = {}, versionTag = 0) {
     const libs = await this.deployLibs();
     const {context: contextJson, ...jsonsWithoutContext} = jsons;

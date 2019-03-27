@@ -28,12 +28,22 @@ describe('Administrative actions', () => {
     headWrapperMock = {
       setContext: sinon.stub().resolves(),
       getOwner: sinon.stub().resolves(defaultAddress),
+      transferOwnership: sinon.stub().resolves(),
       defaultAddress
     };
     blockchainStatusWrapperMock = {
       isAddressAContract: sinon.stub().resolves(true)
     };
     adminActions = new AdministrativeActions(headWrapperMock, blockchainStatusWrapperMock);
+  });
+
+  describe('Move ownerships to multiplexer', () => {
+    const exampleMultiplexerAddress = '0xc0ffee';
+
+    it('Transfers ownership of head', async () => {
+      await adminActions.moveOwnershipsToMultiplexer(exampleMultiplexerAddress);
+      expect(headWrapperMock.transferOwnership).to.be.calledOnceWith(exampleMultiplexerAddress);
+    });
   });
 
   describe('Switch context', () => {

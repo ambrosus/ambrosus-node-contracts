@@ -13,6 +13,10 @@ export default class AdministrativeActions {
     this.blockchainStateWrapper = blockchainStateWrapper;
   }
 
+  async moveOwnershipsToMultiplexer(multiplexerAddress) {
+    return this.headWrapper.transferOwnership(multiplexerAddress);
+  }
+
   async switchContext(newContextAddress) {
     if (await this.headWrapper.getOwner() !== this.headWrapper.defaultAddress) {
       throw new Error('You need to be the owner of the Head contract to perform a context switch');

@@ -34,6 +34,7 @@ import ShelteringWrapper from '../wrappers/sheltering_wrapper';
 import NodeServiceTask from './node_service';
 import NodeServiceActions from '../actions/node_service';
 import PayoutsActions from '../actions/payouts_actions';
+import AdministrativeActions from '../actions/admin_actions';
 import TimeWrapper from '../wrappers/time_wrapper';
 import PayoutsWrapper from '../wrappers/payouts_wrapper';
 import ChallengeActions from '../actions/challenge_actions';
@@ -42,6 +43,7 @@ import BlockchainStateWrapper from '../wrappers/blockchain_state_wrapper';
 import ChallengesEventEmitterWrapper from '../wrappers/challenges_event_emitter_wrapper';
 import AtlasStakeStoreWrapper from '../wrappers/atlas_stake_store_wrapper';
 import RetiringTask from './retire';
+import MoveOwnershipToMultiplexerTask from './move_ownership_to_multiplexer';
 
 const runTask = async () => {
   const web3 = await createWeb3();
@@ -72,6 +74,7 @@ const runTask = async () => {
   const nodeServiceActions = new NodeServiceActions(rolesWrapper);
   const payoutsActions = new PayoutsActions(timeWrapper, payoutsWrapper);
   const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper);
+  const adminActions = new AdministrativeActions(headWrapper, blockchainStateWrapper);
 
   const list = new TaskList();
   const args = process.argv.slice(2);
@@ -84,6 +87,7 @@ const runTask = async () => {
   list.add('payouts', new PayoutsTask(web3, nodeAddress, payoutsActions));
   list.add('challenge', new ChallengeTask(challengeActions));
   list.add('retire', new RetiringTask(onboardActions));
+  list.add('moveOwnershipToMultiplexer', new MoveOwnershipToMultiplexerTask(adminActions));
 
   await list.run(args[0], args.slice(1));
 };

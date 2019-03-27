@@ -40,6 +40,7 @@ describe('Multiplexer', () => {
         }
       }
     }));
+    head.methods.transferOwnership(multiplexer.options.address).send({from: oldOwner});
   });
 
   beforeEach(async () => {

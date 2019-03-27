@@ -57,6 +57,10 @@ export default class DeployActions {
     return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts}, [], {multiplexer: {owner: this.sender}});
   }
 
+  async setMultiplexerAsAnOwner() {
+    return this.deployer.setMultiplexerAsAnOwner(contractJsons);
+  }
+
   async recycleStorageContracts() {
     const storageContractNames = this.headWrapper.availableStorageCatalogueContracts;
     const recycled = {};
