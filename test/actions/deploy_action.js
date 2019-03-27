@@ -102,7 +102,7 @@ describe('Deploy Actions', () => {
 
     it('overwrites some contracts in turbo mode', async () => {
       await deployActions.deployInitial(true);
-      expect(mockDeployer.deploy).to.be.calledOnceWithExactly({...contractJsons, ...contractSuperSpeedJsons}, genesisContracts);
+      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, genesisContracts);
     });
   });
 
@@ -130,7 +130,7 @@ describe('Deploy Actions', () => {
 
     it('overwrites some contracts in turbo mode', async () => {
       await deployActions.deployUpdate(true);
-      expect(mockDeployer.deploy).to.be.calledOnceWithExactly({...contractJsons, ...contractSuperSpeedJsons}, {...genesisContracts, ...exampleStorageContracts});
+      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, {...genesisContracts, ...exampleStorageContracts});
     });
   });
 

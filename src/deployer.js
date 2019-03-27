@@ -202,8 +202,6 @@ export default class Deployer {
     contracts.context = await this.deployContext(contextJson, contracts, versionTag);
     await this.updateContextPointer(contracts);
     await this.transferOwnerships(contracts);
-    await this.setMultiplexerAsAnOwner(contracts);
-
     return contracts;
   }
 }
