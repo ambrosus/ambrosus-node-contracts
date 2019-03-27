@@ -37,6 +37,7 @@ import PayoutsActions from './actions/payouts_actions';
 import ChallengeActions from './actions/challenge_actions';
 import {InsufficientFundsToStartChallengeError, InsufficientFundsToUploadBundleError} from './errors/errors';
 import AtlasStakeStoreWrapper from './wrappers/atlas_stake_store_wrapper';
+import MultiplexerWrapper from './wrappers/multiplexer_wrapper';
 const constants = require('./constants');
 
 module.exports = {
@@ -70,5 +71,6 @@ module.exports = {
   InsufficientFundsToStartChallengeError,
   BundleStoreWrapper,
   AtlasStakeStoreWrapper,
-  RolesEventEmitterWrapper
+  RolesEventEmitterWrapper,
+  MultiplexerWrapper
 };
