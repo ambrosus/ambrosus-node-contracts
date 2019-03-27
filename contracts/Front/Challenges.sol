@@ -153,7 +153,8 @@ contract Challenges is Base {
     }
 
     function getChallengeDesignatedShelterer(bytes32 challengeId) public view returns (address) {
-        return DMPalgorithm.getDMPshelterer(challengeId, getChallengeCreationTime(challengeId), getChallengeSequenceNumber(challengeId), config, atlasStakeStore);
+        uint64 challengeDuration = time.currentTimestamp() - getChallengeCreationTime(challengeId);
+        return DMPalgorithm.getDMPshelterer(challengeId, getChallengeSequenceNumber(challengeId), challengeDuration, config, atlasStakeStore);
     }
 
     function getChallengeFee(bytes32 challengeId) public view returns (uint) {
