@@ -26,7 +26,7 @@ library DMPalgorithm {
     uint constant public FIRST_PHASE_DURATION = 2 days;
 
     function getCurrentRound(uint64 creationTime) internal view returns (uint) {
-        return (now - creationTime).div(ROUND_DURATION);
+        return (now.castTo64() - creationTime).div(ROUND_DURATION);
     }
 
     function isFirstPhase(uint currentRound) internal pure returns (bool) {
