@@ -45,7 +45,6 @@ const deploy = async (options = {}) => {
   const contracts = await deployer.deploy(jsons, alreadyDeployed, skipDeployment, params);
 
   await contracts.context.methods.addToWhitelist([sender]).send({from: sender});
-  await deployer.setMultiplexerAsAnOwner(contracts);
 
   return {web3, ...contracts};
 };
