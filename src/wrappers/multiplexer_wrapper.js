@@ -16,6 +16,6 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
   }
 
   async transferContractsOwnership(address) {
-    await this.processTransaction(this.contract.methods.transferContractsOwnership(address));
+    return this.processTransaction(this.contract.methods.transferContractsOwnership(address));
   }
 }
