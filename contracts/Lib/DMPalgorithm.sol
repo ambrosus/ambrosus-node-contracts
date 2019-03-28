@@ -12,9 +12,6 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./SafeMathExtensions.sol";
-import "../Configuration/Config.sol";
-import "../Storage/AtlasStakeStore.sol";
-
 
 library DMPalgorithm {
     using SafeMath for uint;
@@ -23,80 +20,54 @@ library DMPalgorithm {
     using SafeMathExtensions for uint;
 
     uint constant public DMP_PRECISION = 100;
-    uint constant public ROUND_DURATION = 10 minutes;
-    uint constant public FIRST_PHASE_DURATION = 2 days;
+
 
     function qualifyShelterer(bytes32 DMPbaseHash, uint DMPlength, uint currentRound) internal pure returns (uint32) {
         return uint32(uint256(keccak256(abi.encodePacked(DMPbaseHash, currentRound))).mod(DMPlength));
     }
 
     function qualifyShelterTypeStake(bytes32 DMPbaseHash, uint[] atlasCount, uint[] ATLAS_NUMERATOR, uint length) internal pure returns (uint) {
-        uint256 denominator = 0;
+        uint denominator = 0;
         uint numeratorSum = 0;
-        uint i;
+        uint i = 0;
 
         for (i = 0; i < length; i++) {
-            denominator.add(atlasCount[i].mul(ATLAS_NUMERATOR[i]));
-            numeratorSum.add(ATLAS_NUMERATOR[i]);
+            uint elem = atlasCount[i].mul(ATLAS_NUMERATOR[i]);
+            denominator = denominator.add(elem);
+            numeratorSum = numeratorSum.add(ATLAS_NUMERATOR[i]);
         }
+
+        numeratorSum = numeratorSum.mul(DMP_PRECISION);
 
         uint currentWCD = 0;
         uint[] memory wcd = new uint[](length);
 
         for (i = 0; i < length - 1; i++) {
-            uint currentNum = atlasCount[i].mul(ATLAS_NUMERATOR[i]).mul(DMP_PRECISION);
-            currentWCD.add(currentNum.div(denominator));
-            wcd[i] = currentWCD;
+            uint currentNum = atlasCount[i].mul(ATLAS_NUMERATOR[i]);
+            if (currentNum == 0) {
+                wcd[i] = 0;
+            }
+            if (currentNum == denominator) {
+                wcd[i] = numeratorSum;
+                currentWCD = numeratorSum;
+            } else {
+                currentNum = currentNum.mul(DMP_PRECISION);
+                currentNum = currentNum.div(denominator);
+                currentWCD = currentWCD.add(currentNum);
+                wcd[i] = currentWCD;
+            }
         }
-        wcd[i] = numeratorSum.mul(DMP_PRECISION);
+        wcd[length-1] = numeratorSum;
 
-        uint randomNumber = uint(DMPbaseHash).mod(numeratorSum.mul(DMP_PRECISION));
         uint chosenStake = length - 1;
-
+        uint randomNumber = uint(DMPbaseHash).mod(numeratorSum);
         for (i = 0; i < length; i++) {
-            if (randomNumber <= wcd[i]) {
+            if (wcd[i] != 0 && randomNumber <= wcd[i]) {
                 chosenStake = i;
                 break;
             }
         }
 
         return chosenStake;
-    }
-
-    function getDMPtypeShelterer(bytes32 DMPbaseHash, Config config, AtlasStakeStore atlasStakeStore) internal view returns(uint, uint) {
-        uint length = config.ATLAS_TYPES();
-        uint[] memory atlasTypeCounts = new uint[](length);
-        uint[] memory atlasNumerators = new uint[](length);
-        uint i;
-
-        for (i = 0; i < length; i++) {
-            atlasTypeCounts[i] = atlasStakeStore.getNumberOfStakersWithStake(config.ATLAS_STAKE(i));
-            atlasNumerators[i] = config.ATLAS_NUMERATOR(i);
-        }
-
-        uint DMPtype = qualifyShelterTypeStake(DMPbaseHash, atlasTypeCounts, atlasNumerators, length);
-        uint atlasCount = atlasTypeCounts[DMPtype];
-
-        return (atlasCount, DMPtype);
-    }
-
-    function getDMPshelterer(bytes32 challengeId, uint sequenceNumber, uint64 challengeDuration, Config config, AtlasStakeStore atlasStakeStore)
-        internal view returns (address)
-    {
-        uint currentRound = challengeDuration.div(ROUND_DURATION);
-        bytes32 DMPbaseHash = keccak256(abi.encodePacked(challengeId, sequenceNumber));
-        address DMPshelterer;
-        uint32 DMPindex;
-
-        if (currentRound < FIRST_PHASE_DURATION.div(ROUND_DURATION)) {
-            (uint atlasCount, uint DMPtype) = getDMPtypeShelterer(DMPbaseHash, config, atlasStakeStore);
-            DMPindex = qualifyShelterer(DMPbaseHash, atlasCount, currentRound);
-            DMPshelterer = atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(DMPtype), DMPindex);
-        } else {
-            DMPindex = qualifyShelterer(DMPbaseHash, atlasStakeStore.getNumberOfStakers(), currentRound);
-            DMPshelterer = atlasStakeStore.getStakerAtIndex(DMPindex);
-        }
-
-        return DMPshelterer;
     }
 }

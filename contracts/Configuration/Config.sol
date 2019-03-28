@@ -25,4 +25,7 @@ contract Config {
 
     uint constant public SHELTERING_CAP_ATLASES_PERCENTAGE = 80;
     uint constant public SHELTERING_CAP_ATLAS_NUMBER_THRESHOLD = 8;
+
+    uint64 constant public ROUND_DURATION = 10 minutes;
+    uint64 constant public FIRST_PHASE_DURATION = 2 days;
 }
