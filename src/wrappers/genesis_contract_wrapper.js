@@ -8,20 +8,16 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {loadContract} from '../utils/web3_tools';
+import ContractWrapper from './contract_wrapper';
 
-export default class GenesisContractWrapper {
+export default class GenesisContractWrapper extends ContractWrapper {
   constructor(address, contractJson, web3, defaultAddress) {
+    super(web3, defaultAddress);
     if (address === undefined) {
       throw new Error('address is not configured');
     }
 
-    this.web3 = web3;
-    this.defaultAddress = defaultAddress;
     this.contract = loadContract(this.web3, contractJson.abi, address);
-  }
-
-  setDefaultAddress(defaultAddress) {
-    this.defaultAddress = defaultAddress;
   }
 
   async getOwner() {
