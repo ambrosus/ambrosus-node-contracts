@@ -44,11 +44,13 @@ import ChallengesEventEmitterWrapper from '../wrappers/challenges_event_emitter_
 import AtlasStakeStoreWrapper from '../wrappers/atlas_stake_store_wrapper';
 import RetiringTask from './retire';
 import MoveOwnershipToMultiplexerTask from './move_ownership_to_multiplexer';
+import MultiplexerWrapper from '../wrappers/multiplexer_wrapper';
+import MoveOwnershipFromMultiplexerTask from './move_ownership_from_multiplexer';
+import CheckOwnershipTask from './ownership';
 
 const runTask = async () => {
   const web3 = await createWeb3();
   const nodeAddress = web3.eth.accounts.privateKeyToAccount(config.nodePrivateKey).address;
-
   const deployer = new Deployer(web3, nodeAddress);
 
   const headWrapper = new HeadWrapper(config.headContractAddress, web3, nodeAddress);
@@ -66,6 +68,7 @@ const runTask = async () => {
   const challengesEventEmitterWrapper = new ChallengesEventEmitterWrapper(headWrapper, web3, nodeAddress);
   const blockchainStateWrapper = new BlockchainStateWrapper(web3);
   const atlasStakeStoreWrapper = new AtlasStakeStoreWrapper(headWrapper, web3, nodeAddress);
+  const multiplexerWrapper = new MultiplexerWrapper(config.multiplexerContractAddress, web3, nodeAddress);
 
   const deployActions = new DeployActions(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper);
   const whitelistActions = new WhitelistActions(kycWhitelistWrapper);
@@ -74,7 +77,7 @@ const runTask = async () => {
   const nodeServiceActions = new NodeServiceActions(rolesWrapper);
   const payoutsActions = new PayoutsActions(timeWrapper, payoutsWrapper);
   const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper);
-  const adminActions = new AdministrativeActions(headWrapper, blockchainStateWrapper);
+  const adminActions = new AdministrativeActions(headWrapper, blockchainStateWrapper, multiplexerWrapper);
 
   const list = new TaskList();
   const args = process.argv.slice(2);
@@ -88,6 +91,8 @@ const runTask = async () => {
   list.add('challenge', new ChallengeTask(challengeActions));
   list.add('retire', new RetiringTask(onboardActions));
   list.add('moveOwnershipToMultiplexer', new MoveOwnershipToMultiplexerTask(adminActions));
+  list.add('moveOwnershipFromMultiplexer', new MoveOwnershipFromMultiplexerTask(adminActions));
+  list.add('checkOwnership', new CheckOwnershipTask(web3));
 
   await list.run(args[0], args.slice(1));
 };

@@ -150,10 +150,9 @@ export default class Deployer {
         return;
       }
       const owner = await contract.methods.owner().call();
-      if (owner === this.sender) {
-        return;
+      if (owner !== this.sender) {
+        throw `The ${contractName} contract needs to be owned by ${this.sender} (the sender). The current owner is ${owner}`;
       }
-      throw `The ${contractName} contract needs to be owned by ${this.sender} (the sender). The current owner is ${owner}`;
     };
 
     const {validatorSet, blockRewards, head} = contracts;
