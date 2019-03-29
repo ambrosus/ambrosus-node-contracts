@@ -26,3 +26,11 @@ export const APOLLO_DEPOSIT = utils.toWei('250000');
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export const APPROVALS_REQUIRED = 4;
+
+
+export const DMP_PRECISION = 100;
+export const ROUND_DURATION = 10 * 60;
+export const FIRST_PHASE_DURATION = 2 * 24 * 60 * 60;
+export const ATLAS1_NUMENATOR = 1;
+export const ATLAS2_NUMENATOR = 2;
+export const ATLAS3_NUMENATOR = 7;

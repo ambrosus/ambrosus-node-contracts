@@ -28,16 +28,12 @@ library DMPalgorithm {
 
     function qualifyShelterTypeStake(bytes32 DMPbaseHash, uint[] atlasCount, uint[] ATLAS_NUMERATOR, uint length) internal pure returns (uint) {
         uint denominator = 0;
-        uint numeratorSum = 0;
         uint i = 0;
 
         for (i = 0; i < length; i++) {
             uint elem = atlasCount[i].mul(ATLAS_NUMERATOR[i]);
             denominator = denominator.add(elem);
-            numeratorSum = numeratorSum.add(ATLAS_NUMERATOR[i]);
         }
-
-        numeratorSum = numeratorSum.mul(DMP_PRECISION);
 
         uint currentWCD = 0;
         uint[] memory wcd = new uint[](length);
@@ -48,8 +44,8 @@ library DMPalgorithm {
                 wcd[i] = 0;
             }
             if (currentNum == denominator) {
-                wcd[i] = numeratorSum;
-                currentWCD = numeratorSum;
+                wcd[i] = DMP_PRECISION;
+                currentWCD = DMP_PRECISION;
             } else {
                 currentNum = currentNum.mul(DMP_PRECISION);
                 currentNum = currentNum.div(denominator);
@@ -57,10 +53,10 @@ library DMPalgorithm {
                 wcd[i] = currentWCD;
             }
         }
-        wcd[length-1] = numeratorSum;
+        wcd[length-1] = DMP_PRECISION;
 
         uint chosenStake = length - 1;
-        uint randomNumber = uint(DMPbaseHash).mod(numeratorSum);
+        uint randomNumber = uint(DMPbaseHash).mod(DMP_PRECISION);
         for (i = 0; i < length; i++) {
             if (wcd[i] != 0 && randomNumber <= wcd[i]) {
                 chosenStake = i;

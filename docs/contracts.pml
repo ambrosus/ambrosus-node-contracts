@@ -49,6 +49,7 @@ package Boilerplate <<Rectangle>> {
 
 package Testing <<Rectangle>> {
   class SafeMathExtensionsAdapter
+  class DMPalgorithmAdapter
   class SuperSpeedTime
   class SuperSpeedConfig
   class CalledContract
@@ -112,8 +113,6 @@ Time *-- SafeMathExtensions
 
 DMPalgorithm *-- SafeMath
 DMPalgorithm *-- SafeMathExtensions
-DMPalgorithm *-- Config
-DMPalgorithm *-- AtlasStakeStore
 
 Challenges *-- SafeMath
 Challenges *-- SafeMathExtensions
