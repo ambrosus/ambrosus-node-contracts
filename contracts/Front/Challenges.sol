@@ -127,9 +127,7 @@ contract Challenges is Base {
         bytes32 bundleId = getChallengedBundle(challengeId);
 
         return challengeIsInProgress(challengeId) &&
-        !sheltering.isSheltering(bundleId, resolverId) &&
-        resolverId == getChallengeDesignatedShelterer(challengeId) &&
-        atlasStakeStore.getStake(resolverId) > 0;
+        !sheltering.isSheltering(bundleId, resolverId) && resolverId == getChallengeDesignatedShelterer(challengeId) && atlasStakeStore.getStake(resolverId) > 0;
     }
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns (bool) {
