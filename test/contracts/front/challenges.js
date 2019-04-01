@@ -531,17 +531,21 @@ describe('Challenges Contract', () => {
     it('Increases sequence number for all resolutions but last', async () => {
       const systemFee = userChallengeFee.mul(new BN('2'));
       await startChallengeForSystem(uploader, bundleId, 2, context, systemFee);
-
       challengeId = await lastChallengeId();
-      expect(await getChallengeSequenceNumber(challengeId)).to.equal('2');
 
+      expect(await getChallengeSequenceNumber(challengeId)).to.equal('2');
       resolver = await getChallengeDesignatedShelterer(challengeId);
       await resolveChallenge(challengeId, resolver);
       expect(await getChallengeSequenceNumber(challengeId)).to.equal('3');
 
-      resolver = await getChallengeDesignatedShelterer(challengeId);
-      await resolveChallenge(challengeId, resolver);
-      expect(await getChallengeSequenceNumber(challengeId)).to.equal('0');
+      const anotherResolver = await getChallengeDesignatedShelterer(challengeId);
+
+      if (anotherResolver !== resolver) {
+        await resolveChallenge(challengeId, anotherResolver);
+        expect(await getChallengeSequenceNumber(challengeId)).to.equal('0');
+      } else {
+        await expect(resolveChallenge(challengeId, anotherResolver)).to.be.eventually.rejected;
+      }
     });
 
     it('Removes system challenge if active count was 1', async () => {
