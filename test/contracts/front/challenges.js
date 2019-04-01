@@ -49,7 +49,6 @@ describe('Challenges Contract', () => {
   let DMPalgorithmAdapter;
   let bundleStore;
   let sheltering;
-  let config;
   let fees;
   let roles;
   let atlasStakeStore;
@@ -58,10 +57,8 @@ describe('Challenges Contract', () => {
   let context;
   let uploader;
   let shelterer;
-  let atlassian = [];
+  const atlassian = [];
   let resolver;
-  let resolverType;
-  let resolverIndex;
   let totalStranger;
   let time;
   let challengeId;
@@ -93,7 +90,7 @@ describe('Challenges Contract', () => {
   const getChallengeDesignatedShelterer = async (challengeId) => challenges.methods.getChallengeDesignatedShelterer(challengeId).call();
 
   const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from: context});
-  const currentTimestamp = async (timestamp) => time.methods.currentTimestamp().call();
+  const currentTimestamp = async () => time.methods.currentTimestamp().call();
   const addToKycWhitelist = async(candidate, role, requiredDeposit) => kycWhitelist.methods.add(candidate, role, requiredDeposit).send({from: context});
   const storeBundle = async (bundleId, sheltererId, storagePeriods, currentTimestamp) => bundleStore.methods.store(bundleId, sheltererId, storagePeriods, currentTimestamp).send({from: context});
   const addSheltererToBundle = async (bundleId, sheltererId, shelteringReward, payoutPeriodsReduction, currentTimestamp) =>
@@ -109,7 +106,7 @@ describe('Challenges Contract', () => {
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
   const isSheltering = async (bundleId, sheltererId) => sheltering.methods.isSheltering(bundleId, sheltererId).call();
   const getLastChallengeResolvedSequenceNumber = async (nodeId) => atlasStakeStore.methods.getLastChallengeResolvedSequenceNumber(nodeId).call();
-  const setLastChallengeResolvedSequenceNumber = async (nodeId, sequenceNumber) => atlasStakeStore.methods.updateLastChallengeResolvedSequenceNumber(nodeId, sequenceNumber).send({from: context});
+
   const getStake = async (nodeId) => atlasStakeStore.methods.getStake(nodeId).call();
   const nextChallengeSequenceNumber = async () => challengesStore.methods.getNextChallengeSequenceNumber().call();
 
@@ -121,7 +118,7 @@ describe('Challenges Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [context, challenger, uploader, atlassian[0], atlassian[1], atlassian[2], atlassian[3], atlassian[4], shelterer, totalStranger] = await web3.eth.getAccounts();
-    ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles, config, challengesEventEmitter} = await deploy({
+    ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles, challengesEventEmitter} = await deploy({
       web3,
       contracts: {
         challenges: true,
@@ -392,7 +389,6 @@ describe('Challenges Contract', () => {
   });
 
   describe('Resolving a challenge', () => {
-
     const atlasOnboarding = async (address, value, url) => {
       await addToKycWhitelist(address, ATLAS, value);
       await onboardAsAtlas(url, address, value);
@@ -409,10 +405,10 @@ describe('Challenges Contract', () => {
       await atlasOnboarding(atlassian[2], ATLAS2_STAKE, 'url2');
       await atlasOnboarding(atlassian[3], ATLAS2_STAKE, 'url3');
       await atlasOnboarding(atlassian[4], ATLAS1_STAKE, 'url4');
-      
+
       await depositStake(shelterer, ATLAS1_STAKE);
       await addShelterer(bundleId, shelterer, totalReward);
-      
+
       await startChallenge(shelterer, bundleId, challenger, userChallengeFee);
       challengeId = await lastChallengeId();
       await removeLastStaker(shelterer, ATLAS1_STAKE);
@@ -459,25 +455,25 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails to resolve for not designated resolvers', async () => {
-      if (atlassian[0] != resolver) {
+      if (atlassian[0] !== resolver) {
         expect(await canResolve(atlassian[0], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[0])).to.be.eventually.rejected; 
+        await expect(resolveChallenge(challengeId, atlassian[0])).to.be.eventually.rejected;
       }
-      if (atlassian[1] != resolver) {
+      if (atlassian[1] !== resolver) {
         expect(await canResolve(atlassian[1], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[1])).to.be.eventually.rejected; 
+        await expect(resolveChallenge(challengeId, atlassian[1])).to.be.eventually.rejected;
       }
-      if (atlassian[2] != resolver) {
+      if (atlassian[2] !== resolver) {
         expect(await canResolve(atlassian[2], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[2])).to.be.eventually.rejected; 
+        await expect(resolveChallenge(challengeId, atlassian[2])).to.be.eventually.rejected;
       }
-      if (atlassian[3] != resolver) {
+      if (atlassian[3] !== resolver) {
         expect(await canResolve(atlassian[3], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[3])).to.be.eventually.rejected; 
+        await expect(resolveChallenge(challengeId, atlassian[3])).to.be.eventually.rejected;
       }
-      if (atlassian[4] != resolver) {
+      if (atlassian[4] !== resolver) {
         expect(await canResolve(atlassian[4], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[4])).to.be.eventually.rejected; 
+        await expect(resolveChallenge(challengeId, atlassian[4])).to.be.eventually.rejected;
       }
     });
 
@@ -677,18 +673,19 @@ describe('Challenges Contract', () => {
   describe('DMP algorithm testing', () => {
     let trueResolver;
     let chosenAtlas = [];
-    let atlas1 = [];
+    const atlas1 = [];
     let atlas2 = [];
-    let atlas3 = [];
+    const atlas3 = [];
 
     const atlassianChosen = async (challengeId, atlassianCount) => {
       const creationTime = await getChallengeCreationTime(challengeId);
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
       const currentTime = await currentTimestamp();
-      const currentRound = Math.floor((currentTime - creationTime)/ROUND_DURATION);
-      const DMPbaseHash = await getBaseHash(challengeId, sequenceNumber);
+      const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
       const DMPindexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
-      const DMPindex = web3.utils.toBN(DMPindexHash).mod(new BN(atlassianCount)).toString();
+      const DMPindex = web3.utils.toBN(DMPindexHash).mod(new BN(atlassianCount))
+        .toString();
+
       trueResolver = atlassian[DMPindex];
     };
 
@@ -696,29 +693,30 @@ describe('Challenges Contract', () => {
       const creationTime = await getChallengeCreationTime(challengeId);
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
       const currentTime = await currentTimestamp();
-      const currentRound = Math.floor((currentTime - creationTime)/ROUND_DURATION);
+      const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
       const DMPbaseHash = await getBaseHash(challengeId, sequenceNumber);
       const DMPindexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
 
-      const denominator = (atlas1Count*ATLAS1_NUMENATOR + atlas2Count*ATLAS2_NUMENATOR + atlas3Count*ATLAS3_NUMENATOR);
+      const denominator = ((atlas1Count * ATLAS1_NUMENATOR) + (atlas2Count * ATLAS2_NUMENATOR) + (atlas3Count * ATLAS3_NUMENATOR));
 
-      const randomNumber = web3.utils.toBN(DMPbaseHash).mod(new BN(DMP_PRECISION)).toNumber();
+      const randomNumber = web3.utils.toBN(DMPbaseHash).mod(new BN(DMP_PRECISION))
+        .toNumber();
 
       const atlas1WCD = Math.floor((atlas1Count * ATLAS1_NUMENATOR * DMP_PRECISION) / denominator);
       const atlas2WCD = atlas1WCD + Math.floor((atlas2Count * ATLAS2_NUMENATOR * DMP_PRECISION) / denominator);
       const atlas3WCD = atlas2WCD + Math.floor((atlas3Count * ATLAS3_NUMENATOR * DMP_PRECISION) / denominator);
 
-      if (atlas1WCD != 0 && randomNumber <= atlas1WCD) {
+      if (atlas1WCD !== 0 && randomNumber <= atlas1WCD) {
         chosenAtlas = Array.from(atlas1);
-      }
-      else if (atlas2WCD != 0 && randomNumber <= atlas2WCD) {
+      } else if (atlas2WCD !== 0 && randomNumber <= atlas2WCD) {
         chosenAtlas = Array.from(atlas2);
-      }
-      else if (atlas3WCD != 0 && randomNumber <= atlas3WCD) {
+      } else if (atlas3WCD !== 0 && randomNumber <= atlas3WCD) {
         chosenAtlas = Array.from(atlas3);
       }
 
-      const DMPindex = web3.utils.toBN(DMPindexHash).mod(new BN(chosenAtlas.length)).toString();
+      const DMPindex = web3.utils.toBN(DMPindexHash).mod(new BN(chosenAtlas.length))
+        .toString();
+
       trueResolver = chosenAtlas[DMPindex];
     };
 
@@ -735,7 +733,7 @@ describe('Challenges Contract', () => {
     beforeEach(async () => {
       await depositStake(shelterer, ATLAS1_STAKE);
       await addShelterer(bundleId, shelterer, totalReward);
-      
+
       await startChallenge(shelterer, bundleId, challenger, userChallengeFee);
       challengeId = await lastChallengeId();
       await removeLastStaker(shelterer, ATLAS1_STAKE);
@@ -749,11 +747,7 @@ describe('Challenges Contract', () => {
       await atlasOnboarding(atlassian[4], ATLAS1_STAKE, 'url4');
       await setNumberOfStakers(5);
 
-      atlas1[0] = atlassian[4];
-      atlas2[0] = atlassian[2];
-      atlas2[1] = atlassian[3];
-      atlas3[0] = atlassian[0];
-      atlas3[1] = atlassian[1];
+      [atlas3[0], atlas3[1], atlas2[0], atlas2[1], atlas1[0]] = atlassian;
 
       await atlassianChosenByType(challengeId, 1, 2, 2);
       resolver = await getChallengeDesignatedShelterer(challengeId);
@@ -769,13 +763,9 @@ describe('Challenges Contract', () => {
       await atlasOnboarding(atlassian[4], ATLAS1_STAKE, 'url4');
       await setNumberOfStakers(5);
 
-      atlas1[0] = atlassian[4];
-      atlas2[0] = atlassian[2];
-      atlas2[1] = atlassian[3];
-      atlas3[0] = atlassian[0];
-      atlas3[1] = atlassian[1];
+      [atlas3[0], atlas3[1], atlas2[0], atlas2[1], atlas1[0]] = atlassian;
 
-      await setTimestamp(now + ROUND_DURATION*5);
+      await setTimestamp(now + (ROUND_DURATION * 5));
 
       await atlassianChosenByType(challengeId, 1, 2, 2);
       resolver = await getChallengeDesignatedShelterer(challengeId);
@@ -808,7 +798,7 @@ describe('Challenges Contract', () => {
 
       atlas2 = Array.from(atlassian);
 
-      await setTimestamp(now + ROUND_DURATION*5);
+      await setTimestamp(now + (ROUND_DURATION * 5));
 
       await atlassianChosenByType(challengeId, 0, 5, 0);
       resolver = await getChallengeDesignatedShelterer(challengeId);
@@ -817,8 +807,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Failed to get resolver if no resolver in the system', async () => {
-        await expect(getChallengeDesignatedShelterer(challengeId)).to.be.eventually.rejected;
+      await expect(getChallengeDesignatedShelterer(challengeId)).to.be.eventually.rejected;
     });
-
   });
 });
