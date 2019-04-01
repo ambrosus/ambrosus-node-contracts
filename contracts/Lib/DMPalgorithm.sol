@@ -13,6 +13,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./SafeMathExtensions.sol";
 
+
 library DMPalgorithm {
     using SafeMath for uint;
     using SafeMath for uint32;

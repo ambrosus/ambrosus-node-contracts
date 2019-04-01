@@ -171,22 +171,6 @@ contract Challenges is Base {
         return DMPshelterer;
     }
 
-    function getDesignatedSheltererType(bytes32 DMPbaseHash) private view returns(uint, uint) {
-        uint length = config.ATLAS_TYPES();
-        uint[] memory atlasTypeCounts = new uint[](length);
-        uint[] memory atlasNumerators = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            atlasTypeCounts[i] = atlasStakeStore.getNumberOfStakersWithStake(config.ATLAS_STAKE(i));
-            atlasNumerators[i] = config.ATLAS_NUMERATOR(i);
-        }
-
-        uint DMPtype = DMPalgorithm.qualifyShelterTypeStake(DMPbaseHash, atlasTypeCounts, atlasNumerators, length);
-        uint atlasCount = atlasTypeCounts[DMPtype];
-
-        return (atlasCount, DMPtype);
-    }
-
     function getChallengeFee(bytes32 challengeId) public view returns (uint) {
         (,,, uint feePerChallenge,,,) = challengesStore.getChallenge(challengeId);
         return feePerChallenge;
@@ -217,6 +201,22 @@ contract Challenges is Base {
 
     function getChallengeId(address sheltererId, bytes32 bundleId) public view returns (bytes32) {
         return challengesStore.getChallengeId(sheltererId, bundleId);
+    }
+
+    function getDesignatedSheltererType(bytes32 DMPbaseHash) private view returns(uint, uint) {
+        uint length = config.ATLAS_TYPES();
+        uint[] memory atlasTypeCounts = new uint[](length);
+        uint[] memory atlasNumerators = new uint[](length);
+
+        for (uint i = 0; i < length; i++) {
+            atlasTypeCounts[i] = atlasStakeStore.getNumberOfStakersWithStake(config.ATLAS_STAKE(i));
+            atlasNumerators[i] = config.ATLAS_NUMERATOR(i);
+        }
+
+        uint DMPtype = DMPalgorithm.qualifyShelterTypeStake(DMPbaseHash, atlasTypeCounts, atlasNumerators, length);
+        uint atlasCount = atlasTypeCounts[DMPtype];
+
+        return (atlasCount, DMPtype);
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {

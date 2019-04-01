@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
+
 contract DMPalgorithmAdapter {
     function getBaseHash(bytes32 challengeId, uint sequenceNumber) public pure returns (bytes32) {
         bytes32 DMPbaseHash = keccak256(abi.encodePacked(challengeId, sequenceNumber));
