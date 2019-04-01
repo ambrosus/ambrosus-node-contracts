@@ -126,8 +126,11 @@ contract Challenges is Base {
     function canResolve(address resolverId, bytes32 challengeId) public view returns (bool) {
         bytes32 bundleId = getChallengedBundle(challengeId);
 
+        // solium-disable-next-line operator-whitespace
         return challengeIsInProgress(challengeId) &&
-        !sheltering.isSheltering(bundleId, resolverId) && resolverId == getChallengeDesignatedShelterer(challengeId) && atlasStakeStore.getStake(resolverId) > 0;
+        !sheltering.isSheltering(bundleId, resolverId) &&
+        resolverId == getChallengeDesignatedShelterer(challengeId) &&
+        atlasStakeStore.getStake(resolverId) > 0;
     }
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns (bool) {
