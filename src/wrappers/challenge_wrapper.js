@@ -53,4 +53,9 @@ export default class ChallengeWrapper extends ManagedContractWrapper {
     const contract = await this.contract();
     return contract.methods.challengeIsInProgress(challengeId).call();
   }
+
+  async getChallengeDesignatedShelterer(challengeId) {
+    const contract = await this.contract();
+    return contract.methods.getChallengeDesignatedShelterer(challengeId).call();
+  }
 }
