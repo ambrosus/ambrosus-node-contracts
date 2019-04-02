@@ -122,8 +122,14 @@ startGanacheServer(
         }
       };
 
+      const extractMultiplexerAddress = (stdout) => {
+        const regex = /multiplexer -> (0x[a-f0-9]{40})/i;
+        const match = regex.exec(stdout);
+        return match[1];
+      };
+
       console.log('------ test deploy update ------');
-      await execute(`yarn task deploy update`, adminEnv);
+      adminEnv.MULTIPLEXER_CONTRACT_ADDRESS = extractMultiplexerAddress(await execute(`yarn task deploy update`, adminEnv));
 
       await verifyFails(async () => {
         await execute(`yarn task deploy update`, apolloEnv);
@@ -131,12 +137,26 @@ startGanacheServer(
 
       const verifyNodeState = async (address, whitelistedRole, onboardedRole, stake, url) => {
         const ret = await execute(`yarn task whitelist get ${address}`, adminEnv);
-        const regexStr = `Address ${address} is whitelisted for the ${whitelistedRole} role with ${stake} AMB deposit\/stake\\W+Address ${address} is onboarded for the ${onboardedRole} role with url:\\W*${url}`;
+        const regexStr = `Address ${address} is whitelisted for the ${whitelistedRole} role with ${stake} AMB deposit/stake\\W+Address ${address} is onboarded for the ${onboardedRole} role with url:\\W*${url}`;
         const regex = new RegExp(regexStr, 'g');
         if (!regex.test(ret)) {
           throw new Error('Expected whitelist/onboard state not present');
         }
       };
+
+      const verifyOwnershipState = async (address, expectedOwner) => {
+        const ret = await execute(`yarn task checkOwnership ${address}`, adminEnv);
+        const regex = new RegExp(expectedOwner, 'g');
+        if (!regex.test(ret)) {
+          throw new Error(`Expected contract owner to be ${expectedOwner} but got ${ret}`);
+        }
+      };
+
+      console.log('------ test multiplexer ------');
+      await execute(`yarn task moveOwnershipToMultiplexer ${adminEnv.MULTIPLEXER_CONTRACT_ADDRESS}`, adminEnv);
+      await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminEnv.MULTIPLEXER_CONTRACT_ADDRESS);
+      await execute(`yarn task moveOwnershipFromMultiplexer ${adminUser.address}`, adminEnv);
+      await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminUser.address);
 
       console.log('------ test whitelisting ------');
       await verifyNodeState(apolloUser.address, 'NONE', 'NONE', '0', '');

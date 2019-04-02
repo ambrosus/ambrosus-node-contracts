@@ -21,6 +21,7 @@ describe('Administrative actions', () => {
   let adminActions;
   let headWrapperMock;
   let blockchainStatusWrapperMock;
+  let multiplexerWrapperMock;
   const exampleAddress = '0x123';
   const defaultAddress = '0xc0ffee';
 
@@ -34,7 +35,10 @@ describe('Administrative actions', () => {
     blockchainStatusWrapperMock = {
       isAddressAContract: sinon.stub().resolves(true)
     };
-    adminActions = new AdministrativeActions(headWrapperMock, blockchainStatusWrapperMock);
+    multiplexerWrapperMock = {
+      transferContractsOwnership: sinon.stub().resolves()
+    };
+    adminActions = new AdministrativeActions(headWrapperMock, blockchainStatusWrapperMock, multiplexerWrapperMock);
   });
 
   describe('Move ownerships to multiplexer', () => {
@@ -43,6 +47,15 @@ describe('Administrative actions', () => {
     it('Transfers ownership of head', async () => {
       await adminActions.moveOwnershipsToMultiplexer(exampleMultiplexerAddress);
       expect(headWrapperMock.transferOwnership).to.be.calledOnceWith(exampleMultiplexerAddress);
+    });
+  });
+
+  describe('Move ownerships from multiplexer', () => {
+    const exampleAddress = '0xc0ffee';
+
+    it('Transfers ownership of head', async () => {
+      await adminActions.moveOwnershipsFromMultiplexer(exampleAddress);
+      expect(multiplexerWrapperMock.transferContractsOwnership).to.be.calledOnceWith(exampleAddress);
     });
   });
 
