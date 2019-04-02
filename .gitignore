@@ -3,4 +3,3 @@ dist
 .idea
 yarn-error.log
 src/contracts
-test_cli_head.env
