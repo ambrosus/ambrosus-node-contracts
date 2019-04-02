@@ -89,7 +89,7 @@ startGanacheServer(
     let failed = false;
     try {
       const deployEnvFile = `${__dirname}/test_cli_head.env`;
-      await execute(`yarn task deployGenesis`, envForUser(adminUser));
+      await execute(`yarn task deployGenesis --save ${deployEnvFile}`, envForUser(adminUser));
       const deployConfig = dotenv.parse(fs.readFileSync(deployEnvFile));
       const adminEnv = {
         ...envForUser(adminUser),
@@ -122,8 +122,14 @@ startGanacheServer(
         }
       };
 
+      const extractMultiplexerAddress = (stdout) => {
+        const regex = /multiplexer -> (0x[a-f0-9]{40})/i;
+        const match = regex.exec(stdout);
+        return match[1];
+      };
+
       console.log('------ test deploy update ------');
-      await execute(`yarn task deploy update`, adminEnv);
+      adminEnv.MULTIPLEXER_CONTRACT_ADDRESS = extractMultiplexerAddress(await execute(`yarn task deploy update`, adminEnv));
 
       await verifyFails(async () => {
         await execute(`yarn task deploy update`, apolloEnv);
@@ -147,8 +153,8 @@ startGanacheServer(
       };
 
       console.log('------ test multiplexer ------');
-      await execute(`yarn task moveOwnershipToMultiplexer ${deployConfig.MULTIPLEXER_CONTRACT_ADDRESS}`, adminEnv);
-      await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, deployConfig.MULTIPLEXER_CONTRACT_ADDRESS);
+      await execute(`yarn task moveOwnershipToMultiplexer ${adminEnv.MULTIPLEXER_CONTRACT_ADDRESS}`, adminEnv);
+      await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminEnv.MULTIPLEXER_CONTRACT_ADDRESS);
       await execute(`yarn task moveOwnershipFromMultiplexer ${adminUser.address}`, adminEnv);
       await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminUser.address);
 
