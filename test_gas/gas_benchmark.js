@@ -26,6 +26,7 @@ let atlasInitialShelterer;
 let atlasQuickResolver;
 let atlasSlowResolver;
 let challenges;
+let challengesEventEmitter;
 let time;
 let kycWhitelist;
 let roles;
@@ -80,7 +81,7 @@ const runGasBenchmark = async () => {
 const setupEnvironment = async () => {
   web3 = await createWeb3();
   [from, hermes, perseus, atlasInitialShelterer, atlasQuickResolver, atlasSlowResolver] = await web3.eth.getAccounts();
-  ({challenges, time, kycWhitelist, roles, fees, uploads} = await deploy({
+  ({challenges, time, kycWhitelist, roles, fees, uploads, challengesEventEmitter} = await deploy({
     web3,
     contracts: {
       challenges: true,
@@ -98,7 +99,9 @@ const setupEnvironment = async () => {
       payouts: true,
       payoutsStore: true,
       rolesStore: true,
-      shelteringTransfersStore: true,
+      rolesEventEmitter: true,
+      transfersEventEmitter: true,
+      challengesEventEmitter: true,
       challengesStore: true
     }}));
   await setTimestamp(now);
@@ -131,7 +134,7 @@ const getFeeForChallenge = async (storagePeriods) => new BN(await fees.methods.g
 const startChallenge = async (sheltererId, bundleId, challengerId, fee) => challenges.methods.start(sheltererId, bundleId).send({from: challengerId, value: fee});
 
 const lastChallengeId = async () => {
-  const [challengeCreationEvent] = await challenges.getPastEvents('allEvents');
+  const [challengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
   return challengeCreationEvent.returnValues.challengeId;
 };
 
