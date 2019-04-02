@@ -9,13 +9,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {loadContract} from '../utils/web3_tools';
 import contractJsons from '../contract_jsons';
+import ContractWrapper from './contract_wrapper';
 
 /** @abstract */
-export default class ManagedContractWrapper {
+export default class ManagedContractWrapper extends ContractWrapper {
   constructor(headWrapper, web3, defaultAddress) {
+    super(web3, defaultAddress);
     this.headWrapper = headWrapper;
-    this.web3 = web3;
-    this.defaultAddress = defaultAddress;
   }
 
   async address() {
@@ -29,13 +29,5 @@ export default class ManagedContractWrapper {
 
   get getContractName() {
     throw new Error('Abstract method getContractName needs to be overridden');
-  }
-
-  async processTransaction(transactionObject, sendParams = {}) {
-    return transactionObject.send({from: this.defaultAddress, ...sendParams});
-  }
-
-  setDefaultAddress(defaultAddress) {
-    this.defaultAddress = defaultAddress;
   }
 }

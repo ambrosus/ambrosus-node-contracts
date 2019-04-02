@@ -37,6 +37,7 @@ import SuperSpeedTime from './contracts/SuperSpeedTime.json';
 import ChallengesEventEmitter from './contracts/ChallengesEventEmitter.json';
 import RolesEventEmitter from './contracts/RolesEventEmitter.json';
 import TransfersEventEmitter from './contracts/TransfersEventEmitter.json';
+import Multiplexer from './contracts/Multiplexer.json';
 
 const contractJsons = {
   head: HeadJson,
@@ -66,7 +67,8 @@ const contractJsons = {
   validatorProxy: ValidatorProxyJson,
   challengesEventEmitter: ChallengesEventEmitter,
   rolesEventEmitter: RolesEventEmitter,
-  transfersEventEmitter: TransfersEventEmitter
+  transfersEventEmitter: TransfersEventEmitter,
+  multiplexer: Multiplexer
 };
 
 export const contractSuperSpeedJsons = {
