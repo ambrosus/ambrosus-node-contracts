@@ -52,7 +52,7 @@ describe('Multiplexer', () => {
   });
 
   describe('Transfer Ownership', () => {
-    it('changes oldOwner of the head contract', async () => {
+    it('changes owner of the head contract', async () => {
       await transferOwnership(newOwner);
       expect(await head.methods.owner().call()).to.equal(newOwner);
     });
