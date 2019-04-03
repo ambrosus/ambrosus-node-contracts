@@ -39,7 +39,7 @@ library DmpAlgorithm {
         uint currentWCD = 0;
         uint[] memory wcd = new uint[](length);
 
-        for (i = 0; i < length - 1; i++) {
+        for (i = 0; i < length; i++) {
             uint currentNum = atlasCount[i].mul(ATLAS_NUMERATOR[i]);
             if (currentNum == 0) {
                 wcd[i] = 0;
@@ -53,17 +53,21 @@ library DmpAlgorithm {
                 wcd[i] = currentWCD;
             }
         }
-        wcd[length-1] = DMP_PRECISION;
 
-        uint32 chosenStake = length - 1;
-        uint randomNumber = uint(dmpBaseHash).mod(DMP_PRECISION);
-        for (i = 0; i < length; i++) {
-            if (wcd[i] != 0 && randomNumber <= wcd[i]) {
-                chosenStake = i;
+        for (i = length - 1; i >= 0; i--) {
+            if (wcd[i] != 0) {
+                wcd[i] = DMP_PRECISION;
                 break;
             }
         }
 
-        return chosenStake;
+        uint randomNumber = uint(dmpBaseHash).mod(DMP_PRECISION);
+        for (i = 0; i < length; i++) {
+            if (wcd[i] != 0 && randomNumber <= wcd[i]) {
+                break;
+            }
+        }
+
+        return i;
     }
 }
