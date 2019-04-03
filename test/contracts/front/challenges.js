@@ -18,7 +18,6 @@ import {
   ATLAS1_STAKE,
   ATLAS2_STAKE,
   ATLAS3_STAKE,
-  DMP_PRECISION,
   ROUND_DURATION,
   FIRST_PHASE_DURATION,
   ATLAS1_NUMENATOR,
@@ -111,7 +110,8 @@ describe('Challenges Contract', () => {
   const nextChallengeSequenceNumber = async () => challengesStore.methods.getNextChallengeSequenceNumber().call();
 
   const getBaseHash = async (challengeId, sequenceNumber) => DmpAlgorithmAdapter.methods.getBaseHash(challengeId, sequenceNumber).call();
-  const getQualifyHash = async (challengeId, sequenceNumber, currentRound) => DmpAlgorithmAdapter.methods.getQualifyHash(challengeId, sequenceNumber, currentRound).call();
+  const qualifyShelterer = async(dmpBaseHash, dmpLength, currentRound) => DmpAlgorithmAdapter.methods.qualifyShelterer(dmpBaseHash, dmpLength, currentRound).call();
+  const qualifyShelterTypeStake = async(dmpBaseHash, atlasCounts, atlasNum, length) => DmpAlgorithmAdapter.methods.qualifyShelterTypeStake(dmpBaseHash, atlasCounts, atlasNum, length).call();
 
   // eslint-disable-next-line new-cap
 
@@ -674,52 +674,52 @@ describe('Challenges Contract', () => {
     });
   });
 
-  describe('DMP algorithm testing', () => {
+  describe('Designated shelterer testing', () => {
     let trueResolver;
     let chosenAtlas = [];
     const atlas1 = [];
     let atlas2 = [];
     const atlas3 = [];
 
-    const atlassianChosen = async (challengeId, atlassianCount) => {
+    const getCurrentRound = async (challengeId) => {
       const creationTime = await getChallengeCreationTime(challengeId);
-      const sequenceNumber = await getChallengeSequenceNumber(challengeId);
       const currentTime = await currentTimestamp();
       const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
-      const dmpIndexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
-      const dmpIndex = web3.utils.toBN(dmpIndexHash).mod(new BN(atlassianCount))
-        .toString();
+
+      return currentRound;
+    };
+
+    const atlassianChosen = async (challengeId, atlassianCount) => {
+      const currentRound = await getCurrentRound(challengeId);
+
+      const sequenceNumber = await getChallengeSequenceNumber(challengeId);
+
+      const dmpBaseHash = await getBaseHash(challengeId, sequenceNumber);
+      const dmpIndex = await qualifyShelterer(dmpBaseHash, atlassianCount, currentRound);
 
       trueResolver = atlassian[dmpIndex];
     };
 
     const atlassianChosenByType = async (challengeId, atlas1Count, atlas2Count, atlas3Count) => {
-      const creationTime = await getChallengeCreationTime(challengeId);
+      const currentRound = await getCurrentRound(challengeId);
+
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
-      const currentTime = await currentTimestamp();
-      const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
       const dmpBaseHash = await getBaseHash(challengeId, sequenceNumber);
-      const dmpIndexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
 
-      const denominator = ((atlas1Count * ATLAS1_NUMENATOR) + (atlas2Count * ATLAS2_NUMENATOR) + (atlas3Count * ATLAS3_NUMENATOR));
+      const atlasNums = Array.from([ATLAS1_NUMENATOR, ATLAS2_NUMENATOR, ATLAS3_NUMENATOR]);
+      const atlasCounts = Array.from([atlas1Count, atlas2Count, atlas3Count]);
 
-      const randomNumber = web3.utils.toBN(dmpBaseHash).mod(new BN(DMP_PRECISION))
-        .toNumber();
+      const resolverType = await qualifyShelterTypeStake(dmpBaseHash, atlasCounts, atlasNums, 3);
 
-      const atlas1WCD = Math.floor((atlas1Count * ATLAS1_NUMENATOR * DMP_PRECISION) / denominator);
-      const atlas2WCD = atlas1WCD + Math.floor((atlas2Count * ATLAS2_NUMENATOR * DMP_PRECISION) / denominator);
-      const atlas3WCD = atlas2WCD + Math.floor((atlas3Count * ATLAS3_NUMENATOR * DMP_PRECISION) / denominator);
-
-      if (atlas1WCD !== 0 && randomNumber <= atlas1WCD) {
+      if (resolverType === '0') {
         chosenAtlas = Array.from(atlas1);
-      } else if (atlas2WCD !== 0 && randomNumber <= atlas2WCD) {
+      } else if (resolverType === '1') {
         chosenAtlas = Array.from(atlas2);
-      } else if (atlas3WCD !== 0 && randomNumber <= atlas3WCD) {
+      } else if (resolverType === '2') {
         chosenAtlas = Array.from(atlas3);
       }
 
-      const dmpIndex = web3.utils.toBN(dmpIndexHash).mod(new BN(chosenAtlas.length))
-        .toString();
+      const dmpIndex = await qualifyShelterer(dmpBaseHash, chosenAtlas.length, currentRound);
 
       trueResolver = chosenAtlas[dmpIndex];
     };
