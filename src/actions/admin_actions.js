@@ -8,14 +8,20 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class AdministrativeActions {
-  constructor(headWrapper, blockchainStateWrapper, multiplexerWrapper) {
+  constructor(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper, multiplexerWrapper) {
     this.headWrapper = headWrapper;
+    this.kycWhitelistWrapper = kycWhitelistWrapper;
+    this.feesWrapper = feesWrapper;
+    this.validatorProxyWrapper = validatorProxyWrapper;
     this.blockchainStateWrapper = blockchainStateWrapper;
     this.multiplexerWrapper = multiplexerWrapper;
   }
 
   async moveOwnershipsToMultiplexer(multiplexerAddress) {
-    return this.headWrapper.transferOwnership(multiplexerAddress);
+    await this.headWrapper.transferOwnership(multiplexerAddress);
+    await this.kycWhitelistWrapper.transferOwnership(multiplexerAddress);
+    await this.feesWrapper.transferOwnership(multiplexerAddress);
+    await this.validatorProxyWrapper.transferOwnership(multiplexerAddress);
   }
 
   async moveOwnershipsFromMultiplexer(newOwnerAddress) {

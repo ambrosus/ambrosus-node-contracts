@@ -22,6 +22,9 @@ describe('Administrative actions', () => {
   let headWrapperMock;
   let blockchainStatusWrapperMock;
   let multiplexerWrapperMock;
+  let feesWrapperMock;
+  let kycWhitelistWrapperMock;
+  let validatorProxyWrapperMock;
   const exampleAddress = '0x123';
   const defaultAddress = '0xc0ffee';
 
@@ -32,13 +35,23 @@ describe('Administrative actions', () => {
       transferOwnership: sinon.stub().resolves(),
       defaultAddress
     };
+    feesWrapperMock = {
+      transferOwnership: sinon.stub().resolves()
+    };
+    kycWhitelistWrapperMock = {
+      transferOwnership: sinon.stub().resolves()
+    };
+    validatorProxyWrapperMock = {
+      transferOwnership: sinon.stub().resolves()
+    };
     blockchainStatusWrapperMock = {
       isAddressAContract: sinon.stub().resolves(true)
     };
     multiplexerWrapperMock = {
       transferContractsOwnership: sinon.stub().resolves()
     };
-    adminActions = new AdministrativeActions(headWrapperMock, blockchainStatusWrapperMock, multiplexerWrapperMock);
+    adminActions = new AdministrativeActions(headWrapperMock, kycWhitelistWrapperMock, feesWrapperMock,
+      validatorProxyWrapperMock, blockchainStatusWrapperMock, multiplexerWrapperMock);
   });
 
   describe('Move ownerships to multiplexer', () => {
@@ -47,6 +60,9 @@ describe('Administrative actions', () => {
     it('Transfers ownership of head', async () => {
       await adminActions.moveOwnershipsToMultiplexer(exampleMultiplexerAddress);
       expect(headWrapperMock.transferOwnership).to.be.calledOnceWith(exampleMultiplexerAddress);
+      expect(kycWhitelistWrapperMock.transferOwnership).to.be.calledOnceWith(exampleMultiplexerAddress);
+      expect(feesWrapperMock.transferOwnership).to.be.calledOnceWith(exampleMultiplexerAddress);
+      expect(validatorProxyWrapperMock.transferOwnership).to.be.calledOnceWith(exampleMultiplexerAddress);
     });
   });
 
