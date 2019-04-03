@@ -15,7 +15,7 @@ import "../Configuration/Fees.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 import "../Lib/SafeMathExtensions.sol";
-import "../Lib/DMPalgorithm.sol";
+import "../Lib/DmpAlgorithm.sol";
 import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
 import "../Storage/AtlasStakeStore.sol";
@@ -154,22 +154,22 @@ contract Challenges is Base {
     }
 
     function getChallengeDesignatedShelterer(bytes32 challengeId) public view returns (address) {
-        uint64 challengeDuration = time.currentTimestamp() - getChallengeCreationTime(challengeId);
+        uint challengeDuration = time.currentTimestamp().sub(getChallengeCreationTime(challengeId));
         uint currentRound = challengeDuration.div(config.ROUND_DURATION());
-        bytes32 DMPbaseHash = keccak256(abi.encodePacked(challengeId, getChallengeSequenceNumber(challengeId)));
-        address DMPshelterer;
-        uint32 DMPindex;
+        bytes32 dmpBaseHash = keccak256(abi.encodePacked(challengeId, getChallengeSequenceNumber(challengeId)));
+        address dmpShelterer;
+        uint32 dmpIndex;
 
         if (currentRound < config.FIRST_PHASE_DURATION().div(config.ROUND_DURATION())) {
-            (uint atlasCount, uint DMPtype) = getDesignatedSheltererType(DMPbaseHash);
-            DMPindex = DMPalgorithm.qualifyShelterer(DMPbaseHash, atlasCount, currentRound);
-            DMPshelterer = atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(DMPtype), DMPindex);
+            (uint atlasCount, uint32 dmpType) = getDesignatedSheltererType(dmpBaseHash);
+            dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasCount, currentRound);
+            dmpShelterer = atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(dmpType), dmpIndex);
         } else {
-            DMPindex = DMPalgorithm.qualifyShelterer(DMPbaseHash, atlasStakeStore.getNumberOfStakers(), currentRound);
-            DMPshelterer = atlasStakeStore.getStakerAtIndex(DMPindex);
+            dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasStakeStore.getNumberOfStakers(), currentRound);
+            dmpShelterer = atlasStakeStore.getStakerAtIndex(dmpIndex);
         }
 
-        return DMPshelterer;
+        return dmpShelterer;
     }
 
     function getChallengeFee(bytes32 challengeId) public view returns (uint) {
@@ -204,8 +204,8 @@ contract Challenges is Base {
         return challengesStore.getChallengeId(sheltererId, bundleId);
     }
 
-    function getDesignatedSheltererType(bytes32 DMPbaseHash) private view returns(uint, uint) {
-        uint length = config.ATLAS_TYPES();
+    function getDesignatedSheltererType(bytes32 dmpBaseHash) private view returns(uint, uint32) {
+        uint32 length = config.ATLAS_TYPES_COUNT();
         uint[] memory atlasTypeCounts = new uint[](length);
         uint[] memory atlasNumerators = new uint[](length);
 
@@ -214,10 +214,10 @@ contract Challenges is Base {
             atlasNumerators[i] = config.ATLAS_NUMERATOR(i);
         }
 
-        uint DMPtype = DMPalgorithm.qualifyShelterTypeStake(DMPbaseHash, atlasTypeCounts, atlasNumerators, length);
-        uint atlasCount = atlasTypeCounts[DMPtype];
+        uint32 dmpType = DmpAlgorithm.qualifyShelterTypeStake(dmpBaseHash, atlasTypeCounts, atlasNumerators, length);
+        uint atlasCount = atlasTypeCounts[dmpType];
 
-        return (atlasCount, DMPtype);
+        return (atlasCount, dmpType);
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {

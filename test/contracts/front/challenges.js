@@ -32,7 +32,7 @@ import ChallengesStoreMockJson from '../../../src/contracts/ChallengesStoreMock.
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 import {expectEventEmission} from '../../helpers/web3EventObserver';
-import DMPalgorithmAdapterJson from '../../../src/contracts/DMPalgorithmAdapter.json';
+import DmpAlgorithmAdapterJson from '../../../src/contracts/DmpAlgorithmAdapter.json';
 
 chai.use(chaiEmitEvents);
 
@@ -46,7 +46,7 @@ describe('Challenges Contract', () => {
   let challenges;
   let challengesStore;
   let challengesEventEmitter;
-  let DMPalgorithmAdapter;
+  let DmpAlgorithmAdapter;
   let bundleStore;
   let sheltering;
   let fees;
@@ -110,8 +110,8 @@ describe('Challenges Contract', () => {
   const getStake = async (nodeId) => atlasStakeStore.methods.getStake(nodeId).call();
   const nextChallengeSequenceNumber = async () => challengesStore.methods.getNextChallengeSequenceNumber().call();
 
-  const getBaseHash = async (challengeId, sequenceNumber) => DMPalgorithmAdapter.methods.getBaseHash(challengeId, sequenceNumber).call();
-  const getQualifyHash = async (challengeId, sequenceNumber, currentRound) => DMPalgorithmAdapter.methods.getQualifyHash(challengeId, sequenceNumber, currentRound).call();
+  const getBaseHash = async (challengeId, sequenceNumber) => DmpAlgorithmAdapter.methods.getBaseHash(challengeId, sequenceNumber).call();
+  const getQualifyHash = async (challengeId, sequenceNumber, currentRound) => DmpAlgorithmAdapter.methods.getQualifyHash(challengeId, sequenceNumber, currentRound).call();
 
   // eslint-disable-next-line new-cap
 
@@ -139,7 +139,7 @@ describe('Challenges Contract', () => {
         challengesEventEmitter: true,
         rolesEventEmitter: true
       }}));
-    DMPalgorithmAdapter = await deployContract(web3, DMPalgorithmAdapterJson);
+    DmpAlgorithmAdapter = await deployContract(web3, DmpAlgorithmAdapterJson);
     await setTimestamp(now);
     await storeBundle(bundleId, uploader, storagePeriods, now);
     userChallengeFee = new BN(await getFeeForChallenge(storagePeriods));
@@ -686,11 +686,11 @@ describe('Challenges Contract', () => {
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
       const currentTime = await currentTimestamp();
       const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
-      const DMPindexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
-      const DMPindex = web3.utils.toBN(DMPindexHash).mod(new BN(atlassianCount))
+      const dmpIndexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
+      const dmpIndex = web3.utils.toBN(dmpIndexHash).mod(new BN(atlassianCount))
         .toString();
 
-      trueResolver = atlassian[DMPindex];
+      trueResolver = atlassian[dmpIndex];
     };
 
     const atlassianChosenByType = async (challengeId, atlas1Count, atlas2Count, atlas3Count) => {
@@ -698,12 +698,12 @@ describe('Challenges Contract', () => {
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
       const currentTime = await currentTimestamp();
       const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
-      const DMPbaseHash = await getBaseHash(challengeId, sequenceNumber);
-      const DMPindexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
+      const dmpBaseHash = await getBaseHash(challengeId, sequenceNumber);
+      const dmpIndexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
 
       const denominator = ((atlas1Count * ATLAS1_NUMENATOR) + (atlas2Count * ATLAS2_NUMENATOR) + (atlas3Count * ATLAS3_NUMENATOR));
 
-      const randomNumber = web3.utils.toBN(DMPbaseHash).mod(new BN(DMP_PRECISION))
+      const randomNumber = web3.utils.toBN(dmpBaseHash).mod(new BN(DMP_PRECISION))
         .toNumber();
 
       const atlas1WCD = Math.floor((atlas1Count * ATLAS1_NUMENATOR * DMP_PRECISION) / denominator);
@@ -718,10 +718,10 @@ describe('Challenges Contract', () => {
         chosenAtlas = Array.from(atlas3);
       }
 
-      const DMPindex = web3.utils.toBN(DMPindexHash).mod(new BN(chosenAtlas.length))
+      const dmpIndex = web3.utils.toBN(dmpIndexHash).mod(new BN(chosenAtlas.length))
         .toString();
 
-      trueResolver = chosenAtlas[DMPindex];
+      trueResolver = chosenAtlas[dmpIndex];
     };
 
     const atlasOnboarding = async (address, value, url) => {

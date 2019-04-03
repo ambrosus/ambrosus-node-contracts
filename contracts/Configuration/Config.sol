@@ -21,7 +21,7 @@ contract Config {
 
     uint[3] public ATLAS_STAKE = [10000 ether, 30000 ether, 75000 ether];
     uint[3] public ATLAS_NUMERATOR = [1, 2, 7];
-    uint constant public ATLAS_TYPES = 3;
+    uint32 constant public ATLAS_TYPES_COUNT = 3;
 
     uint constant public SHELTERING_CAP_ATLASES_PERCENTAGE = 80;
     uint constant public SHELTERING_CAP_ATLAS_NUMBER_THRESHOLD = 8;

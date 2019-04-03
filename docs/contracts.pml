@@ -31,7 +31,7 @@ package Utilities <<Rectangle>> {
   class Math
   class SafeMath
   class SafeMathExtensions
-  class DMPalgorithm
+  class DmpAlgorithm
 }
 
 package Middleware <<Rectangle>> {
@@ -49,7 +49,7 @@ package Boilerplate <<Rectangle>> {
 
 package Testing <<Rectangle>> {
   class SafeMathExtensionsAdapter
-  class DMPalgorithmAdapter
+  class DmpAlgorithmAdapter
   class SuperSpeedTime
   class SuperSpeedConfig
   class CalledContract
@@ -111,12 +111,12 @@ Fees *-- Time
 Time *-- SafeMath
 Time *-- SafeMathExtensions
 
-DMPalgorithm *-- SafeMath
-DMPalgorithm *-- SafeMathExtensions
+DmpAlgorithm *-- SafeMath
+DmpAlgorithm *-- SafeMathExtensions
 
 Challenges *-- SafeMath
 Challenges *-- SafeMathExtensions
-Challenges *-- DMPalgorithm
+Challenges *-- DmpAlgorithm
 
 Challenges *-- Time
 Challenges *-- Sheltering
