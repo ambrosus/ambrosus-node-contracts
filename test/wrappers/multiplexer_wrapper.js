@@ -44,6 +44,7 @@ describe('Multiplexer wrapper', () => {
       }
     };
     multiplexerWrapper = new MultiplexerWrapper({}, web3Mock, defaultAddress);
+    sinon.stub(multiplexerWrapper, 'contract').resolves(contractMock);
   };
 
   describe('transferContractsOwnership', () => {
