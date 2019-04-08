@@ -32,7 +32,7 @@ export default class DeployTask extends TaskBase {
   async deploy(initial, args) {
     console.log(`Deploying ${initial ? 'initial set of contracts' : 'contracts update'}. This may take some time...`);
     const options = this.parseOptions(args);
-    const approvalAdresses;
+    let approvalAdresses;
     if (config.multisigApprovalAddresses !== 'undefined') {
       approvalAdresses = Array.from(config.multisigApprovalAddresses.split(','));
     } else {
