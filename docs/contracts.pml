@@ -63,6 +63,7 @@ package Front <<Rectangle>> {
   class Roles
   class Uploads
   class Challenges
+  class MultiSig
   class Payouts
   class ShelteringTransfers
 }
@@ -85,6 +86,7 @@ Catalogue *-- KycWhitelist
 Catalogue *-- Roles 
 Catalogue *-- Fees
 Catalogue *-- Challenges 
+Catalogue *-- MultiSig 
 Catalogue *-- Payouts 
 Catalogue *-- ShelteringTransfers 
 Catalogue *-- Sheltering 
@@ -118,6 +120,10 @@ Challenges *-- AtlasStakeStore
 Challenges *-- Config 
 Challenges *-- Fees 
 Challenges *-- ChallengesStore
+
+MultiSig ..|> MultiSigWallet
+MultiSig *-- Config
+MultiSig *-- Multiplexer
 
 KycWhitelist ..|> Ownable
 KycWhitelist *-- KycWhitelistStore

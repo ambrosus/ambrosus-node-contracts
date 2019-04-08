@@ -33,7 +33,7 @@ export default class DeployActions {
     return {head, validatorSet, blockRewards};
   }
 
-  async deployInitial(turbo = false) {
+  async deployInitial(approvalAdresses, turbo = false) {
     const overrides = turbo ? contractSuperSpeedJsons : {};
     const contractsToDeploy = {...contractJsons, ...overrides};
     const genesisContracts = {
@@ -41,10 +41,10 @@ export default class DeployActions {
       validatorSet: this.validatorSetWrapper.address(),
       blockRewards: this.blockRewardsWrapper.address()
     };
-    return this.deployer.deploy(contractsToDeploy, genesisContracts, [], {multiplexer: {owner: this.sender}});
+    return this.deployer.deploy(contractsToDeploy, genesisContracts, [], {multiplexer: {owner: this.sender}, multisig: {owners: approvalAdresses}});
   }
 
-  async deployUpdate(turbo = false) {
+  async deployUpdate(approvalAdresses, turbo = false) {
     const overrides = turbo ? contractSuperSpeedJsons : {};
     const contractsToDeploy = {...contractJsons, ...overrides};
     const recycledContracts = await this.recycleStorageContracts();
@@ -54,7 +54,7 @@ export default class DeployActions {
       blockRewards: this.blockRewardsWrapper.address()
     };
     await this.regainGenesisContractsOwnership();
-    return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts}, [], {multiplexer: {owner: this.sender}});
+    return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts}, [], {multiplexer: {owner: this.sender}, multisig: {owners: approvalAdresses}});
   }
 
   async recycleStorageContracts() {

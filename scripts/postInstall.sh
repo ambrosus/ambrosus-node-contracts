@@ -1,0 +1,2 @@
+mkdir node_modules/multisig-wallet-gnosis node_modules/multisig-wallet-gnosis/contracts 
+curl https://raw.githubusercontent.com/gnosis/MultiSigWallet/master/contracts/MultiSigWallet.sol -o ./node_modules/multisig-wallet-gnosis/contracts/MultiSigWallet.sol

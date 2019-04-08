@@ -21,6 +21,11 @@ export WEB3_RPC=http://localhost:8545
 export WEB3_NODEPRIVATEKEY="COPIED_PRIVATE_KEY"
 ```
 
+Then you need to set the addresses of multisig validators. It is comma separated list of addresses with C-level validators in the first place.
+```bash
+export MULTISIG_APPROVAL_ADDRESSES="CLEVEL_ADDRESS1,CLEVEL_ADDRESS2,CLEVEL_ADDRESS3,APPROVAL_ADDRESS4,APPROVAL_ADDRESS5,APPROVAL_ADDRESS6"
+```
+
 Then deploy genesis contracts and save outcome to an environment file
 ```bash
 yarn task deployGenesis --save <path to file>
