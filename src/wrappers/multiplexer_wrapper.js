@@ -18,4 +18,28 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
   async transferContractsOwnership(address) {
     return this.processTransaction(this.contract.methods.transferContractsOwnership(address));
   }
+
+  async changeContext(contextAddress) {
+    return this.processTransaction(this.contract.methods.changeContext(contextAddress));
+  }
+
+  async addToWhitelist(candidateAddress, role, deposit) {
+    return this.processTransaction(this.contract.methods.addToWhitelist(candidateAddress, role, deposit));
+  }
+
+  async removeFromWhitelist(candidateAddress) {
+    return this.processTransaction(this.contract.methods.removeFromWhitelist(candidateAddress));
+  }
+
+  async setBaseUploadFee(fee) {
+    return this.processTransaction(this.contract.methods.setBaseUploadFee(fee));
+  }
+
+  async transferOwnershipForValidatorSet(address) {
+    return this.processTransaction(this.contract.methods.transferOwnershipForValidatorSet(address));
+  }
+
+  async transferOwnershipForBlockRewards(address) {
+    return this.processTransaction(this.contract.methods.transferOwnershipForBlockRewards(address));
+  }
 }

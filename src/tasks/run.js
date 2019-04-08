@@ -77,7 +77,7 @@ const runTask = async () => {
   const nodeServiceActions = new NodeServiceActions(rolesWrapper);
   const payoutsActions = new PayoutsActions(timeWrapper, payoutsWrapper);
   const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper);
-  const adminActions = new AdministrativeActions(headWrapper, blockchainStateWrapper, multiplexerWrapper);
+  const adminActions = new AdministrativeActions(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper, multiplexerWrapper);
 
   const list = new TaskList();
   const args = process.argv.slice(2);
