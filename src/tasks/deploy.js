@@ -12,8 +12,9 @@ import commandLineArgs from 'command-line-args';
 import config from '../../config/config';
 
 export default class DeployTask extends TaskBase {
-  constructor(deployActions) {
+  constructor(web3, deployActions) {
     super();
+    this.web3 = web3;
     this.deployActions = deployActions;
   }
 
@@ -33,7 +34,7 @@ export default class DeployTask extends TaskBase {
     console.log(`Deploying ${initial ? 'initial set of contracts' : 'contracts update'}. This may take some time...`);
     const options = this.parseOptions(args);
     let approvalAdresses;
-    if (config.multisigApprovalAddresses !== 'undefined') {
+    if (typeof config.multisigApprovalAddresses !== 'undefined') {
       approvalAdresses = Array.from(config.multisigApprovalAddresses.split(','));
     } else {
       approvalAdresses = Array(6)
