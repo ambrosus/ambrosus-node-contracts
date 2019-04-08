@@ -12,6 +12,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import DeployActions from '../../src/actions/deploy_actions';
+import {createWeb3} from '../../src/utils/web3_tools';
 import contractJsons, {contractSuperSpeedJsons} from '../../src/contract_jsons';
 
 chai.use(sinonChai);
@@ -19,12 +20,14 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Deploy Actions', () => {
+  let web3;
   let deployActions;
   let mockDeployer;
   let mockHeadWrapper;
   let mockValidatorSetWrapper;
   let mockBlockRewardsWrapper;
   let mockValidatorProxyWrapper;
+  let approvalAdresses = [];
   const exampleDeployResult = 'deployResult';
   const defaultAddress = '0xbeefdead';
   const validatorProxyAddress = '0x382919';
@@ -37,6 +40,11 @@ describe('Deploy Actions', () => {
     contractA: '0x1234',
     contractB: '0xABCD'
   };
+
+  before(async () => {
+    web3 = await createWeb3();
+    [approvalAdresses[0], approvalAdresses[1], approvalAdresses[2], approvalAdresses[3], approvalAdresses[4], approvalAdresses[5]] = await web3.eth.getAccounts();
+  });
 
   beforeEach(() => {
     mockDeployer = {
@@ -96,12 +104,12 @@ describe('Deploy Actions', () => {
 
   describe('deployInitial', () => {
     it('passes contract jsons to the deployer together with already deployed genesis addresses', async () => {
-      expect(await deployActions.deployInitial()).to.equal(exampleDeployResult);
+      expect(await deployActions.deployInitial(approvalAdresses)).to.equal(exampleDeployResult);
       expect(mockDeployer.deploy).to.be.calledOnceWith(contractJsons, genesisContracts);
     });
 
     it('overwrites some contracts in turbo mode', async () => {
-      await deployActions.deployInitial(true);
+      await deployActions.deployInitial(approvalAdresses, true);
       expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, genesisContracts);
     });
   });
@@ -121,7 +129,7 @@ describe('Deploy Actions', () => {
     });
 
     it('recycles some deployed contracts, reclaims ownership and deploys the update', async () => {
-      expect(await deployActions.deployUpdate()).to.equal(exampleDeployResult);
+      expect(await deployActions.deployUpdate(approvalAdresses)).to.equal(exampleDeployResult);
       expect(recycleStorageContractsStub).to.have.been.calledOnce;
       expect(regainGenesisContractsOwnershipStub).to.have.been.calledOnceWith();
 
@@ -129,7 +137,7 @@ describe('Deploy Actions', () => {
     });
 
     it('overwrites some contracts in turbo mode', async () => {
-      await deployActions.deployUpdate(true);
+      await deployActions.deployUpdate(approvalAdresses, true);
       expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, {...genesisContracts, ...exampleStorageContracts});
     });
   });

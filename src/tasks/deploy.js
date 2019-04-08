@@ -32,7 +32,15 @@ export default class DeployTask extends TaskBase {
   async deploy(initial, args) {
     console.log(`Deploying ${initial ? 'initial set of contracts' : 'contracts update'}. This may take some time...`);
     const options = this.parseOptions(args);
-    const approvalAdresses = Array.from(config.multisigApprovalAddresses.split(','));
+    const approvalAdresses;
+    if (config.multisigApprovalAddresses !== 'undefined') {
+      approvalAdresses = Array.from(config.multisigApprovalAddresses.split(','));
+    } else {
+      approvalAdresses = Array(6)
+      .fill(null)
+      .map(() => this.web3.eth.accounts.create().address);
+    console.log(`Initial multisig validators are: ${approvalAdresses}`);
+    }
 
     if (options.turbo) {
       console.log('⚡️ Deploying in super speed mode. ⚡️');
