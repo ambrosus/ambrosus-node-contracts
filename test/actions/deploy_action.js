@@ -27,7 +27,7 @@ describe('Deploy Actions', () => {
   let mockValidatorSetWrapper;
   let mockBlockRewardsWrapper;
   let mockValidatorProxyWrapper;
-  let approvalAdresses = [];
+  const approvalAdresses = [];
   const exampleDeployResult = 'deployResult';
   const defaultAddress = '0xbeefdead';
   const validatorProxyAddress = '0x382919';
