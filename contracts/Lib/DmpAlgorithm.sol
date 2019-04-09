@@ -27,47 +27,59 @@ library DmpAlgorithm {
         return uint32(uint256(keccak256(abi.encodePacked(dmpBaseHash, currentRound))).mod(dmpLength));
     }
 
-    function qualifyShelterTypeStake(bytes32 dmpBaseHash, uint[] atlasCount, uint[] ATLAS_NUMERATOR, uint32 length) internal pure returns (uint32) {
-        uint denominator = 0;
-        uint32 i = 0;
+    function selectingAtlasTier(bytes32 dmpBaseHash, uint[] atlasCount, uint[] ATLAS_NUMERATOR) internal pure returns (uint32) {
+        require(atlasCount.length == ATLAS_NUMERATOR.length);
+        
+        uint[] memory wcd = calculateWcd(atlasCount, ATLAS_NUMERATOR);
 
-        for (i = 0; i < length; i++) {
-            uint elem = atlasCount[i].mul(ATLAS_NUMERATOR[i]);
+        uint32 tier = selectRandomlyFrom(dmpBaseHash, wcd);
+
+        return tier;
+    }
+
+    function calculateDenominator(uint[] atlasCount, uint[] ATLAS_NUMERATOR) private pure returns (uint) {
+        uint denominator = 0;
+        for (uint tier = 0; tier < ATLAS_NUMERATOR.length; tier++) {
+            uint elem = atlasCount[tier].mul(ATLAS_NUMERATOR[tier]);
             denominator = denominator.add(elem);
         }
+        return denominator;
+    }
 
+    function calculateWcd(uint[] atlasCount, uint[] ATLAS_NUMERATOR) private pure returns (uint[]) {
+        uint[] memory wcd = new uint[](ATLAS_NUMERATOR.length);
         uint currentWCD = 0;
-        uint[] memory wcd = new uint[](length);
+        uint denominator = calculateDenominator(atlasCount, ATLAS_NUMERATOR);
 
-        for (i = 0; i < length; i++) {
-            uint currentNum = atlasCount[i].mul(ATLAS_NUMERATOR[i]);
-            if (currentNum == 0) {
-                wcd[i] = 0;
-            }
+        for (uint tier = 0; tier < ATLAS_NUMERATOR.length; tier++) {
+            uint currentNum = atlasCount[tier].mul(ATLAS_NUMERATOR[tier]);
+
             if (currentNum == denominator) {
-                wcd[i] = DMP_PRECISION;
+                wcd[tier] = DMP_PRECISION;
                 currentWCD = DMP_PRECISION;
             } else {
                 currentNum = currentNum.mul(DMP_PRECISION).div(denominator);
                 currentWCD = currentWCD.add(currentNum);
-                wcd[i] = currentWCD;
+                wcd[tier] = currentWCD;
             }
         }
 
-        for (i = length - 1; i >= 0; i--) {
-            if (wcd[i] != 0) {
-                wcd[i] = DMP_PRECISION;
+        for (tier = ATLAS_NUMERATOR.length - 1; tier >= 0; tier--) {
+            if (wcd[tier] != 0) {
+                wcd[tier] = DMP_PRECISION;
                 break;
             }
         }
+        return wcd;
+    }
 
+    function selectRandomlyFrom(bytes32 dmpBaseHash, uint[] wcd) private pure returns (uint32) {
         uint randomNumber = uint(dmpBaseHash).mod(DMP_PRECISION);
-        for (i = 0; i < length; i++) {
-            if (wcd[i] != 0 && randomNumber <= wcd[i]) {
+        for (uint32 tier = 0; tier < wcd.length; tier++) {
+            if (wcd[tier] != 0 && randomNumber <= wcd[tier]) {
                 break;
             }
         }
-
-        return i;
+        return tier;
     }
 }

@@ -20,9 +20,9 @@ import {
   ATLAS3_STAKE,
   ROUND_DURATION,
   FIRST_PHASE_DURATION,
-  ATLAS1_NUMENATOR,
-  ATLAS2_NUMENATOR,
-  ATLAS3_NUMENATOR
+  ATLAS1_NUMERATOR,
+  ATLAS2_NUMERATOR,
+  ATLAS3_NUMERATOR
 } from '../../../src/constants';
 import {ONE, DAY, SYSTEM_CHALLENGES_COUNT} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
@@ -111,7 +111,7 @@ describe('Challenges Contract', () => {
 
   const getBaseHash = async (challengeId, sequenceNumber) => DmpAlgorithmAdapter.methods.getBaseHash(challengeId, sequenceNumber).call();
   const qualifyShelterer = async(dmpBaseHash, dmpLength, currentRound) => DmpAlgorithmAdapter.methods.qualifyShelterer(dmpBaseHash, dmpLength, currentRound).call();
-  const qualifyShelterTypeStake = async(dmpBaseHash, atlasCounts, atlasNum, length) => DmpAlgorithmAdapter.methods.qualifyShelterTypeStake(dmpBaseHash, atlasCounts, atlasNum, length).call();
+  const selectingAtlasTier = async(dmpBaseHash, atlasCounts, atlasNum) => DmpAlgorithmAdapter.methods.selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNum).call();
 
   // eslint-disable-next-line new-cap
 
@@ -706,10 +706,10 @@ describe('Challenges Contract', () => {
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
       const dmpBaseHash = await getBaseHash(challengeId, sequenceNumber);
 
-      const atlasNums = Array.from([ATLAS1_NUMENATOR, ATLAS2_NUMENATOR, ATLAS3_NUMENATOR]);
+      const atlasNums = Array.from([ATLAS1_NUMERATOR, ATLAS2_NUMERATOR, ATLAS3_NUMERATOR]);
       const atlasCounts = Array.from([atlas1Count, atlas2Count, atlas3Count]);
 
-      const resolverType = await qualifyShelterTypeStake(dmpBaseHash, atlasCounts, atlasNums, 3);
+      const resolverType = await selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNums);
 
       if (resolverType === '0') {
         chosenAtlas = Array.from(atlas1);

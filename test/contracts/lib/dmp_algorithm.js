@@ -17,9 +17,9 @@ import BN from 'bn.js';
 import {
   DMP_PRECISION,
   ROUND_DURATION,
-  ATLAS1_NUMENATOR,
-  ATLAS2_NUMENATOR,
-  ATLAS3_NUMENATOR
+  ATLAS1_NUMERATOR,
+  ATLAS2_NUMERATOR,
+  ATLAS3_NUMERATOR
 } from '../../../src/constants';
 
 chai.use(sinonChai);
@@ -27,19 +27,20 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe('DMP alrgorithm library', () => {
+describe('DMP algorithm library', () => {
   let DmpAlgorithmAdapter;
   let time;
   let web3;
   let snapshotId;
   let context;
+  let dmpBaseHash;
   const now = 1500000000;
   const challengeId = utils.keccak256('someChallengeId');
   const sequenceNumber = 2;
   const creationTime = now;
-  const atlasNums = Array.from([ATLAS1_NUMENATOR, ATLAS2_NUMENATOR, ATLAS3_NUMENATOR]);
-  const atlasCounts = Array.from([2, 4, 8]);
-  const atlasCountsNoLast = Array.from([2, 4, 0]);
+  const atlasNums = [ATLAS1_NUMERATOR, ATLAS2_NUMERATOR, ATLAS3_NUMERATOR];
+  const atlasCounts = [2, 4, 8];
+  const atlasCountsNoLast = [2, 4, 0];
 
   const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from: context});
   const currentTimestamp = async () => time.methods.currentTimestamp().call();
@@ -47,7 +48,7 @@ describe('DMP alrgorithm library', () => {
   const getBaseHash = async (challengeId, sequenceNumber) => DmpAlgorithmAdapter.methods.getBaseHash(challengeId, sequenceNumber).call();
   const getQualifyHash = async (challengeId, sequenceNumber, currentRound) => DmpAlgorithmAdapter.methods.getQualifyHash(challengeId, sequenceNumber, currentRound).call();
   const qualifyShelterer = async(dmpBaseHash, dmpLength, currentRound) => DmpAlgorithmAdapter.methods.qualifyShelterer(dmpBaseHash, dmpLength, currentRound).call();
-  const qualifyShelterTypeStake = async(dmpBaseHash, atlasCounts, atlasNum, length) => DmpAlgorithmAdapter.methods.qualifyShelterTypeStake(dmpBaseHash, atlasCounts, atlasNum, length).call();
+  const selectingAtlasTier = async(dmpBaseHash, atlasCounts, atlasNum) => DmpAlgorithmAdapter.methods.selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNum).call();
 
   before(async () => {
     web3 = await createWeb3();
@@ -66,78 +67,74 @@ describe('DMP alrgorithm library', () => {
     await restoreSnapshot(web3, snapshotId);
   });
 
-  describe('DMP algorithm testing', () => {
-    let dmpBaseHash;
+  beforeEach(async () => {
+    dmpBaseHash = await getBaseHash(challengeId, sequenceNumber);
+  });
 
-    beforeEach(async () => {
-      dmpBaseHash = await getBaseHash(challengeId, sequenceNumber);
-    });
+  const getCurrentRound = async () => {
+    const currentTime = await currentTimestamp();
+    const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
 
-    const getCurrentRound = async () => {
-      const currentTime = await currentTimestamp();
-      const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
+    return currentRound;
+  };
 
-      return currentRound;
-    };
+  const chosenByIndex = async (atlassianCount, currentRound) => {
+    const dmpIndexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
+    const dmpIndex = web3.utils.toBN(dmpIndexHash).mod(new BN(atlassianCount))
+      .toNumber();
 
-    const chosenByIndex = async (atlassianCount, currentRound) => {
-      const dmpIndexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
-      const dmpIndex = web3.utils.toBN(dmpIndexHash).mod(new BN(atlassianCount))
-        .toNumber();
+    return dmpIndex;
+  };
 
-      return dmpIndex;
-    };
+  const chosenByType = async (atlas1Count, atlas2Count, atlas3Count) => {
+    const denominator = ((atlas1Count * ATLAS1_NUMERATOR) + (atlas2Count * ATLAS2_NUMERATOR) + (atlas3Count * ATLAS3_NUMERATOR));
 
-    const chosenByType = async (atlas1Count, atlas2Count, atlas3Count) => {
-      const denominator = ((atlas1Count * ATLAS1_NUMENATOR) + (atlas2Count * ATLAS2_NUMENATOR) + (atlas3Count * ATLAS3_NUMENATOR));
+    const randomNumber = web3.utils.toBN(dmpBaseHash).mod(new BN(DMP_PRECISION))
+      .toNumber();
 
-      const randomNumber = web3.utils.toBN(dmpBaseHash).mod(new BN(DMP_PRECISION))
-        .toNumber();
+    const atlas1WCD = Math.floor((atlas1Count * ATLAS1_NUMERATOR * DMP_PRECISION) / denominator);
+    const atlas2WCD = atlas1WCD + Math.floor((atlas2Count * ATLAS2_NUMERATOR * DMP_PRECISION) / denominator);
+    const atlas3WCD = atlas2WCD + Math.floor((atlas3Count * ATLAS3_NUMERATOR * DMP_PRECISION) / denominator);
 
-      const atlas1WCD = Math.floor((atlas1Count * ATLAS1_NUMENATOR * DMP_PRECISION) / denominator);
-      const atlas2WCD = atlas1WCD + Math.floor((atlas2Count * ATLAS2_NUMENATOR * DMP_PRECISION) / denominator);
-      const atlas3WCD = atlas2WCD + Math.floor((atlas3Count * ATLAS3_NUMENATOR * DMP_PRECISION) / denominator);
+    if (atlas1WCD !== 0 && randomNumber <= atlas1WCD) {
+      return 0;
+    } else if (atlas2WCD !== 0 && randomNumber <= atlas2WCD) {
+      return 1;
+    } else if (atlas3WCD !== 0 && randomNumber <= atlas3WCD) {
+      return 2;
+    }
+  };
 
-      if (atlas1WCD !== 0 && randomNumber <= atlas1WCD) {
-        return 0;
-      } else if (atlas2WCD !== 0 && randomNumber <= atlas2WCD) {
-        return 1;
-      } else if (atlas3WCD !== 0 && randomNumber <= atlas3WCD) {
-        return 2;
-      }
-    };
+  it('Correct type is returned in the first phase', async () => {
+    const calculatedType = await chosenByType(atlasCounts[0], atlasCounts[1], atlasCounts[2]);
+    const resolverType = web3.utils.toBN(await selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNums)).toNumber();
 
-    it('Correct type is returned in the first phase', async () => {
-      const calculatedType = await chosenByType(atlasCounts[0], atlasCounts[1], atlasCounts[2]);
-      const resolverType = web3.utils.toBN(await qualifyShelterTypeStake(dmpBaseHash, atlasCounts, atlasNums, 3)).toNumber();
+    expect(resolverType).to.equal(calculatedType);
+  });
 
-      expect(resolverType).to.equal(calculatedType);
-    });
+  it('Correct index is returned in the second phase', async () => {
+    let currentRound = await getCurrentRound();
+    let calculatedIndex = await chosenByIndex(20, currentRound);
 
-    it('Correct index is returned in the second phase', async () => {
-      let currentRound = await getCurrentRound();
-      let calculatedIndex = await chosenByIndex(20, currentRound);
+    let resolverIndex = web3.utils.toBN(await qualifyShelterer(dmpBaseHash, 20, currentRound)).toNumber();
 
-      let resolverIndex = web3.utils.toBN(await qualifyShelterer(dmpBaseHash, 20, currentRound)).toNumber();
+    expect(resolverIndex).to.equal(calculatedIndex);
 
-      expect(resolverIndex).to.equal(calculatedIndex);
+    await setTimestamp(now + (ROUND_DURATION * 5));
 
-      await setTimestamp(now + (ROUND_DURATION * 5));
+    currentRound = await getCurrentRound();
+    calculatedIndex = await chosenByIndex(20, currentRound);
 
-      currentRound = await getCurrentRound();
-      calculatedIndex = await chosenByIndex(20, currentRound);
+    resolverIndex = web3.utils.toBN(await qualifyShelterer(dmpBaseHash, 20, currentRound)).toNumber();
 
-      resolverIndex = web3.utils.toBN(await qualifyShelterer(dmpBaseHash, 20, currentRound)).toNumber();
+    expect(resolverIndex).to.equal(calculatedIndex);
+  });
 
-      expect(resolverIndex).to.equal(calculatedIndex);
-    });
+  it('Correct index is returned if last atlas type is absent', async () => {
+    const calculatedType = await chosenByType(atlasCountsNoLast[0], atlasCountsNoLast[1], atlasCountsNoLast[2]);
 
-    it('Correct index is returned if last atlas type is absent', async () => {
-      const calculatedType = await chosenByType(atlasCountsNoLast[0], atlasCountsNoLast[1], atlasCountsNoLast[2]);
+    const resolverType = web3.utils.toBN(await selectingAtlasTier(dmpBaseHash, atlasCountsNoLast, atlasNums)).toNumber();
 
-      const resolverType = web3.utils.toBN(await qualifyShelterTypeStake(dmpBaseHash, atlasCountsNoLast, atlasNums, 3)).toNumber();
-
-      expect(resolverType).to.equal(calculatedType);
-    });
+    expect(resolverType).to.equal(calculatedType);
   });
 });

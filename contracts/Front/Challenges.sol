@@ -214,7 +214,7 @@ contract Challenges is Base {
             atlasNumerators[i] = config.ATLAS_NUMERATOR(i);
         }
 
-        uint32 dmpType = DmpAlgorithm.qualifyShelterTypeStake(dmpBaseHash, atlasTypeCounts, atlasNumerators, length);
+        uint32 dmpType = DmpAlgorithm.selectingAtlasTier(dmpBaseHash, atlasTypeCounts, atlasNumerators);
         uint atlasCount = atlasTypeCounts[dmpType];
 
         return (atlasCount, dmpType);

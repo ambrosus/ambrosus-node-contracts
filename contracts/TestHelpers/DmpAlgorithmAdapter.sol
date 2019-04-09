@@ -28,7 +28,7 @@ contract DmpAlgorithmAdapter {
         return DmpAlgorithm.qualifyShelterer(dmpBaseHash, dmpLength, currentRound);
     }
 
-    function qualifyShelterTypeStake(bytes32 dmpBaseHash, uint[] atlasCount, uint[] ATLAS_NUMERATOR, uint32 length) public pure returns (uint32) {
-        return DmpAlgorithm.qualifyShelterTypeStake(dmpBaseHash, atlasCount, ATLAS_NUMERATOR, length);
+    function selectingAtlasTier(bytes32 dmpBaseHash, uint[] atlasCount, uint[] ATLAS_NUMERATOR) public pure returns (uint32) {
+        return DmpAlgorithm.selectingAtlasTier(dmpBaseHash, atlasCount, ATLAS_NUMERATOR);
     }
 }
