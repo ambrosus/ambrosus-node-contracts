@@ -41,7 +41,12 @@ export default class DeployActions {
       validatorSet: this.validatorSetWrapper.address(),
       blockRewards: this.blockRewardsWrapper.address()
     };
-    return this.deployer.deploy(contractsToDeploy, genesisContracts, [], {multiplexer: {owner: this.sender}, multisig: {owners: approvalAdresses}});
+
+    let skippedContracts = [];
+    if (typeof approvalAdresses === 'undefined') {
+      skippedContracts.push('multisig');
+    }
+    return this.deployer.deploy(contractsToDeploy, genesisContracts, skippedContracts, {multiplexer: {owner: this.sender}, multisig: {owners: approvalAdresses}});
   }
 
   async deployUpdate(approvalAdresses, turbo = false) {
@@ -53,8 +58,13 @@ export default class DeployActions {
       validatorSet: this.validatorSetWrapper.address(),
       blockRewards: this.blockRewardsWrapper.address()
     };
+
+    let skippedContracts = [];
+    if (typeof approvalAdresses === 'undefined') {
+      skippedContracts.push('multisig');
+    }
     await this.regainGenesisContractsOwnership();
-    return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts}, [], {multiplexer: {owner: this.sender}, multisig: {owners: approvalAdresses}});
+    return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts}, skippedContracts, {multiplexer: {owner: this.sender}, multisig: {owners: approvalAdresses}});
   }
 
   async recycleStorageContracts() {

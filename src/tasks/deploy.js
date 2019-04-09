@@ -36,11 +36,6 @@ export default class DeployTask extends TaskBase {
     let approvalAdresses;
     if (typeof config.multisigApprovalAddresses !== 'undefined') {
       approvalAdresses = Array.from(config.multisigApprovalAddresses.split(','));
-    } else {
-      approvalAdresses = Array(6)
-        .fill(null)
-        .map(() => this.web3.eth.accounts.create().address);
-      console.log(`Initial multisig validators are: ${approvalAdresses}`);
     }
 
     if (options.turbo) {
