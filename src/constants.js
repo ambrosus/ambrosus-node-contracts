@@ -24,3 +24,7 @@ export const ATLAS3_STAKE = utils.toWei('75000');
 export const APOLLO_DEPOSIT = utils.toWei('250000');
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
+export const C_LEVEL_NUMBER = 3;
+export const APPROVALS_REQUIRED = 4;
+export const TOTAL_APPROVALS = 6;
