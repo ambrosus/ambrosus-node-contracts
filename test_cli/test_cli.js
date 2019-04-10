@@ -144,19 +144,20 @@ startGanacheServer(
         }
       };
 
-      const verifyOwnershipState = async (address, expectedOwner) => {
-        const ret = await execute(`yarn task checkOwnership ${address}`, adminEnv);
-        const regex = new RegExp(expectedOwner, 'g');
-        if (!regex.test(ret)) {
-          throw new Error(`Expected contract owner to be ${expectedOwner} but got ${ret}`);
-        }
-      };
-
-      console.log('------ test multiplexer ------');
-      await execute(`yarn task moveOwnershipToMultiplexer ${adminEnv.MULTIPLEXER_CONTRACT_ADDRESS}`, adminEnv);
-      await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminEnv.MULTIPLEXER_CONTRACT_ADDRESS);
-      await execute(`yarn task moveOwnershipFromMultiplexer ${adminUser.address}`, adminEnv);
-      await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminUser.address);
+      // TODO uncomment after multisig is ready
+      // const verifyOwnershipState = async (address, expectedOwner) => {
+      //   const ret = await execute(`yarn task checkOwnership ${address}`, adminEnv);
+      //   const regex = new RegExp(expectedOwner, 'g');
+      //   if (!regex.test(ret)) {
+      //     throw new Error(`Expected contract owner to be ${expectedOwner} but got ${ret}`);
+      //   }
+      // };
+      //
+      // console.log('------ test multiplexer ------');
+      // await execute(`yarn task moveOwnershipToMultiplexer ${adminEnv.MULTIPLEXER_CONTRACT_ADDRESS}`, adminEnv);
+      // await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminEnv.MULTIPLEXER_CONTRACT_ADDRESS);
+      // await execute(`yarn task moveOwnershipFromMultiplexer ${adminUser.address}`, adminEnv);
+      // await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminUser.address);
 
       console.log('------ test whitelisting ------');
       await verifyNodeState(apolloUser.address, 'NONE', 'NONE', '0', '');
