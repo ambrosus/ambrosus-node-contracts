@@ -11,7 +11,7 @@ import ContractWrapper from './contract_wrapper';
 import {loadContract} from '../utils/web3_tools';
 import {multisig} from '../contract_jsons';
 
- export default class MultisigWrapper extends ContractWrapper {
+export default class MultisigWrapper extends ContractWrapper {
   constructor(contractAddress, web3, defaultAddress) {
     super(web3, defaultAddress);
     this.contract = loadContract(web3, multisig.abi, contractAddress);
