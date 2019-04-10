@@ -38,7 +38,7 @@ import ChallengesEventEmitter from './contracts/ChallengesEventEmitter.json';
 import RolesEventEmitter from './contracts/RolesEventEmitter.json';
 import TransfersEventEmitter from './contracts/TransfersEventEmitter.json';
 import Multiplexer from './contracts/Multiplexer.json';
-import MultiSigJson from './contracts/MultiSig.json';
+import MultisigWalletJson from './contracts/MultisigWallet.json';
 
 const contractJsons = {
   head: HeadJson,
@@ -69,9 +69,10 @@ const contractJsons = {
   challengesEventEmitter: ChallengesEventEmitter,
   rolesEventEmitter: RolesEventEmitter,
   transfersEventEmitter: TransfersEventEmitter,
-  multiplexer: Multiplexer,
-  multisig: MultiSigJson
+  multiplexer: Multiplexer
 };
+
+export const multisig = MultisigWalletJson;
 
 export const contractSuperSpeedJsons = {
   config: SuperSpeedConfig,

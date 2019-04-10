@@ -44,9 +44,9 @@ export default class DeployTask extends TaskBase {
 
     let contracts;
     if (initial) {
-      contracts = await this.deployActions.deployInitial(approvalAdresses, options.turbo);
+      contracts = await this.deployActions.deployInitial(options.turbo);
     } else {
-      contracts = await this.deployActions.deployUpdate(approvalAdresses, options.turbo);
+      contracts = await this.deployActions.deployUpdate(options.turbo);
     }
     console.log(`Current contract set: `);
     this.prettyPrintAddresses(contracts);

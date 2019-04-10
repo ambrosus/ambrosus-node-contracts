@@ -73,6 +73,5 @@ module.exports = {
   BundleStoreWrapper,
   AtlasStakeStoreWrapper,
   RolesEventEmitterWrapper,
-  MultiplexerWrapper,
-  MultiSigWrapper
+  MultiplexerWrapper
 };
