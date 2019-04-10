@@ -20,16 +20,16 @@ const writeFile = (path, data) =>
     });
   });
 
-  const appendFile = (path, data) =>
-   new Promise((resolve, reject) => {
-     fs.appendFile(path, data, (err) => {
-       if (err) {
-         reject(err);
-       } else {
-         resolve(data);
-       }
-     })
-   })
+const appendFile = (path, data) =>
+  new Promise((resolve, reject) => {
+    fs.appendFile(path, data, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
 
 const readFile = (path) =>
   new Promise((resolve, reject) => {

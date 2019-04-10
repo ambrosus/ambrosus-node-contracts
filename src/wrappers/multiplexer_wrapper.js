@@ -16,7 +16,7 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
     this.functionAbis = this.getFunctionSignatures(contractJsons.multiplexer.abi);
   }
 
-   getFunctionSignatures(abi) {
+  getFunctionSignatures(abi) {
     return abi
       .filter((abiEntry) => abiEntry.type === 'function' && !abiEntry.constant)
       .map((abiEntry) => ({
@@ -28,17 +28,17 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
       .reduce((acc, entry) => ({...acc, ...entry}), {});
   }
 
-   getFunctionName(transactionData) {
+  getFunctionName(transactionData) {
     return this.functionAbis[transactionData.substring(0, 10)].name;
   }
 
-   getFunctionArguments(transactionData) {
+  getFunctionArguments(transactionData) {
     const {inputs} = this.functionAbis[transactionData.substring(0, 10)];
     const parameters = this.web3.eth.abi.decodeParameters(inputs, `0x${transactionData.substring(10)}`);
     return inputs.reduce((acc, {name}) => ({...acc, [name]: parameters[name]}), {});
   }
 
-   async transferOwnership(newOwnerAddress) {
+  async transferOwnership(newOwnerAddress) {
     return this.contract.methods.transferOwnership(newOwnerAddress).encodeABI();
   }
 

@@ -13,7 +13,7 @@ import {appendFile} from '../utils/file';
 import config from '../../config/config';
 import {multisig} from '../../src/contract_jsons';
 import {
-  APPROVALS_REQUIRED,
+  APPROVALS_REQUIRED
 } from '../constants';
 
 export default class DeployMultisigTask extends TaskBase {
