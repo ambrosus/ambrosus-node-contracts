@@ -20,6 +20,17 @@ const writeFile = (path, data) =>
     });
   });
 
+  const appendFile = (path, data) =>
+   new Promise((resolve, reject) => {
+     fs.appendFile(path, data, (err) => {
+       if (err) {
+         reject(err);
+       } else {
+         resolve(data);
+       }
+     })
+   })
+
 const readFile = (path) =>
   new Promise((resolve, reject) => {
     fs.readFile(path, (err, data) => {
@@ -49,4 +60,4 @@ const listDirectory = (path) =>
     });
   });
 
-export {writeFile, readFile, checkFileExists, listDirectory};
+export {writeFile, appendFile, readFile, checkFileExists, listDirectory};

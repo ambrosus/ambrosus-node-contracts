@@ -9,7 +9,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import commandLineArgs from 'command-line-args';
-import config from '../../config/config';
 
 export default class DeployTask extends TaskBase {
   constructor(deployActions) {
@@ -32,10 +31,6 @@ export default class DeployTask extends TaskBase {
   async deploy(initial, args) {
     console.log(`Deploying ${initial ? 'initial set of contracts' : 'contracts update'}. This may take some time...`);
     const options = this.parseOptions(args);
-    let approvalAdresses;
-    if (typeof config.multisigApprovalAddresses !== 'undefined') {
-      approvalAdresses = Array.from(config.multisigApprovalAddresses.split(','));
-    }
 
     if (options.turbo) {
       console.log('⚡️ Deploying in super speed mode. ⚡️');
