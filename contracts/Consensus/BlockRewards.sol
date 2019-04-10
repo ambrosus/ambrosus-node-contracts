@@ -36,6 +36,8 @@ contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
     uint256 public baseReward;
     mapping(address => uint) public shares;
 
+    event BaseRewardChanged(uint baseReward);
+
     /**
     @notice Constructor
     @param _owner the owner of this contract, that can add/remove valiators and their share.
@@ -94,6 +96,7 @@ contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
 
     function setBaseReward(uint256 _baseReward) public onlyOwner {
         baseReward = _baseReward;
+        emit BaseRewardChanged(baseReward);
     }
 
     function isBeneficiary(address beneficiary) public view returns(bool) {

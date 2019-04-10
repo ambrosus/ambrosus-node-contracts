@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai, {expect} from 'chai';
+import sinon from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
 import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
 import contractJsons from '../../src/contract_jsons';
@@ -32,6 +33,28 @@ describe('Block Rewards Wrapper', () => {
 
   it('getOwner returns the owner address', async () => {
     await expect(wrapper.getOwner()).to.eventually.equal(ownerAddress);
+  });
+
+  describe('baseRewardChanges', () => {
+    let getPastEventsStub;
+    let mockedWrapper;
+    const eventsStub = 'events';
+    const fromBlock = 4;
+    const toBlock = 6;
+
+    before(async () => {
+      getPastEventsStub = sinon.stub().returns(eventsStub);
+      const contractMock = {
+        getPastEvents: getPastEventsStub
+      };
+      mockedWrapper = new BlockRewardsWrapper(contract.options.address, web3);
+      mockedWrapper.contract = contractMock;
+    });
+
+    it('gets past base reward changes', async () => {
+      expect(await mockedWrapper.baseRewardChanges(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(getPastEventsStub).to.be.calledWith('BaseRewardChanged', {fromBlock, toBlock});
+    });
   });
 });
 

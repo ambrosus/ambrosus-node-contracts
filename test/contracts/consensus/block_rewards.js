@@ -191,6 +191,13 @@ describe('Block rewards contract', () => {
       expect(await baseReward(contract, owner)).to.equal(exampleDifferentBaseReward);
     });
 
+    it('emits an event', async () => {
+      await expect(setBaseReward(contract, owner, exampleDifferentBaseReward)).to.eventually.be.fulfilled;
+      const baseRewardChangeEvents = await contract.getPastEvents('BaseRewardChanged');
+      expect(baseRewardChangeEvents.length).to.equal(1);
+      expect(baseRewardChangeEvents[0].returnValues.baseReward).to.equal(exampleDifferentBaseReward);
+    });
+
     it('can only be called by owner', async () => {
       await expect(setBaseReward(contract, otherUser, exampleDifferentBaseReward)).to.eventually.be.rejected;
     });

@@ -14,4 +14,8 @@ export default class BlockRewardsWrapper extends GenesisContractWrapper {
   constructor(blockRewardsContractAddress, web3, defaultAddress) {
     super(blockRewardsContractAddress, contractJsons.blockRewards, web3, defaultAddress);
   }
+
+  async baseRewardChanges(fromBlock, toBlock) {
+    return this.contract.getPastEvents('BaseRewardChanged', {fromBlock, toBlock});
+  }
 }
