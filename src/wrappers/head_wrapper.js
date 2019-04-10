@@ -25,7 +25,6 @@ export default class HeadWrapper extends GenesisContractWrapper {
       'fees',
       'time',
       'challenges',
-      'multisig',
       'payouts',
       'shelteringTransfers',
       'sheltering',

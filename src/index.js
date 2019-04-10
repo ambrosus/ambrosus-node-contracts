@@ -38,7 +38,6 @@ import ChallengeActions from './actions/challenge_actions';
 import {InsufficientFundsToStartChallengeError, InsufficientFundsToUploadBundleError} from './errors/errors';
 import AtlasStakeStoreWrapper from './wrappers/atlas_stake_store_wrapper';
 import MultiplexerWrapper from './wrappers/multiplexer_wrapper';
-import MultiSigWrapper from './wrappers/multisig_wrapper';
 const constants = require('./constants');
 
 module.exports = {

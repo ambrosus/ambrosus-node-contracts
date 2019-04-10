@@ -41,7 +41,7 @@ export default class DeployActions {
       validatorSet: this.validatorSetWrapper.address(),
       blockRewards: this.blockRewardsWrapper.address()
     };
-    return this.deployer.deploy(contractsToDeploy, genesisContracts, skippedContracts, {multiplexer: {owner: this.sender}});
+    return this.deployer.deploy(contractsToDeploy, genesisContracts, [], {multiplexer: {owner: this.sender}});
   }
 
   async deployUpdate(turbo = false) {
@@ -54,7 +54,7 @@ export default class DeployActions {
       blockRewards: this.blockRewardsWrapper.address()
     };
     await this.regainGenesisContractsOwnership();
-    return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts}, skippedContracts, {multiplexer: {owner: this.sender}});
+    return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts}, [], {multiplexer: {owner: this.sender}});
   }
 
   async recycleStorageContracts() {

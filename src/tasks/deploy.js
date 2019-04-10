@@ -12,9 +12,8 @@ import commandLineArgs from 'command-line-args';
 import config from '../../config/config';
 
 export default class DeployTask extends TaskBase {
-  constructor(web3, deployActions) {
+  constructor(deployActions) {
     super();
-    this.web3 = web3;
     this.deployActions = deployActions;
   }
 
