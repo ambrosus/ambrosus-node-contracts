@@ -31,6 +31,17 @@ const readFile = (path) =>
     });
   });
 
+const appendFile = (path, data) =>
+  new Promise((resolve, reject) => {
+    fs.appendFile(path, data, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+
 const checkFileExists = (path) =>
   new Promise((resolve) => {
     fs.access(path, (err) => {
@@ -49,4 +60,4 @@ const listDirectory = (path) =>
     });
   });
 
-export {writeFile, readFile, checkFileExists, listDirectory};
+export {writeFile, appendFile, readFile, checkFileExists, listDirectory};
