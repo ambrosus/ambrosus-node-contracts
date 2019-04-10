@@ -13,33 +13,60 @@ import GenesisContractWrapper from './genesis_contract_wrapper';
 export default class MultiplexerWrapper extends GenesisContractWrapper {
   constructor(multiplexerContractAddress, web3, defaultAddress) {
     super(multiplexerContractAddress, contractJsons.multiplexer, web3, defaultAddress);
+    this.functionAbis = this.getFunctionSignatures(contractJsons.multiplexer.abi);
+  }
+
+  getFunctionSignatures(abi) {
+    return abi
+      .filter((abiEntry) => abiEntry.type === 'function' && !abiEntry.constant)
+      .map((abiEntry) => ({
+        [this.web3.eth.abi.encodeFunctionSignature(abiEntry)]: {
+          name: abiEntry.name,
+          inputs: abiEntry.inputs
+        }
+      }))
+      .reduce((acc, entry) => ({...acc, ...entry}), {});
+  }
+
+  getFunctionName(transactionData) {
+    return this.functionAbis[transactionData.substring(0, 10)].name;
+  }
+
+  getFunctionArguments(transactionData) {
+    const {inputs} = this.functionAbis[transactionData.substring(0, 10)];
+    const parameters = this.web3.eth.abi.decodeParameters(inputs, `0x${transactionData.substring(10)}`);
+    return inputs.reduce((acc, {name}) => ({...acc, [name]: parameters[name]}), {});
+  }
+
+  async transferOwnership(newOwnerAddress) {
+    return this.contract.methods.transferOwnership(newOwnerAddress).encodeABI();
   }
 
   async transferContractsOwnership(address) {
-    return this.processTransaction(this.contract.methods.transferContractsOwnership(address));
+    return this.contract.methods.transferContractsOwnership(address).encodeABI();
   }
 
   async changeContext(contextAddress) {
-    return this.processTransaction(this.contract.methods.changeContext(contextAddress));
+    return this.contract.methods.changeContext(contextAddress).encodeABI();
   }
 
   async addToWhitelist(candidateAddress, role, deposit) {
-    return this.processTransaction(this.contract.methods.addToWhitelist(candidateAddress, role, deposit));
+    return this.contract.methods.addToWhitelist(candidateAddress, role, deposit).encodeABI();
   }
 
   async removeFromWhitelist(candidateAddress) {
-    return this.processTransaction(this.contract.methods.removeFromWhitelist(candidateAddress));
+    return this.contract.methods.removeFromWhitelist(candidateAddress).encodeABI();
   }
 
   async setBaseUploadFee(fee) {
-    return this.processTransaction(this.contract.methods.setBaseUploadFee(fee));
+    return this.contract.methods.setBaseUploadFee(fee).encodeABI();
   }
 
   async transferOwnershipForValidatorSet(address) {
-    return this.processTransaction(this.contract.methods.transferOwnershipForValidatorSet(address));
+    return this.contract.methods.transferOwnershipForValidatorSet(address).encodeABI();
   }
 
   async transferOwnershipForBlockRewards(address) {
-    return this.processTransaction(this.contract.methods.transferOwnershipForBlockRewards(address));
+    return this.contract.methods.transferOwnershipForBlockRewards(address).encodeABI();
   }
 }

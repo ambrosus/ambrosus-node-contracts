@@ -63,7 +63,7 @@ describe('BlockchainStateWrapper', () => {
       wrapper = new BlockchainStateWrapper(web3);
     });
 
-    it('return balance of the account', async () => {
+    it('returns balance of the account', async () => {
       expect(await wrapper.getBalance(exampleAddress)).to.equal(currentBalance);
     });
   });
@@ -80,7 +80,7 @@ describe('BlockchainStateWrapper', () => {
       wrapper = new BlockchainStateWrapper(web3);
     });
 
-    it('return balance of the account', async () => {
+    it('returns number of latest block', async () => {
       expect(await wrapper.getCurrentBlockNumber()).to.equal(currentBlockNumber);
     });
   });

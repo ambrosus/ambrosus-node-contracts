@@ -12,6 +12,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import MultiplexerWrapper from '../../src/wrappers/multiplexer_wrapper';
+import Web3 from 'web3';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -19,58 +20,93 @@ const {expect} = chai;
 
 describe('Multiplexer wrapper', () => {
   let multiplexerWrapper;
-  const defaultAddress = '0xc0ffee';
+  const exampleABI = '0xc0ffee';
+  const defaultAddress = '0x12345';
   let contractMock;
   let contractMethodStub;
-  let contractMethodSendStub;
+  let contractMethodEncodeAbiStub;
 
-  const prepareTest = async (contractMethodName) => {
+  const prepareTest = (contractMethodName) => {
     contractMethodStub = sinon.stub();
-    contractMethodSendStub = sinon.stub();
+    contractMethodEncodeAbiStub = sinon.stub().returns(exampleABI);
     contractMethodStub.returns({
-      send: contractMethodSendStub
+      encodeABI: contractMethodEncodeAbiStub
     });
     contractMock = {
       methods: {
         [contractMethodName]: contractMethodStub
       }
     };
-    const web3Mock = {
-      eth: {
-        Contract: sinon.mock().returns(contractMock)
-      },
-      utils: {
-        toWei: sinon.stub()
-      }
-    };
+    const web3Mock = new Web3();
+
+    sinon.stub(web3Mock.eth, 'Contract').callsFake(() => contractMock);
+
     multiplexerWrapper = new MultiplexerWrapper({}, web3Mock, defaultAddress);
+    sinon.stub(multiplexerWrapper, 'contract').resolves(contractMock);
   };
+
+  [
+    ['0xcce524b4', 'setBaseUploadFee'],
+    ['0x3b9aa98a', 'transferOwnershipForBlockRewards'],
+    ['0x5366dbc0', 'changeContext'],
+    ['0x8ab1d681', 'removeFromWhitelist'],
+    ['0xa6f1e840', 'transferContractsOwnership'],
+    ['0xbe08add3', 'transferOwnershipForValidatorSet'],
+    ['0xf2fde38b', 'transferOwnership'],
+    ['0xfae37c3a', 'addToWhitelist']
+  ].forEach(([signature, functionName]) =>
+    it(`correctly resolves method name for ${functionName}`, async () => {
+      prepareTest();
+      expect(multiplexerWrapper.getFunctionName(`${signature}1234`)).to.equal(functionName);
+    })
+  );
+
+  it('correctly resolves method arguments', async () => {
+    prepareTest();
+    const parameters = new Web3().eth.abi.encodeParameters(['uint256'], ['100']).substring(2);
+    const setBaseUploadFeeSignature = `0xcce524b4`;
+    expect(multiplexerWrapper.getFunctionArguments(`${setBaseUploadFeeSignature}${parameters}`)).to.deep.equal({fee: '100'});
+  });
 
   describe('transferContractsOwnership', () => {
     const newOwnerAddress = '0x123';
 
-    beforeEach(async () => {
-      await prepareTest('transferContractsOwnership');
+    beforeEach(() => {
+      prepareTest('transferContractsOwnership');
     });
 
-    it('calls contract method with correct arguments', async () => {
-      await multiplexerWrapper.transferContractsOwnership(newOwnerAddress);
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.transferContractsOwnership(newOwnerAddress)).to.equal(exampleABI);
       expect(contractMethodStub).to.be.calledWith(newOwnerAddress);
-      expect(contractMethodSendStub).to.be.calledWith({from: defaultAddress});
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
+    });
+  });
+
+  describe('transferOwnership', () => {
+    const newOwnerAddress = '0x123';
+
+    beforeEach(() => {
+      prepareTest('transferOwnership');
+    });
+
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.transferOwnership(newOwnerAddress)).to.equal(exampleABI);
+      expect(contractMethodStub).to.be.calledWith(newOwnerAddress);
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
     });
   });
 
   describe('changeContext', () => {
     const newContextAddress = '0x123';
 
-    beforeEach(async () => {
-      await prepareTest('changeContext');
+    beforeEach(() => {
+      prepareTest('changeContext');
     });
 
-    it('calls contract method with correct arguments', async () => {
-      await multiplexerWrapper.changeContext(newContextAddress);
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.changeContext(newContextAddress)).to.equal(exampleABI);
       expect(contractMethodStub).to.be.calledWith(newContextAddress);
-      expect(contractMethodSendStub).to.be.calledWith({from: defaultAddress});
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
     });
   });
 
@@ -79,73 +115,70 @@ describe('Multiplexer wrapper', () => {
     const exampleRole = 2;
     const exampleDeposit = 100;
 
-    beforeEach(async () => {
-      await prepareTest('addToWhitelist');
+    beforeEach(() => {
+      prepareTest('addToWhitelist');
     });
 
-    it('calls contract method with correct arguments', async () => {
-      await multiplexerWrapper.addToWhitelist(candidateAddress, exampleRole, exampleDeposit);
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.addToWhitelist(candidateAddress, exampleRole, exampleDeposit)).to.equal(exampleABI);
       expect(contractMethodStub).to.be.calledWith(candidateAddress, exampleRole, exampleDeposit);
-      expect(contractMethodSendStub).to.be.calledWith({from: defaultAddress});
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
     });
   });
 
   describe('removeFromWhitelist', () => {
     const candidateAddress = '0x123';
 
-    beforeEach(async () => {
-      await prepareTest('removeFromWhitelist');
+    beforeEach(() => {
+      prepareTest('removeFromWhitelist');
     });
 
-    it('calls contract method with correct arguments', async () => {
-      await multiplexerWrapper.removeFromWhitelist(candidateAddress);
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.removeFromWhitelist(candidateAddress)).to.equal(exampleABI);
       expect(contractMethodStub).to.be.calledWith(candidateAddress);
-      expect(contractMethodSendStub).to.be.calledWith({from: defaultAddress});
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
     });
   });
 
   describe('setBaseUploadFee', () => {
     const fee = '42';
 
-    beforeEach(async () => {
-      await prepareTest('setBaseUploadFee');
+    beforeEach(() => {
+      prepareTest('setBaseUploadFee');
     });
 
-
-    it('calls contract method with correct arguments', async () => {
-      await multiplexerWrapper.setBaseUploadFee(fee);
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.setBaseUploadFee(fee)).to.equal(exampleABI);
       expect(contractMethodStub).to.be.calledWith(fee);
-      expect(contractMethodSendStub).to.be.calledWith({from: defaultAddress});
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
     });
   });
 
   describe('transferOwnershipForValidatorSet', () => {
     const newOwnerAddress = '0x123';
 
-    beforeEach(async () => {
-      await prepareTest('transferOwnershipForValidatorSet');
+    beforeEach(() => {
+      prepareTest('transferOwnershipForValidatorSet');
     });
 
-
-    it('calls contract method with correct arguments', async () => {
-      await multiplexerWrapper.transferOwnershipForValidatorSet(newOwnerAddress);
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.transferOwnershipForValidatorSet(newOwnerAddress)).to.equal(exampleABI);
       expect(contractMethodStub).to.be.calledWith(newOwnerAddress);
-      expect(contractMethodSendStub).to.be.calledWith({from: defaultAddress});
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
     });
   });
 
   describe('transferOwnershipForBlockRewards', () => {
     const newOwnerAddress = '0x123';
 
-    beforeEach(async () => {
-      await prepareTest('transferOwnershipForBlockRewards');
+    beforeEach(() => {
+      prepareTest('transferOwnershipForBlockRewards');
     });
 
-
-    it('calls contract method with correct arguments', async () => {
-      await multiplexerWrapper.transferOwnershipForBlockRewards(newOwnerAddress);
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.transferOwnershipForBlockRewards(newOwnerAddress)).to.equal(exampleABI);
       expect(contractMethodStub).to.be.calledWith(newOwnerAddress);
-      expect(contractMethodSendStub).to.be.calledWith({from: defaultAddress});
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
     });
   });
 });
