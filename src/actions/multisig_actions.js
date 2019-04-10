@@ -42,7 +42,11 @@ export default class MultisigActions {
   }
 
   async submitTransactionToMultiplexer(data) {
-    return this.multisigWrapper.submitTransaction(this.multiplexerWrapper.address, '0', data);
+    return this.multisigWrapper.submitTransaction(this.multiplexerWrapper.address(), '0', data);
+  }
+
+  async transferMultiplexerOwnership(address) {
+    return this.submitTransactionToMultiplexer(await this.multiplexerWrapper.transferOwnership(address));
   }
 
   async transferContractsOwnership(address) {

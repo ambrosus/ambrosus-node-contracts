@@ -13,7 +13,6 @@ import GenesisContractWrapper from './genesis_contract_wrapper';
 export default class MultiplexerWrapper extends GenesisContractWrapper {
   constructor(multiplexerContractAddress, web3, defaultAddress) {
     super(multiplexerContractAddress, contractJsons.multiplexer, web3, defaultAddress);
-    this.address = multiplexerContractAddress;
     this.functionAbis = this.getFunctionSignatures(contractJsons.multiplexer.abi);
   }
 
@@ -37,6 +36,10 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
     const {inputs} = this.functionAbis[transactionData.substring(0, 10)];
     const parameters = this.web3.eth.abi.decodeParameters(inputs, `0x${transactionData.substring(10)}`);
     return inputs.reduce((acc, {name}) => ({...acc, [name]: parameters[name]}), {});
+  }
+
+  async transferOwnership(newOwnerAddress) {
+    return this.contract.methods.transferOwnership(newOwnerAddress).encodeABI();
   }
 
   async transferContractsOwnership(address) {

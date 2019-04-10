@@ -82,6 +82,20 @@ describe('Multiplexer wrapper', () => {
     });
   });
 
+  describe('transferOwnership', () => {
+    const newOwnerAddress = '0x123';
+
+    beforeEach(() => {
+      prepareTest('transferOwnership');
+    });
+
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.transferOwnership(newOwnerAddress)).to.equal(exampleABI);
+      expect(contractMethodStub).to.be.calledWith(newOwnerAddress);
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
+    });
+  });
+
   describe('changeContext', () => {
     const newContextAddress = '0x123';
 

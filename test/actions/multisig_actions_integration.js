@@ -43,6 +43,7 @@ describe('Multisig actions integration', () => {
   before(async () => {
     web3 = await createWeb3();
     [owner, otherOwner, otherAddress] = await web3.eth.getAccounts();
+    multisigContract = await deployContract(web3, multisig, [[owner, otherOwner], 2]);
     ({multiplexer, head, kycWhitelist, fees, validatorSet, blockRewards} = await deploy({
       web3,
       contracts: {
@@ -58,7 +59,7 @@ describe('Multisig actions integration', () => {
       },
       params: {
         multiplexer: {
-          owner
+          owner: multisigContract.options.address
         },
         blockRewards: {
           owner,
@@ -72,7 +73,6 @@ describe('Multisig actions integration', () => {
         }
       }
     }));
-    multisigContract = await deployContract(web3, multisig, [[owner, otherOwner], 2]);
     const headWrapper = new HeadWrapper(head.options.address, web3, owner);
     const adminActions = new AdministrativeActions(
       headWrapper,
@@ -82,7 +82,6 @@ describe('Multisig actions integration', () => {
     );
     await adminActions.moveOwnershipsToMultiplexer(multiplexer.options.address);
     const multiplexerWrapper = new MultiplexerWrapper(multiplexer.options.address, web3, owner);
-    await multiplexerWrapper.transferOwnership(multisigContract.options.address);
     const multisigWrapper = new MultisigWrapper(multisigContract.options.address, web3, owner);
     multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper);
   });
@@ -158,6 +157,11 @@ describe('Multisig actions integration', () => {
       await submitTransactionBy(otherOwner, (multisigActions) => multisigActions.confirmTransaction(transactionsCounter));
       transactionsCounter++;
     };
+
+    it('transferMultiplexerOwnership', async () => {
+      await executeTransaction((multisigActions) => multisigActions.transferMultiplexerOwnership(otherAddress));
+      expect(await multiplexer.methods.owner().call()).to.equal(otherAddress);
+    });
 
     it('transferContractsOwnership', async () => {
       await executeTransaction((multisigActions) => multisigActions.transferContractsOwnership(otherAddress));
