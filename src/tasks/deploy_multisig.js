@@ -17,9 +17,8 @@ import {
 } from '../constants';
 
 export default class DeployMultisigTask extends TaskBase {
-  constructor(web3, deployActions) {
+  constructor(deployActions) {
     super();
-    this.web3 = web3;
     this.deployActions = deployActions;
   }
 
@@ -31,7 +30,7 @@ export default class DeployMultisigTask extends TaskBase {
       return;
     }
 
-    const approvalAdresses;
+    let approvalAdresses;
     if (typeof config.multisigApprovalAddresses !== 'undefined') {
       approvalAdresses = Array.from(config.multisigApprovalAddresses.split(','));
     } else {
@@ -39,13 +38,13 @@ export default class DeployMultisigTask extends TaskBase {
       return;
     }
 
-    const multisigContract = await this.deployActions.deployer.deployContract(web3, multisig, [approvalAdresses, APPROVALS_REQUIRED]);
+    const multisigContract = await this.deployActions.deployer.deployContract(multisig, [approvalAdresses, APPROVALS_REQUIRED], {});
 
     console.log(`\tmultisig -> ${multisigContract.options.address}`);
 
     const toFile = this.multisigToEnvFile(multisigContract);
     if (options.save) {
-      await this.saveEnvFile(options.save, toFile);
+      await this.appendEnvFile(options.save, toFile);
     }
   }
 

@@ -12,6 +12,7 @@ import Deployer from '../deployer';
 import WhitelistTask from './whitelist';
 import DeployTask from './deploy';
 import DeployGenesisTask from './deploy_genesis';
+import DeployMultisigTask from './deploy_multisig';
 import OnboardingTask from './onboard';
 import TaskList from './base/task_list';
 import UploadTask from './upload';
