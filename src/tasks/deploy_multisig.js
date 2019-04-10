@@ -12,16 +12,13 @@ import commandLineArgs from 'command-line-args';
 import {appendFile} from '../utils/file';
 import config from '../../config/config';
 import {multisig} from '../../src/contract_jsons';
-import MultisigWrapper from '../wrappers/multisig_wrapper';
-import MultisigActions from '../actions/multisig_actions';
 import {
   APPROVALS_REQUIRED,
 } from '../constants';
 
 export default class DeployMultisigTask extends TaskBase {
-  constructor(web3, deployActions, multiplexerWrapper) {
+  constructor(deployActions, multiplexerWrapper) {
     super();
-    this.web3 = web3;
     this.deployActions = deployActions;
     this.multiplexerWrapper = multiplexerWrapper;
   }
@@ -45,10 +42,7 @@ export default class DeployMultisigTask extends TaskBase {
     const multisigContract = await this.deployActions.deployer.deployContract(multisig, [approvalAdresses, APPROVALS_REQUIRED], {});
     const multiSigAddress = multisigContract.options.address;
 
-    const multisigWrapper = new MultisigWrapper(multiSigAddress, this.web3, this.deployActions.deployer.sender);
-    const multisigActions = new MultisigActions(multisigWrapper, this.multiplexerWrapper);
-
-    await multisigActions.transferMultiplexerOwnership(multiSigAddress);
+    await this.multiplexerWrapper.transferOwnership(multiSigAddress);
 
     console.log(`\tmultisig -> ${multiSigAddress}`);
 
