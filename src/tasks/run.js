@@ -84,7 +84,7 @@ const runTask = async () => {
   const args = process.argv.slice(2);
   list.add('deployGenesis', new DeployGenesisTask(web3, deployActions));
   list.add('deploy', new DeployTask(deployActions));
-  list.add('deployMultisig', new DeployMultisigTask(deployActions));
+  list.add('deployMultisig', new DeployMultisigTask(web3, deployActions, multiplexerWrapper));
   list.add('onboard', new OnboardingTask(web3, nodeAddress, onboardActions));
   list.add('whitelist', new WhitelistTask(web3, whitelistActions, onboardActions));
   list.add('upload', new UploadTask(uploadActions));
