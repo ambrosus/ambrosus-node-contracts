@@ -18,7 +18,6 @@ import "../Front/Payouts.sol";
 import "../Front/ShelteringTransfers.sol";
 import "../Front/Challenges.sol";
 import "../Front/Uploads.sol";
-import "../Front/MultiSig.sol";
 import "../Middleware/Sheltering.sol";
 import "../Middleware/ValidatorProxy.sol";
 
@@ -40,7 +39,6 @@ contract Catalogue {
     Roles public roles;
     Fees public fees;
     Challenges public challenges;
-    MultiSig public multisig;
     Payouts public payouts;
     ShelteringTransfers public shelteringTransfers;
     Sheltering public sheltering;
@@ -55,7 +53,6 @@ contract Catalogue {
         Fees _fees,
         Time _time,
         Challenges _challenges,
-        MultiSig _multisig,
         Payouts _payouts,
         ShelteringTransfers _shelteringTransfers,
         Sheltering _sheltering,
@@ -68,7 +65,6 @@ contract Catalogue {
         fees = _fees;
         time = _time;
         challenges = _challenges;
-        multisig = _multisig;
         payouts = _payouts;
         shelteringTransfers = _shelteringTransfers;
         sheltering = _sheltering;

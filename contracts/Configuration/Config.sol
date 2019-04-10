@@ -31,8 +31,4 @@ contract Config {
 
     uint constant public SHELTERING_CAP_ATLASES_PERCENTAGE = 80;
     uint constant public SHELTERING_CAP_ATLAS_NUMBER_THRESHOLD = 8;
-
-    uint32 constant public C_LEVEL_NUMBER = 3;
-    uint32 constant public APPROVALS_REQUIRED = 4;
-    uint32 constant public TOTAL_APPROVALS = 6;
 }
