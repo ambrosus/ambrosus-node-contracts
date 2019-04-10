@@ -17,23 +17,22 @@ export default class MultisigActions {
     const {data} = await this.multisigWrapper.getTransaction(transactionId);
     const name = this.multiplexerWrapper.getFunctionName(data);
     const args = this.multiplexerWrapper.getFunctionArguments(data);
-    return {name, args};
+    return {name, args, transactionId};
   }
 
-
   async allPendingTransactions() {
-    const allPendingTransactions = await this.multisigWrapper.getPendingTransaction();
-    const approvableTransactions = [];
-    for (const txId of allPendingTransactions) {
-      approvableTransactions.push(await this.getTransactionCallFromData(txId));
+    const allPendingTransactionIds = await this.multisigWrapper.getPendingTransaction();
+    const allPendingTransactions = [];
+    for (const txId of allPendingTransactionIds) {
+      allPendingTransactions.push(await this.getTransactionCallFromData(txId));
     }
-    return approvableTransactions;
+    return allPendingTransactions;
   }
 
   async approvableTransactions() {
-    const allPendingTransactions = await this.allPendingTransactions();
+    const allPendingTransactionIds = await this.multisigWrapper.getPendingTransaction();
     const approvableTransactions = [];
-    for (const txId of allPendingTransactions) {
+    for (const txId of allPendingTransactionIds) {
       const confirmations = await this.multisigWrapper.getConfirmations(txId);
       if (!confirmations.includes(this.multisigWrapper.defaultAddress)) {
         approvableTransactions.push(await this.getTransactionCallFromData(txId));

@@ -172,17 +172,39 @@ describe('Multisig wrapper', () => {
     });
   });
 
-  xdescribe('getTransaction', () => {
-    const exampleTransactionId = '0x123';
+  describe('getTransaction', () => {
+    let getTransactionStub;
+    let getTransactionCallStub;
+    const exampleTxId = '0xc0ffee';
+    const exampleTransaction = 'mock transaction';
 
     beforeEach(async () => {
-      await prepareTest('revokeConfirmation');
+      getTransactionStub = sinon.stub();
+      getTransactionCallStub = sinon.stub().resolves(exampleTransaction);
+      getTransactionStub.returns({
+        call: getTransactionCallStub
+      });
+      contractMock = {
+        methods: {
+          transactions: getTransactionStub
+        }
+      };
+      const web3Mock = {
+        eth: {
+          Contract: sinon.mock().returns(contractMock)
+        },
+        utils: {
+          toWei: sinon.stub()
+        }
+      };
+      multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
+      sinon.stub(multisigWrapper, 'contract').resolves(contractMock);
     });
 
     it('calls contract method with correct arguments', async () => {
-      await multisigWrapper.revokeConfirmation(exampleData);
-      expect(contractMethodStub).to.be.calledWith(exampleData);
-      expect(contractMethodSendStub).to.be.calledWith({from: defaultAddress});
+      expect(await multisigWrapper.getTransaction(exampleTxId)).to.equal(exampleTransaction);
+      expect(getTransactionStub).to.be.calledOnceWith(exampleTxId);
+      expect(getTransactionCallStub).to.be.calledOnce;
     });
   });
 });

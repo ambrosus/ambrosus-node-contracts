@@ -37,89 +37,35 @@ describe('Multiplexer wrapper', () => {
         [contractMethodName]: contractMethodStub
       }
     };
-    const web3Mock = {
-      eth: {
-        Contract: sinon.mock().returns(contractMock),
-        abi: {
-          encodeFunctionSignature: new Web3().eth.abi.encodeFunctionSignature
-        }
-      },
-      utils: {
-        toWei: sinon.stub()
-      }
-    };
+    const web3Mock = new Web3();
+
+    sinon.stub(web3Mock.eth, 'Contract').callsFake(() => contractMock);
+
     multiplexerWrapper = new MultiplexerWrapper({}, web3Mock, defaultAddress);
     sinon.stub(multiplexerWrapper, 'contract').resolves(contractMock);
   };
 
-  const expectedFunctionAbis = {
-    '0x3b9aa98a': {
-      inputs: [{
-        name: 'newOwner',
-        type: 'address'
-      }],
-      name: 'transferOwnershipForBlockRewards'
-    },
-    '0x5366dbc0': {
-      inputs: [{
-        name: 'context',
-        type: 'address'
-      }],
-      name: 'changeContext'
-    },
-    '0x8ab1d681': {
-      inputs: [{
-        name: 'candidate',
-        type: 'address'
-      }],
-      name: 'removeFromWhitelist'
-    },
-    '0xa6f1e840': {
-      inputs: [{
-        name: 'newOwner',
-        type: 'address'
-      }],
-      name: 'transferContractsOwnership'
-    },
-    '0xbe08add3': {
-      inputs: [{
-        name: 'newOwner',
-        type: 'address'
-      }],
-      name: 'transferOwnershipForValidatorSet'
-    },
-    '0xcce524b4': {
-      inputs: [{
-        name: 'fee',
-        type: 'uint256'
-      }],
-      name: 'setBaseUploadFee'
-    },
-    '0xf2fde38b': {
-      inputs: [{
-        name: 'newOwner',
-        type: 'address'
-      }],
-      name: 'transferOwnership'
-    },
-    '0xfae37c3a': {
-      inputs: [{
-        name: 'candidate',
-        type: 'address'
-      }, {
-        name: 'role',
-        type: 'uint8'
-      }, {
-        name: 'deposit',
-        type: 'uint256'
-      }],
-      name: 'addToWhitelist'
-    }
-  };
+  [
+    ['0xcce524b4', 'setBaseUploadFee'],
+    ['0x3b9aa98a', 'transferOwnershipForBlockRewards'],
+    ['0x5366dbc0', 'changeContext'],
+    ['0x8ab1d681', 'removeFromWhitelist'],
+    ['0xa6f1e840', 'transferContractsOwnership'],
+    ['0xbe08add3', 'transferOwnershipForValidatorSet'],
+    ['0xf2fde38b', 'transferOwnership'],
+    ['0xfae37c3a', 'addToWhitelist']
+  ].forEach(([signature, functionName]) =>
+    it(`correctly resolves method name for ${functionName}`, async () => {
+      prepareTest();
+      expect(multiplexerWrapper.getFunctionName(`${signature}1234`)).to.equal(functionName);
+    })
+  );
 
-  it('calculates correct function signatures', async () => {
+  it('correctly resolves method arguments', async () => {
     prepareTest();
-    expect(multiplexerWrapper.functionAbis).to.deep.equal(expectedFunctionAbis);
+    const parameters = new Web3().eth.abi.encodeParameters(['uint256'], ['100']).substring(2);
+    const setBaseUploadFeeSignature = `0xcce524b4`;
+    expect(multiplexerWrapper.getFunctionArguments(`${setBaseUploadFeeSignature}${parameters}`)).to.deep.equal({fee: '100'});
   });
 
   describe('transferContractsOwnership', () => {
