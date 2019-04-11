@@ -21,6 +21,11 @@ export WEB3_RPC=http://localhost:8545
 export WEB3_NODEPRIVATEKEY="COPIED_PRIVATE_KEY"
 ```
 
+Then you need to set the addresses of multisig validators. It is comma separated list:
+```bash
+export MULTISIG_APPROVAL_ADDRESSES="APPROVAL_ADDRESS1,APPROVAL_ADDRESS2,APPROVAL_ADDRESS3,APPROVAL_ADDRESS4,APPROVAL_ADDRESS5,APPROVAL_ADDRESS6"
+```
+
 Then deploy genesis contracts and save outcome to an environment file
 ```bash
 yarn task deployGenesis --save <path to file>
@@ -34,6 +39,11 @@ yarn task deploy initial
 Or deploy an update to the cryptoeconomy contracts:
 ```bash
 yarn task deploy update
+```
+
+Also multisignature contract can be deployed, if the list of validators addresses is provided. Address can be added to the environment file. 
+```bash
+yarn task deployMultisig --save <path to file>
 ```
 
 You are ready to play.

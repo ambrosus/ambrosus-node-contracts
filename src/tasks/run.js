@@ -12,6 +12,7 @@ import Deployer from '../deployer';
 import WhitelistTask from './whitelist';
 import DeployTask from './deploy';
 import DeployGenesisTask from './deploy_genesis';
+import DeployMultisigTask from './deploy_multisig';
 import OnboardingTask from './onboard';
 import TaskList from './base/task_list';
 import UploadTask from './upload';
@@ -83,6 +84,7 @@ const runTask = async () => {
   const args = process.argv.slice(2);
   list.add('deployGenesis', new DeployGenesisTask(web3, deployActions));
   list.add('deploy', new DeployTask(deployActions));
+  list.add('deployMultisig', new DeployMultisigTask(deployActions, multiplexerWrapper));
   list.add('onboard', new OnboardingTask(web3, nodeAddress, onboardActions));
   list.add('whitelist', new WhitelistTask(web3, whitelistActions, onboardActions));
   list.add('upload', new UploadTask(uploadActions));
