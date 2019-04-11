@@ -48,6 +48,8 @@ import MoveOwnershipToMultiplexerTask from './move_ownership_to_multiplexer';
 import MultiplexerWrapper from '../wrappers/multiplexer_wrapper';
 import MoveOwnershipFromMultiplexerTask from './move_ownership_from_multiplexer';
 import CheckOwnershipTask from './ownership';
+import MultisigActions from '../actions/multisig_actions';
+import MultisigWrapper from '../wrappers/multisig_wrapper';
 
 const runTask = async () => {
   const web3 = await createWeb3();
@@ -70,6 +72,7 @@ const runTask = async () => {
   const blockchainStateWrapper = new BlockchainStateWrapper(web3);
   const atlasStakeStoreWrapper = new AtlasStakeStoreWrapper(headWrapper, web3, nodeAddress);
   const multiplexerWrapper = new MultiplexerWrapper(config.multiplexerContractAddress, web3, nodeAddress);
+  const multisigWrapper = new MultisigWrapper(config.multisigContractAddress, web3, nodeAddress);
 
   const deployActions = new DeployActions(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper);
   const whitelistActions = new WhitelistActions(kycWhitelistWrapper);
@@ -78,7 +81,8 @@ const runTask = async () => {
   const nodeServiceActions = new NodeServiceActions(rolesWrapper);
   const payoutsActions = new PayoutsActions(timeWrapper, payoutsWrapper);
   const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper);
-  const adminActions = new AdministrativeActions(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper, multiplexerWrapper);
+  const adminActions = new AdministrativeActions(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper);
+  const multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper);
 
   const list = new TaskList();
   const args = process.argv.slice(2);
@@ -93,7 +97,7 @@ const runTask = async () => {
   list.add('challenge', new ChallengeTask(challengeActions));
   list.add('retire', new RetiringTask(onboardActions));
   list.add('moveOwnershipToMultiplexer', new MoveOwnershipToMultiplexerTask(adminActions));
-  list.add('moveOwnershipFromMultiplexer', new MoveOwnershipFromMultiplexerTask(adminActions));
+  list.add('moveOwnershipFromMultiplexer', new MoveOwnershipFromMultiplexerTask(multisigActions));
   list.add('checkOwnership', new CheckOwnershipTask(web3));
 
   await list.run(args[0], args.slice(1));

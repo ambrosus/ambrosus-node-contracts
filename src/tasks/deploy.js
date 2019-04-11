@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import commandLineArgs from 'command-line-args';
+import {appendFile} from '../utils/file';
 
 export default class DeployTask extends TaskBase {
   constructor(deployActions) {
@@ -44,12 +45,22 @@ export default class DeployTask extends TaskBase {
     }
     console.log(`Current contract set: `);
     this.prettyPrintAddresses(contracts);
+
+    const multiplexerEnvLine = this.multiplexerToEnvFile(contracts.multiplexer);
+    if (options.save) {
+      await appendFile(options.save, multiplexerEnvLine);
+    }
+  }
+
+  multiplexerToEnvFile(multiplexerContract) {
+    return `MULTIPLEXER_CONTRACT_ADDRESS="${multiplexerContract.options.address}"\n`;
   }
 
   parseOptions(args) {
     const options = commandLineArgs(
       [
-        {name: 'turbo', type: Boolean}
+        {name: 'turbo', type: Boolean},
+        {name: 'save', type: String}
       ],
       {argv: args, partial: true}
     );
@@ -58,6 +69,11 @@ export default class DeployTask extends TaskBase {
     if (unknownOptions && unknownOptions.length > 0) {
       console.error(`Unknown options: ${unknownOptions.join(', ')}`);
       process.exit(1);
+    }
+
+    if (options.save === null) {
+      console.error(`You should provide a value for the save parameter.`);
+      return null;
     }
 
     return options;
