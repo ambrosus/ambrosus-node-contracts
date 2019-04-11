@@ -76,13 +76,13 @@ const execute = (command, env = {}) => new Promise((resolve, reject) => {
   );
 });
 
-const updateEnvs = (deployEnvFile) => {
-  const envForUser = (account) => ({
-    WEB3_RPC: `http://localhost:${PORT}`,
-    WEB3_NODEPRIVATEKEY: account.privateKey,
-    MULTISIG_APPROVAL_ADDRESSES: approvalPublicKeys
-  });
+const envForUser = (account) => ({
+  WEB3_RPC: `http://localhost:${PORT}`,
+  WEB3_NODEPRIVATEKEY: account.privateKey,
+  MULTISIG_APPROVAL_ADDRESSES: approvalPublicKeys
+});
 
+const updateEnvs = (deployEnvFile) => {
   const deployConfig = dotenv.parse(fs.readFileSync(deployEnvFile));
   return {
     adminEnv: {
@@ -101,6 +101,12 @@ const updateEnvs = (deployEnvFile) => {
   };
 };
 
+const resetEnvFile = async function () {
+  const deployEnvFile = `${__dirname}/test_cli_head.env`;
+  await fs.writeFileSync(deployEnvFile, '');
+  return deployEnvFile;
+};
+
 startGanacheServer(
   [
     adminUser.privateKey,
@@ -111,9 +117,8 @@ startGanacheServer(
   .then(async (server) => {
     let failed = false;
     try {
-      const deployEnvFile = `${__dirname}/test_cli_head.env`;
-      await fs.writeFileSync(deployEnvFile, '');
-      await execute(`yarn task deployGenesis --save ${deployEnvFile}`, adminEnv);
+      const deployEnvFile = await resetEnvFile();
+      await execute(`yarn task deployGenesis --save ${deployEnvFile}`, envForUser(adminUser));
       let {adminEnv, apolloEnv, atlasEnv, hermesEnv} = await updateEnvs(deployEnvFile);
       await execute(`yarn task deploy initial`, adminEnv);
 

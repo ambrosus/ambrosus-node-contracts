@@ -67,6 +67,6 @@ const appendEnvFile = async (envFilePath, envFileData) => {
   } catch (err) {
     console.error(`Unable to save configuration: ${err}`);
   }
-}
+};
 
 export {writeFile, appendFile, readFile, checkFileExists, listDirectory, appendEnvFile};
