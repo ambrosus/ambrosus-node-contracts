@@ -32,8 +32,8 @@ export default class DeployMultisigTask extends TaskBase {
     }
 
     let approvalAdresses;
-    if (typeof config.multisigApprovalAddresses !== 'undefined') {
-      approvalAdresses = Array.from(config.multisigApprovalAddresses.split(','));
+    if (config.multisigApprovalAddresses !== undefined) {
+      approvalAdresses = config.multisigApprovalAddresses.split(',');
     } else {
       console.error('No validators addresses entered.');
       return;
