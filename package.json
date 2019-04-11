@@ -2,7 +2,7 @@
   "name": "ambrosus-node-contracts",
   "author": "Ambrosus",
   "description": "Smart contracts used in AMB-NET",
-  "version": "0.0.44",
+  "version": "0.0.45",
   "license": "MPL-2.0-no-copyleft-exception",
   "repository": "git@github.com:ambrosus/ambrosus-node-contracts.git",
   "main": "dist/index.js",
@@ -21,8 +21,8 @@
     "test:tasks": "node test_cli/test_cli.js",
     "test:gasbenchmark": ". ./test_gas/gas_benchmark.env && babel-node test_gas/gas_benchmark.js",
     "test:all": "yarn build:sol && yarn test:units && yarn test:tasks",
-    "dev:lint": "eslint src test config && solium -d contracts/",
-    "dev:lint:fix": "eslint src test config --fix && solium -d contracts/ --fix",
+    "dev:lint": "eslint src test test_cli config && solium -d contracts/",
+    "dev:lint:fix": "eslint src test test_cli config --fix && solium -d contracts/ --fix",
     "task": "babel-node src/tasks/run.js"
   },
   "engines": {
