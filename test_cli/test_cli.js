@@ -76,11 +76,12 @@ const execute = (command, env = {}) => new Promise((resolve, reject) => {
   );
 });
 
-const envForUser = (account) => ({
-  WEB3_RPC: `http://localhost:${PORT}`,
-  WEB3_NODEPRIVATEKEY: account.privateKey,
-  MULTISIG_APPROVAL_ADDRESSES: approvalPublicKeys
-});
+const updateEnvs = (deployEnvFile) => {
+  const envForUser = (account) => ({
+    WEB3_RPC: `http://localhost:${PORT}`,
+    WEB3_NODEPRIVATEKEY: account.privateKey,
+    MULTISIG_APPROVAL_ADDRESSES: approvalPublicKeys
+  });
 
 const updateEnvs = (deployEnvFile) => {
   const deployConfig = dotenv.parse(fs.readFileSync(deployEnvFile));
