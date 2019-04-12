@@ -36,7 +36,7 @@ contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
     uint256 public baseReward;
     mapping(address => uint) public shares;
 
-    event BaseRewardChanged(uint baseReward);
+    event BaseRewardChanged(uint oldBaseReward, uint newBaseReward);
 
     /**
     @notice Constructor
@@ -95,8 +95,8 @@ contract BlockRewards is BlockRewardsBase, ConstructorOwnable {
     }
 
     function setBaseReward(uint256 _baseReward) public onlyOwner {
+        emit BaseRewardChanged(baseReward, _baseReward);
         baseReward = _baseReward;
-        emit BaseRewardChanged(baseReward);
     }
 
     function isBeneficiary(address beneficiary) public view returns(bool) {

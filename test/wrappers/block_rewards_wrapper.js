@@ -21,8 +21,9 @@ describe('Block Rewards Wrapper', () => {
   let ownerAddress;
   let contract;
   let wrapper;
+  const baseReward = '2000000000000000000';
 
-  const deploy = async (web3, sender) => deployContract(web3, contractJsons.blockRewards, [sender, '2000000000000000000', sender], {from: sender});
+  const deploy = async (web3, sender) => deployContract(web3, contractJsons.blockRewards, [sender, baseReward, sender], {from: sender});
 
   before(async () => {
     web3 = await createWeb3();
@@ -33,6 +34,10 @@ describe('Block Rewards Wrapper', () => {
 
   it('getOwner returns the owner address', async () => {
     await expect(wrapper.getOwner()).to.eventually.equal(ownerAddress);
+  });
+
+  it('getBaseReward returns the base reward', async () => {
+    await expect(wrapper.getBaseReward()).to.eventually.equal(baseReward);
   });
 
   describe('baseRewardChanges', () => {

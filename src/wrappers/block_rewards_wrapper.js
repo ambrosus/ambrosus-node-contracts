@@ -18,4 +18,8 @@ export default class BlockRewardsWrapper extends GenesisContractWrapper {
   async baseRewardChanges(fromBlock, toBlock) {
     return this.contract.getPastEvents('BaseRewardChanged', {fromBlock, toBlock});
   }
+
+  async getBaseReward() {
+    return this.contract.methods.baseReward().call();
+  }
 }
