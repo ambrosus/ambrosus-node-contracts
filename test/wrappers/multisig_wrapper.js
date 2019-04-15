@@ -96,7 +96,7 @@ describe('Multisig wrapper', () => {
     let getConfirmationsStub;
     let getConfirmationsCallStub;
     const exampleConfirmations = ['0x123', '0x456'];
-    const exampleTxId = '0xc0ffee';
+    const exampleTxId = '4';
 
     beforeEach(async () => {
       getConfirmationsStub = sinon.stub();
@@ -125,6 +125,77 @@ describe('Multisig wrapper', () => {
       expect(await multisigWrapper.getConfirmations(exampleTxId)).to.equal(exampleConfirmations);
       expect(getConfirmationsStub).to.be.calledOnceWith(exampleTxId);
       expect(getConfirmationsCallStub).to.be.calledOnce;
+    });
+  });
+
+  describe('getConfirmationCount', () => {
+    let getConfirmationCountStub;
+    let getConfirmationCountCallStub;
+    const exampleConfirmationCount = 5;
+    const exampleTxId = '4';
+
+    beforeEach(async () => {
+      getConfirmationCountStub = sinon.stub();
+      getConfirmationCountCallStub = sinon.stub().resolves(exampleConfirmationCount);
+      getConfirmationCountStub.returns({
+        call: getConfirmationCountCallStub
+      });
+      contractMock = {
+        methods: {
+          getConfirmationCount: getConfirmationCountStub
+        }
+      };
+      const web3Mock = {
+        eth: {
+          Contract: sinon.mock().returns(contractMock)
+        },
+        utils: {
+          toWei: sinon.stub()
+        }
+      };
+      multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
+      sinon.stub(multisigWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await multisigWrapper.getConfirmationCount(exampleTxId)).to.equal(exampleConfirmationCount);
+      expect(getConfirmationCountStub).to.be.calledOnceWith(exampleTxId);
+      expect(getConfirmationCountCallStub).to.be.calledOnce;
+    });
+  });
+
+  describe('confirmationsRequired', () => {
+    let confirmationsRequiredStub;
+    let confirmationsRequiredCallStub;
+    const exampleRequiredConfirmations = 6;
+
+    beforeEach(async () => {
+      confirmationsRequiredStub = sinon.stub();
+      confirmationsRequiredCallStub = sinon.stub().resolves(exampleRequiredConfirmations);
+      confirmationsRequiredStub.returns({
+        call: confirmationsRequiredCallStub
+      });
+      contractMock = {
+        methods: {
+          required: confirmationsRequiredStub
+        }
+      };
+      const web3Mock = {
+        eth: {
+          Contract: sinon.mock().returns(contractMock)
+        },
+        utils: {
+          toWei: sinon.stub()
+        }
+      };
+      multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
+      sinon.stub(multisigWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await multisigWrapper.confirmationsRequired()).to.equal(exampleRequiredConfirmations);
+      expect(confirmationsRequiredStub).to.be.calledOnceWith();
+      expect(confirmationsRequiredCallStub).to.be.calledOnce;
     });
   });
 

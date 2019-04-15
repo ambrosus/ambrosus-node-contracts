@@ -108,7 +108,11 @@ describe('Multisig actions integration', () => {
       args: {
         candidate: otherAddress, role: '2', deposit: '0'
       },
-      transactionId: '0'
+      transactionId: '0',
+      confirmations: {
+        required: 2,
+        confirmed: 1
+      }
     }]);
   });
 
@@ -146,6 +150,12 @@ describe('Multisig actions integration', () => {
     }]);
   });
 
+  it('allPendingTransactions does not list failed transactions', async () => {
+    await multisigActions.removeFromWhitelist(otherAddress);
+    await expect(submitTransactionBy(otherOwner, (multisigActions) => multisigActions.confirmTransaction('0'))).to.be.rejected;
+    expect(await multisigActions.allPendingTransactions()).to.deep.equal([]);
+  });
+
   describe('Actions', () => {
     let transactionsCounter;
     beforeEach(() => {
@@ -178,15 +188,29 @@ describe('Multisig actions integration', () => {
       expect(await kycWhitelist.methods.hasRoleAssigned(otherAddress, 2).call()).to.be.true;
     });
 
+    it('throws when adding to whitelist has failed', async () => {
+      await executeTransaction((multisigActions) => multisigActions.addToWhitelist(otherAddress, 2, '0'));
+      await expect(executeTransaction((multisigActions) => multisigActions.addToWhitelist(otherAddress, 2, '0'))).to.be.rejectedWith(`Transaction #1 has been rejected`);
+    });
+
     it('removeFromWhitelist', async () => {
       await executeTransaction((multisigActions) => multisigActions.addToWhitelist(otherAddress, 2, '0'));
       await executeTransaction((multisigActions) => multisigActions.removeFromWhitelist(otherAddress));
       expect(await kycWhitelist.methods.isWhitelisted(otherAddress).call()).to.be.false;
     });
 
+    it('throws when removing from whitelist has failed', async () => {
+      await expect(executeTransaction((multisigActions) => multisigActions.removeFromWhitelist(otherAddress))).to.be.rejectedWith(`Transaction #0 has been rejected`);
+    });
+
     it('setBaseUploadFee', async () => {
       await executeTransaction((multisigActions) => multisigActions.setBaseUploadFee('100'));
       expect(await fees.methods.baseUploadFee().call()).to.equal('100');
+    });
+
+    it('throws when setBaseUploadFee has failed', async () => {
+      const wrongFee = 21;
+      await expect(executeTransaction((multisigActions) => multisigActions.setBaseUploadFee(wrongFee))).to.be.rejectedWith(`Transaction #0 has been rejected`);
     });
 
     it('transferOwnershipForValidatorSet', async () => {

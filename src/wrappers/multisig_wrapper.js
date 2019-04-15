@@ -26,6 +26,14 @@ export default class MultisigWrapper extends ContractWrapper {
     return this.contract.methods.getConfirmations(transactionId).call();
   }
 
+  async getConfirmationCount(transactionId) {
+    return this.contract.methods.getConfirmationCount(transactionId).call();
+  }
+
+  async confirmationsRequired() {
+    return this.contract.methods.required().call();
+  }
+
   async submitTransaction(destination, value, data) {
     return this.processTransaction(this.contract.methods.submitTransaction(destination, value, data));
   }
