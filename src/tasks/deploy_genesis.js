@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import commandLineArgs from 'command-line-args';
-import {writeFile} from '../utils/file';
+import {appendEnvFile} from '../utils/file';
 
 export default class DeployGenesisTask extends TaskBase {
   constructor(web3, deployActions) {
@@ -37,7 +37,7 @@ export default class DeployGenesisTask extends TaskBase {
 
     const envFile = this.contractsToEnvFile(genesisContracts);
     if (options.save) {
-      await this.saveEnvFile(options.save, envFile);
+      await appendEnvFile(options.save, envFile);
     } else {
       this.printSummary(envFile);
     }
@@ -65,15 +65,6 @@ export default class DeployGenesisTask extends TaskBase {
     return options;
   }
 
-  async saveEnvFile(envFilePath, envFile) {
-    try {
-      await writeFile(envFilePath, envFile);
-      console.log(`Genesis contracts deployed, env saved to ${envFilePath}.`);
-    } catch (err) {
-      console.error(`Unable to save configuration: ${err}`);
-    }
-  }
-
   prettyPrintAddresses(contracts) {
     return Object.entries(contracts).forEach(([key, contract]) => console.log(`\t${key} -> ${contract.options.address}`));
   }
@@ -86,7 +77,8 @@ export default class DeployGenesisTask extends TaskBase {
   contractsToEnvFile(addresses) {
     return `HEAD_CONTRACT_ADDRESS="${addresses.head.options.address}"
 VALIDATOR_SET_CONTRACT_ADDRESS="${addresses.validatorSet.options.address}"
-BLOCK_REWARDS_CONTRACT_ADDRESS="${addresses.blockRewards.options.address}"`;
+BLOCK_REWARDS_CONTRACT_ADDRESS="${addresses.blockRewards.options.address}"
+`;
   }
 
   help() {

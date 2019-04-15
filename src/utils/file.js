@@ -60,4 +60,13 @@ const listDirectory = (path) =>
     });
   });
 
-export {writeFile, appendFile, readFile, checkFileExists, listDirectory};
+const appendEnvFile = async (envFilePath, envFileData) => {
+  try {
+    await appendFile(envFilePath, envFileData);
+    console.log(`Env updated in ${envFilePath}.`);
+  } catch (err) {
+    console.error(`Unable to save configuration: ${err}`);
+  }
+};
+
+export {writeFile, appendFile, readFile, checkFileExists, listDirectory, appendEnvFile};

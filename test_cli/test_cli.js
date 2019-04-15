@@ -34,14 +34,8 @@ const hermesUser = {
   address: '0xC04c60FB732724a287f147f8bfC1cEF108a0C45b'
 };
 
-const approvalPrivateKeys = ["0xc5864529cc942df9af41a090c7bf2821526eb0ba3bb261d8065405e993861f51",
-  "0x1c18894f8a7ce931665bec962c3aa78fff221232910d49f322003dd2989a4c7f",
-  "0x6013af822c32929bf718da5819286792742895d7ec5b00cde08515fc13196433",
-  "0xf97bc3369aa07c564e886b90776902584c7f56396f6f02d9f3bfec6814a44ac0",
-  "0x76cead93f8a339ebf8ca15142ab0fb2c1643e44a31a275daa202f7631fc40370",
-  "0x52fd07f4d1f558336991a1754a74e38acbbad612eae8e2a1ee57bb76d9ca159a"];
+const approvalPublicKeys = `${adminUser.address},${hermesUser.address}`;
 
-const approvalPuiblicKeys = "0x6fbee88fe88494f27f4af87b0d3051665cc0f8b7,0x37db0b19c5cd9d7d8c846c14d1083438013bf578,0x8d01a621bab4d2b2bf022667a4329096dfce7e6e,0x41812f66faf66fe3e10f5b5bc61abff9f6c91ed6,0x497652703fbf03aa36354ab4a67a1eccaa32db61,0xaa5422745e0965d04502ed5d46328d753fc69f0b"
 const printError = (message) => console.error('\x1b[31m', message, '\x1b[0m');
 
 const startGanacheServer = (privateKeys) => new Promise((resolve, reject) => {
@@ -72,6 +66,7 @@ const execute = (command, env = {}) => new Promise((resolve, reject) => {
         printError(stderr);
       }
       if (error) {
+        console.log(stdout);
         reject(error);
       } else {
         console.log(stdout);
@@ -84,45 +79,47 @@ const execute = (command, env = {}) => new Promise((resolve, reject) => {
 const envForUser = (account) => ({
   WEB3_RPC: `http://localhost:${PORT}`,
   WEB3_NODEPRIVATEKEY: account.privateKey,
-  MULTISIG_APPROVAL_ADDRESSES: approvalPuiblicKeys
+  MULTISIG_APPROVAL_ADDRESSES: approvalPublicKeys
 });
+
+const updateEnvs = (deployEnvFile) => {
+  const deployConfig = dotenv.parse(fs.readFileSync(deployEnvFile));
+  return {
+    adminEnv: {
+      ...envForUser(adminUser),
+      ...deployConfig
+    }, apolloEnv: {
+      ...envForUser(apolloUser),
+      ...deployConfig
+    }, atlasEnv: {
+      ...envForUser(atlasUser),
+      ...deployConfig
+    }, hermesEnv: {
+      ...envForUser(hermesUser),
+      ...deployConfig
+    }
+  };
+};
+
+const resetEnvFile = async function () {
+  const deployEnvFile = `${__dirname}/test_cli_head.env`;
+  await fs.writeFileSync(deployEnvFile, '');
+  return deployEnvFile;
+};
 
 startGanacheServer(
   [
     adminUser.privateKey,
     apolloUser.privateKey,
     atlasUser.privateKey,
-    hermesUser.privateKey,
-    approvalPrivateKeys[0],
-    approvalPrivateKeys[1],
-    approvalPrivateKeys[2],
-    approvalPrivateKeys[3],
-    approvalPrivateKeys[4],
-    approvalPrivateKeys[5]
+    hermesUser.privateKey
   ])
   .then(async (server) => {
     let failed = false;
     try {
-      const deployEnvFile = `${__dirname}/test_cli_head.env`;
+      const deployEnvFile = await resetEnvFile();
       await execute(`yarn task deployGenesis --save ${deployEnvFile}`, envForUser(adminUser));
-      const deployConfig = dotenv.parse(fs.readFileSync(deployEnvFile));
-      const adminEnv = {
-        ...envForUser(adminUser),
-        ...deployConfig
-      };
-      const apolloEnv = {
-        ...envForUser(apolloUser),
-        ...deployConfig
-      };
-      const atlasEnv = {
-        ...envForUser(atlasUser),
-        ...deployConfig
-      };
-      const hermesEnv = {
-        ...envForUser(hermesUser),
-        ...deployConfig
-      };
-
+      let {adminEnv, apolloEnv, atlasEnv, hermesEnv} = await updateEnvs(deployEnvFile);
       await execute(`yarn task deploy initial`, adminEnv);
 
       const verifyFails = async (work) => {
@@ -137,20 +134,15 @@ startGanacheServer(
         }
       };
 
-      const extractMultiplexerAddress = (stdout) => {
-        const regex = /multiplexer -> (0x[a-f0-9]{40})/i;
-        const match = regex.exec(stdout);
-        return match[1];
-      };
-
       console.log('------ test deploy update ------');
-      adminEnv.MULTIPLEXER_CONTRACT_ADDRESS = extractMultiplexerAddress(await execute(`yarn task deploy update`, adminEnv));
-
+      await execute(`yarn task deploy update --save ${deployEnvFile}`, adminEnv);
+      ({adminEnv, apolloEnv, atlasEnv, hermesEnv} = await updateEnvs(deployEnvFile));
       await verifyFails(async () => {
         await execute(`yarn task deploy update`, apolloEnv);
       });
 
-      await execute(`yarn task deployMultisig --save ${deployEnvFile}`, envForUser(adminUser));
+      await execute(`yarn task deployMultisig --save ${deployEnvFile} --required 1`, adminEnv);
+      ({adminEnv, apolloEnv, atlasEnv, hermesEnv} = await updateEnvs(deployEnvFile));
 
       const verifyNodeState = async (address, whitelistedRole, onboardedRole, stake, url) => {
         const ret = await execute(`yarn task whitelist get ${address}`, adminEnv);
@@ -161,20 +153,20 @@ startGanacheServer(
         }
       };
 
-      // TODO uncomment after multisig is ready
-      // const verifyOwnershipState = async (address, expectedOwner) => {
-      //   const ret = await execute(`yarn task checkOwnership ${address}`, adminEnv);
-      //   const regex = new RegExp(expectedOwner, 'g');
-      //   if (!regex.test(ret)) {
-      //     throw new Error(`Expected contract owner to be ${expectedOwner} but got ${ret}`);
-      //   }
-      // };
-      //
-      // console.log('------ test multiplexer ------');
-      // await execute(`yarn task moveOwnershipToMultiplexer ${adminEnv.MULTIPLEXER_CONTRACT_ADDRESS}`, adminEnv);
-      // await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminEnv.MULTIPLEXER_CONTRACT_ADDRESS);
-      // await execute(`yarn task moveOwnershipFromMultiplexer ${adminUser.address}`, adminEnv);
-      // await verifyOwnershipState(deployConfig.HEAD_CONTRACT_ADDRESS, adminUser.address);
+      const verifyOwnershipState = async (address, expectedOwner) => {
+        const ret = await execute(`yarn task checkOwnership ${address}`, adminEnv);
+        const regex = new RegExp(expectedOwner, 'g');
+        if (!regex.test(ret)) {
+          throw new Error(`Expected contract owner to be ${expectedOwner} but got ${ret}`);
+        }
+      };
+
+      console.log('------ test multiplexer ------');
+      await verifyOwnershipState(adminEnv.MULTIPLEXER_CONTRACT_ADDRESS, adminEnv.MULTISIG_CONTRACT_ADDRESS);
+      await execute(`yarn task moveOwnershipToMultiplexer ${adminEnv.MULTIPLEXER_CONTRACT_ADDRESS}`, adminEnv);
+      await verifyOwnershipState(adminEnv.HEAD_CONTRACT_ADDRESS, adminEnv.MULTIPLEXER_CONTRACT_ADDRESS);
+      await execute(`yarn task moveOwnershipFromMultiplexer ${adminUser.address}`, adminEnv);
+      await verifyOwnershipState(adminEnv.HEAD_CONTRACT_ADDRESS, adminUser.address);
 
       console.log('------ test whitelisting ------');
       await verifyNodeState(apolloUser.address, 'NONE', 'NONE', '0', '');

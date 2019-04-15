@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import TaskBase from './base/task_base';
 import commandLineArgs from 'command-line-args';
-import {appendFile} from '../utils/file';
+import {appendEnvFile} from '../utils/file';
 import config from '../../config/config';
 import {multisig} from '../../src/contract_jsons';
 import {
@@ -38,24 +38,25 @@ export default class DeployMultisigTask extends TaskBase {
       console.error('No validators addresses entered.');
       return;
     }
-
-    const multisigContract = await this.deployActions.deployer.deployContract(multisig, [approvalAdresses, APPROVALS_REQUIRED], {});
+    if (options.required > approvalAdresses.length) {
+      throw new Error(`There are fewer approvers than required approves (${approvalAdresses.length} provided, but required at least ${options.required}).`);
+    }
+    const multisigContract = await this.deployActions.deployer.deployContract(multisig, [approvalAdresses, options.required], {});
     const multiSigAddress = multisigContract.options.address;
-
-    await this.multiplexerWrapper.transferOwnership(multiSigAddress);
-
+    await this.multiplexerWrapper.contract.methods.transferOwnership(multiSigAddress).send({from: this.multiplexerWrapper.defaultAddress});
     console.log(`\tmultisig -> ${multiSigAddress}`);
 
-    const toFile = this.multisigToEnvFile(multisigContract);
+    const multisigEnvLine = this.multisigToEnvFile(multisigContract);
     if (options.save) {
-      await this.appendEnvFile(options.save, toFile);
+      await appendEnvFile(options.save, multisigEnvLine);
     }
   }
 
   parseOptions(args) {
     const options = commandLineArgs(
       [
-        {name: 'save', type: String}
+        {name: 'save', type: String},
+        {name: 'required', type: Number, default: APPROVALS_REQUIRED}
       ],
       {argv: args, partial: true}
     );
@@ -74,16 +75,7 @@ export default class DeployMultisigTask extends TaskBase {
     return options;
   }
 
-  async appendEnvFile(envFilePath, envFile) {
-    try {
-      await appendFile(envFilePath, envFile);
-      console.log(`Multisig contract is deployed, address is added to the env: ${envFilePath}.`);
-    } catch (err) {
-      console.error(`Unable to save configuration: ${err}`);
-    }
-  }
-
   multisigToEnvFile(multisigContract) {
-    return `MULTISIG_CONTRACT_ADDRESS="${multisigContract.options.address}"`;
+    return `MULTISIG_CONTRACT_ADDRESS="${multisigContract.options.address}"\n`;
   }
 }

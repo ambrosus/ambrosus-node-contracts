@@ -11,9 +11,9 @@ import TaskBase from './base/task_base';
 import {utils} from '../utils/web3_tools';
 
 export default class MoveOwnershipFromMultiplexerTask extends TaskBase {
-  constructor(adminActions) {
+  constructor(multisigActions) {
     super();
-    this.adminActions = adminActions;
+    this.multisigActions = multisigActions;
   }
 
   async execute(args) {
@@ -27,7 +27,7 @@ export default class MoveOwnershipFromMultiplexerTask extends TaskBase {
   }
 
   async setOwnerships(newOwnerAddress) {
-    return this.adminActions.moveOwnershipsFromMultiplexer(newOwnerAddress);
+    return this.multisigActions.transferContractsOwnership(newOwnerAddress);
   }
 
   help() {
