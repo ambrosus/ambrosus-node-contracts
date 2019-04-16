@@ -128,7 +128,11 @@ describe('Multisig actions integration', () => {
       args: {
         candidate: otherAddress, role: '2', deposit: '0'
       },
-      transactionId: '0'
+      transactionId: '0',
+      confirmations: {
+        required: 2,
+        confirmed: 1
+      }
     }]);
   });
 
@@ -146,7 +150,11 @@ describe('Multisig actions integration', () => {
       args: {
         candidate: otherAddress, role: '2', deposit: '0'
       },
-      transactionId: '0'
+      transactionId: '0',
+      confirmations: {
+        required: 2,
+        confirmed: 0
+      }
     }]);
   });
 

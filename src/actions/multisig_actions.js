@@ -40,12 +40,12 @@ export default class MultisigActions {
   }
 
   async approvableTransactions() {
-    const allPendingTransactionIds = await this.multisigWrapper.getPendingTransaction();
+    const allPendingTransactions = await this.allPendingTransactions();
     const approvableTransactions = [];
-    for (const txId of allPendingTransactionIds) {
-      const confirmations = await this.multisigWrapper.getConfirmations(txId);
+    for (const transaction of allPendingTransactions) {
+      const confirmations = await this.multisigWrapper.getConfirmations(transaction.transactionId);
       if (!confirmations.includes(this.multisigWrapper.defaultAddress)) {
-        approvableTransactions.push(await this.getTransactionCallFromData(txId));
+        approvableTransactions.push(transaction);
       }
     }
     return approvableTransactions;
