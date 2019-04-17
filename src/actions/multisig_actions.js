@@ -21,28 +21,47 @@ export default class MultisigActions {
   }
 
   async allPendingTransactions() {
+    const requiredConfirmations = parseInt(await this.multisigWrapper.confirmationsRequired(), 10);
     const allPendingTransactionIds = await this.multisigWrapper.getPendingTransaction();
     const allPendingTransactions = [];
     for (const txId of allPendingTransactionIds) {
-      allPendingTransactions.push(await this.getTransactionCallFromData(txId));
+      const confirmationCount = parseInt(await this.multisigWrapper.getConfirmationCount(txId), 10);
+      if (confirmationCount < requiredConfirmations) {
+        allPendingTransactions.push({
+          ...await this.getTransactionCallFromData(txId),
+          confirmations: {
+            required: requiredConfirmations,
+            confirmed: confirmationCount
+          }
+        });
+      }
     }
     return allPendingTransactions;
   }
 
   async approvableTransactions() {
-    const allPendingTransactionIds = await this.multisigWrapper.getPendingTransaction();
+    const allPendingTransactions = await this.allPendingTransactions();
     const approvableTransactions = [];
-    for (const txId of allPendingTransactionIds) {
-      const confirmations = await this.multisigWrapper.getConfirmations(txId);
+    for (const transaction of allPendingTransactions) {
+      const confirmations = await this.multisigWrapper.getConfirmations(transaction.transactionId);
       if (!confirmations.includes(this.multisigWrapper.defaultAddress)) {
-        approvableTransactions.push(await this.getTransactionCallFromData(txId));
+        approvableTransactions.push(transaction);
       }
     }
     return approvableTransactions;
   }
 
+  checkIfTransactionDitNotFail(transactionData) {
+    if (transactionData.events.ExecutionFailure) {
+      throw new Error(
+        `Transaction #${transactionData.events.ExecutionFailure.returnValues.transactionId} has been rejected`);
+    }
+    return transactionData;
+  }
+
   async submitTransactionToMultiplexer(data) {
-    return this.multisigWrapper.submitTransaction(this.multiplexerWrapper.address(), '0', data);
+    return this.checkIfTransactionDitNotFail(
+      await this.multisigWrapper.submitTransaction(this.multiplexerWrapper.address(), '0', data));
   }
 
   async transferMultiplexerOwnership(address) {
@@ -78,7 +97,7 @@ export default class MultisigActions {
   }
 
   async confirmTransaction(transactionId) {
-    return this.multisigWrapper.confirmTransaction(transactionId);
+    return this.checkIfTransactionDitNotFail(await this.multisigWrapper.confirmTransaction(transactionId));
   }
 
   async revokeConfirmation(transactionId) {
