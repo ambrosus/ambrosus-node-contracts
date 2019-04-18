@@ -12,6 +12,7 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import MultisigWrapper from '../../src/wrappers/multisig_wrapper';
+import Web3 from 'web3';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -20,11 +21,12 @@ const {expect} = chai;
 describe('Multisig wrapper', () => {
   let multisigWrapper;
   const defaultAddress = '0xc0ffee';
+  const exampleABI = '0x12345678';
   let contractMock;
   let contractMethodStub;
   let contractMethodSendStub;
 
-  const prepareTest = async (contractMethodName) => {
+  const prepareSendableTransactionTest = (contractMethodName) => {
     contractMethodStub = sinon.stub();
     contractMethodSendStub = sinon.stub();
     contractMethodStub.returns({
@@ -45,6 +47,40 @@ describe('Multisig wrapper', () => {
     };
     multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
   };
+
+
+  const prepareEncodedTransactionTest = (contractMethodName) => {
+    contractMethodStub = sinon.stub();
+    contractMethodSendStub = sinon.stub().returns(exampleABI);
+    contractMethodStub.returns({
+      encodeABI: contractMethodSendStub
+    });
+    contractMock = {
+      methods: {
+        [contractMethodName]: contractMethodStub
+      }
+    };
+    const web3Mock = new Web3();
+    sinon.stub(web3Mock.eth, 'Contract').callsFake(() => contractMock);
+
+    multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
+  };
+
+  // [
+  //   ['0xcce524b4', 'setBaseUploadFee'],
+  //   ['0x3b9aa98a', 'transferOwnershipForBlockRewards'],
+  //   ['0x5366dbc0', 'changeContext'],
+  //   ['0x8ab1d681', 'removeFromWhitelist'],
+  //   ['0xa6f1e840', 'transferContractsOwnership'],
+  //   ['0xbe08add3', 'transferOwnershipForValidatorSet'],
+  //   ['0xf2fde38b', 'transferOwnership'],
+  //   ['0xfae37c3a', 'addToWhitelist']
+  // ].forEach(([signature, functionName]) =>
+  //   it(`correctly resolves method name for ${functionName}`, async () => {
+  //     prepareTest();
+  //     expect(multiplexerWrapper.getFunctionName(`${signature}1234`)).to.equal(functionName);
+  //   })
+  // );
 
   describe('getPendingTransaction', () => {
     let getTransactionCountStub;
@@ -205,7 +241,7 @@ describe('Multisig wrapper', () => {
     const exampleData = '0xdeadBeef';
 
     beforeEach(async () => {
-      await prepareTest('submitTransaction');
+      await prepareSendableTransactionTest('submitTransaction');
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -218,8 +254,8 @@ describe('Multisig wrapper', () => {
   describe('confirmTransaction', () => {
     const exampleData = '0x123';
 
-    beforeEach(async () => {
-      await prepareTest('confirmTransaction');
+    beforeEach(() => {
+      prepareSendableTransactionTest('confirmTransaction');
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -232,8 +268,8 @@ describe('Multisig wrapper', () => {
   describe('revokeConfirmation', () => {
     const exampleData = '0x123';
 
-    beforeEach(async () => {
-      await prepareTest('revokeConfirmation');
+    beforeEach(() => {
+      prepareSendableTransactionTest('revokeConfirmation');
     });
 
     it('calls contract method with correct arguments', async () => {
@@ -249,7 +285,7 @@ describe('Multisig wrapper', () => {
     const exampleTxId = '0xc0ffee';
     const exampleTransaction = 'mock transaction';
 
-    beforeEach(async () => {
+    beforeEach(() => {
       getTransactionStub = sinon.stub();
       getTransactionCallStub = sinon.stub().resolves(exampleTransaction);
       getTransactionStub.returns({
@@ -276,6 +312,48 @@ describe('Multisig wrapper', () => {
       expect(await multisigWrapper.getTransaction(exampleTxId)).to.equal(exampleTransaction);
       expect(getTransactionStub).to.be.calledOnceWith(exampleTxId);
       expect(getTransactionCallStub).to.be.calledOnce;
+    });
+  });
+
+  describe('addOwner', () => {
+    const exampleNewOwner = '0x123';
+
+    beforeEach(() => {
+      prepareEncodedTransactionTest('addOwner');
+    });
+
+    it('calls contract method with correct arguments and returns ABI', async () => {
+      expect(multisigWrapper.addOwner(exampleNewOwner)).to.equal(exampleABI);
+      expect(contractMethodStub).to.be.calledWith(exampleNewOwner);
+      expect(contractMethodSendStub).to.be.calledWith();
+    });
+  });
+
+  describe('removeOwner', () => {
+    const exampleOwner = '0x123';
+
+    beforeEach(() => {
+      prepareEncodedTransactionTest('removeOwner');
+    });
+
+    it('calls contract method with correct arguments and returns ABI', async () => {
+      expect(multisigWrapper.removeOwner(exampleOwner)).to.equal(exampleABI);
+      expect(contractMethodStub).to.be.calledWith(exampleOwner);
+      expect(contractMethodSendStub).to.be.calledWith();
+    });
+  });
+
+  describe('changeRequirement', () => {
+    const exampleNewRequirement = 5;
+
+    beforeEach(() => {
+      prepareEncodedTransactionTest('changeRequirement');
+    });
+
+    it('calls contract method with correct arguments and returns ABI', async () => {
+      expect(multisigWrapper.changeRequirement(exampleNewRequirement)).to.equal(exampleABI);
+      expect(contractMethodStub).to.be.calledWith(exampleNewRequirement);
+      expect(contractMethodSendStub).to.be.calledWith();
     });
   });
 });

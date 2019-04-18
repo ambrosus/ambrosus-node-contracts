@@ -9,12 +9,24 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import ContractWrapper from './contract_wrapper';
 import {loadContract} from '../utils/web3_tools';
-import {multisig} from '../contract_jsons';
+import contractJsons, {multisig} from '../contract_jsons';
 
 export default class MultisigWrapper extends ContractWrapper {
   constructor(contractAddress, web3, defaultAddress) {
     super(web3, defaultAddress);
+    this.address = contractAddress;
     this.contract = loadContract(web3, multisig.abi, contractAddress);
+    this.functionAbis = this.getFunctionSignatures(contractJsons.multiplexer.abi);
+  }
+
+  getFunctionName(transactionData) {
+    return this.functionAbis[transactionData.substring(0, 10)].name;
+  }
+
+  getFunctionArguments(transactionData) {
+    const {inputs} = this.functionAbis[transactionData.substring(0, 10)];
+    const parameters = this.web3.eth.abi.decodeParameters(inputs, `0x${transactionData.substring(10)}`);
+    return inputs.reduce((acc, {name}) => ({...acc, [name]: parameters[name]}), {});
   }
 
   async getPendingTransaction() {
@@ -48,5 +60,18 @@ export default class MultisigWrapper extends ContractWrapper {
 
   async getTransaction(transactionId) {
     return this.contract.methods.transactions(transactionId).call();
+  }
+
+  addOwner(ownerAddress) {
+    return this.contract.methods.addOwner(ownerAddress).encodeABI();
+  }
+
+  removeOwner(ownerAddress) {
+    return this.contract.methods.removeOwner(ownerAddress).encodeABI();
+  }
+
+  changeRequirement(newRequiredConfirmationsCount) {
+    return this.contract.methods.changeRequirement(newRequiredConfirmationsCount).encodeABI();
+
   }
 }

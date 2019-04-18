@@ -116,6 +116,10 @@ describe('Multisig actions integration', () => {
     }]);
   });
 
+  it('multisig requires 2 confirmations', async () => {
+    expect(await multisigActions.confirmationsRequired()).to.equal(2);
+  });
+
   it('approvableTransactions does not show transactions approved by us', async () => {
     await multisigActions.addToWhitelist(otherAddress, 2, '0');
     expect(await multisigActions.approvableTransactions()).to.deep.equal([]);
@@ -229,6 +233,23 @@ describe('Multisig actions integration', () => {
     it('transferOwnershipForBlockRewards', async () => {
       await executeTransaction((multisigActions) => multisigActions.transferOwnershipForBlockRewards(otherAddress));
       expect(await blockRewards.methods.owner().call()).to.equal(otherAddress);
+    });
+
+    it('addOwner', async () => {
+      await expect(submitTransactionBy(otherAddress, (multisigActions) => multisigActions.setBaseUploadFee('100'))).to.be.rejected;
+      await executeTransaction((multisigActions) => multisigActions.addOwner(otherAddress));
+      await expect(submitTransactionBy(otherAddress, (multisigActions) => multisigActions.setBaseUploadFee('100'))).to.be.fulfilled;
+    });
+
+    it('removeOwner', async () => {
+      await executeTransaction((multisigActions) => multisigActions.addOwner(otherAddress));
+      await executeTransaction((multisigActions) => multisigActions.removeOwner(otherAddress));
+      await expect(submitTransactionBy(otherAddress, (multisigActions) => multisigActions.setBaseUploadFee('100'))).to.be.rejected;
+    });
+
+    it('changeRequirement', async () => {
+      await executeTransaction((multisigActions) => multisigActions.changeRequirement(1));
+      expect(await multisigActions.confirmationsRequired()).to.equal(1);
     });
   });
 });
