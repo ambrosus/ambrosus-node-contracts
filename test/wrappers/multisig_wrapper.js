@@ -25,6 +25,7 @@ describe('Multisig wrapper', () => {
   let contractMock;
   let contractMethodStub;
   let contractMethodSendStub;
+  let web3Mock;
 
   const prepareSendableTransactionTest = (contractMethodName) => {
     contractMethodStub = sinon.stub();
@@ -35,14 +36,6 @@ describe('Multisig wrapper', () => {
     contractMock = {
       methods: {
         [contractMethodName]: contractMethodStub
-      }
-    };
-    const web3Mock = {
-      eth: {
-        Contract: sinon.mock().returns(contractMock)
-      },
-      utils: {
-        toWei: sinon.stub()
       }
     };
     multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
@@ -82,6 +75,12 @@ describe('Multisig wrapper', () => {
   //   })
   // );
 
+  beforeEach(async () => {
+    web3Mock = new Web3();
+
+    sinon.stub(web3Mock.eth, 'Contract').callsFake(() => contractMock);
+  });
+
   describe('getPendingTransaction', () => {
     let getTransactionCountStub;
     let getTransactionCountCallStub;
@@ -105,14 +104,6 @@ describe('Multisig wrapper', () => {
         methods: {
           getTransactionCount: getTransactionCountStub,
           getTransactionIds: getTransactionIdsStub
-        }
-      };
-      const web3Mock = {
-        eth: {
-          Contract: sinon.mock().returns(contractMock)
-        },
-        utils: {
-          toWei: sinon.stub()
         }
       };
       multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
@@ -145,14 +136,6 @@ describe('Multisig wrapper', () => {
           getConfirmations: getConfirmationsStub
         }
       };
-      const web3Mock = {
-        eth: {
-          Contract: sinon.mock().returns(contractMock)
-        },
-        utils: {
-          toWei: sinon.stub()
-        }
-      };
       multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
       sinon.stub(multisigWrapper, 'contract').resolves(contractMock);
     });
@@ -181,14 +164,6 @@ describe('Multisig wrapper', () => {
           getConfirmationCount: getConfirmationCountStub
         }
       };
-      const web3Mock = {
-        eth: {
-          Contract: sinon.mock().returns(contractMock)
-        },
-        utils: {
-          toWei: sinon.stub()
-        }
-      };
       multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
       sinon.stub(multisigWrapper, 'contract').resolves(contractMock);
     });
@@ -214,14 +189,6 @@ describe('Multisig wrapper', () => {
       contractMock = {
         methods: {
           required: confirmationsRequiredStub
-        }
-      };
-      const web3Mock = {
-        eth: {
-          Contract: sinon.mock().returns(contractMock)
-        },
-        utils: {
-          toWei: sinon.stub()
         }
       };
       multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
@@ -294,14 +261,6 @@ describe('Multisig wrapper', () => {
       contractMock = {
         methods: {
           transactions: getTransactionStub
-        }
-      };
-      const web3Mock = {
-        eth: {
-          Contract: sinon.mock().returns(contractMock)
-        },
-        utils: {
-          toWei: sinon.stub()
         }
       };
       multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);

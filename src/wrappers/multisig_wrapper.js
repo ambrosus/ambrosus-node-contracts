@@ -16,7 +16,19 @@ export default class MultisigWrapper extends ContractWrapper {
     super(web3, defaultAddress);
     this.address = contractAddress;
     this.contract = loadContract(web3, multisig.abi, contractAddress);
-    this.functionAbis = this.getFunctionSignatures(contractJsons.multiplexer.abi);
+    this.functionAbis = this.getFunctionSignatures(contractJsons.multisig.abi);
+  }
+
+  getFunctionSignatures(abi) {
+    return abi
+      .filter((abiEntry) => abiEntry.type === 'function' && !abiEntry.constant)
+      .map((abiEntry) => ({
+        [this.web3.eth.abi.encodeFunctionSignature(abiEntry)]: {
+          name: abiEntry.name,
+          inputs: abiEntry.inputs
+        }
+      }))
+      .reduce((acc, entry) => ({...acc, ...entry}), {});
   }
 
   getFunctionName(transactionData) {
