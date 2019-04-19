@@ -61,6 +61,9 @@ export default class MultisigWrapper extends ContractWrapper {
 
   changeRequirement(newRequiredConfirmationsCount) {
     return this.contract.methods.changeRequirement(newRequiredConfirmationsCount).encodeABI();
+  }
 
+  async getOwners() {
+    return this.contract.methods.getOwners().call();
   }
 }

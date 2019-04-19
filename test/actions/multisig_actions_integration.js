@@ -137,12 +137,12 @@ describe('Multisig actions integration', () => {
     expect(await multisigActions.confirmationsRequired()).to.equal(2);
   });
 
-  it('approvableTransactions does not show transactions approved by us', async () => {
+  it('approvable transactions do not include transactions approved by us', async () => {
     await multisigActions.addToWhitelist(otherAddress, 2, '0');
     expect(await multisigActions.approvableTransactions()).to.deep.equal([]);
   });
 
-  it('approvableTransactions shows transactions not approved by us', async () => {
+  it('approvable transactions include transactions not approved by us', async () => {
     await submitTransactionBy(otherOwner, (multisigActions) => multisigActions.addToWhitelist(otherAddress, 2, '0'));
     expect(await multisigActions.approvableTransactions()).to.deep.equal([{
       name: 'addToWhitelist',
@@ -253,15 +253,13 @@ describe('Multisig actions integration', () => {
     });
 
     it('addOwner', async () => {
-      await expect(submitTransactionBy(otherAddress, (multisigActions) => multisigActions.setBaseUploadFee('100'))).to.be.rejected;
       await executeTransaction((multisigActions) => multisigActions.addOwner(otherAddress));
-      await expect(submitTransactionBy(otherAddress, (multisigActions) => multisigActions.setBaseUploadFee('100'))).to.be.fulfilled;
+      expect(await multisigActions.getOwners()).to.contain(otherAddress);
     });
 
     it('removeOwner', async () => {
-      await executeTransaction((multisigActions) => multisigActions.addOwner(otherAddress));
-      await executeTransaction((multisigActions) => multisigActions.removeOwner(otherAddress));
-      await expect(submitTransactionBy(otherAddress, (multisigActions) => multisigActions.setBaseUploadFee('100'))).to.be.rejected;
+      await executeTransaction((multisigActions) => multisigActions.removeOwner(owner));
+      expect(await multisigActions.getOwners()).not.to.contain(owner);
     });
 
     it('changeRequirement', async () => {

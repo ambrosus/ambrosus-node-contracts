@@ -120,4 +120,8 @@ export default class MultisigActions {
   async changeRequirement(newRequiredConfirmationsCount) {
     return this.submitTransaction(await this.multisigWrapper.changeRequirement(newRequiredConfirmationsCount), this.multisigWrapper.address);
   }
+
+  async getOwners() {
+    return this.multisigWrapper.getOwners();
+  }
 }
