@@ -20,6 +20,7 @@ import KycWhitelistWrapper from '../../src/wrappers/kyc_whitelist_wrapper';
 import FeesWrapper from '../../src/wrappers/fees_wrapper';
 import ValidatorProxyWrapper from '../../src/wrappers/validator_proxy_wrapper';
 import MultisigActions from '../../src/actions/multisig_actions';
+import MultisigFunctions from '../../src/utils/multisig_functions';
 
 
 chai.use(chaiAsPromised);
@@ -83,7 +84,7 @@ describe('Multisig actions integration', () => {
     await adminActions.moveOwnershipsToMultiplexer(multiplexer.options.address);
     const multiplexerWrapper = new MultiplexerWrapper(multiplexer.options.address, web3, owner);
     const multisigWrapper = new MultisigWrapper(multisigContract.options.address, web3, owner);
-    multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper);
+    multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper, new MultisigFunctions(web3));
   });
 
   beforeEach(async () => {
@@ -97,16 +98,32 @@ describe('Multisig actions integration', () => {
   const submitTransactionBy = async (address, callback) => {
     const multiplexerWrapper = new MultiplexerWrapper(multiplexer.options.address, web3, address);
     const multisigWrapper = new MultisigWrapper(multisigContract.options.address, web3, address);
-    const multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper);
+    const multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper, new MultisigFunctions(web3));
     await callback(multisigActions);
   };
 
-  it('shows pending transaction', async () => {
+  it('shows pending multiplexer transaction', async () => {
     await multisigActions.addToWhitelist(otherAddress, 2, '0');
     expect(await multisigActions.allPendingTransactions()).to.deep.equal([{
       name: 'addToWhitelist',
       args: {
         candidate: otherAddress, role: '2', deposit: '0'
+      },
+      transactionId: '0',
+      confirmations: {
+        required: 2,
+        confirmed: 1
+      }
+    }]);
+  });
+
+  it('shows pending multisig transaction', async () => {
+    await multisigActions.addOwner(otherAddress);
+    const transactions = await multisigActions.allPendingTransactions();
+    expect(transactions).to.deep.equal([{
+      name: 'addOwner',
+      args: {
+        owner: otherAddress
       },
       transactionId: '0',
       confirmations: {

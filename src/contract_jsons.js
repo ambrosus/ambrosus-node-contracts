@@ -70,7 +70,6 @@ const contractJsons = {
   rolesEventEmitter: RolesEventEmitterJson,
   transfersEventEmitter: TransfersEventEmitterJson,
   multiplexer: MultiplexerJson,
-  multisig: MultisigWalletJson
 };
 
 export const contractSuperSpeedJsons = {

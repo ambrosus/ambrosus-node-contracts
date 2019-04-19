@@ -8,15 +8,16 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 export default class MultisigActions {
-  constructor(multisigWrapper, multiplexerWrapper) {
+  constructor(multisigWrapper, multiplexerWrapper, multisigFunctions) {
     this.multisigWrapper = multisigWrapper;
     this.multiplexerWrapper = multiplexerWrapper;
+    this.multisigFunctions = multisigFunctions;
   }
 
   async getTransactionCallFromData(transactionId) {
     const {data} = await this.multisigWrapper.getTransaction(transactionId);
-    const name = this.multiplexerWrapper.getFunctionName(data);
-    const args = this.multiplexerWrapper.getFunctionArguments(data);
+    const name = this.multisigFunctions.getFunctionName(data);
+    const args = this.multisigFunctions.getFunctionArguments(data);
     return {name, args, transactionId};
   }
 

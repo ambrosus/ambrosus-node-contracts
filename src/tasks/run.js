@@ -50,6 +50,8 @@ import MoveOwnershipFromMultiplexerTask from './move_ownership_from_multiplexer'
 import CheckOwnershipTask from './ownership';
 import MultisigActions from '../actions/multisig_actions';
 import MultisigWrapper from '../wrappers/multisig_wrapper';
+import MultisigFunctions from '../utils/multisig_functions';
+
 
 const runTask = async () => {
   const web3 = await createWeb3();
@@ -82,7 +84,7 @@ const runTask = async () => {
   const payoutsActions = new PayoutsActions(timeWrapper, payoutsWrapper);
   const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper);
   const adminActions = new AdministrativeActions(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper);
-  const multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper);
+  const multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper, new MultisigFunctions(web3));
 
   const list = new TaskList();
   const args = process.argv.slice(2);
