@@ -40,6 +40,7 @@ import AtlasStakeStoreWrapper from './wrappers/atlas_stake_store_wrapper';
 import MultiplexerWrapper from './wrappers/multiplexer_wrapper';
 import MultisigWrapper from './wrappers/multisig_wrapper';
 import MultisigActions from './actions/multisig_actions';
+import MultisigFunctions from './utils/multisig_functions';
 const constants = require('./constants');
 
 module.exports = {
@@ -76,5 +77,6 @@ module.exports = {
   RolesEventEmitterWrapper,
   MultiplexerWrapper,
   MultisigWrapper,
-  MultisigActions
+  MultisigActions,
+  MultisigFunctions
 };
