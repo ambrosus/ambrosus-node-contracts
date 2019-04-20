@@ -45,29 +45,6 @@ describe('Multiplexer wrapper', () => {
     sinon.stub(multiplexerWrapper, 'contract').resolves(contractMock);
   };
 
-  [
-    ['0xcce524b4', 'setBaseUploadFee'],
-    ['0x3b9aa98a', 'transferOwnershipForBlockRewards'],
-    ['0x5366dbc0', 'changeContext'],
-    ['0x8ab1d681', 'removeFromWhitelist'],
-    ['0xa6f1e840', 'transferContractsOwnership'],
-    ['0xbe08add3', 'transferOwnershipForValidatorSet'],
-    ['0xf2fde38b', 'transferOwnership'],
-    ['0xfae37c3a', 'addToWhitelist']
-  ].forEach(([signature, functionName]) =>
-    it(`correctly resolves method name for ${functionName}`, async () => {
-      prepareTest();
-      expect(multiplexerWrapper.getFunctionName(`${signature}1234`)).to.equal(functionName);
-    })
-  );
-
-  it('correctly resolves method arguments', async () => {
-    prepareTest();
-    const parameters = new Web3().eth.abi.encodeParameters(['uint256'], ['100']).substring(2);
-    const setBaseUploadFeeSignature = `0xcce524b4`;
-    expect(multiplexerWrapper.getFunctionArguments(`${setBaseUploadFeeSignature}${parameters}`)).to.deep.equal({fee: '100'});
-  });
-
   describe('transferContractsOwnership', () => {
     const newOwnerAddress = '0x123';
 

@@ -34,10 +34,10 @@ import ApolloDepositStoreJson from './contracts/ApolloDepositStore.json';
 import ValidatorProxyJson from './contracts/ValidatorProxy.json';
 import SuperSpeedConfig from './contracts/SuperSpeedConfig.json';
 import SuperSpeedTime from './contracts/SuperSpeedTime.json';
-import ChallengesEventEmitter from './contracts/ChallengesEventEmitter.json';
-import RolesEventEmitter from './contracts/RolesEventEmitter.json';
-import TransfersEventEmitter from './contracts/TransfersEventEmitter.json';
-import Multiplexer from './contracts/Multiplexer.json';
+import ChallengesEventEmitterJson from './contracts/ChallengesEventEmitter.json';
+import RolesEventEmitterJson from './contracts/RolesEventEmitter.json';
+import TransfersEventEmitterJson from './contracts/TransfersEventEmitter.json';
+import MultiplexerJson from './contracts/Multiplexer.json';
 import MultisigWalletJson from './contracts/MultiSigWallet.json';
 
 const contractJsons = {
@@ -66,10 +66,10 @@ const contractJsons = {
   rolesStore: RolesStoreJson,
   apolloDepositStore: ApolloDepositStoreJson,
   validatorProxy: ValidatorProxyJson,
-  challengesEventEmitter: ChallengesEventEmitter,
-  rolesEventEmitter: RolesEventEmitter,
-  transfersEventEmitter: TransfersEventEmitter,
-  multiplexer: Multiplexer
+  challengesEventEmitter: ChallengesEventEmitterJson,
+  rolesEventEmitter: RolesEventEmitterJson,
+  transfersEventEmitter: TransfersEventEmitterJson,
+  multiplexer: MultiplexerJson
 };
 
 export const contractSuperSpeedJsons = {

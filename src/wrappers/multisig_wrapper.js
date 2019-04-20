@@ -14,6 +14,7 @@ import {multisig} from '../contract_jsons';
 export default class MultisigWrapper extends ContractWrapper {
   constructor(contractAddress, web3, defaultAddress) {
     super(web3, defaultAddress);
+    this.address = contractAddress;
     this.contract = loadContract(web3, multisig.abi, contractAddress);
   }
 
@@ -48,5 +49,21 @@ export default class MultisigWrapper extends ContractWrapper {
 
   async getTransaction(transactionId) {
     return this.contract.methods.transactions(transactionId).call();
+  }
+
+  addOwner(ownerAddress) {
+    return this.contract.methods.addOwner(ownerAddress).encodeABI();
+  }
+
+  removeOwner(ownerAddress) {
+    return this.contract.methods.removeOwner(ownerAddress).encodeABI();
+  }
+
+  changeRequirement(newRequiredConfirmationsCount) {
+    return this.contract.methods.changeRequirement(newRequiredConfirmationsCount).encodeABI();
+  }
+
+  async getOwners() {
+    return this.contract.methods.getOwners().call();
   }
 }
