@@ -59,22 +59,6 @@ describe('Multisig wrapper', () => {
     multisigWrapper = new MultisigWrapper({}, web3Mock, defaultAddress);
   };
 
-  // [
-  //   ['0xcce524b4', 'setBaseUploadFee'],
-  //   ['0x3b9aa98a', 'transferOwnershipForBlockRewards'],
-  //   ['0x5366dbc0', 'changeContext'],
-  //   ['0x8ab1d681', 'removeFromWhitelist'],
-  //   ['0xa6f1e840', 'transferContractsOwnership'],
-  //   ['0xbe08add3', 'transferOwnershipForValidatorSet'],
-  //   ['0xf2fde38b', 'transferOwnership'],
-  //   ['0xfae37c3a', 'addToWhitelist']
-  // ].forEach(([signature, functionName]) =>
-  //   it(`correctly resolves method name for ${functionName}`, async () => {
-  //     prepareTest();
-  //     expect(multiplexerWrapper.getFunctionName(`${signature}1234`)).to.equal(functionName);
-  //   })
-  // );
-
   beforeEach(async () => {
     web3Mock = new Web3();
 
