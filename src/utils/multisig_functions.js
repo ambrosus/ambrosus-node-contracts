@@ -11,7 +11,7 @@ import contractJsons, {multisig} from '../contract_jsons';
 export default class MultisigFunctions {
   constructor(web3) {
     this.web3 = web3;
-    this.functionAbis = {...this.getFunctionSignatures(multisig.abi), ...this.getFunctionSignatures(contractJsons.multiplexer.abi)}
+    this.functionAbis = {...this.getFunctionSignatures(multisig.abi), ...this.getFunctionSignatures(contractJsons.multiplexer.abi)};
   }
 
   getFunctionSignatures(abi) {

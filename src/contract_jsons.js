@@ -69,7 +69,7 @@ const contractJsons = {
   challengesEventEmitter: ChallengesEventEmitterJson,
   rolesEventEmitter: RolesEventEmitterJson,
   transfersEventEmitter: TransfersEventEmitterJson,
-  multiplexer: MultiplexerJson,
+  multiplexer: MultiplexerJson
 };
 
 export const contractSuperSpeedJsons = {
