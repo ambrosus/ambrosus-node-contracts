@@ -14,14 +14,7 @@ import "../Lib/DmpAlgorithm.sol";
 
 contract DmpAlgorithmAdapter {
     function getBaseHash(bytes32 challengeId, uint sequenceNumber) public pure returns (bytes32) {
-        bytes32 dmpBaseHash = keccak256(abi.encodePacked(challengeId, sequenceNumber));
-        return dmpBaseHash;
-    }
-
-    function getQualifyHash(bytes32 challengeId, uint sequenceNumber, uint currentRound) public pure returns (bytes32) {
-        bytes32 dmpBaseHash = getBaseHash(challengeId, sequenceNumber);
-        bytes32 qualifyHash = keccak256(abi.encodePacked(dmpBaseHash, currentRound));
-        return qualifyHash;
+        return keccak256(abi.encodePacked(challengeId, sequenceNumber));
     }
 
     function qualifyShelterer(bytes32 dmpBaseHash, uint dmpLength, uint currentRound) public pure returns (uint32) {

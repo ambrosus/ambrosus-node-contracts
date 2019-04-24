@@ -157,19 +157,16 @@ contract Challenges is Base {
         uint challengeDuration = time.currentTimestamp().sub(getChallengeCreationTime(challengeId));
         uint currentRound = challengeDuration.div(config.ROUND_DURATION());
         bytes32 dmpBaseHash = keccak256(abi.encodePacked(challengeId, getChallengeSequenceNumber(challengeId)));
-        address dmpShelterer;
         uint32 dmpIndex;
 
         if (currentRound < config.FIRST_PHASE_DURATION().div(config.ROUND_DURATION())) {
             (uint atlasCount, uint32 dmpType) = getDesignatedSheltererType(dmpBaseHash);
             dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasCount, currentRound);
-            dmpShelterer = atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(dmpType), dmpIndex);
+            return atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(dmpType), dmpIndex);
         } else {
             dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasStakeStore.getNumberOfStakers(), currentRound);
-            dmpShelterer = atlasStakeStore.getStakerAtIndex(dmpIndex);
+            return atlasStakeStore.getStakerAtIndex(dmpIndex);
         }
-
-        return dmpShelterer;
     }
 
     function getChallengeFee(bytes32 challengeId) public view returns (uint) {

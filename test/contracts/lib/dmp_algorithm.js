@@ -12,15 +12,8 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import {createWeb3, deployContract, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 import DmpAlgorithmAdapterJson from '../../../src/contracts/DmpAlgorithmAdapter.json';
-import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import BN from 'bn.js';
-import {
-  DMP_PRECISION,
-  ROUND_DURATION,
-  ATLAS1_NUMERATOR,
-  ATLAS2_NUMERATOR,
-  ATLAS3_NUMERATOR
-} from '../../../src/constants';
+import {DMP_PRECISION} from '../../../src/constants';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -29,34 +22,16 @@ const {expect} = chai;
 
 describe('DMP algorithm library', () => {
   let DmpAlgorithmAdapter;
-  let time;
   let web3;
   let snapshotId;
-  let context;
-  let dmpBaseHash;
-  const now = 1500000000;
-  const challengeId = utils.keccak256('someChallengeId');
-  const sequenceNumber = 2;
-  const creationTime = now;
-  const atlasNums = [ATLAS1_NUMERATOR, ATLAS2_NUMERATOR, ATLAS3_NUMERATOR];
-  const atlasCounts = [2, 4, 8];
-  const atlasCountsNoLast = [2, 4, 0];
+  const dmpBaseHash = utils.keccak256('some hash');
 
-  const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from: context});
-  const currentTimestamp = async () => time.methods.currentTimestamp().call();
-
-  const getBaseHash = async (challengeId, sequenceNumber) => DmpAlgorithmAdapter.methods.getBaseHash(challengeId, sequenceNumber).call();
-  const getQualifyHash = async (challengeId, sequenceNumber, currentRound) => DmpAlgorithmAdapter.methods.getQualifyHash(challengeId, sequenceNumber, currentRound).call();
-  const qualifyShelterer = async(dmpBaseHash, dmpLength, currentRound) => DmpAlgorithmAdapter.methods.qualifyShelterer(dmpBaseHash, dmpLength, currentRound).call();
-  const selectingAtlasTier = async(dmpBaseHash, atlasCounts, atlasNum) => DmpAlgorithmAdapter.methods.selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNum).call();
+  const qualifyShelterer = async (dmpBaseHash, dmpLength, currentRound) => DmpAlgorithmAdapter.methods.qualifyShelterer(dmpBaseHash, dmpLength, currentRound).call();
+  const selectingAtlasTier = async (dmpBaseHash, atlasCounts, atlasNum) => DmpAlgorithmAdapter.methods.selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNum).call();
 
   before(async () => {
     web3 = await createWeb3();
-    [context] = await web3.eth.getAccounts();
-    time = await deployContract(web3, TimeMockJson);
     DmpAlgorithmAdapter = await deployContract(web3, DmpAlgorithmAdapterJson);
-
-    await setTimestamp(now);
   });
 
   beforeEach(async () => {
@@ -67,74 +42,138 @@ describe('DMP algorithm library', () => {
     await restoreSnapshot(web3, snapshotId);
   });
 
-  beforeEach(async () => {
-    dmpBaseHash = await getBaseHash(challengeId, sequenceNumber);
-  });
+  function hashGivingRandomOf(number) {
+    const resultsToInputs = {
+      8: '8',
+      32: '4',
+      50: '13',
+      56: '10',
+      60: '12',
+      89: '7',
+      97: '0'
+    };
+    const hash = utils.keccak256(resultsToInputs[number]);
+    expect(web3.utils.toBN(hash).mod(new BN(DMP_PRECISION))
+      .toNumber()).to.eq(number);
+    return hash;
+  }
 
-  const getCurrentRound = async () => {
-    const currentTime = await currentTimestamp();
-    const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
-
-    return currentRound;
-  };
-
-  const chosenByIndex = async (atlassianCount, currentRound) => {
-    const dmpIndexHash = await getQualifyHash(challengeId, sequenceNumber, currentRound);
-    const dmpIndex = web3.utils.toBN(dmpIndexHash).mod(new BN(atlassianCount))
-      .toNumber();
-
-    return dmpIndex;
-  };
-
-  const chosenByType = async (atlas1Count, atlas2Count, atlas3Count) => {
-    const denominator = ((atlas1Count * ATLAS1_NUMERATOR) + (atlas2Count * ATLAS2_NUMERATOR) + (atlas3Count * ATLAS3_NUMERATOR));
-
-    const randomNumber = web3.utils.toBN(dmpBaseHash).mod(new BN(DMP_PRECISION))
-      .toNumber();
-
-    const atlas1WCD = Math.floor((atlas1Count * ATLAS1_NUMERATOR * DMP_PRECISION) / denominator);
-    const atlas2WCD = atlas1WCD + Math.floor((atlas2Count * ATLAS2_NUMERATOR * DMP_PRECISION) / denominator);
-    const atlas3WCD = atlas2WCD + Math.floor((atlas3Count * ATLAS3_NUMERATOR * DMP_PRECISION) / denominator);
-
-    if (atlas1WCD !== 0 && randomNumber <= atlas1WCD) {
-      return 0;
-    } else if (atlas2WCD !== 0 && randomNumber <= atlas2WCD) {
-      return 1;
-    } else if (atlas3WCD !== 0 && randomNumber <= atlas3WCD) {
-      return 2;
+  describe('Resolves Atlas tier', () => {
+    async function selectTier(atlasCounts, atlasWeights, randomnessSource) {
+      return web3.utils.toBN(await selectingAtlasTier(randomnessSource, atlasCounts, atlasWeights)).toNumber();
     }
-  };
 
-  it('Correct type is returned in the first phase', async () => {
-    const calculatedType = await chosenByType(atlasCounts[0], atlasCounts[1], atlasCounts[2]);
-    const resolverType = web3.utils.toBN(await selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNums)).toNumber();
+    it('returns the only tier if only one exists', async () => {
+      const atlasWeights = [1];
+      const atlasCounts = [2];
 
-    expect(resolverType).to.equal(calculatedType);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(0);
+    });
+
+    it('for two equal tiers will return either with same probability', async () => {
+      const atlasWeights = [1, 1];
+      const atlasCounts = [5, 5];
+
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(1);
+    });
+
+    it('for two tiers of same count one with bigger weight is more likely to be selected', async () => {
+      const atlasWeights = [10, 1];
+      const atlasCounts = [5, 5];
+
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(1);
+    });
+
+    it('for two tiers of same weight one with bigger count is more likely to be selected', async () => {
+      const atlasWeights = [3, 3];
+      const atlasCounts = [1, 10];
+
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(1);
+    });
+
+    it('for three tiers probability is proportional to product of weight and count', async () => {
+      const atlasWeights = [1, 2, 7];
+      const atlasCounts = [14, 7, 2];
+
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(2);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(2);
+    });
+
+    it('correct index is returned if last tier has no atlases', async () => {
+      const atlasWeights = [1, 2, 7];
+      const atlasCountsNoLast = [2, 4, 0];
+
+      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
+      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(32))).to.equal(1);
+      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(50))).to.equal(1);
+      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(97))).to.equal(1);
+    });
   });
 
-  it('Correct index is returned in the second phase', async () => {
-    let currentRound = await getCurrentRound();
-    let calculatedIndex = await chosenByIndex(20, currentRound);
+  describe('Resolves Atlas in-tier', () => {
+    function tries(count) {
+      return new Array(count).fill(0);
+    }
 
-    let resolverIndex = web3.utils.toBN(await qualifyShelterer(dmpBaseHash, 20, currentRound)).toNumber();
+    function countOccurrences(array) {
+      return array.reduce(
+        ({[value]: count = 0, ...rest}, value) => ({...rest, [value]: count + 1}),
+        {}
+      );
+    }
 
-    expect(resolverIndex).to.equal(calculatedIndex);
+    it('each Atlas gets the same probability of being selected for same challenge', async () => {
+      const numberOfTries = 400;
+      const sheltererInEachRound = await Promise.all(tries(numberOfTries)
+        .map(async (__, index) => web3.utils.toBN(await qualifyShelterer(dmpBaseHash, 20, index)).toNumber()
+        ));
 
-    await setTimestamp(now + (ROUND_DURATION * 5));
+      const countMap = countOccurrences(sheltererInEachRound);
 
-    currentRound = await getCurrentRound();
-    calculatedIndex = await chosenByIndex(20, currentRound);
+      const expectedCountForEachShelterer = numberOfTries / 20;
+      const tolerance = expectedCountForEachShelterer * 0.45;
+      Object
+        .values(countMap)
+        .forEach((count) => expect(count).to.be.closeTo(expectedCountForEachShelterer, tolerance));
+    });
 
-    resolverIndex = web3.utils.toBN(await qualifyShelterer(dmpBaseHash, 20, currentRound)).toNumber();
+    it('each Atlas gets the same probability of being selected for same round of different challenge', async () => {
+      const numberOfTries = 400;
+      const sheltererForEachChallenge = await Promise.all(tries(numberOfTries)
+        .map(async (__, index) => web3.utils.toBN(await qualifyShelterer(utils.keccak256(`${index}`), 20, 1)).toNumber()
+        ));
 
-    expect(resolverIndex).to.equal(calculatedIndex);
-  });
+      const countMap = countOccurrences(sheltererForEachChallenge);
 
-  it('Correct index is returned if last atlas type is absent', async () => {
-    const calculatedType = await chosenByType(atlasCountsNoLast[0], atlasCountsNoLast[1], atlasCountsNoLast[2]);
-
-    const resolverType = web3.utils.toBN(await selectingAtlasTier(dmpBaseHash, atlasCountsNoLast, atlasNums)).toNumber();
-
-    expect(resolverType).to.equal(calculatedType);
+      const expectedCountForEachShelterer = numberOfTries / 20;
+      const tolerance = expectedCountForEachShelterer * 0.45;
+      Object
+        .values(countMap)
+        .forEach((count) => expect(count).to.be.closeTo(expectedCountForEachShelterer, tolerance));
+    });
   });
 });

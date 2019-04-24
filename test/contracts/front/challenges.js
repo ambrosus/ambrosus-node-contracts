@@ -15,16 +15,16 @@ import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import BN from 'bn.js';
 import {
   ATLAS,
-  ATLAS1_STAKE,
-  ATLAS2_STAKE,
-  ATLAS3_STAKE,
-  ROUND_DURATION,
-  FIRST_PHASE_DURATION,
   ATLAS1_NUMERATOR,
+  ATLAS1_STAKE,
   ATLAS2_NUMERATOR,
-  ATLAS3_NUMERATOR
+  ATLAS2_STAKE,
+  ATLAS3_NUMERATOR,
+  ATLAS3_STAKE,
+  FIRST_PHASE_DURATION,
+  ROUND_DURATION
 } from '../../../src/constants';
-import {ONE, DAY, SYSTEM_CHALLENGES_COUNT} from '../../helpers/consts';
+import {DAY, ONE, SYSTEM_CHALLENGES_COUNT} from '../../helpers/consts';
 import deploy from '../../helpers/deploy';
 import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.json';
 import ChallengesStoreMockJson from '../../../src/contracts/ChallengesStoreMock.json';
@@ -56,7 +56,7 @@ describe('Challenges Contract', () => {
   let context;
   let uploader;
   let shelterer;
-  const atlassian = [];
+  const atlases = [];
   let resolver;
   let totalStranger;
   let time;
@@ -113,11 +113,21 @@ describe('Challenges Contract', () => {
   const qualifyShelterer = async(dmpBaseHash, dmpLength, currentRound) => DmpAlgorithmAdapter.methods.qualifyShelterer(dmpBaseHash, dmpLength, currentRound).call();
   const selectingAtlasTier = async(dmpBaseHash, atlasCounts, atlasNum) => DmpAlgorithmAdapter.methods.selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNum).call();
 
+  const atlasOnboarding = async (address, value, url) => {
+    await addToKycWhitelist(address, ATLAS, value);
+    await onboardAsAtlas(url, address, value);
+  };
+
+  const lastChallengeId = async () => {
+    const [challengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
+    return challengeCreationEvent.returnValues.challengeId;
+  };
+
   // eslint-disable-next-line new-cap
 
   before(async () => {
     web3 = await createWeb3();
-    [context, challenger, uploader, atlassian[0], atlassian[1], atlassian[2], atlassian[3], atlassian[4], shelterer, totalStranger] = await web3.eth.getAccounts();
+    [context, challenger, uploader, atlases[0], atlases[1], atlases[2], atlases[3], atlases[4], shelterer, totalStranger] = await web3.eth.getAccounts();
     ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles, challengesEventEmitter} = await deploy({
       web3,
       contracts: {
@@ -389,22 +399,12 @@ describe('Challenges Contract', () => {
   });
 
   describe('Resolving a challenge', () => {
-    const atlasOnboarding = async (address, value, url) => {
-      await addToKycWhitelist(address, ATLAS, value);
-      await onboardAsAtlas(url, address, value);
-    };
-
-    const lastChallengeId = async () => {
-      const [challengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
-      return challengeCreationEvent.returnValues.challengeId;
-    };
-
     beforeEach(async () => {
-      await atlasOnboarding(atlassian[0], ATLAS3_STAKE, 'url0');
-      await atlasOnboarding(atlassian[1], ATLAS3_STAKE, 'url1');
-      await atlasOnboarding(atlassian[2], ATLAS2_STAKE, 'url2');
-      await atlasOnboarding(atlassian[3], ATLAS2_STAKE, 'url3');
-      await atlasOnboarding(atlassian[4], ATLAS1_STAKE, 'url4');
+      await atlasOnboarding(atlases[0], ATLAS3_STAKE, 'url0');
+      await atlasOnboarding(atlases[1], ATLAS3_STAKE, 'url1');
+      await atlasOnboarding(atlases[2], ATLAS2_STAKE, 'url2');
+      await atlasOnboarding(atlases[3], ATLAS2_STAKE, 'url3');
+      await atlasOnboarding(atlases[4], ATLAS1_STAKE, 'url4');
 
       await depositStake(shelterer, ATLAS1_STAKE);
       await addShelterer(bundleId, shelterer, totalReward);
@@ -455,25 +455,25 @@ describe('Challenges Contract', () => {
     });
 
     it('Fails to resolve for not designated resolvers', async () => {
-      if (atlassian[0] !== resolver) {
-        expect(await canResolve(atlassian[0], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[0])).to.be.eventually.rejected;
+      if (atlases[0] !== resolver) {
+        expect(await canResolve(atlases[0], challengeId)).to.equal(false);
+        await expect(resolveChallenge(challengeId, atlases[0])).to.be.eventually.rejected;
       }
-      if (atlassian[1] !== resolver) {
-        expect(await canResolve(atlassian[1], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[1])).to.be.eventually.rejected;
+      if (atlases[1] !== resolver) {
+        expect(await canResolve(atlases[1], challengeId)).to.equal(false);
+        await expect(resolveChallenge(challengeId, atlases[1])).to.be.eventually.rejected;
       }
-      if (atlassian[2] !== resolver) {
-        expect(await canResolve(atlassian[2], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[2])).to.be.eventually.rejected;
+      if (atlases[2] !== resolver) {
+        expect(await canResolve(atlases[2], challengeId)).to.equal(false);
+        await expect(resolveChallenge(challengeId, atlases[2])).to.be.eventually.rejected;
       }
-      if (atlassian[3] !== resolver) {
-        expect(await canResolve(atlassian[3], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[3])).to.be.eventually.rejected;
+      if (atlases[3] !== resolver) {
+        expect(await canResolve(atlases[3], challengeId)).to.equal(false);
+        await expect(resolveChallenge(challengeId, atlases[3])).to.be.eventually.rejected;
       }
-      if (atlassian[4] !== resolver) {
-        expect(await canResolve(atlassian[4], challengeId)).to.equal(false);
-        await expect(resolveChallenge(challengeId, atlassian[4])).to.be.eventually.rejected;
+      if (atlases[4] !== resolver) {
+        expect(await canResolve(atlases[4], challengeId)).to.equal(false);
+        await expect(resolveChallenge(challengeId, atlases[4])).to.be.eventually.rejected;
       }
     });
 
@@ -496,20 +496,10 @@ describe('Challenges Contract', () => {
   });
 
   describe('Resolving system challenge', () => {
-    const atlasOnboarding = async (address, value, url) => {
-      await addToKycWhitelist(address, ATLAS, value);
-      await onboardAsAtlas(url, address, value);
-    };
-
-    const lastChallengeId = async () => {
-      const [challengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
-      return challengeCreationEvent.returnValues.challengeId;
-    };
-
     beforeEach(async () => {
-      await atlasOnboarding(atlassian[0], ATLAS1_STAKE, 'url0');
-      await atlasOnboarding(atlassian[1], ATLAS1_STAKE, 'url1');
-      await atlasOnboarding(atlassian[2], ATLAS1_STAKE, 'url2');
+      await atlasOnboarding(atlases[0], ATLAS1_STAKE, 'url0');
+      await atlasOnboarding(atlases[1], ATLAS1_STAKE, 'url1');
+      await atlasOnboarding(atlases[2], ATLAS1_STAKE, 'url2');
 
       await depositStake(shelterer, ATLAS1_STAKE);
       await addShelterer(bundleId, shelterer, totalReward);
@@ -656,8 +646,8 @@ describe('Challenges Contract', () => {
     });
 
     it(`Returns fee to creator (part of the fee if partially resolved)`, async () => {
-      await addToKycWhitelist(atlassian[0], ATLAS, ATLAS1_STAKE);
-      await onboardAsAtlas(url, atlassian[0], ATLAS1_STAKE);
+      await addToKycWhitelist(atlases[0], ATLAS, ATLAS1_STAKE);
+      await onboardAsAtlas(url, atlases[0], ATLAS1_STAKE);
       resolver = await getChallengeDesignatedShelterer(systemChallengeId);
       await resolveChallenge(systemChallengeId, resolver);
 
@@ -684,12 +674,10 @@ describe('Challenges Contract', () => {
     const getCurrentRound = async (challengeId) => {
       const creationTime = await getChallengeCreationTime(challengeId);
       const currentTime = await currentTimestamp();
-      const currentRound = Math.floor((currentTime - creationTime) / ROUND_DURATION);
-
-      return currentRound;
+      return Math.floor((currentTime - creationTime) / ROUND_DURATION);
     };
 
-    const atlassianChosen = async (challengeId, atlassianCount) => {
+    const atlasChosen = async (challengeId, atlassianCount) => {
       const currentRound = await getCurrentRound(challengeId);
 
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
@@ -697,10 +685,10 @@ describe('Challenges Contract', () => {
       const dmpBaseHash = await getBaseHash(challengeId, sequenceNumber);
       const dmpIndex = await qualifyShelterer(dmpBaseHash, atlassianCount, currentRound);
 
-      trueResolver = atlassian[dmpIndex];
+      trueResolver = atlases[dmpIndex];
     };
 
-    const atlassianChosenByType = async (challengeId, atlas1Count, atlas2Count, atlas3Count) => {
+    const atlasChosenByType = async (challengeId, atlas1Count, atlas2Count, atlas3Count) => {
       const currentRound = await getCurrentRound(challengeId);
 
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
@@ -724,16 +712,6 @@ describe('Challenges Contract', () => {
       trueResolver = chosenAtlas[dmpIndex];
     };
 
-    const atlasOnboarding = async (address, value, url) => {
-      await addToKycWhitelist(address, ATLAS, value);
-      await onboardAsAtlas(url, address, value);
-    };
-
-    const lastChallengeId = async () => {
-      const [challengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
-      return challengeCreationEvent.returnValues.challengeId;
-    };
-
     beforeEach(async () => {
       await depositStake(shelterer, ATLAS1_STAKE);
       await addShelterer(bundleId, shelterer, totalReward);
@@ -744,73 +722,73 @@ describe('Challenges Contract', () => {
     });
 
     it('Correct resolver is returned in the first round', async () => {
-      await atlasOnboarding(atlassian[0], ATLAS3_STAKE, 'url0');
-      await atlasOnboarding(atlassian[1], ATLAS3_STAKE, 'url1');
-      await atlasOnboarding(atlassian[2], ATLAS2_STAKE, 'url2');
-      await atlasOnboarding(atlassian[3], ATLAS2_STAKE, 'url3');
-      await atlasOnboarding(atlassian[4], ATLAS1_STAKE, 'url4');
+      await atlasOnboarding(atlases[0], ATLAS3_STAKE, 'url0');
+      await atlasOnboarding(atlases[1], ATLAS3_STAKE, 'url1');
+      await atlasOnboarding(atlases[2], ATLAS2_STAKE, 'url2');
+      await atlasOnboarding(atlases[3], ATLAS2_STAKE, 'url3');
+      await atlasOnboarding(atlases[4], ATLAS1_STAKE, 'url4');
       await setNumberOfStakers(5);
 
-      [atlas3[0], atlas3[1], atlas2[0], atlas2[1], atlas1[0]] = atlassian;
+      [atlas3[0], atlas3[1], atlas2[0], atlas2[1], atlas1[0]] = atlases;
 
-      await atlassianChosenByType(challengeId, 1, 2, 2);
+      await setTimestamp(now);
+      await atlasChosenByType(challengeId, 1, 2, 2);
       resolver = await getChallengeDesignatedShelterer(challengeId);
 
       expect(resolver).to.equal(trueResolver);
     });
 
     it('Correct resolver is returned in not the first round', async () => {
-      await atlasOnboarding(atlassian[0], ATLAS3_STAKE, 'url0');
-      await atlasOnboarding(atlassian[1], ATLAS3_STAKE, 'url1');
-      await atlasOnboarding(atlassian[2], ATLAS2_STAKE, 'url2');
-      await atlasOnboarding(atlassian[3], ATLAS2_STAKE, 'url3');
-      await atlasOnboarding(atlassian[4], ATLAS1_STAKE, 'url4');
+      await atlasOnboarding(atlases[0], ATLAS3_STAKE, 'url0');
+      await atlasOnboarding(atlases[1], ATLAS3_STAKE, 'url1');
+      await atlasOnboarding(atlases[2], ATLAS2_STAKE, 'url2');
+      await atlasOnboarding(atlases[3], ATLAS2_STAKE, 'url3');
+      await atlasOnboarding(atlases[4], ATLAS1_STAKE, 'url4');
       await setNumberOfStakers(5);
 
-      [atlas3[0], atlas3[1], atlas2[0], atlas2[1], atlas1[0]] = atlassian;
+      [atlas3[0], atlas3[1], atlas2[0], atlas2[1], atlas1[0]] = atlases;
 
       await setTimestamp(now + (ROUND_DURATION * 5));
-
-      await atlassianChosenByType(challengeId, 1, 2, 2);
+      await atlasChosenByType(challengeId, 1, 2, 2);
       resolver = await getChallengeDesignatedShelterer(challengeId);
 
       expect(resolver).to.equal(trueResolver);
     });
 
     it('Correct resolver is returned in the second phase', async () => {
-      await atlasOnboarding(atlassian[0], ATLAS3_STAKE, 'url0');
-      await atlasOnboarding(atlassian[1], ATLAS3_STAKE, 'url1');
-      await atlasOnboarding(atlassian[2], ATLAS2_STAKE, 'url2');
-      await atlasOnboarding(atlassian[3], ATLAS2_STAKE, 'url3');
-      await atlasOnboarding(atlassian[4], ATLAS1_STAKE, 'url4');
+      await atlasOnboarding(atlases[0], ATLAS3_STAKE, 'url0');
+      await atlasOnboarding(atlases[1], ATLAS3_STAKE, 'url1');
+      await atlasOnboarding(atlases[2], ATLAS2_STAKE, 'url2');
+      await atlasOnboarding(atlases[3], ATLAS2_STAKE, 'url3');
+      await atlasOnboarding(atlases[4], ATLAS1_STAKE, 'url4');
       await setNumberOfStakers(5);
 
       await setTimestamp(now + FIRST_PHASE_DURATION + ROUND_DURATION);
-      await atlassianChosen(challengeId, 5);
+      await atlasChosen(challengeId, 5);
       resolver = await getChallengeDesignatedShelterer(challengeId);
 
       expect(resolver).to.equal(trueResolver);
     });
 
     it('Correct resolver is returned if only one atlas type is present', async () => {
-      await atlasOnboarding(atlassian[0], ATLAS2_STAKE, 'url0');
-      await atlasOnboarding(atlassian[1], ATLAS2_STAKE, 'url1');
-      await atlasOnboarding(atlassian[2], ATLAS2_STAKE, 'url2');
-      await atlasOnboarding(atlassian[3], ATLAS2_STAKE, 'url3');
-      await atlasOnboarding(atlassian[4], ATLAS2_STAKE, 'url4');
+      await atlasOnboarding(atlases[0], ATLAS2_STAKE, 'url0');
+      await atlasOnboarding(atlases[1], ATLAS2_STAKE, 'url1');
+      await atlasOnboarding(atlases[2], ATLAS2_STAKE, 'url2');
+      await atlasOnboarding(atlases[3], ATLAS2_STAKE, 'url3');
+      await atlasOnboarding(atlases[4], ATLAS2_STAKE, 'url4');
       await setNumberOfStakers(5);
 
-      atlas2 = Array.from(atlassian);
+      atlas2 = Array.from(atlases);
 
       await setTimestamp(now + (ROUND_DURATION * 5));
 
-      await atlassianChosenByType(challengeId, 0, 5, 0);
+      await atlasChosenByType(challengeId, 0, 5, 0);
       resolver = await getChallengeDesignatedShelterer(challengeId);
 
       expect(resolver).to.equal(trueResolver);
     });
 
-    it('Failed to get resolver if no resolver in the system', async () => {
+    it('Fails to get resolver if no resolver in the system', async () => {
       await expect(getChallengeDesignatedShelterer(challengeId)).to.be.eventually.rejected;
     });
   });
