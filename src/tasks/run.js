@@ -51,6 +51,8 @@ import CheckOwnershipTask from './ownership';
 import MultisigActions from '../actions/multisig_actions';
 import MultisigWrapper from '../wrappers/multisig_wrapper';
 import MultisigFunctions from '../utils/multisig_functions';
+import MultisigOwnersTask from './multisig_owners';
+import BaseFeeTask from './base_fee';
 
 
 const runTask = async () => {
@@ -101,6 +103,8 @@ const runTask = async () => {
   list.add('moveOwnershipToMultiplexer', new MoveOwnershipToMultiplexerTask(adminActions));
   list.add('moveOwnershipFromMultiplexer', new MoveOwnershipFromMultiplexerTask(multisigActions));
   list.add('checkOwnership', new CheckOwnershipTask(web3));
+  list.add('multisigOwners', new MultisigOwnersTask(multisigWrapper));
+  list.add('fee', new BaseFeeTask(feesWrapper));
 
   await list.run(args[0], args.slice(1));
 };
