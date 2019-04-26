@@ -144,6 +144,11 @@ startGanacheServer(
       await execute(`yarn task deployMultisig --save ${deployEnvFile} --required 1`, adminEnv);
       ({adminEnv, apolloEnv, atlasEnv, hermesEnv} = await updateEnvs(deployEnvFile));
 
+      const multisigOwners = await execute(`yarn task multisigOwners`, adminEnv);
+      if (!multisigOwners.includes(approvalPublicKeys)) {
+        throw new Error(`Expected multisig owners ${multisigOwners} to equal ${approvalPublicKeys}`);
+      }
+
       const verifyNodeState = async (address, whitelistedRole, onboardedRole, stake, url) => {
         const ret = await execute(`yarn task whitelist get ${address}`, adminEnv);
         const regexStr = `Address ${address} is whitelisted for the ${whitelistedRole} role with ${stake} AMB deposit/stake\\W+Address ${address} is onboarded for the ${onboardedRole} role with url:\\W*${url}`;
@@ -202,6 +207,17 @@ startGanacheServer(
       await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://google.com');
       await execute(`yarn task retire`, hermesEnv);
       await verifyNodeState(hermesUser.address, 'HERMES', 'NONE', '0', '');
+
+      console.log('------ test Fee change ------');
+      const feeBefore = await execute(`yarn task fee get`, adminEnv);
+      if (!feeBefore.includes('10000000000000000000')) {
+        throw new Error('Expected fee to equal 10000000000000000000');
+      }
+      await execute('yarn task fee set 12000000000000000000', adminEnv);
+      const feeAfter = await execute(`yarn task fee get`, adminEnv);
+      if (!feeAfter.includes('12000000000000000000')) {
+        throw new Error('Expected fee to equal 12000000000000000000');
+      }
     } catch (err) {
       printError(err);
       failed = true;
