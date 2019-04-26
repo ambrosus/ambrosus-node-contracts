@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import SafeMathExtensionsJson from '../src/contracts/SafeMathExtensions.json';
+import DmpAlgorithmJson from '../src/contracts/DmpAlgorithm.json';
 
 import {DEFAULT_GAS, deployContract, loadContract, link} from './utils/web3_tools';
 
@@ -22,7 +23,8 @@ export default class Deployer {
 
   async deployLibs() {
     return {
-      SafeMathExtensions: await deployContract(this.web3, SafeMathExtensionsJson, [], {from: this.sender})
+      SafeMathExtensions: await deployContract(this.web3, SafeMathExtensionsJson, [], {from: this.sender}),
+      DmpAlgorithm: await deployContract(this.web3, DmpAlgorithmJson, [], {from: this.sender})
     };
   }
 

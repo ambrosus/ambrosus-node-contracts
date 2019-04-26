@@ -30,4 +30,14 @@ contract AtlasStakeStoreMock is AtlasStakeStore {
     function setStakeAmount(address node, uint amount) public {
         stakes[node].amount = amount;
     }
+
+    function removeLastStaker(address node, uint amount) public {
+        --stakesIndex.length;
+
+        --stakesIndexGrouped[amount].length;
+
+        stakes[node].initialAmount = 0;
+        stakes[node].amount = 0;
+        stakes[node].shelteredBundlesCount = 0;        
+    }
 }

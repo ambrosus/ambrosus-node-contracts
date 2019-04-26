@@ -15,6 +15,7 @@ import "../Configuration/Fees.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 import "../Lib/SafeMathExtensions.sol";
+import "../Lib/DmpAlgorithm.sol";
 import "../Boilerplate/Head.sol";
 import "../Middleware/Sheltering.sol";
 import "../Storage/AtlasStakeStore.sol";
@@ -128,7 +129,7 @@ contract Challenges is Base {
         // solium-disable-next-line operator-whitespace
         return challengeIsInProgress(challengeId) &&
         !sheltering.isSheltering(bundleId, resolverId) &&
-        !isOnCooldown(resolverId, challengeId) &&
+        resolverId == getChallengeDesignatedShelterer(challengeId) &&
         atlasStakeStore.getStake(resolverId) > 0;
     }
 
@@ -150,6 +151,22 @@ contract Challenges is Base {
     function getChallenger(bytes32 challengeId) public view returns (address) {
         (,, address challengerId,,,,) = challengesStore.getChallenge(challengeId);
         return challengerId;
+    }
+
+    function getChallengeDesignatedShelterer(bytes32 challengeId) public view returns (address) {
+        uint challengeDuration = time.currentTimestamp().sub(getChallengeCreationTime(challengeId));
+        uint currentRound = challengeDuration.div(config.ROUND_DURATION());
+        bytes32 dmpBaseHash = keccak256(abi.encodePacked(challengeId, getChallengeSequenceNumber(challengeId)));
+        uint32 dmpIndex;
+
+        if (currentRound < config.FIRST_PHASE_DURATION().div(config.ROUND_DURATION())) {
+            (uint atlasCount, uint32 dmpTier) = getDesignatedSheltererTier(dmpBaseHash);
+            dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasCount, currentRound);
+            return atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(dmpTier), dmpIndex);
+        } else {
+            dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasStakeStore.getNumberOfStakers(), currentRound);
+            return atlasStakeStore.getStakerAtIndex(dmpIndex);
+        }
     }
 
     function getChallengeFee(bytes32 challengeId) public view returns (uint) {
@@ -184,17 +201,20 @@ contract Challenges is Base {
         return challengesStore.getChallengeId(sheltererId, bundleId);
     }
 
-    function getCooldown() public view returns (uint) {
-        uint32 numberOfStakers = atlasStakeStore.getNumberOfStakers();
-        uint32 lowReduction = config.COOLDOWN_LOW_REDUCTION();
-        if (numberOfStakers < lowReduction) {
-            return 0;
+    function getDesignatedSheltererTier(bytes32 dmpBaseHash) private view returns(uint, uint32) {
+        uint32 length = config.ATLAS_TIERS_COUNT();
+        uint[] memory atlasTiersCounts = new uint[](length);
+        uint[] memory atlasRelativeStrengths = new uint[](length);
+
+        for (uint i = 0; i < length; i++) {
+            atlasTiersCounts[i] = atlasStakeStore.getNumberOfStakersWithStake(config.ATLAS_STAKE(i));
+            atlasRelativeStrengths[i] = config.ATLAS_RELATIVE_STRENGTHS(i);
         }
-        uint32 threshold = config.COOLDOWN_SWITCH_THRESHOLD();
-        if (numberOfStakers < threshold) {
-            return numberOfStakers.sub(lowReduction).castTo32();
-        }
-        return numberOfStakers.mul(config.COOLDOWN_HIGH_PERCENTAGE()).div(100).add(1).castTo32();
+
+        uint32 dmpTier = DmpAlgorithm.selectingAtlasTier(dmpBaseHash, atlasTiersCounts, atlasRelativeStrengths);
+        uint atlasCount = atlasTiersCounts[dmpTier];
+
+        return (atlasCount, dmpTier);
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
@@ -224,14 +244,5 @@ contract Challenges is Base {
         } else {
             challengesStore.decreaseActiveCount(challengeId);
         }
-    }
-
-    function isOnCooldown(address resolverId, bytes32 challengeId) private view returns (bool) {
-        uint lastResolvedSequenceNumber = atlasStakeStore.getLastChallengeResolvedSequenceNumber(resolverId);
-
-        // solium-disable-next-line operator-whitespace
-        return getChallengeCreationTime(challengeId).add(config.COOLDOWN_TIMEOUT()) > time.currentTimestamp() &&
-        lastResolvedSequenceNumber != 0 &&
-        lastResolvedSequenceNumber.add(getCooldown()) > getChallengeSequenceNumber(challengeId);
     }
 }

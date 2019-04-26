@@ -10,7 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import Web3 from 'web3';
 import config from '../../config/config';
 
-export const DEFAULT_GAS = 4700000;
+export const DEFAULT_GAS = 5010000;
 const DEFAULT_PORT = 8545;
 
 export const {utils} = new Web3();

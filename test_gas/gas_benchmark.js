@@ -22,16 +22,15 @@ let gasUsed;
 let from;
 let hermes;
 let perseus;
-let atlasInitialShelterer;
-let atlasQuickResolver;
-let atlasSlowResolver;
-let challenges;
 let challengesEventEmitter;
+let challenges;
 let time;
 let kycWhitelist;
 let roles;
 let fees;
 let uploads;
+let incorrectResolver;
+const atlassian = [];
 
 
 const now = 1500000000;
@@ -40,36 +39,47 @@ const bundleId = '0xbeef';
 
 const runGasBenchmark = async () => {
   await setupEnvironment();
-
+  require('events').EventEmitter.prototype._maxListeners = 0;
   console.log(`\n Basic AMB-NET operations gas costs:\n`);
 
   gasUsed  = getGasUsed(await onboardAsHermes(hermes));
   console.log(`                  Hermes onboarding: ${gasUsed}`);
 
-  gasUsed  = getGasUsed(await onboardAsAtlas(atlasInitialShelterer));
+  gasUsed  = getGasUsed(await onboardAsAtlas(atlassian[0]));
   console.log(`                   Atlas onboarding: ${gasUsed}`);
 
-  await onboardAsAtlas(atlasQuickResolver);
-  await onboardAsAtlas(atlasSlowResolver);
+  await onboardAsAtlas(atlassian[1]);
+  await onboardAsAtlas(atlassian[2]);
 
   const feeForUpload = await getFeeForUpload(storagePeriods);
   gasUsed  = getGasUsed(await registerBundle(hermes, bundleId, storagePeriods, feeForUpload));
   console.log(`                    Register bundle: ${gasUsed}`);
 
   const systemChallengeId = await lastChallengeId();
-  gasUsed  = getGasUsed(await resolveChallenge(systemChallengeId, atlasInitialShelterer));
+  const systemResolver = await getChallengeDesignatedShelterer(systemChallengeId);
+  gasUsed  = getGasUsed(await resolveChallenge(systemChallengeId, systemResolver));
   console.log(`           Resolve system challenge: ${gasUsed}`);
 
   const feeForChallenge = await getFeeForChallenge(storagePeriods);
-  gasUsed  = getGasUsed(await startChallenge(atlasInitialShelterer, bundleId, perseus, feeForChallenge));
+  gasUsed  = getGasUsed(await startChallenge(systemResolver, bundleId, perseus, feeForChallenge));
   console.log(`               Start user challenge: ${gasUsed}`);
 
   const userChallengeId = await lastChallengeId();
-  gasUsed  = getGasUsed(await resolveChallenge(userChallengeId, atlasQuickResolver));
+  const resolver = await getChallengeDesignatedShelterer(userChallengeId);
+  gasUsed  = getGasUsed(await resolveChallenge(userChallengeId, resolver));
   console.log(`Successfully resolve user challenge: ${gasUsed}`);
 
+  const lastSystemResolver = await getChallengeDesignatedShelterer(systemChallengeId);
+  if (lastSystemResolver !== atlassian[0]) {
+    incorrectResolver = atlassian[0];
+  } else if (lastSystemResolver !== atlassian[1]) {
+    incorrectResolver = atlassian[1];
+  } else {
+    incorrectResolver = atlassian[2];
+  }
+
   try {
-    await resolveChallenge(systemChallengeId, atlasInitialShelterer);
+    await resolveChallenge(systemChallengeId, incorrectResolver);
   } catch (error) {
     gasUsed = extractGasUsedFromError(error);
     console.log(`      Fail resolving user challenge: ${gasUsed}`);
@@ -80,7 +90,7 @@ const runGasBenchmark = async () => {
 
 const setupEnvironment = async () => {
   web3 = await createWeb3();
-  [from, hermes, perseus, atlasInitialShelterer, atlasQuickResolver, atlasSlowResolver] = await web3.eth.getAccounts();
+  [from, hermes, perseus, atlassian[0], atlassian[1], atlassian[2]] = await web3.eth.getAccounts();
   ({challenges, time, kycWhitelist, roles, fees, uploads, challengesEventEmitter} = await deploy({
     web3,
     contracts: {
@@ -99,15 +109,16 @@ const setupEnvironment = async () => {
       payouts: true,
       payoutsStore: true,
       rolesStore: true,
+      shelteringTransfersStore: true,
+      challengesStore: true,
       rolesEventEmitter: true,
-      transfersEventEmitter: true,
       challengesEventEmitter: true,
-      challengesStore: true
+      transfersEventEmitter: true
     }}));
   await setTimestamp(now);
-  await kycWhitelist.methods.add(atlasInitialShelterer, ATLAS, ATLAS1_STAKE).send({from});
-  await kycWhitelist.methods.add(atlasQuickResolver, ATLAS, ATLAS1_STAKE).send({from});
-  await kycWhitelist.methods.add(atlasSlowResolver, ATLAS, ATLAS1_STAKE).send({from});
+  await kycWhitelist.methods.add(atlassian[0], ATLAS, ATLAS1_STAKE).send({from});
+  await kycWhitelist.methods.add(atlassian[1], ATLAS, ATLAS1_STAKE).send({from});
+  await kycWhitelist.methods.add(atlassian[2], ATLAS, ATLAS1_STAKE).send({from});
   await kycWhitelist.methods.add(hermes, HERMES, 0).send({from});
 };
 
@@ -132,6 +143,8 @@ const resolveChallenge = async (challengeId, resolverId) => challenges.methods.r
 const getFeeForChallenge = async (storagePeriods) => new BN(await fees.methods.getFeeForChallenge(storagePeriods).call());
 
 const startChallenge = async (sheltererId, bundleId, challengerId, fee) => challenges.methods.start(sheltererId, bundleId).send({from: challengerId, value: fee});
+
+const getChallengeDesignatedShelterer = async (challengeId) => challenges.methods.getChallengeDesignatedShelterer(challengeId).call();
 
 const lastChallengeId = async () => {
   const [challengeCreationEvent] = await challengesEventEmitter.getPastEvents('allEvents');
