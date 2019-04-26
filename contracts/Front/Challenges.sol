@@ -160,9 +160,9 @@ contract Challenges is Base {
         uint32 dmpIndex;
 
         if (currentRound < config.FIRST_PHASE_DURATION().div(config.ROUND_DURATION())) {
-            (uint atlasCount, uint32 dmpType) = getDesignatedSheltererType(dmpBaseHash);
+            (uint atlasCount, uint32 dmpTier) = getDesignatedSheltererTier(dmpBaseHash);
             dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasCount, currentRound);
-            return atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(dmpType), dmpIndex);
+            return atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(dmpTier), dmpIndex);
         } else {
             dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasStakeStore.getNumberOfStakers(), currentRound);
             return atlasStakeStore.getStakerAtIndex(dmpIndex);
@@ -201,20 +201,20 @@ contract Challenges is Base {
         return challengesStore.getChallengeId(sheltererId, bundleId);
     }
 
-    function getDesignatedSheltererType(bytes32 dmpBaseHash) private view returns(uint, uint32) {
-        uint32 length = config.ATLAS_TYPES_COUNT();
-        uint[] memory atlasTypeCounts = new uint[](length);
-        uint[] memory atlasNumerators = new uint[](length);
+    function getDesignatedSheltererTier(bytes32 dmpBaseHash) private view returns(uint, uint32) {
+        uint32 length = config.ATLAS_TIERS_COUNT();
+        uint[] memory atlasTiersCounts = new uint[](length);
+        uint[] memory atlasRelativeStrengths = new uint[](length);
 
         for (uint i = 0; i < length; i++) {
-            atlasTypeCounts[i] = atlasStakeStore.getNumberOfStakersWithStake(config.ATLAS_STAKE(i));
-            atlasNumerators[i] = config.ATLAS_NUMERATOR(i);
+            atlasTiersCounts[i] = atlasStakeStore.getNumberOfStakersWithStake(config.ATLAS_STAKE(i));
+            atlasRelativeStrengths[i] = config.ATLAS_RELATIVE_STRENGTHS(i);
         }
 
-        uint32 dmpType = DmpAlgorithm.selectingAtlasTier(dmpBaseHash, atlasTypeCounts, atlasNumerators);
-        uint atlasCount = atlasTypeCounts[dmpType];
+        uint32 dmpTier = DmpAlgorithm.selectingAtlasTier(dmpBaseHash, atlasTiersCounts, atlasRelativeStrengths);
+        uint atlasCount = atlasTiersCounts[dmpTier];
 
-        return (atlasCount, dmpType);
+        return (atlasCount, dmpTier);
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {

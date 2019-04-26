@@ -15,11 +15,11 @@ import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import BN from 'bn.js';
 import {
   ATLAS,
-  ATLAS1_NUMERATOR,
+  ATLAS1_RELATIVE_STRENGTH,
   ATLAS1_STAKE,
-  ATLAS2_NUMERATOR,
+  ATLAS2_RELATIVE_STRENGTH,
   ATLAS2_STAKE,
-  ATLAS3_NUMERATOR,
+  ATLAS3_RELATIVE_STRENGTH,
   ATLAS3_STAKE,
   FIRST_PHASE_DURATION,
   ROUND_DURATION
@@ -694,10 +694,10 @@ describe('Challenges Contract', () => {
       const sequenceNumber = await getChallengeSequenceNumber(challengeId);
       const dmpBaseHash = await getBaseHash(challengeId, sequenceNumber);
 
-      const atlasNums = Array.from([ATLAS1_NUMERATOR, ATLAS2_NUMERATOR, ATLAS3_NUMERATOR]);
+      const atlasRelativeStrengths = Array.from([ATLAS1_RELATIVE_STRENGTH, ATLAS2_RELATIVE_STRENGTH, ATLAS3_RELATIVE_STRENGTH]);
       const atlasCounts = Array.from([atlas1Count, atlas2Count, atlas3Count]);
 
-      const resolverType = await selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNums);
+      const resolverType = await selectingAtlasTier(dmpBaseHash, atlasCounts, atlasRelativeStrengths);
 
       if (resolverType === '0') {
         chosenAtlas = Array.from(atlas1);

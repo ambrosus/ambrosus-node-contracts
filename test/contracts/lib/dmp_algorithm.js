@@ -50,7 +50,8 @@ describe('DMP algorithm library', () => {
       56: '10',
       60: '12',
       89: '7',
-      97: '0'
+      97: '0',
+      99: 'f7f49ec3a86dbc6c5141'
     };
     const hash = utils.keccak256(resultsToInputs[number]);
     expect(web3.utils.toBN(hash).mod(new BN(DMP_PRECISION))
@@ -72,7 +73,7 @@ describe('DMP algorithm library', () => {
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(0);
     });
 
     it('for two equal tiers will return either with same probability', async () => {
@@ -84,7 +85,7 @@ describe('DMP algorithm library', () => {
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(1);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(1);
     });
 
     it('for two tiers of same count one with bigger weight is more likely to be selected', async () => {
@@ -96,7 +97,7 @@ describe('DMP algorithm library', () => {
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(1);
     });
 
     it('for two tiers of same weight one with bigger count is more likely to be selected', async () => {
@@ -108,7 +109,7 @@ describe('DMP algorithm library', () => {
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(1);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(1);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(1);
     });
 
     it('for three tiers probability is proportional to product of weight and count', async () => {
@@ -120,7 +121,7 @@ describe('DMP algorithm library', () => {
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(1);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(1);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(2);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(97))).to.equal(2);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(2);
     });
 
     it('correct index is returned if last tier has no atlases', async () => {
@@ -130,7 +131,7 @@ describe('DMP algorithm library', () => {
       expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
       expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(32))).to.equal(1);
       expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(50))).to.equal(1);
-      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(97))).to.equal(1);
+      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(99))).to.equal(1);
     });
   });
 
