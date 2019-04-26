@@ -54,14 +54,9 @@ library DmpAlgorithm {
         for (uint tier = 0; tier < ATLAS_NUMERATOR.length; tier++) {
             uint currentNum = atlasCount[tier].mul(ATLAS_NUMERATOR[tier]);
 
-            if (currentNum == denominator) {
-                wcd[tier] = DMP_PRECISION;
-                currentWCD = DMP_PRECISION;
-            } else {
-                currentNum = currentNum.mul(DMP_PRECISION).div(denominator);
-                currentWCD = currentWCD.add(currentNum);
-                wcd[tier] = currentWCD;
-            }
+            currentNum = currentNum.mul(DMP_PRECISION).div(denominator);
+            currentWCD = currentWCD.add(currentNum);
+            wcd[tier] = currentWCD;
         }
 
         for (tier = ATLAS_NUMERATOR.length - 1; tier >= 0; tier--) {
