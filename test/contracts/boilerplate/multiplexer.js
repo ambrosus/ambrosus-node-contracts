@@ -38,7 +38,9 @@ describe('Multiplexer', () => {
   const setBaseUploadFee = (fee, from = oldOwner) => multiplexer.methods.setBaseUploadFee(fee).send({from});
   const transferOwnershipForValidatorSet = (newOwner, from = oldOwner) => multiplexer.methods.transferOwnershipForValidatorSet(newOwner).send({from});
   const transferOwnershipForBlockRewards = (newOwner, from = oldOwner) => multiplexer.methods.transferOwnershipForBlockRewards(newOwner).send({from});
+  const setBaseReward = (newBaseReward, from = oldOwner) => multiplexer.methods.setBaseReward(newBaseReward).send({from});
 
+  const baseReward = '2000000000000000000';
 
   before(async () => {
     web3 = await createWeb3();
@@ -62,7 +64,7 @@ describe('Multiplexer', () => {
         },
         blockRewards: {
           owner: oldOwner,
-          baseReward: 0,
+          baseReward,
           superUser
         },
         validatorSet: {
@@ -173,6 +175,17 @@ describe('Multiplexer', () => {
 
     it('throws when not an owner tries to transfers block rewards ownership', async () => {
       await expect(transferOwnershipForBlockRewards(otherAddress, otherAddress)).to.be.rejected;
+    });
+  });
+
+  describe('Set base reward', () => {
+    it('transfers block rewards ownership', async () => {
+      await setBaseReward('10');
+      expect(await blockRewards.methods.baseReward().call()).to.equal('10');
+    });
+
+    it('throws when not an owner tries to change base reward=', async () => {
+      await expect(setBaseReward('10', otherAddress)).to.be.rejected;
     });
   });
 });

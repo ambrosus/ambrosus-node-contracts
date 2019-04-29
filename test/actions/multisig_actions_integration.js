@@ -242,6 +242,11 @@ describe('Multisig actions integration', () => {
       await expect(executeTransaction((multisigActions) => multisigActions.setBaseUploadFee(wrongFee))).to.be.rejectedWith(`Transaction #0 has been rejected`);
     });
 
+    it('setBaseReward', async () => {
+      await executeTransaction((multisigActions) => multisigActions.setBaseReward('100'));
+      expect(await blockRewards.methods.baseReward().call()).to.equal('100');
+    });
+
     it('transferOwnershipForValidatorSet', async () => {
       await executeTransaction((multisigActions) => multisigActions.transferOwnershipForValidatorSet(otherAddress));
       expect(await validatorSet.methods.owner().call()).to.equal(otherAddress);

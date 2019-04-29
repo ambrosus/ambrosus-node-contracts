@@ -46,4 +46,8 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
   async transferOwnershipForBlockRewards(address) {
     return this.contract.methods.transferOwnershipForBlockRewards(address).encodeABI();
   }
+
+  async setBaseReward(newBaseReward) {
+    return this.contract.methods.setBaseReward(newBaseReward).encodeABI();
+  }
 }

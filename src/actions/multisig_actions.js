@@ -93,6 +93,10 @@ export default class MultisigActions {
     return this.submitTransaction(await this.multiplexerWrapper.setBaseUploadFee(fee));
   }
 
+  async setBaseReward(newBaseReward) {
+    return this.submitTransaction(await this.multiplexerWrapper.setBaseReward(newBaseReward));
+  }
+
   async transferOwnershipForValidatorSet(address) {
     return this.submitTransaction(await this.multiplexerWrapper.transferOwnershipForValidatorSet(address));
   }

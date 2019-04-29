@@ -158,4 +158,18 @@ describe('Multiplexer wrapper', () => {
       expect(contractMethodEncodeAbiStub).to.be.calledOnce;
     });
   });
+
+  describe('setBaseReward', () => {
+    const newBaseReward = '1231231231312312';
+
+    beforeEach(() => {
+      prepareTest('setBaseReward');
+    });
+
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.setBaseReward(newBaseReward)).to.equal(exampleABI);
+      expect(contractMethodStub).to.be.calledWith(newBaseReward);
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
+    });
+  });
 });

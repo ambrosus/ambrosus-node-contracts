@@ -22,6 +22,8 @@ describe('ValidatorProxy', () => {
     gas: 1000000
   };
 
+  const baseReward = '2000000000000000000';
+
   const deployContracts = async (web3, sender, initialValidators, initialBeneficiaries) => {
     const superUser = '0x000000000000000000000000000000000000000F';
     ({validatorProxy, validatorSet, blockRewards} = await deploy({
@@ -39,7 +41,7 @@ describe('ValidatorProxy', () => {
         },
         blockRewards: {
           owner: sender,
-          baseReward: '2000000000000000000',
+          baseReward,
           superUser
         }
       }
@@ -59,6 +61,7 @@ describe('ValidatorProxy', () => {
   const getOwner = async (contract) => contract.methods.owner().call();
   const getValidatorSet = async (contract) => contract.methods.validatorSet().call();
   const getBlockRewards = async (contract) => contract.methods.blockRewards().call();
+  const setBaseReward = async (contract, sender, baseReward) => contract.methods.setBaseReward(baseReward).send({...standardOptions, from: sender});
   const transferOwnership = async (contract, sender, newOwner) => contract.methods.transferOwnership(newOwner).send({...standardOptions, from: sender});
   const transferOwnershipForValidatorSet = async (contract, sender, newOwner) => contract.methods.transferOwnershipForValidatorSet(newOwner).send({...standardOptions, from: sender});
   const transferOwnershipForBlockRewards = async (contract, sender, newOwner) => contract.methods.transferOwnershipForBlockRewards(newOwner).send({...standardOptions, from: sender});
@@ -68,6 +71,7 @@ describe('ValidatorProxy', () => {
   const getPendingValidators = async (contract) => contract.methods.getPendingValidators().call();
   const isBeneficiary = async (contract, address) => contract.methods.isBeneficiary(address).call();
   const beneficiaryShare = async (contract, address) => contract.methods.beneficiaryShare(address).call();
+  const getBaseReward = async (contract) => contract.methods.baseReward().call();
 
 
   let web3;
@@ -170,6 +174,20 @@ describe('ValidatorProxy', () => {
       it(`can't be invoked by non-owner`, async () => {
         await expect(transferOwnershipForBlockRewards(validatorProxy, otherUser, newOwner)).to.be.rejected;
       });
+    });
+  });
+
+  describe('set base reward', () => {
+    const newBaseReward = '42000000000000000000';
+
+    it('changes the base block reward', async () => {
+      expect(await getBaseReward(blockRewards)).to.equal(baseReward);
+      await expect(setBaseReward(validatorProxy, owner, newBaseReward)).to.be.fulfilled;
+      expect(await getBaseReward(blockRewards)).to.equal(newBaseReward);
+    });
+
+    it(`can't be invoked by non-owner`, async () => {
+      await expect(setBaseReward(validatorProxy, otherUser, newBaseReward)).to.be.rejected;
     });
   });
 
