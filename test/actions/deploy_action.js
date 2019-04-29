@@ -13,6 +13,7 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import DeployActions from '../../src/actions/deploy_actions';
 import contractJsons, {contractSuperSpeedJsons} from '../../src/contract_jsons';
+import {version} from '../../package';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -97,12 +98,12 @@ describe('Deploy Actions', () => {
   describe('deployInitial', () => {
     it('passes contract jsons to the deployer together with already deployed genesis addresses', async () => {
       expect(await deployActions.deployInitial()).to.equal(exampleDeployResult);
-      expect(mockDeployer.deploy).to.be.calledOnceWith(contractJsons, genesisContracts);
+      expect(mockDeployer.deploy).to.be.calledOnceWith(contractJsons, genesisContracts, [], {multiplexer: {owner: defaultAddress}}, version);
     });
 
     it('overwrites some contracts in turbo mode', async () => {
       await deployActions.deployInitial(true);
-      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, genesisContracts);
+      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, genesisContracts, [], {multiplexer: {owner: defaultAddress}}, version);
     });
   });
 
@@ -125,12 +126,12 @@ describe('Deploy Actions', () => {
       expect(recycleStorageContractsStub).to.have.been.calledOnce;
       expect(regainGenesisContractsOwnershipStub).to.have.been.calledOnceWith();
 
-      expect(mockDeployer.deploy).to.be.calledOnceWith(contractJsons, {...genesisContracts, ...exampleStorageContracts});
+      expect(mockDeployer.deploy).to.be.calledOnceWith(contractJsons, {...genesisContracts, ...exampleStorageContracts}, [], {multiplexer: {owner: defaultAddress}}, version);
     });
 
     it('overwrites some contracts in turbo mode', async () => {
       await deployActions.deployUpdate(true);
-      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, {...genesisContracts, ...exampleStorageContracts});
+      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, {...genesisContracts, ...exampleStorageContracts}, [], {multiplexer: {owner: defaultAddress}}, version);
     });
   });
 

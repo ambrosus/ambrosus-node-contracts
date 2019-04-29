@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import contractJsons, {contractSuperSpeedJsons} from '../contract_jsons';
+import {version} from '../../package';
 
 /**
  * Computed as:
@@ -41,7 +42,7 @@ export default class DeployActions {
       validatorSet: this.validatorSetWrapper.address(),
       blockRewards: this.blockRewardsWrapper.address()
     };
-    return this.deployer.deploy(contractsToDeploy, genesisContracts, [], {multiplexer: {owner: this.sender}});
+    return this.deployer.deploy(contractsToDeploy, genesisContracts, [], {multiplexer: {owner: this.sender}}, version);
   }
 
   async deployUpdate(turbo = false) {
@@ -54,7 +55,7 @@ export default class DeployActions {
       blockRewards: this.blockRewardsWrapper.address()
     };
     await this.regainGenesisContractsOwnership();
-    return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts}, [], {multiplexer: {owner: this.sender}});
+    return this.deployer.deploy(contractsToDeploy, {...genesisContracts, ...recycledContracts}, [], {multiplexer: {owner: this.sender}}, version);
   }
 
   async recycleStorageContracts() {

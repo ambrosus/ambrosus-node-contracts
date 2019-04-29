@@ -16,9 +16,9 @@ contract Context {
     mapping (address => bool) public trustedAddresses;
     Catalogue public catalogue;
     StorageCatalogue public storageCatalogue;
-    uint256 public versionTag;
+    string public versionTag;
 
-    constructor(address[] _trustedAddresses, Catalogue _catalogue, StorageCatalogue _storageCatalogue, uint256 _versionTag) public {
+    constructor(address[] _trustedAddresses, Catalogue _catalogue, StorageCatalogue _storageCatalogue, string _versionTag) public {
         require(_trustedAddresses.length > 0);
         require(_catalogue != address(0));
         require(_storageCatalogue != address(0));
