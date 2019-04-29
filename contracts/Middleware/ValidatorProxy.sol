@@ -36,6 +36,10 @@ contract ValidatorProxy is Ownable, Base {
         blockRewards.transferOwnership(newOwner);
     }
 
+    function setBaseReward(uint256 _baseReward) public onlyOwner {
+        blockRewards.setBaseReward(_baseReward);
+    }
+
     function addValidator(address validator, uint256 deposit) public onlyContextInternalCalls {
         address[] memory registeredValidators = validatorSet.getPendingValidators();
         if (!checkInArray(validator, registeredValidators)) {

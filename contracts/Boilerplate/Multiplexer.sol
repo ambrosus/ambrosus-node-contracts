@@ -58,4 +58,8 @@ contract Multiplexer is ConstructorOwnable {
     function transferOwnershipForBlockRewards(address newOwner) public onlyOwner {
         validatorProxy.transferOwnershipForBlockRewards(newOwner);
     }
+
+    function setBaseReward(uint256 _baseReward) public onlyOwner {
+        validatorProxy.setBaseReward(_baseReward);
+    }
 }

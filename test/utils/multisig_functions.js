@@ -18,12 +18,12 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 
 describe('Multiplexer wrapper', () => {
-  let multiplexerWrapper;
+  let multisigFunctions;
 
   beforeEach(async () => {
     const web3Mock = new Web3();
 
-    multiplexerWrapper = new MultisigFunctions(web3Mock);
+    multisigFunctions = new MultisigFunctions(web3Mock);
   });
 
   [
@@ -37,16 +37,17 @@ describe('Multiplexer wrapper', () => {
     ['0xfae37c3a', 'addToWhitelist'],
     ['0x7065cb48', 'addOwner'],
     ['0x173825d9', 'removeOwner'],
-    ['0xba51a6df', 'changeRequirement']
+    ['0xba51a6df', 'changeRequirement'],
+    ['0xcce524b4', 'setBaseUploadFee']
   ].forEach(([signature, functionName]) =>
     it(`correctly resolves method name for ${functionName}`, async () => {
-      expect(multiplexerWrapper.getFunctionName(`${signature}1234`)).to.equal(functionName);
+      expect(multisigFunctions.getFunctionName(`${signature}1234`)).to.equal(functionName);
     })
   );
 
   it('correctly resolves method arguments', async () => {
     const parameters = new Web3().eth.abi.encodeParameters(['uint256'], ['100']).substring(2);
     const setBaseUploadFeeSignature = `0xcce524b4`;
-    expect(multiplexerWrapper.getFunctionArguments(`${setBaseUploadFeeSignature}${parameters}`)).to.deep.equal({fee: '100'});
+    expect(multisigFunctions.getFunctionArguments(`${setBaseUploadFeeSignature}${parameters}`)).to.deep.equal({fee: '100'});
   });
 });

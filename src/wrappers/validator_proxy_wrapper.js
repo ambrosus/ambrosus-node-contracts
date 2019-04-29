@@ -23,4 +23,9 @@ export default class ValidatorProxyWrapper extends ManagedOwnableContractWrapper
     const contract = await this.contract();
     return this.processTransaction(contract.methods.transferOwnershipForBlockRewards(newOwner));
   }
+
+  async setBaseReward(newBaseReward) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.setBaseReward(newBaseReward));
+  }
 }

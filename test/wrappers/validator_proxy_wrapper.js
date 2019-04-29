@@ -98,4 +98,31 @@ describe('ValidatorProxy Wrapper', () => {
       expect(transferOwnershipForBlockRewardsSendStub).to.be.calledOnceWith({from: validatorProxyOwner});
     });
   });
+
+  describe('setBaseReward', () => {
+    let setBaseRewardStub;
+    let setBaseRewardSendStub;
+    const validatorProxyOwner = '0x1234ABCD';
+    const newBaseReward = '450000000000000000';
+
+    before(async () => {
+      setBaseRewardStub = sinon.stub();
+      setBaseRewardSendStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          setBaseReward: setBaseRewardStub.returns({
+            send: setBaseRewardSendStub.resolves()
+          })
+        }
+      };
+      validatorProxyWrapper = new ValidatorProxyWrapper({}, {}, validatorProxyOwner);
+      sinon.stub(validatorProxyWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await expect(validatorProxyWrapper.setBaseReward(newBaseReward)).to.be.fulfilled;
+      expect(setBaseRewardStub).to.be.calledOnceWith(newBaseReward);
+      expect(setBaseRewardSendStub).to.be.calledOnceWith({from: validatorProxyOwner});
+    });
+  });
 });
