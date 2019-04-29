@@ -40,7 +40,7 @@ describe('Context Contract', () => {
 
   describe('constructor', () => {
     it('stores the catalogue provided in the constructor', async () => {
-      context = await expect(deploy(deployer, [trustedAddress], catalogueAddress, storageCatalogueAddress, 15)).to.be.eventually.fulfilled;
+      context = await expect(deploy(deployer, [trustedAddress], catalogueAddress, storageCatalogueAddress, '15')).to.be.eventually.fulfilled;
       expect(await catalogue(context)).to.equal(catalogueAddress);
       expect(await storageCatalogue(context)).to.equal(storageCatalogueAddress);
       expect(await versionTag(context)).to.equal('15');
@@ -52,24 +52,24 @@ describe('Context Contract', () => {
     const zeroAddress = '0x0000000000000000000000000000000000000000';
 
     it('throws if no storageCatalogue is provided', async () => {
-      context = await deploy(deployer, [trustedAddress], catalogueAddress, zeroAddress, 0);
+      context = await deploy(deployer, [trustedAddress], catalogueAddress, zeroAddress, '0');
       await expect(catalogue(context)).to.be.eventually.rejected;
     });
 
     it('throws if no catalogue is provided', async () => {
-      context = await deploy(deployer, [trustedAddress], zeroAddress, storageCatalogueAddress, 0);
+      context = await deploy(deployer, [trustedAddress], zeroAddress, storageCatalogueAddress, '0');
       await expect(catalogue(context)).to.be.eventually.rejected;
     });
 
     it('throws if trusted addresses are empty', async () => {
-      context = await deploy(deployer, [], catalogueAddress, storageCatalogueAddress, 0);
+      context = await deploy(deployer, [], catalogueAddress, storageCatalogueAddress, '0');
       await expect(catalogue(context)).to.be.eventually.rejected;
     });
   });
 
   describe('isInternalToContext', () => {
     before(async () => {
-      context = await deploy(deployer, [trustedAddress], catalogueAddress, storageCatalogueAddress, 0);
+      context = await deploy(deployer, [trustedAddress], catalogueAddress, storageCatalogueAddress, '0');
     });
 
     it('returns true if address is known', async () => {

@@ -188,7 +188,7 @@ export default class Deployer {
     }
   }
 
-  async deploy(jsons, alreadyDeployed, skipDeployment = [], params = {}, versionTag = 0) {
+  async deploy(jsons, alreadyDeployed, skipDeployment = [], params = {}, versionTag = '0') {
     const libs = await this.deployLibs();
     const {context: contextJson, ...jsonsWithoutContext} = jsons;
     const contracts = await this.deployOrLoadContracts(jsonsWithoutContext, alreadyDeployed, skipDeployment, libs, params);
