@@ -97,12 +97,12 @@ describe('Deploy Actions', () => {
   describe('deployInitial', () => {
     it('passes contract jsons to the deployer together with already deployed genesis addresses', async () => {
       expect(await deployActions.deployInitial()).to.equal(exampleDeployResult);
-      expect(mockDeployer.deploy).to.be.calledOnceWith(contractJsons, genesisContracts);
+      expect(mockDeployer.deploy).to.be.calledOnceWith(contractJsons, genesisContracts, [], {multiplexer: {owner: defaultAddress}}, sinon.match(/^\d+\.\d+\.\d+$/));
     });
 
     it('overwrites some contracts in turbo mode', async () => {
       await deployActions.deployInitial(true);
-      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, genesisContracts);
+      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, genesisContracts, [], {multiplexer: {owner: defaultAddress}}, sinon.match(/^\d+\.\d+\.\d+$/));
     });
   });
 
@@ -125,12 +125,12 @@ describe('Deploy Actions', () => {
       expect(recycleStorageContractsStub).to.have.been.calledOnce;
       expect(regainGenesisContractsOwnershipStub).to.have.been.calledOnceWith();
 
-      expect(mockDeployer.deploy).to.be.calledOnceWith(contractJsons, {...genesisContracts, ...exampleStorageContracts});
+      expect(mockDeployer.deploy).to.be.calledOnceWith(contractJsons, {...genesisContracts, ...exampleStorageContracts}, [], {multiplexer: {owner: defaultAddress}}, sinon.match(/^\d+\.\d+\.\d+$/));
     });
 
     it('overwrites some contracts in turbo mode', async () => {
       await deployActions.deployUpdate(true);
-      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, {...genesisContracts, ...exampleStorageContracts});
+      expect(mockDeployer.deploy).to.be.calledOnceWith({...contractJsons, ...contractSuperSpeedJsons}, {...genesisContracts, ...exampleStorageContracts}, [], {multiplexer: {owner: defaultAddress}}, sinon.match(/^\d+\.\d+\.\d+$/));
     });
   });
 
