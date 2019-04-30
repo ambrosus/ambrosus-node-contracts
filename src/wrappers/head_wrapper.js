@@ -122,4 +122,8 @@ export default class HeadWrapper extends GenesisContractWrapper {
   updateContractAddressCache(contractName, contractAddress) {
     this.cachedAddresses[`${contractName}`] = contractAddress;
   }
+
+  async contractsVersion() {
+    return (await this.context()).methods.versionTag().call();
+  }
 }
