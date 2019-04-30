@@ -81,6 +81,10 @@ describe('Head Wrapper', () => {
     expect(headWrapper.address()).to.equal(headContract.options.address);
   });
 
+  it('version return version from context', async() => {
+    expect(await headWrapper.contractsVersion()).to.equal('12');
+  });
+
   it('context method returns the context contract instance', async () => {
     const receivedContext = await headWrapper.context();
     expect(receivedContext instanceof web3.eth.Contract).to.be.true;
