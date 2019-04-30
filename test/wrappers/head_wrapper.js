@@ -27,6 +27,7 @@ describe('Head Wrapper', () => {
   let addressesForCatalogueConstructor;
   let addressesForStorageCatalogueConstructor;
   const exampleAddress = '0x97E12BD75bdee72d4975D6df410D2d145b3d8457';
+  const exampleVersion = '12';
   const deployedMockContracts = {};
 
   const getContractConstructor = (contractJson) => contractJson.abi.find((value) => value.type === 'constructor');
@@ -55,7 +56,7 @@ describe('Head Wrapper', () => {
     ownerAddress = getDefaultAddress(web3);
     await deployCatalogue();
     await deployStorageCatalogue();
-    context = await deployContract(web3, contractJsons.context, [[...addressesForCatalogueConstructor, ...addressesForStorageCatalogueConstructor], catalogue.options.address, storageCatalogue.options.address, '12']);
+    context = await deployContract(web3, contractJsons.context, [[...addressesForCatalogueConstructor, ...addressesForStorageCatalogueConstructor], catalogue.options.address, storageCatalogue.options.address, exampleVersion]);
     headContract = await deployContract(web3, contractJsons.head, [ownerAddress]);
     headWrapper = new HeadWrapper(headContract.options.address, web3, ownerAddress);
   });
@@ -82,7 +83,7 @@ describe('Head Wrapper', () => {
   });
 
   it('version return version from context', async() => {
-    expect(await headWrapper.contractsVersion()).to.equal('12');
+    expect(await headWrapper.contractsVersion()).to.equal(exampleVersion);
   });
 
   it('context method returns the context contract instance', async () => {
