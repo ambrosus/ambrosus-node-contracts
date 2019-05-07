@@ -34,4 +34,46 @@ describe('Bundle Store Wrapper', () => {
       expect(getPastEventsStub).to.be.calledWith('BundleStored', {fromBlock, toBlock});
     });
   });
+
+  describe('sheltererAdded', () => {
+    const fromBlock = 4;
+    const toBlock = 6;
+    const eventsStub = 'events';
+    let getPastEventsStub;
+
+    beforeEach(async () => {
+      getPastEventsStub = sinon.stub().returns(eventsStub);
+      const contractMock = {
+        getPastEvents: getPastEventsStub
+      };
+      bundleStoreWrapper = new BundleStoreWrapper();
+      sinon.stub(bundleStoreWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('gets past events', async () => {
+      expect(await bundleStoreWrapper.sheltererAdded(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(getPastEventsStub).to.be.calledWith('SheltererAdded', {fromBlock, toBlock});
+    });
+  });
+
+  describe('sheltererRemoved', () => {
+    const fromBlock = 4;
+    const toBlock = 6;
+    const eventsStub = 'events';
+    let getPastEventsStub;
+
+    beforeEach(async () => {
+      getPastEventsStub = sinon.stub().returns(eventsStub);
+      const contractMock = {
+        getPastEvents: getPastEventsStub
+      };
+      bundleStoreWrapper = new BundleStoreWrapper();
+      sinon.stub(bundleStoreWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('gets past events', async () => {
+      expect(await bundleStoreWrapper.sheltererRemoved(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(getPastEventsStub).to.be.calledWith('SheltererRemoved', {fromBlock, toBlock});
+    });
+  });
 });
