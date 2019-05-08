@@ -42,7 +42,9 @@ export default class BlockRewardsWrapper extends GenesisContractWrapper {
   convertBaseRewardToRate(baseReward) {
     const totalSupply = new BN(TOTAL_AMB_SUPPLY);
     const numberOfBlocksInYear = new BN(BLOCKS_PER_YEAR);
-    const percentageRate = baseReward.mul(numberOfBlocksInYear).muln(100).muln(100).divRound(totalSupply);
+    const percentageRate = baseReward.mul(numberOfBlocksInYear).muln(100)
+      .muln(100)
+      .divRound(totalSupply);
 
     const rate = percentageRate.toNumber() / 100;
 

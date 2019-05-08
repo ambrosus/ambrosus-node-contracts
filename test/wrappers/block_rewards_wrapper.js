@@ -51,7 +51,8 @@ describe('Block Rewards Wrapper', () => {
     expect(wrapper.convertRateToBaseReward(rate).toString()).to.equal(reward);
 
     rate = 0.1;
-    reward = (new BN(DEFAULT_BLOCK_REWARD)).divn(20).toString();
+    reward = (new BN(DEFAULT_BLOCK_REWARD)).divn(20)
+      .toString();
 
     expect(wrapper.convertRateToBaseReward(rate).toString()).to.equal(reward);
   });
