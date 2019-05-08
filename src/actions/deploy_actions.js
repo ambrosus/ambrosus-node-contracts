@@ -9,12 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import contractJsons, {contractSuperSpeedJsons} from '../contract_jsons';
 import {version} from '../../package';
-
-/**
- * Computed as:
- * floor((Total AMB supply) * 2% / (blocks/year))
- */
-const DEFAULT_BLOCK_REWARD = '1146237435108134836';
+import {DEFAULT_BLOCK_REWARD} from '../constants';
 
 export default class DeployActions {
   constructor(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper) {
