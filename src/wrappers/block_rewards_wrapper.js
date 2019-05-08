@@ -33,8 +33,9 @@ export default class BlockRewardsWrapper extends GenesisContractWrapper {
 
     const totalSupply = new BN(TOTAL_AMB_SUPPLY);
     const numberOfBlocksInYear = new BN(BLOCKS_PER_YEAR);
+    /* Percentage rate works with float numbers with up to 2 digits after the point */
     const rewardPercent = totalSupply.div(numberOfBlocksInYear).divn(100);
-    const percentageRate = rate * 100;
+    const percentageRate = rate * 100; /* Adjust percentage rate to contain digits after the point */
 
     return rewardPercent.muln(percentageRate).divn(100);
   }
@@ -42,17 +43,18 @@ export default class BlockRewardsWrapper extends GenesisContractWrapper {
   convertBaseRewardToRate(baseReward) {
     const totalSupply = new BN(TOTAL_AMB_SUPPLY);
     const numberOfBlocksInYear = new BN(BLOCKS_PER_YEAR);
+    /* Percentage rate works with float numbers with up to 2 digits after the point */
     const percentageRate = baseReward.mul(numberOfBlocksInYear).muln(100)
       .muln(100)
       .divRound(totalSupply);
 
-    const rate = percentageRate.toNumber() / 100;
+    const rate = percentageRate.toNumber() / 100; /* Adjust percentage rate to reveal digits after the point*/
 
     return rate;
   }
 
   async getBaseRewardRate() {
-    const currentBaseReward = new BN(await this.getBaseReward());
+    const currentBaseReward = new BN((await this.getBaseReward()).toString());
 
     return this.convertBaseRewardToRate(currentBaseReward);
   }
