@@ -15,43 +15,31 @@ chai.use(chaiAsPromised);
 chai.use(require('sinon-chai'));
 
 describe('Block Rewards Wrapper', () => {
-  const resultsToInputs = {
-    0: '0',
-    0.01: '5731187175540674',
-    0.03: '17193561526622022',
-    0.05: '28655935877703370',
-    0.1: '57311871755406741',
-    0.3: '171935615266220225',
-    0.5: '286559358777033709',
-    1: '573118717554067418',
-    1.01: '578849904729608092',
-    1.3: '745054332820287643',
-    2: '1146237435108134836',
-    2.5: '1432796793885168546',
-    3: '1719356152662202255',
-    5: '2865593587770337092',
-    100: '57311871755406741844'
-  };
+  const resultsToInputs = [
+    [0.01, '5731187175540674'],
+    [0.03, '17193561526622022'],
+    [0.05, '28655935877703370'],
+    [0.1, '57311871755406741'],
+    [0.3, '171935615266220225'],
+    [0.5, '286559358777033709'],
+    [1, '573118717554067418'],
+    [1.01, '578849904729608092'],
+    [1.3, '745054332820287643'],
+    [2, '1146237435108134836'],
+    [2.5, '1432796793885168546'],
+    [3, '1719356152662202255'],
+    [5, '2865593587770337092'],
+  ];
 
   it('Get correct reward value for the entered rate', async () => {
-    expect(convertRateToBaseReward(0.01)).to.equal(resultsToInputs[0.01]);
-    expect(convertRateToBaseReward(0.03)).to.equal(resultsToInputs[0.03]);
-    expect(convertRateToBaseReward(0.05)).to.equal(resultsToInputs[0.05]);
-    expect(convertRateToBaseReward(0.1)).to.equal(resultsToInputs[0.1]);
-    expect(convertRateToBaseReward(0.3)).to.equal(resultsToInputs[0.3]);
-    expect(convertRateToBaseReward(0.5)).to.equal(resultsToInputs[0.5]);
-    expect(convertRateToBaseReward(1)).to.equal(resultsToInputs[1]);
-    expect(convertRateToBaseReward(1.01)).to.equal(resultsToInputs[1.01]);
-    expect(convertRateToBaseReward(1.3)).to.equal(resultsToInputs[1.3]);
-    expect(convertRateToBaseReward(2)).to.equal(resultsToInputs[2]);
-    expect(convertRateToBaseReward(2.5)).to.equal(resultsToInputs[2.5]);
-    expect(convertRateToBaseReward(3)).to.equal(resultsToInputs[3]);
-    expect(convertRateToBaseReward(5)).to.equal(resultsToInputs[5]);
+    resultsToInputs.forEach(([rate, reward]) => {
+      expect(convertRateToBaseReward(rate)).to.equal(reward);
+    });
   });
 
   it ('Get correct reward value for extreme rate values', async () => {
-    expect(convertRateToBaseReward(0)).to.equal(resultsToInputs[0]);
-    expect(convertRateToBaseReward(100)).to.equal(resultsToInputs[100]);
+    expect(convertRateToBaseReward(0)).to.equal('0');
+    expect(convertRateToBaseReward(100)).to.equal('57311871755406741844');
   });
 
   it('Get exception for the rate more than 100%', async () => {
@@ -67,19 +55,9 @@ describe('Block Rewards Wrapper', () => {
   });
 
   it('Get correct rate calculated for reward value', async () => {
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[0.01]))).to.equal(0.01);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[0.03]))).to.equal(0.03);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[0.05]))).to.equal(0.05);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[0.1]))).to.equal(0.1);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[0.3]))).to.equal(0.3);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[0.5]))).to.equal(0.5);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[1]))).to.equal(1);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[1.01]))).to.equal(1.01);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[1.3]))).to.equal(1.3);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[2]))).to.equal(2);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[2.5]))).to.equal(2.5);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[3]))).to.equal(3);
-    expect(parseFloat(convertBaseRewardToRate(resultsToInputs[5]))).to.equal(5);
+    resultsToInputs.forEach(([rate, reward]) => {
+      expect(parseFloat(convertBaseRewardToRate(reward))).to.equal(rate);
+    });
   });
 
   it ('Roundtrip rate test', async () => {
