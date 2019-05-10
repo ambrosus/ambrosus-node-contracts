@@ -90,3 +90,4 @@ describe('Block Rewards Wrapper', () => {
     expect(calculatedRate).to.equal(defaultRate);
   });
 });
+

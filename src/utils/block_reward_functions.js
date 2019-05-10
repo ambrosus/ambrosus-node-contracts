@@ -39,3 +39,4 @@ export function convertBaseRewardToRate(baseReward) {
 
   return rate.toFixed(2);
 }
+
