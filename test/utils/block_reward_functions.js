@@ -25,7 +25,7 @@ describe('Block Rewards Wrapper', () => {
     [2.5, '1432796793885168546'],
     [3, '1719356152662202255'],
     [3.7, '2120539254950049448'],
-    [5, '2865593587770337092'],
+    [5, '2865593587770337092']
   ];
 
   describe('Get correct reward value for the entered rate', () => {
