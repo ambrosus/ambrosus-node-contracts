@@ -7,12 +7,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import chai, {expect} from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import {expect} from 'chai';
 import {convertRateToBaseReward, convertBaseRewardToRate} from '../../src/utils/block_reward_functions';
-
-chai.use(chaiAsPromised);
-chai.use(require('sinon-chai'));
 
 describe('Block Rewards Wrapper', () => {
   const resultsToInputs = [
@@ -28,13 +24,15 @@ describe('Block Rewards Wrapper', () => {
     [2, '1146237435108134836'],
     [2.5, '1432796793885168546'],
     [3, '1719356152662202255'],
+    [3.7, '2120539254950049448'],
     [5, '2865593587770337092'],
   ];
 
-  it('Get correct reward value for the entered rate', async () => {
-    resultsToInputs.forEach(([rate, reward]) => {
+  describe('Get correct reward value for the entered rate', () => {
+    resultsToInputs.forEach(([rate, reward]) => 
+    it(`correct reward for ${rate}`, async () => {
       expect(convertRateToBaseReward(rate)).to.equal(reward);
-    });
+    }))
   });
 
   it ('Get correct reward value for extreme rate values', async () => {
@@ -54,10 +52,11 @@ describe('Block Rewards Wrapper', () => {
     }).to.throw('Invalid rate');
   });
 
-  it('Get correct rate calculated for reward value', async () => {
-    resultsToInputs.forEach(([rate, reward]) => {
+  describe('Get correct rate calculated for reward value', () => {
+    resultsToInputs.forEach(([rate, reward]) =>
+    it(`correct rate for ${reward}`, async () => {
       expect(parseFloat(convertBaseRewardToRate(reward))).to.equal(rate);
-    });
+    }))
   });
 
   it ('Roundtrip rate test', async () => {
@@ -66,6 +65,15 @@ describe('Block Rewards Wrapper', () => {
     const calculatedRate = convertBaseRewardToRate(reward);
 
     expect(calculatedRate).to.equal(defaultRate);
+  });
+  describe('Roundtrip rate test', () => {
+    resultsToInputs.forEach(([rate, reward]) =>
+    it(`Passed for ${rate}`, async () => {
+      const calculatedReward = convertRateToBaseReward(rate);
+      const calculatedRate = convertBaseRewardToRate(calculatedReward);
+
+      expect(parseFloat(calculatedRate)).to.equal(rate);
+    }))
   });
 });
 
