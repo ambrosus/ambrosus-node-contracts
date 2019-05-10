@@ -9,12 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import contractJsons, {contractSuperSpeedJsons} from '../contract_jsons';
 import {version} from '../../package';
-
-/**
- * Computed as:
- * floor((Total AMB supply) * 2% / (blocks/year))
- */
-const DEFAULT_BLOCK_REWARD = '1146237435108134836';
+import {DEFAULT_BLOCK_RATE} from '../constants';
+import {convertRateToBaseReward} from '../utils/block_reward_functions';
 
 export default class DeployActions {
   constructor(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper) {
@@ -24,9 +20,10 @@ export default class DeployActions {
     this.validatorSetWrapper = validatorSetWrapper;
     this.blockRewardsWrapper = blockRewardsWrapper;
     this.validatorProxyWrapper = validatorProxyWrapper;
+    this.defaultBlockReward = convertRateToBaseReward(DEFAULT_BLOCK_RATE);
   }
 
-  async deployGenesis(initialValidators, baseReward = DEFAULT_BLOCK_REWARD) {
+  async deployGenesis(initialValidators, baseReward = this.defaultBlockReward) {
     const {head: headJson, validatorSet: validatorSetJson, blockRewards: blockRewardsJson} = contractJsons;
     const head = await this.deployer.deployContract(headJson, [this.sender], {});
     const validatorSet = await this.deployer.deployContract(validatorSetJson, [this.sender, initialValidators, this.sender], {});

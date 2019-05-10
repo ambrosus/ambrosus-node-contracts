@@ -34,3 +34,7 @@ export const FIRST_PHASE_DURATION = 2 * 60 * 60;
 export const ATLAS1_RELATIVE_STRENGTH = 1;
 export const ATLAS2_RELATIVE_STRENGTH = 4;
 export const ATLAS3_RELATIVE_STRENGTH = 12;
+
+export const DEFAULT_BLOCK_RATE = 2;
+export const TOTAL_AMB_SUPPLY = '361477437535701402159030000';
+export const BLOCKS_PER_YEAR = 365 * 24 * 60 * 60 / 5;
