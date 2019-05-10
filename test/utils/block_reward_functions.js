@@ -52,14 +52,18 @@ describe('Block Rewards Wrapper', () => {
   it ('Get correct reward value for extreme rate values', async () => {
     expect(convertRateToBaseReward(0)).to.equal(resultsToInputs[0]);
     expect(convertRateToBaseReward(100)).to.equal(resultsToInputs[100]);
-  })
+  });
 
   it('Get exception for the rate more than 100%', async () => {
-    expect(function(){convertRateToBaseReward(101);}).to.throw("Invalid rate");
+    expect(() => {
+      convertRateToBaseReward(101);
+    }).to.throw('Invalid rate');
   });
 
   it('Get exception for the negative rate', async () => {
-    expect(function(){convertRateToBaseReward(-2);}).to.throw("Invalid rate");
+    expect(() => {
+      convertRateToBaseReward(-2);
+    }).to.throw('Invalid rate');
   });
 
   it('Get correct rate calculated for reward value', async () => {
