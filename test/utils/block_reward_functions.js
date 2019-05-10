@@ -29,10 +29,10 @@ describe('Block Rewards Wrapper', () => {
   ];
 
   describe('Get correct reward value for the entered rate', () => {
-    resultsToInputs.forEach(([rate, reward]) => 
-    it(`correct reward for ${rate}`, async () => {
-      expect(convertRateToBaseReward(rate)).to.equal(reward);
-    }))
+    resultsToInputs.forEach(([rate, reward]) =>
+      it(`correct reward for ${rate}`, async () => {
+        expect(convertRateToBaseReward(rate)).to.equal(reward);
+      }));
   });
 
   it ('Get correct reward value for extreme rate values', async () => {
@@ -54,9 +54,9 @@ describe('Block Rewards Wrapper', () => {
 
   describe('Get correct rate calculated for reward value', () => {
     resultsToInputs.forEach(([rate, reward]) =>
-    it(`correct rate for ${reward}`, async () => {
-      expect(parseFloat(convertBaseRewardToRate(reward))).to.equal(rate);
-    }))
+      it(`correct rate for ${reward}`, async () => {
+        expect(parseFloat(convertBaseRewardToRate(reward))).to.equal(rate);
+      }));
   });
 
   it ('Roundtrip rate test', async () => {
@@ -67,13 +67,13 @@ describe('Block Rewards Wrapper', () => {
     expect(calculatedRate).to.equal(defaultRate);
   });
   describe('Roundtrip rate test', () => {
-    resultsToInputs.forEach(([rate, reward]) =>
-    it(`Passed for ${rate}`, async () => {
-      const calculatedReward = convertRateToBaseReward(rate);
-      const calculatedRate = convertBaseRewardToRate(calculatedReward);
+    resultsToInputs.forEach(([rate]) =>
+      it(`Passed for ${rate}`, async () => {
+        const calculatedReward = convertRateToBaseReward(rate);
+        const calculatedRate = convertBaseRewardToRate(calculatedReward);
 
-      expect(parseFloat(calculatedRate)).to.equal(rate);
-    }))
+        expect(parseFloat(calculatedRate)).to.equal(rate);
+      }));
   });
 });
 
