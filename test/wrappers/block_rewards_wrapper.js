@@ -62,3 +62,4 @@ describe('Block Rewards Wrapper', () => {
     });
   });
 });
+
