@@ -129,11 +129,11 @@ describe('ValidatorProxy Wrapper', () => {
   describe('getBlockRewardsContractAddress', () => {
     let blockRewardsStub;
     let blockRewardsCallStub;
-    const validatorProxyOwner = '0x1234ABCD';
+    const blockRewardsAddress = '0x1234ABCD';
 
     before(async () => {
       blockRewardsStub = sinon.stub();
-      blockRewardsCallStub = sinon.stub().resolves(validatorProxyOwner);
+      blockRewardsCallStub = sinon.stub().resolves(blockRewardsAddress);
       const contractMock = {
         methods: {
           blockRewards: blockRewardsStub.returns({
@@ -141,12 +141,12 @@ describe('ValidatorProxy Wrapper', () => {
           })
         }
       };
-      validatorProxyWrapper = new ValidatorProxyWrapper({}, {}, validatorProxyOwner);
+      validatorProxyWrapper = new ValidatorProxyWrapper({}, {}, blockRewardsAddress);
       sinon.stub(validatorProxyWrapper, 'contract').resolves(contractMock);
     });
 
     it('returns correct contract address', async () => {
-      expect(await validatorProxyWrapper.getBlockRewardsContractAddress()).to.equal(validatorProxyOwner);
+      expect(await validatorProxyWrapper.getBlockRewardsContractAddress()).to.equal(blockRewardsAddress);
     });
   });
 });
