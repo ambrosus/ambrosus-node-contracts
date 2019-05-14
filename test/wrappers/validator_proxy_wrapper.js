@@ -125,4 +125,28 @@ describe('ValidatorProxy Wrapper', () => {
       expect(setBaseRewardSendStub).to.be.calledOnceWith({from: validatorProxyOwner});
     });
   });
+
+  describe('getBlockRewardsContractAddress', () => {
+    let blockRewardsStub;
+    let blockRewardsCallStub;
+    const blockRewardsAddress = '0x1234ABCD';
+
+    before(async () => {
+      blockRewardsStub = sinon.stub();
+      blockRewardsCallStub = sinon.stub().resolves(blockRewardsAddress);
+      const contractMock = {
+        methods: {
+          blockRewards: blockRewardsStub.returns({
+            call: blockRewardsCallStub
+          })
+        }
+      };
+      validatorProxyWrapper = new ValidatorProxyWrapper({}, {}, blockRewardsAddress);
+      sinon.stub(validatorProxyWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('returns correct contract address', async () => {
+      expect(await validatorProxyWrapper.getBlockRewardsContractAddress()).to.equal(blockRewardsAddress);
+    });
+  });
 });
