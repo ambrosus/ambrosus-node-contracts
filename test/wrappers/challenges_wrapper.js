@@ -244,4 +244,32 @@ describe('Challenge Wrapper', () => {
       expect(challengeIsInProgressCallStub).to.be.called;
     });
   });
+
+  describe('getChallengeCreationTime', () => {
+    const challengeId = '0x123';
+    const result = '16012361';
+    let getChallengeCreationTimeStub;
+    let getChallengeCreationTimeCallStub;
+
+    beforeEach(async () => {
+      getChallengeCreationTimeStub = sinon.stub();
+      getChallengeCreationTimeCallStub = sinon.stub().resolves(result);
+      const contractMock = {
+        methods: {
+          getChallengeCreationTime: getChallengeCreationTimeStub
+        }
+      };
+      getChallengeCreationTimeStub.returns({
+        call: getChallengeCreationTimeCallStub
+      });
+      challengeWrapper = new ChallengeWrapper();
+      sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await challengeWrapper.getChallengeCreationTime(challengeId)).to.equal(result);
+      expect(getChallengeCreationTimeStub).to.be.calledWith(challengeId);
+      expect(getChallengeCreationTimeCallStub).to.be.called;
+    });
+  });
 });
