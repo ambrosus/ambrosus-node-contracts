@@ -13,6 +13,7 @@ import "../Boilerplate/Head.sol";
 import "../Configuration/Fees.sol";
 import "../Configuration/Config.sol";
 import "../Middleware/Sheltering.sol";
+import "../Storage/RewardsEventEmitter.sol";
 import "../Front/Challenges.sol";
 
 
@@ -26,12 +27,21 @@ contract Uploads is Base {
     Fees private fees;
     Sheltering private sheltering;
     Challenges private challenges;
+    RewardsEventEmitter private rewardsEventEmitter;
 
-    constructor(Head _head, Config _config, Fees _fees, Sheltering _sheltering, Challenges _challenges) Base(_head) public {
+    constructor(
+        Head _head,
+        Config _config,
+        Fees _fees,
+        Sheltering _sheltering,
+        RewardsEventEmitter _rewardsEventEmitter,
+        Challenges _challenges
+        ) Base(_head) public {
         config = _config;
         fees = _fees;
         sheltering = _sheltering;
         challenges = _challenges;
+        rewardsEventEmitter = _rewardsEventEmitter;
     }
 
     function registerBundle(bytes32 bundleId, uint64 storagePeriods) public payable {
@@ -43,6 +53,7 @@ contract Uploads is Base {
         sheltering.storeBundle(bundleId, msg.sender, storagePeriods);
         (uint challengeFee, uint validatorsFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
+        rewardsEventEmitter.apolloBundleFeePayout(msg.sender, bundleId, validatorsFee);
         challenges.startForSystem.value(challengeFee)(msg.sender, bundleId, SYSTEM_CHALLENGES_COUNT);
     }
 }

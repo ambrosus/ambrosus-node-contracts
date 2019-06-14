@@ -14,6 +14,7 @@ import deploy from '../../helpers/deploy';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {expectEventEmission} from '../../helpers/web3EventObserver';
 import {PAYOUT_PERIOD_UNIT} from '../../helpers/consts';
 
 chai.use(sinonChai);
@@ -29,6 +30,7 @@ describe('Payouts Contract', () => {
   let otherUser;
   let payoutsStore;
   let payouts;
+  let rewardsEventEmitter;
   let time;
   let snapshotId;
 
@@ -47,11 +49,12 @@ describe('Payouts Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [validUser, beneficiary, withdrawTarget, otherUser] = await web3.eth.getAccounts();
-    ({payoutsStore, payouts, time} = await deploy({
+    ({payoutsStore, payouts, rewardsEventEmitter, time} = await deploy({
       web3,
       contracts: {
         payoutsStore: true,
         payouts: true,
+        rewardsEventEmitter: true,
         time: TimeMockJson,
         config: true
       }
@@ -194,6 +197,22 @@ describe('Payouts Contract', () => {
 
       await expectBalanceChange(withdrawTarget, '9', async () => withdraw(withdrawTarget, beneficiary));
       await expectBalanceChange(withdrawTarget, '0', async () => withdraw(withdrawTarget, beneficiary));
+    });
+
+    it(`emits proper event`, async () => {
+      const payoutValue = 10;
+      await injectGrantRepeating(beneficiary, 8, 9, payoutValue);
+
+      await expectEventEmission(
+        web3,
+        () => withdraw(withdrawTarget, beneficiary),
+        rewardsEventEmitter,
+        'AtlasPayoutWithdrawal',
+        {
+          target: withdrawTarget,
+          beneficiary,
+          value: payoutValue.toString()
+        });
     });
   });
 
