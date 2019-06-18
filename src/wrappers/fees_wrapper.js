@@ -28,4 +28,9 @@ export default class FeesWrapper extends ManagedOwnableContractWrapper {
     const contract = await this.contract();
     return contract.methods.getFeeForChallenge(storagePeriods).call();
   }
+
+  async getPenalty(nominalStake, penaltiesCount, lastPenaltyTime) {
+    const contract = await this.contract();
+    return contract.methods.getPenalty(nominalStake, penaltiesCount, lastPenaltyTime).call();
+  }
 }

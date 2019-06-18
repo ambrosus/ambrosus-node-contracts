@@ -11,11 +11,12 @@ import BN from 'bn.js';
 import {InsufficientFundsToStartChallengeError} from '../errors/errors';
 
 export default class ChallengeActions {
-  constructor(challengeWrapper, feeWrapper, shelteringWrapper, blockchainStateWrapper) {
+  constructor(challengeWrapper, feeWrapper, shelteringWrapper, blockchainStateWrapper, atlasStakeStoreWrapper) {
     this.challengeWrapper = challengeWrapper;
     this.feeWrapper = feeWrapper;
     this.shelteringWrapper = shelteringWrapper;
     this.blockchainStateWrapper = blockchainStateWrapper;
+    this.atlasStakeStoreWrapper = atlasStakeStoreWrapper;
   }
 
   async startChallenge(sheltererId, bundleId) {
@@ -64,5 +65,14 @@ export default class ChallengeActions {
   /** @private */
   async getBalance() {
     return this.blockchainStateWrapper.getBalance(this.challengeWrapper.defaultAddress);
+  }
+
+  async nextPenalty(nodeAddress) {
+    const basicStake = await this.atlasStakeStoreWrapper.getBasicStake(nodeAddress);
+    if (basicStake === '0') {
+      throw new Error(`Node ${nodeAddress} is not onboarded as an ATLAS`);
+    }
+    const {penaltiesCount, lastPenaltyTime} = await this.atlasStakeStoreWrapper.getPenaltiesHistory(nodeAddress);
+    return this.feeWrapper.getPenalty(basicStake, penaltiesCount, lastPenaltyTime);
   }
 }
