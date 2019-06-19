@@ -161,7 +161,10 @@ describe('Challenge actions', () => {
       lastPenaltyTime: '1560862350',
       penaltiesCount: '5'
     };
-    const examplePenalty = '1000000000';
+    const examplePenaltyInfo = {
+      penalty: '1000000000',
+      newPenaltiesCount: '1'
+    };
 
     beforeEach(() => {
       mockAtlasStakeStoreWrapper = {
@@ -173,12 +176,12 @@ describe('Challenge actions', () => {
       };
       mockAtlasStakeStoreWrapper.getPenaltiesHistory.withArgs(exampleNode).resolves(penaltiesHistory);
       mockAtlasStakeStoreWrapper.getBasicStake.withArgs(exampleNode).resolves(basicStake);
-      mockFeesWrapper.getPenalty.withArgs(basicStake, penaltiesHistory.penaltiesCount, penaltiesHistory.lastPenaltyTime).resolves(examplePenalty);
+      mockFeesWrapper.getPenalty.withArgs(basicStake, penaltiesHistory.penaltiesCount, penaltiesHistory.lastPenaltyTime).resolves(examplePenaltyInfo);
       challengeActions = new ChallengeActions({}, mockFeesWrapper, {}, {}, mockAtlasStakeStoreWrapper);
     });
 
     it('returns next penalty for node', async () => {
-      expect(await challengeActions.nextPenalty(exampleNode)).to.equal(examplePenalty);
+      expect(await challengeActions.nextPenalty(exampleNode)).to.equal(examplePenaltyInfo.penalty);
     });
 
     it('throws if node is not an Atlas', async () => {

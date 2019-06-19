@@ -13,6 +13,6 @@ import "../Configuration/Time.sol";
 
 
 contract SuperSpeedTime is Time {
-    uint64 constant public PAYOUT_PERIOD_DURATION = 1 hours;
+    uint64 constant public PAYOUT_PERIOD_DURATION = 30 seconds;
     uint64 constant public STORAGE_PERIOD_DURATION = PAYOUT_PERIOD_DURATION * PAYOUT_TO_STORAGE_PERIOD_MULTIPLIER;
 }

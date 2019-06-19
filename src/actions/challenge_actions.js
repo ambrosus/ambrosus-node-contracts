@@ -73,6 +73,6 @@ export default class ChallengeActions {
       throw new Error(`Node ${nodeAddress} is not onboarded as an ATLAS`);
     }
     const {penaltiesCount, lastPenaltyTime} = await this.atlasStakeStoreWrapper.getPenaltiesHistory(nodeAddress);
-    return this.feeWrapper.getPenalty(basicStake, penaltiesCount, lastPenaltyTime);
+    return (await this.feeWrapper.getPenalty(basicStake, penaltiesCount, lastPenaltyTime)).penalty;
   }
 }

@@ -81,10 +81,10 @@ const runTask = async () => {
   const deployActions = new DeployActions(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper);
   const whitelistActions = new WhitelistActions(kycWhitelistWrapper);
   const onboardActions = new OnboardActions(kycWhitelistWrapper, rolesWrapper, atlasStakeStoreWrapper);
-  const uploadActions = new UploadActions(uploadsWrapper, feesWrapper, shelteringWrapper, challengesEventEmitterWrapper);
+  const uploadActions = new UploadActions(uploadsWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper, challengesEventEmitterWrapper);
   const nodeServiceActions = new NodeServiceActions(rolesWrapper);
   const payoutsActions = new PayoutsActions(timeWrapper, payoutsWrapper);
-  const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper);
+  const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper, atlasStakeStoreWrapper);
   const adminActions = new AdministrativeActions(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper);
   const multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper, new MultisigFunctions(web3));
 

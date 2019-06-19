@@ -13,6 +13,5 @@ import "../Configuration/Config.sol";
 
 
 contract SuperSpeedConfig is Config {
-    uint constant public CHALLENGE_DURATION = 30 minutes;
-    uint32 constant public COOLDOWN_TIMEOUT = 15 minutes;
+    uint constant public CHALLENGE_DURATION = 10 seconds;
 }
