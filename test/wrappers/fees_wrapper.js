@@ -104,4 +104,35 @@ describe('Fees Wrapper', () => {
       expect(getFeeForChallengeCallStub).to.be.calledOnce;
     });
   });
+
+  describe('getPenalty', () => {
+    const nominalStake = '75000000000000000000000';
+    const penaltiesCount = '12';
+    const lastPenaltyTime = '1560862351';
+    const penalty = '100000000000000000000';
+
+    let getPenaltyStub;
+    let getPenaltyCallStub;
+
+    beforeEach(async () => {
+      getPenaltyStub = sinon.stub();
+      getPenaltyCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getPenalty: getPenaltyStub
+        }
+      };
+      getPenaltyStub.returns({
+        call: getPenaltyCallStub.resolves(penalty)
+      });
+      feesWrapper = new FeesWrapper({}, {}, null);
+      sinon.stub(feesWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await feesWrapper.getPenalty(nominalStake, penaltiesCount, lastPenaltyTime)).to.equal(penalty);
+      expect(getPenaltyStub).to.be.calledOnceWith(nominalStake, penaltiesCount, lastPenaltyTime);
+      expect(getPenaltyCallStub).to.be.calledOnce;
+    });
+  });
 });

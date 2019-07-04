@@ -107,6 +107,8 @@ const resetEnvFile = async function () {
   return deployEnvFile;
 };
 
+const sleep = async (time) => new Promise((resolve) => setTimeout(resolve, time));
+
 startGanacheServer(
   [
     adminUser.privateKey,
@@ -120,7 +122,7 @@ startGanacheServer(
       const deployEnvFile = await resetEnvFile();
       await execute(`yarn task deployGenesis --save ${deployEnvFile}`, envForUser(adminUser));
       let {adminEnv, apolloEnv, atlasEnv, hermesEnv} = await updateEnvs(deployEnvFile);
-      await execute(`yarn task deploy initial`, adminEnv);
+      await execute(`yarn task deploy initial --turbo`, adminEnv);
 
       const verifyFails = async (work) => {
         let failed = false;
@@ -135,7 +137,7 @@ startGanacheServer(
       };
 
       console.log('------ test deploy update ------');
-      await execute(`yarn task deploy update --save ${deployEnvFile}`, adminEnv);
+      await execute(`yarn task deploy update --turbo --save ${deployEnvFile}`, adminEnv);
       ({adminEnv, apolloEnv, atlasEnv, hermesEnv} = await updateEnvs(deployEnvFile));
       await verifyFails(async () => {
         await execute(`yarn task deploy update`, apolloEnv);
@@ -195,8 +197,6 @@ startGanacheServer(
       await verifyNodeState(atlasUser.address, 'ATLAS', 'ATLAS', '75000', 'http://example.com');
       await execute(`yarn task nodeService setUrl http://amazon.com`, atlasEnv);
       await verifyNodeState(atlasUser.address, 'ATLAS', 'ATLAS', '75000', 'http://amazon.com');
-      await execute(`yarn task retire`, atlasEnv);
-      await verifyNodeState(atlasUser.address, 'ATLAS', 'NONE', '75000', '');
 
       console.log('------ test HERMES onboarding ------');
       await execute(`yarn task whitelist add ${hermesUser.address} HERMES 0`, adminEnv);
@@ -205,6 +205,26 @@ startGanacheServer(
       await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://example.com');
       await execute(`yarn task nodeService setUrl http://google.com`, hermesEnv);
       await verifyNodeState(hermesUser.address, 'HERMES', 'HERMES', '0', 'http://google.com');
+
+      console.log('------ test challenges ------');
+      await execute('yarn task upload 0xa0afad9a0bae3a77ea6189db3ad6fbf13873bde00d1df1db87a5776889f28f58 1', hermesEnv);
+      await execute(`yarn task challenge resolve 0x712b64f65b733a58389856d77602dc15ea010c2a8c2e4d00fac33c08c5498474`, atlasEnv);
+      await execute(`yarn task challenge start ${atlasUser.address} 0xa0afad9a0bae3a77ea6189db3ad6fbf13873bde00d1df1db87a5776889f28f58`, hermesEnv);
+      const penaltyBefore = await execute(`yarn task challenge nextPenalty ${atlasUser.address}`, hermesEnv);
+      if (!penaltyBefore.includes('750 AMB')) {
+        throw new Error('Expected penalty to equal 750 AMB');
+      }
+      await sleep(20000);
+      await execute(`yarn task challenge status 0x7c2c31dbe720b0c3da6fe529b84aa402e102f1675413b052ea736e5730b44342`, hermesEnv);
+      await execute(`yarn task challenge expire 0x7c2c31dbe720b0c3da6fe529b84aa402e102f1675413b052ea736e5730b44342`, hermesEnv);
+      const penaltyAfter = await execute(`yarn task challenge nextPenalty ${atlasUser.address}`, hermesEnv);
+      if (!penaltyAfter.includes('1500 AMB')) {
+        throw new Error('Expected penalty to equal 1500 AMB');
+      }
+
+      console.log('------ test retirement ------');
+      await execute(`yarn task retire`, atlasEnv);
+      await verifyNodeState(atlasUser.address, 'ATLAS', 'NONE', '75000', '');
       await execute(`yarn task retire`, hermesEnv);
       await verifyNodeState(hermesUser.address, 'HERMES', 'NONE', '0', '');
 

@@ -43,4 +43,61 @@ describe('Atlas stake store wrapper', () => {
       expect(isShelteringAnyCallStub).to.be.calledOnce;
     });
   });
+
+  describe('getBasicStake', () => {
+    let getBasicStakeStub;
+    let getBasicStakeCallStub;
+    const nodeAddress = '0xc0ffee';
+    const stake = '75000000000000000000000';
+
+    beforeEach(async () => {
+      getBasicStakeStub = sinon.stub();
+      getBasicStakeCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getBasicStake: getBasicStakeStub.returns({
+            call: getBasicStakeCallStub.resolves(stake)
+          })
+        }
+      };
+      atlasStakeStoreWrapper = new AtlasStakeStoreWrapper();
+      sinon.stub(atlasStakeStoreWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await atlasStakeStoreWrapper.getBasicStake(nodeAddress)).to.equal(stake);
+      expect(getBasicStakeStub).to.be.calledOnceWith(nodeAddress);
+      expect(getBasicStakeCallStub).to.be.calledOnce;
+    });
+  });
+
+  describe('getPenaltiesHistory', () => {
+    let getPenaltiesHistoryStub;
+    let getPenaltiesHistoryCallStub;
+    const nodeAddress = '0xc0ffee';
+    const penaltiesHistory = {
+      penaltiesCount: '1',
+      lastPenaltyTime: '1560862351'
+    };
+
+    beforeEach(async () => {
+      getPenaltiesHistoryStub = sinon.stub();
+      getPenaltiesHistoryCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getPenaltiesHistory: getPenaltiesHistoryStub.returns({
+            call: getPenaltiesHistoryCallStub.resolves(penaltiesHistory)
+          })
+        }
+      };
+      atlasStakeStoreWrapper = new AtlasStakeStoreWrapper();
+      sinon.stub(atlasStakeStoreWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await atlasStakeStoreWrapper.getPenaltiesHistory(nodeAddress)).to.deep.equal(penaltiesHistory);
+      expect(getPenaltiesHistoryStub).to.be.calledOnceWith(nodeAddress);
+      expect(getPenaltiesHistoryCallStub).to.be.calledOnce;
+    });
+  });
 });

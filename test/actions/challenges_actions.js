@@ -24,6 +24,7 @@ describe('Challenge actions', () => {
   let mockFeesWrapper;
   let mockShelteringWrapper;
   let mockBlockchainStateWrapper;
+  let mockAtlasStakeStoreWrapper;
   const exampleChallengeId = '0x12345';
   const exampleTxResult = {
     blockNumber: 100,
@@ -150,6 +151,41 @@ describe('Challenge actions', () => {
         canResolve: false,
         isTimedOut: true
       });
+    });
+  });
+
+  describe('Next penalty for a node', () => {
+    const exampleNode = '0x12356';
+    const basicStake = '75000000000000000000000';
+    const penaltiesHistory = {
+      lastPenaltyTime: '1560862350',
+      penaltiesCount: '5'
+    };
+    const examplePenaltyInfo = {
+      penalty: '1000000000',
+      newPenaltiesCount: '1'
+    };
+
+    beforeEach(() => {
+      mockAtlasStakeStoreWrapper = {
+        getPenaltiesHistory: sinon.stub(),
+        getBasicStake: sinon.stub().resolves('0')
+      };
+      mockFeesWrapper = {
+        getPenalty: sinon.stub()
+      };
+      mockAtlasStakeStoreWrapper.getPenaltiesHistory.withArgs(exampleNode).resolves(penaltiesHistory);
+      mockAtlasStakeStoreWrapper.getBasicStake.withArgs(exampleNode).resolves(basicStake);
+      mockFeesWrapper.getPenalty.withArgs(basicStake, penaltiesHistory.penaltiesCount, penaltiesHistory.lastPenaltyTime).resolves(examplePenaltyInfo);
+      challengeActions = new ChallengeActions({}, mockFeesWrapper, {}, {}, mockAtlasStakeStoreWrapper);
+    });
+
+    it('returns next penalty for node', async () => {
+      expect(await challengeActions.nextPenalty(exampleNode)).to.equal(examplePenaltyInfo.penalty);
+    });
+
+    it('throws if node is not an Atlas', async () => {
+      await expect(challengeActions.nextPenalty('otherNode')).to.be.rejectedWith('Node otherNode is not onboarded as an ATLAS');
     });
   });
 });

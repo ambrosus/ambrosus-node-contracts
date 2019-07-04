@@ -23,7 +23,7 @@
     "test:all": "yarn build:sol && yarn test:units && yarn test:tasks",
     "dev:lint": "eslint src test test_cli config && solium -d contracts/",
     "dev:lint:fix": "eslint src test test_cli config --fix && solium -d contracts/ --fix",
-    "task": "babel-node src/tasks/run.js"
+    "task": "node -r babel-register src/tasks/run.js"
   },
   "engines": {
     "node": ">=9.0",

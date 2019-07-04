@@ -19,12 +19,21 @@ export default class ChallengeTask extends TaskBase {
 
   async execute([command, ...options]) {
     if (command === 'start') {
-      await this.start(options[0], options[1]);
-    } else if (command === 'expire') {
-      await this.expire(options[0]);
-    } else if (command === 'status') {
-      await this.status(options[0]);
-    } else if (command === 'help') {
+      return this.start(options[0], options[1]);
+    }
+    if (command === 'resolve') {
+      return this.resolve(options[0]);
+    }
+    if (command === 'expire') {
+      return this.expire(options[0]);
+    }
+    if (command === 'status') {
+      return this.status(options[0]);
+    }
+    if (command === 'nextPenalty') {
+      return this.nextPenalty(options[0]);
+    }
+    if (command === 'help') {
       this.printUsage();
     } else {
       console.error('Unknown sub-command, see yarn task challenges help');
@@ -53,8 +62,10 @@ export default class ChallengeTask extends TaskBase {
 Usage: yarn task challenges [start/expire/status]
 Options:
   - start [sheltererAddress bundleId]
+  - resolve [challengeId]
   - expire [challengeId]
-  - status [challengeId]`);
+  - status [challengeId]
+  - nextPenalty [sheltererAddress]`);
   }
 
   async start(sheltererId, bundleId) {
@@ -63,6 +74,12 @@ Options:
     const {transactionHash, challengeId} = await this.challengeActions.startChallenge(sheltererId, bundleId);
     console.log(`Challenge with ID = ${challengeId} has been created. 
 Transaction ID - ${transactionHash}`);
+  }
+
+  async resolve(challengeId) {
+    this.validateId(challengeId);
+    await this.challengeActions.challengeWrapper.resolve(challengeId);
+    console.log('Challenge resolved');
   }
 
   async expire(challengeId) {
@@ -91,9 +108,15 @@ You can now mark it as expired.`);
     }
   }
 
+  async nextPenalty(sheltererId) {
+    this.validateAddress(sheltererId);
+    const penalty = await this.challengeActions.nextPenalty(sheltererId);
+    console.log(`Potential penalty for ${sheltererId} is ${utils.fromWei(penalty, 'ether')} AMB`);
+  }
+
   help() {
     return {
-      options: '[start sheltererAddress bundleId], [expire/status challengeId]',
+      options: '[start sheltererAddress bundleId], [resolve/expire/status challengeId], [nextPenalty sheltererAddress]',
       description: 'creates and manages challenges'
     };
   }

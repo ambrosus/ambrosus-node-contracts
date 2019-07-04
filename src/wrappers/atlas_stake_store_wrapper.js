@@ -18,4 +18,14 @@ export default class AtlasStakeStoreWrapper extends ManagedContractWrapper {
     const contract = await this.contract();
     return contract.methods.isShelteringAny(nodeAddress).call();
   }
+
+  async getBasicStake(nodeAddress) {
+    const contract = await this.contract();
+    return contract.methods.getBasicStake(nodeAddress).call();
+  }
+
+  async getPenaltiesHistory(nodeAddress) {
+    const contract = await this.contract();
+    return contract.methods.getPenaltiesHistory(nodeAddress).call();
+  }
 }
