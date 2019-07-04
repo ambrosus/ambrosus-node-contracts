@@ -32,6 +32,7 @@ import "../Storage/ShelteringTransfersStore.sol";
 import "../Storage/RolesEventEmitter.sol";
 import "../Storage/TransfersEventEmitter.sol";
 import "../Storage/ChallengesEventEmitter.sol";
+import "../Storage/RewardsEventEmitter.sol";
 
 
 contract Catalogue {
@@ -87,6 +88,7 @@ contract StorageCatalogue {
     RolesEventEmitter public rolesEventEmitter;
     TransfersEventEmitter public transfersEventEmitter;
     ChallengesEventEmitter public challengesEventEmitter;
+    RewardsEventEmitter public rewardsEventEmitter;
 
     constructor(
         ApolloDepositStore _apolloDepositStore,
@@ -99,7 +101,8 @@ contract StorageCatalogue {
         ShelteringTransfersStore _shelteringTransfersStore,
         RolesEventEmitter _rolesEventEmitter,
         TransfersEventEmitter _transfersEventEmitter,
-        ChallengesEventEmitter _challengesEventEmitter
+        ChallengesEventEmitter _challengesEventEmitter,
+        RewardsEventEmitter _rewardsEventEmitter
     ) public {
         apolloDepositStore = _apolloDepositStore;
         atlasStakeStore = _atlasStakeStore;
@@ -112,5 +115,6 @@ contract StorageCatalogue {
         rolesEventEmitter = _rolesEventEmitter;
         transfersEventEmitter = _transfersEventEmitter;
         challengesEventEmitter = _challengesEventEmitter;
+        rewardsEventEmitter = _rewardsEventEmitter;
     }
 }

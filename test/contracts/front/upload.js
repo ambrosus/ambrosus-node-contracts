@@ -17,6 +17,7 @@ import deploy from '../../helpers/deploy';
 import {ATLAS, HERMES} from '../../../src/constants';
 import {SYSTEM_CHALLENGES_COUNT} from '../../helpers/consts';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {expectEventEmission} from '../../helpers/web3EventObserver';
 import BN from 'bn.js';
 
 export const COINBASE = '0x0000000000000000000000000000000000000000';
@@ -34,6 +35,7 @@ describe('Upload Contract', () => {
   let web3;
   let uploads;
   let challengesEventEmitter;
+  let rewardsEventEmitter;
   let rolesStore;
   let bundleStore;
   let fees;
@@ -44,10 +46,11 @@ describe('Upload Contract', () => {
   let snapshotId;
 
   const expectedMinersFee = () => fee.mul(new BN(3)).div(new BN(10));
+  const registerBundle = (bundleId, storagePeriods, uploader, fee) => uploads.methods.registerBundle(bundleId, storagePeriods).send({from: uploader, value: fee, gasPrice: '0'});
 
   before(async () => {
     web3 = await createWeb3();
-    ({uploads, fees, challengesEventEmitter, bundleStore, rolesStore} = await deploy({
+    ({uploads, fees, challengesEventEmitter, bundleStore, rolesStore, rewardsEventEmitter} = await deploy({
       web3,
       contracts: {
         rolesStore: true,
@@ -59,7 +62,8 @@ describe('Upload Contract', () => {
         fees: true,
         config: true,
         bundleStore: true,
-        challengesEventEmitter: true}
+        challengesEventEmitter: true,
+        rewardsEventEmitter: true}
     }));
     [hermes, atlas, other] = await web3.eth.getAccounts();
     fee = new BN(await fees.methods.getFeeForUpload(1).call());
@@ -78,43 +82,43 @@ describe('Upload Contract', () => {
   it(`saves as uploader`, async () => {
     const emptyAddress = '0x0000000000000000000000000000000000000000';
     expect(await bundleStore.methods.getUploader(bundleId).call({from: hermes})).to.equal(emptyAddress);
-    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
+    await registerBundle(bundleId, 1, hermes, fee);
     expect(await bundleStore.methods.getUploader(bundleId).call({from: hermes})).to.equal(hermes);
   });
 
   it(`fails if fee too high`, async () => {
     const value = fee.add(new BN(1));
-    await expect(uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value}))
+    await expect(registerBundle(bundleId, 1, hermes, value))
       .to.be.eventually.rejected;
   });
 
   it(`fails if fee to low`, async () => {
     const value = fee.sub(new BN(1));
-    await expect(uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value}))
+    await expect(registerBundle(bundleId, 1, hermes, value))
       .to.be.eventually.rejected;
   });
 
   it(`fails if sender is not a Hermes`, async () => {
-    await expect(uploads.methods.registerBundle(bundleId, 1).send({from: atlas, value: fee}))
+    await expect(registerBundle(bundleId, 1, atlas, fee))
       .to.be.eventually.rejected;
-    await expect(uploads.methods.registerBundle(bundleId, 1).send({from: other, value: fee}))
+    await expect(registerBundle(bundleId, 1, other, fee))
       .to.be.eventually.rejected;
   });
 
   it(`fails if already uploaded (with the same endTime)`, async () => {
-    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
-    const promise = uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
+    await registerBundle(bundleId, 1, hermes, fee);
+    const promise = registerBundle(bundleId, 1, hermes, fee);
     await expect(promise).to.be.eventually.rejected;
   });
 
   it(`fails if already uploaded (with different endTime)`, async () => {
-    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
-    const promise = uploads.methods.registerBundle(bundleId, 2).send({from: hermes, value: fee});
+    await registerBundle(bundleId, 1, hermes, fee);
+    const promise = registerBundle(bundleId, 2, hermes, fee);
     await expect(promise).to.be.eventually.rejected;
   });
 
   it('Starts system challanges', async () => {
-    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee});
+    await registerBundle(bundleId, 1, hermes, fee);
     const events = await challengesEventEmitter.getPastEvents('ChallengeCreated');
     expect(events.length).to.eq(1);
     expect(events[0].returnValues).to.deep.include({
@@ -125,9 +129,23 @@ describe('Upload Contract', () => {
 
   it('Pay fee to miner', async () => {
     const balanceBefore = new BN(await web3.eth.getBalance(COINBASE));
-    await uploads.methods.registerBundle(bundleId, 1).send({from: hermes, value: fee, gasPrice: '0'});
+    await registerBundle(bundleId, 1, hermes, fee);
     const balanceAfter = new BN(await web3.eth.getBalance(COINBASE));
     const actualFee = balanceAfter.sub(balanceBefore).sub(BLOCK_REWARD);
     expect(actualFee.eq(expectedMinersFee())).to.be.true;
+  });
+
+  it('Emits event signalizing payout of miner fee', async () => {
+    await expectEventEmission(
+      web3,
+      () => registerBundle(bundleId, 1, hermes, fee),
+      rewardsEventEmitter,
+      'ApolloBundleReward',
+      {
+        uploader: hermes,
+        bundleId,
+        value: expectedMinersFee().toString()
+      }
+    );
   });
 });

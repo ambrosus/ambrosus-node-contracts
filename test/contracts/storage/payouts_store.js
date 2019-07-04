@@ -33,6 +33,7 @@ describe('PayoutsStore Contract', () => {
   const revokeForPeriodsCall = (beneficiary, firstPeriod, lastPeriod, totalPayout, refundAddress, from = validUser) => payoutsStore.methods.revokeForPeriods(beneficiary, firstPeriod, lastPeriod, totalPayout, refundAddress).call({from});
   const available = (beneficiary, period, from = validUser) => payoutsStore.methods.available(beneficiary, period).call({from});
   const withdraw = (beneficiary, target, toPeriod, from = validUser) => payoutsStore.methods.withdraw(beneficiary, target, toPeriod).send({from});
+  const withdrawCall = (beneficiary, target, toPeriod, from = validUser) => payoutsStore.methods.withdraw(beneficiary, target, toPeriod).call({from});
 
   const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount);
 
@@ -184,6 +185,13 @@ describe('PayoutsStore Contract', () => {
       await expectBalanceChange(withdrawTarget, '0', async () => withdraw(beneficiary, withdrawTarget, 9));
       await expectBalanceChange(withdrawTarget, '20', async () => withdraw(beneficiary, withdrawTarget, 11));
       await expectBalanceChange(withdrawTarget, '30', async () => withdraw(beneficiary, withdrawTarget, 14));
+    });
+
+    it(`returns proper values`, async () => {
+      await grantForPeriods(beneficiary, 10, 14, 50);
+      expect(await withdrawCall(beneficiary, withdrawTarget, 9)).to.equal('0');
+      expect(await withdrawCall(beneficiary, withdrawTarget, 11)).to.equal('20');
+      expect(await withdrawCall(beneficiary, withdrawTarget, 14)).to.equal('50');
     });
 
     it(`influences return value of available`, async () => {

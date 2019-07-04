@@ -32,7 +32,7 @@ contract PayoutsStore is Base {
 
     constructor(Head _head) public Base(_head) { }
 
-    function withdraw(address beneficiaryId, address targetId, uint64 toPeriod) public onlyContextInternalCalls {
+    function withdraw(address beneficiaryId, address targetId, uint64 toPeriod) public onlyContextInternalCalls returns(uint) {
         uint payoutSum = 0;
         uint accumulator = 0;
         for (uint period = 0; period <= toPeriod; ++period) {
@@ -46,6 +46,7 @@ contract PayoutsStore is Base {
         nextWithdrawPeriod[beneficiaryId] = toPeriod.add(1).castTo64();
 
         targetId.transfer(payoutSum);
+        return payoutSum;
     }
 
     function available(address beneficiaryId, uint64 payoutPeriod) public view onlyContextInternalCalls returns(uint) {

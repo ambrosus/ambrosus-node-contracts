@@ -12,6 +12,7 @@ pragma solidity ^0.4.23;
 import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
 import "../Storage/PayoutsStore.sol";
+import "../Storage/RewardsEventEmitter.sol";
 import "../Configuration/Time.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../Lib/SafeMathExtensions.sol";
@@ -24,16 +25,19 @@ contract Payouts is Base {
 
     Time private time;
     PayoutsStore private payoutsStore;
+    RewardsEventEmitter private rewardsEventEmitter;
     Config private config;
 
-    constructor(Head _head, Time _time, PayoutsStore _payoutsStore, Config _config) public Base(_head) {
+    constructor(Head _head, Time _time, PayoutsStore _payoutsStore, RewardsEventEmitter _rewardsEventEmitter, Config _config) public Base(_head) {
         time = _time;
         payoutsStore = _payoutsStore;
+        rewardsEventEmitter = _rewardsEventEmitter;
         config = _config;
     }
 
     function withdraw(address target) public {
-        return payoutsStore.withdraw(msg.sender, target, time.currentPayoutPeriod().sub(1).castTo64());
+        uint payoutValue = payoutsStore.withdraw(msg.sender, target, time.currentPayoutPeriod().sub(1).castTo64());
+        rewardsEventEmitter.atlasPayoutWithdrawal(target, msg.sender, payoutValue);
     }
 
     function available(uint64 payoutPeriod) public view returns (uint) {
