@@ -39,10 +39,10 @@ describe('Payouts Event Emitter Wrapper', () => {
     });
   });
 
-  describe('apolloBundleFeePayout', () => {
+  describe('apolloBundleReward', () => {
     it('gets past events', async () => {
-      expect(await rewardsEventEmitterWrapper.apolloBundleFeePayout(fromBlock, toBlock)).to.equal(eventsStub);
-      expect(getPastEventsStub).to.be.calledWith('ApolloBundleFeePayout', {fromBlock, toBlock});
+      expect(await rewardsEventEmitterWrapper.apolloBundleReward(fromBlock, toBlock)).to.equal(eventsStub);
+      expect(getPastEventsStub).to.be.calledWith('ApolloBundleReward', {fromBlock, toBlock});
     });
   });
 });

@@ -140,7 +140,7 @@ describe('Upload Contract', () => {
       web3,
       () => registerBundle(bundleId, 1, hermes, fee),
       rewardsEventEmitter,
-      'ApolloBundleFeePayout',
+      'ApolloBundleReward',
       {
         uploader: hermes,
         bundleId,

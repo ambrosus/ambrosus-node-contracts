@@ -53,7 +53,7 @@ contract Uploads is Base {
         sheltering.storeBundle(bundleId, msg.sender, storagePeriods);
         (uint challengeFee, uint validatorsFee) = fees.calculateFeeSplit(msg.value);
         block.coinbase.transfer(validatorsFee);
-        rewardsEventEmitter.apolloBundleFeePayout(msg.sender, bundleId, validatorsFee);
+        rewardsEventEmitter.apolloBundleReward(msg.sender, bundleId, validatorsFee);
         challenges.startForSystem.value(challengeFee)(msg.sender, bundleId, SYSTEM_CHALLENGES_COUNT);
     }
 }

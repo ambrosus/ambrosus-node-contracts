@@ -17,13 +17,13 @@ contract RewardsEventEmitter is Base {
     constructor(Head _head) Base(_head) public {}
 
     event AtlasPayoutWithdrawal(address target, address beneficiary, uint256 value);
-    event ApolloBundleFeePayout(address uploader, bytes32 bundleId, uint256 value);
+    event ApolloBundleReward(address uploader, bytes32 bundleId, uint256 value);
 
     function atlasPayoutWithdrawal(address target, address beneficiary, uint256 value) public onlyContextInternalCalls {
         emit AtlasPayoutWithdrawal(target, beneficiary, value);
     }
 
-    function apolloBundleFeePayout(address uploader, bytes32 bundleId, uint256 value) public onlyContextInternalCalls {
-        emit ApolloBundleFeePayout(uploader, bundleId, value);
+    function apolloBundleReward(address uploader, bytes32 bundleId, uint256 value) public onlyContextInternalCalls {
+        emit ApolloBundleReward(uploader, bundleId, value);
     }
 }

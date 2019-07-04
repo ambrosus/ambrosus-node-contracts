@@ -19,8 +19,8 @@ export default class RewardsEventEmitterWrapper extends ManagedContractWrapper {
     return contract.getPastEvents('AtlasPayoutWithdrawal', {fromBlock, toBlock});
   }
 
-  async apolloBundleFeePayout(fromBlock, toBlock) {
+  async apolloBundleReward(fromBlock, toBlock) {
     const contract = await this.contract();
-    return contract.getPastEvents('ApolloBundleFeePayout', {fromBlock, toBlock});
+    return contract.getPastEvents('ApolloBundleReward', {fromBlock, toBlock});
   }
 }
