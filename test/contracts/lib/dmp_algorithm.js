@@ -68,7 +68,7 @@ describe('DMP algorithm library', () => {
       const atlasWeights = [1];
       const atlasCounts = [2];
 
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(2))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(0))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(135))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5000))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9999))).to.equal(0);
@@ -81,7 +81,7 @@ describe('DMP algorithm library', () => {
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(33))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5000))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5002))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5001))).to.equal(1);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9999))).to.equal(1);
     });
 
@@ -89,8 +89,8 @@ describe('DMP algorithm library', () => {
       const atlasWeights = [9, 1];
       const atlasCounts = [5, 5];
 
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(33))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(0))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(101))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5000))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8999))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9000))).to.equal(0);
@@ -102,8 +102,8 @@ describe('DMP algorithm library', () => {
       const atlasWeights = [3, 3];
       const atlasCounts = [1, 9];
 
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(33))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(0))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(101))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(1000))).to.equal(0);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(1001))).to.equal(1);
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5000))).to.equal(1);
