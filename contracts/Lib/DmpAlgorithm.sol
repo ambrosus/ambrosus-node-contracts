@@ -20,7 +20,7 @@ library DmpAlgorithm {
     using SafeMath for uint64;
     using SafeMathExtensions for uint;
 
-    uint constant public DMP_PRECISION = 100;
+    uint constant public DMP_PRECISION = 10000;
 
 
     function qualifyShelterer(bytes32 dmpBaseHash, uint dmpLength, uint currentRound) internal pure returns (uint32) {
@@ -29,7 +29,7 @@ library DmpAlgorithm {
 
     function selectingAtlasTier(bytes32 dmpBaseHash, uint[] atlasCount, uint[] ATLAS_NUMERATOR) internal pure returns (uint32) {
         require(atlasCount.length == ATLAS_NUMERATOR.length);
-        
+
         uint[] memory wcd = calculateWcd(atlasCount, ATLAS_NUMERATOR);
 
         uint32 tier = selectRandomlyFrom(dmpBaseHash, wcd);

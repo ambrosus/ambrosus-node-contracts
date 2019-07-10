@@ -25,14 +25,23 @@ describe('DMP algorithm library', () => {
   let web3;
   let snapshotId;
   const dmpBaseHash = utils.keccak256('some hash');
+  const resultsToInputs = {};
 
   const qualifyShelterer = async (dmpBaseHash, dmpLength, currentRound) => DmpAlgorithmAdapter.methods.qualifyShelterer(dmpBaseHash, dmpLength, currentRound).call();
   const selectingAtlasTier = async (dmpBaseHash, atlasCounts, atlasNum) => DmpAlgorithmAdapter.methods.selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNum).call();
 
   before(async () => {
     web3 = await createWeb3();
+    for (let ind = 0; ind < DMP_PRECISION * 5; ind++) {
+      const hash = utils.keccak256(ind.toString());
+      resultsToInputs[web3.utils
+        .toBN(hash)
+        .mod(new BN(DMP_PRECISION))
+        .toNumber()] = ind.toString();
+    }
     DmpAlgorithmAdapter = await deployContract(web3, DmpAlgorithmAdapterJson);
   });
+
 
   beforeEach(async () => {
     snapshotId = await makeSnapshot(web3);
@@ -42,17 +51,8 @@ describe('DMP algorithm library', () => {
     await restoreSnapshot(web3, snapshotId);
   });
 
+
   function hashGivingRandomOf(number) {
-    const resultsToInputs = {
-      8: '8',
-      32: '4',
-      50: '13',
-      56: '10',
-      60: '12',
-      89: '7',
-      97: '0',
-      99: 'f7f49ec3a86dbc6c5141'
-    };
     const hash = utils.keccak256(resultsToInputs[number]);
     expect(web3.utils.toBN(hash).mod(new BN(DMP_PRECISION))
       .toNumber()).to.eq(number);
@@ -68,12 +68,10 @@ describe('DMP algorithm library', () => {
       const atlasWeights = [1];
       const atlasCounts = [2];
 
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(0))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(135))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5000))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9999))).to.equal(0);
     });
 
     it('for two equal tiers will return either with same probability', async () => {
@@ -81,57 +79,72 @@ describe('DMP algorithm library', () => {
       const atlasCounts = [5, 5];
 
       expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(33))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5000))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5001))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9999))).to.equal(1);
     });
 
     it('for two tiers of same count one with bigger weight is more likely to be selected', async () => {
-      const atlasWeights = [10, 1];
+      const atlasWeights = [9, 1];
       const atlasCounts = [5, 5];
 
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(0))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(101))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5000))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8999))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9000))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9001))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9999))).to.equal(1);
     });
 
     it('for two tiers of same weight one with bigger count is more likely to be selected', async () => {
       const atlasWeights = [3, 3];
-      const atlasCounts = [1, 10];
+      const atlasCounts = [1, 9];
 
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(0))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(101))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(1000))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(1001))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(5000))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8999))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9000))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9999))).to.equal(1);
     });
 
     it('for three tiers probability is proportional to product of weight and count', async () => {
       const atlasWeights = [1, 2, 7];
       const atlasCounts = [14, 7, 2];
 
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(32))).to.equal(0);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(50))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(56))).to.equal(1);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(89))).to.equal(2);
-      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(99))).to.equal(2);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(0))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(1))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(3333))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(3334))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(6666))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(6667))).to.equal(2);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9999))).to.equal(2);
+    });
+
+    it('for three tiers when one tier is much more likely to be selected, rest still has some chance to get selected', async () => {
+      const atlasWeights = [1, 4, 12];
+      const atlasCounts = [2, 1, 66];
+      // 0,0012/0,005/0,992 => [0-24, 25-75, 75-9999]
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(0))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(25))).to.equal(0);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(26))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(75))).to.equal(1);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(76))).to.equal(2);
+      expect(await selectTier(atlasCounts, atlasWeights, hashGivingRandomOf(9999))).to.equal(2);
     });
 
     it('correct index is returned if last tier has no atlases', async () => {
       const atlasWeights = [1, 2, 7];
       const atlasCountsNoLast = [2, 4, 0];
 
-      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(8))).to.equal(0);
-      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(32))).to.equal(1);
-      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(50))).to.equal(1);
-      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(99))).to.equal(1);
+      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(1000))).to.equal(0);
+      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(3200))).to.equal(1);
+      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(5000))).to.equal(1);
+      expect(await selectTier(atlasCountsNoLast, atlasWeights, hashGivingRandomOf(9999))).to.equal(1);
     });
   });
 
