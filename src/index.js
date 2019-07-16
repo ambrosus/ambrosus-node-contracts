@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 
 import ChallengeWrapper from './wrappers/challenge_wrapper';
+import ShelteringTransfersWrapper from './wrappers/sheltering_transfers_wrapper';
 import PayoutsWrapper from './wrappers/payouts_wrapper';
 import ConfigWrapper from './wrappers/config_wrapper';
 import FeesWrapper from './wrappers/fees_wrapper';
@@ -23,6 +24,7 @@ import ShelteringWrapper from './wrappers/sheltering_wrapper';
 import UploadsWrapper from './wrappers/uploads_wrapper';
 import BlockchainStateWrapper from './wrappers/blockchain_state_wrapper';
 import ChallengesEventEmitterWrapper from './wrappers/challenges_event_emitter_wrapper';
+import TransfersEventEmitterWrapper from './wrappers/transfers_event_emitter_wrapper';
 import BundleStoreWrapper from './wrappers/bundle_store_wrapper';
 import RolesEventEmitterWrapper from './wrappers/roles_event_emitter_wrapper';
 import WhitelistActions from './actions/whitelist_actions';
@@ -47,6 +49,7 @@ module.exports = {
   PayoutsWrapper,
   TimeWrapper,
   ChallengeWrapper,
+  ShelteringTransfersWrapper,
   ConfigWrapper,
   FeesWrapper,
   HeadWrapper,
@@ -59,6 +62,7 @@ module.exports = {
   UploadsWrapper,
   BlockchainStateWrapper,
   ChallengesEventEmitterWrapper,
+  TransfersEventEmitterWrapper,
   WhitelistActions,
   OnboardActions,
   UploadActions,
