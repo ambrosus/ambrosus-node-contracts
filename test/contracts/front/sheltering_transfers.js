@@ -30,7 +30,6 @@ import {PAYOUT_PERIOD_UNIT} from '../../helpers/consts';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import BN from 'bn.js';
 import {expectEventEmission} from '../../helpers/web3EventObserver';
-import DmpAlgorithmAdapterJson from '../../../src/contracts/DmpAlgorithmAdapter.json';
 
 chai.use(chaiAsPromised);
 chai.use(chaiEmitEvents);
@@ -41,14 +40,12 @@ describe('ShelteringTransfers Contract', () => {
   let web3;
   let shelteringTransfers;
   let transfersEventEmitter;
-  let DmpAlgorithmAdapter;
   let sheltering;
   let rolesStore;
   let challenges;
   let atlasStakeStore;
   let payoutsStore;
   let roles;
-  let kycWhitelist;
   let time;
   let fees;
   let deployer;
@@ -80,7 +77,6 @@ describe('ShelteringTransfers Contract', () => {
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
   const setRole = async (targetId, role, sender = deployer) => rolesStore.methods.setRole(targetId, role).send({from: sender});
   const addShelterer = async (bundleId, sheltererId, totalReward, sender = deployer) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from: sender, value: totalReward});
-  const removeShelterer = async (bundleId, sheltererId, refundAddress, sender = deployer) => sheltering.methods.removeShelterer(bundleId, sheltererId, refundAddress).send({from: sender});
   const isSheltering = async (sheltererId, bundleId) => sheltering.methods.isSheltering(sheltererId, bundleId).call();
   const getShelteringExpirationDate = async (bundleId, sheltererId) => sheltering.methods.getShelteringExpirationDate(bundleId, sheltererId).call();
   const storeBundle = async (bundleId, uploader, storagePeriods, sender = deployer) => sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
@@ -89,15 +85,13 @@ describe('ShelteringTransfers Contract', () => {
   const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
   const setTimestamp = async (timestamp, sender = deployer) => time.methods.setCurrentTimestamp(timestamp).send({from: sender});
   const setNumberOfStakers = async (numberOfStakers, sender = deployer) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from: sender});
-  const removeLastStaker = async (nodeId, amount, sender = deployer) => atlasStakeStore.methods.removeLastStaker(nodeId, amount).send({from: sender});
-  const transferSheltering = async (bundleId, donorId, recipientId, sender = deployer) => sheltering.methods.transferSheltering(bundleId, donorId, recipientId).send({from: sender});
 
   const timestampToPayoutPeriod = (timestamp) => Math.floor(timestamp / PAYOUT_PERIOD_UNIT);
 
   before(async () => {
     web3 = await createWeb3();
     [deployer, hermes, atlas, notSheltering, notStaking] = await web3.eth.getAccounts();
-    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees, transfersEventEmitter, kycWhitelist, roles} = await deploy({
+    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees, transfersEventEmitter, roles} = await deploy({
       web3,
       sender: deployer,
       contracts: {
@@ -112,8 +106,6 @@ describe('ShelteringTransfers Contract', () => {
         apolloDepositStore: true,
         time: TimeMockJson,
         roles: true,
-        kycWhitelist: true,
-        kycWhitelistStore: true,
         config: true,
         payouts: true,
         payoutsStore: true,
@@ -123,13 +115,13 @@ describe('ShelteringTransfers Contract', () => {
         rolesEventEmitter: true
       }
     }));
-    DmpAlgorithmAdapter = await deployContract(web3, DmpAlgorithmAdapterJson);
     await setTimestamp(bundleUploadTimestamp);
     await setRole(hermes, HERMES);
     await setRole(atlas, ATLAS);
     await setRole(notSheltering, ATLAS);
     await depositStake(notSheltering, ATLAS1_STAKE);
     await depositStake(atlas, ATLAS3_STAKE);
+    await setNumberOfStakers(2);
     await storeBundle(bundleId, hermes, storagePeriods);
     await addShelterer(bundleId, atlas, totalReward);
     transferId = await getTransferId(atlas, bundleId);
@@ -207,7 +199,6 @@ describe('ShelteringTransfers Contract', () => {
       let currentTimestamp = transferTimestamp;
       await setTimestamp(transferTimestamp);
       await startTransfer(bundleId, atlas);
-      await setNumberOfStakers(2);
 
       while (true) {
         resolver = await getTransferDesignatedShelterer(transferId);
