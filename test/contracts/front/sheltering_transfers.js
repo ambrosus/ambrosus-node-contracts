@@ -12,17 +12,11 @@ import chaiAsPromised from 'chai-as-promised';
 import {
   HERMES,
   ATLAS,
-  ATLAS1_RELATIVE_STRENGTH,
   ATLAS1_STAKE,
-  ATLAS2_RELATIVE_STRENGTH,
-  ATLAS2_STAKE,
-  ATLAS3_RELATIVE_STRENGTH,
-  ATLAS3_STAKE,
-  FIRST_PHASE_DURATION,
-  ROUND_DURATION
+  ATLAS3_STAKE
 } from '../../../src/constants';
 import deploy from '../../helpers/deploy';
-import {createWeb3, deployContract, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.json';
 import ChallengesStoreMockJson from '../../../src/contracts/ChallengesStoreMock.json';
@@ -45,7 +39,6 @@ describe('ShelteringTransfers Contract', () => {
   let challenges;
   let atlasStakeStore;
   let payoutsStore;
-  let roles;
   let time;
   let fees;
   let deployer;
@@ -91,7 +84,7 @@ describe('ShelteringTransfers Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [deployer, hermes, atlas, notSheltering, notStaking] = await web3.eth.getAccounts();
-    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees, transfersEventEmitter, roles} = await deploy({
+    ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees, transfersEventEmitter} = await deploy({
       web3,
       sender: deployer,
       contracts: {
@@ -199,13 +192,11 @@ describe('ShelteringTransfers Contract', () => {
       let currentTimestamp = transferTimestamp;
       await setTimestamp(transferTimestamp);
       await startTransfer(bundleId, atlas);
+      resolver = atlas;
 
-      while (true) {
+      while (resolver === atlas) {
         resolver = await getTransferDesignatedShelterer(transferId);
-        if (resolver !== atlas) {
-          break;
-        }
-        currentTimestamp += 3*3600;
+        currentTimestamp += 3 * 3600;
         await setTimestamp(currentTimestamp);
       }
     });
