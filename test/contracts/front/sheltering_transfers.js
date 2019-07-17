@@ -13,7 +13,9 @@ import {
   HERMES,
   ATLAS,
   ATLAS1_STAKE,
-  ATLAS3_STAKE
+  ATLAS3_STAKE,
+  FIRST_PHASE_DURATION,
+  ROUND_DURATION
 } from '../../../src/constants';
 import deploy from '../../helpers/deploy';
 import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
@@ -189,15 +191,15 @@ describe('ShelteringTransfers Contract', () => {
 
   describe('Resolving a transfer', () => {
     beforeEach(async () => {
-      let currentTimestamp = transferTimestamp;
       await setTimestamp(transferTimestamp);
       await startTransfer(bundleId, atlas);
       resolver = atlas;
 
+      let currentTimestamp = transferTimestamp + FIRST_PHASE_DURATION - ROUND_DURATION;
       while (resolver === atlas) {
-        resolver = await getTransferDesignatedShelterer(transferId);
-        currentTimestamp += 3 * 3600;
+        currentTimestamp += ROUND_DURATION;
         await setTimestamp(currentTimestamp);
+        resolver = await getTransferDesignatedShelterer(transferId);
       }
     });
 
