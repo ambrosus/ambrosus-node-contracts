@@ -98,7 +98,7 @@ contract ShelteringTransfers is Base {
         (address donorId, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(transferId);
 
         // solium-disable-next-line operator-whitespace
-        return donorId != address(0x0) &&
+        return transferIsInProgress(transferId) &&
         !sheltering.isSheltering(bundleId, resolverId) &&
         resolverId == getTransferDesignatedShelterer(transferId);
     }
