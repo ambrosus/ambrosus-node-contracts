@@ -89,7 +89,7 @@ describe('ShelteringTransfers Wrapper', () => {
           start: startTransferStub
         }
       };
-      shelteringTransfersWrapper = new ShelteringTransfersWrapper({}, {}, defaultAddress, true);
+      shelteringTransfersWrapper = new ShelteringTransfersWrapper({}, {}, defaultAddress);
       sinon.stub(shelteringTransfersWrapper, 'contract').resolves(contractMock);
     });
 

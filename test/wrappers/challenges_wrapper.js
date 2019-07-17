@@ -91,7 +91,7 @@ describe('Challenge Wrapper', () => {
           start: startChallengeStub
         }
       };
-      challengeWrapper = new ChallengeWrapper({}, {}, defaultAddress, true);
+      challengeWrapper = new ChallengeWrapper({}, {}, defaultAddress);
       sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
     });
 
