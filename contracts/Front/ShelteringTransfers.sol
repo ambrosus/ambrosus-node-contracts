@@ -61,7 +61,6 @@ contract ShelteringTransfers is Base {
         require(canResolve(msg.sender, transferId));
 
         (address donorId, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(transferId);
-        requireResolutionPossible(transferId, bundleId);
 
         sheltering.transferSheltering(bundleId, donorId, msg.sender);
 
@@ -144,10 +143,5 @@ contract ShelteringTransfers is Base {
         require(sheltering.isSheltering(bundleId, donorId));
         require(!transferIsInProgress(getTransferId(donorId, bundleId)));
         require(!challenges.challengeIsInProgress(challenges.getChallengeId(donorId, bundleId)));
-    }
-
-    function requireResolutionPossible(bytes32 transferId, bytes32 bundleId) private view {
-        require(!sheltering.isSheltering(bundleId, msg.sender));
-        require(transferIsInProgress(transferId));
     }
 }
