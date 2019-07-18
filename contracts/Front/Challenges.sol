@@ -116,22 +116,22 @@ contract Challenges is DmpAtlasSelectionBase {
         refundAddress.transfer(feeToReturn + revokedReward + penalty);
     }
 
-    function getBundle(bytes32 requestId) public view returns (bytes32) {
-        (, bytes32 bundleId,,,,,) = challengesStore.getChallenge(requestId);
+    function getBundle(bytes32 shelteringInviteId) public view returns (bytes32) {
+        (, bytes32 bundleId,,,,,) = challengesStore.getChallenge(shelteringInviteId);
         return bundleId;
     }
 
-    function computeDmpBaseHash(bytes32 requestId) public view returns (bytes32) {
-        return keccak256(abi.encodePacked(requestId, getChallengeSequenceNumber(requestId)));
+    function computeDmpBaseHash(bytes32 shelteringInviteId) public view returns (bytes32) {
+        return keccak256(abi.encodePacked(shelteringInviteId, getChallengeSequenceNumber(shelteringInviteId)));
     }
 
-    function getCreationTime(bytes32 requestId) public view returns (uint64) {
-        (,,,, uint64 creationTime,,) = challengesStore.getChallenge(requestId);
+    function getCreationTime(bytes32 shelteringInviteId) public view returns (uint64) {
+        (,,,, uint64 creationTime,,) = challengesStore.getChallenge(shelteringInviteId);
         return creationTime;
     }
 
-    function isInProgress(bytes32 requestId) public view returns (bool) {
-        return getActiveChallengesCount(requestId) > 0;
+    function isInProgress(bytes32 shelteringInviteId) public view returns (bool) {
+        return getActiveChallengesCount(shelteringInviteId) > 0;
     }
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns (bool) {

@@ -71,22 +71,22 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
         return donorId;
     }
 
-    function getBundle(bytes32 requestId) public view returns (bytes32) {
-        (, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(requestId);
+    function getBundle(bytes32 shelteringInviteId) public view returns (bytes32) {
+        (, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(shelteringInviteId);
         return bundleId;
     }
 
-    function computeDmpBaseHash(bytes32 requestId) public view returns (bytes32) {
-        return requestId;
+    function computeDmpBaseHash(bytes32 shelteringInviteId) public view returns (bytes32) {
+        return shelteringInviteId;
     }
 
-    function getCreationTime(bytes32 requestId) public view returns (uint64) {
-        (,, uint64 creationTime) = shelteringTransfersStore.getTransfer(requestId);
+    function getCreationTime(bytes32 shelteringInviteId) public view returns (uint64) {
+        (,, uint64 creationTime) = shelteringTransfersStore.getTransfer(shelteringInviteId);
         return creationTime;
     }
 
-    function isInProgress(bytes32 requestId) public view returns (bool) {
-        (address donorId,, ) = shelteringTransfersStore.getTransfer(requestId);
+    function isInProgress(bytes32 shelteringInviteId) public view returns (bool) {
+        (address donorId,, ) = shelteringTransfersStore.getTransfer(shelteringInviteId);
         return donorId != address(0x0);
     }
 
