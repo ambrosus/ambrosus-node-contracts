@@ -21,10 +21,10 @@ import "../Middleware/Sheltering.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Storage/ChallengesStore.sol";
 import "../Storage/ChallengesEventEmitter.sol";
-import "../Front/DmpBasedDesignator.sol";
+import "../Front/DmpAtlasSelectionBase.sol";
 
 
-contract Challenges is DmpBasedDesignator {
+contract Challenges is DmpAtlasSelectionBase {
 
     using SafeMath for uint;
     using SafeMath for uint32;
@@ -37,7 +37,7 @@ contract Challenges is DmpBasedDesignator {
 
     constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
         Fees _fees, ChallengesStore _challengesStore, ChallengesEventEmitter _challengesEventEmitter)
-    public DmpBasedDesignator(_head, _time, _sheltering, _atlasStakeStore, _config)
+    public DmpAtlasSelectionBase(_head, _time, _sheltering, _atlasStakeStore, _config)
     {
         fees = _fees;
         challengesStore = _challengesStore;

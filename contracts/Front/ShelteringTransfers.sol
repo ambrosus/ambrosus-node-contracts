@@ -13,7 +13,7 @@ import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 import "../Lib/DmpAlgorithm.sol";
-import "../Front/DmpBasedDesignator.sol";
+import "../Front/DmpAtlasSelectionBase.sol";
 import "../Front/Challenges.sol";
 import "../Middleware/Sheltering.sol";
 import "../Storage/AtlasStakeStore.sol";
@@ -21,7 +21,7 @@ import "../Storage/ShelteringTransfersStore.sol";
 import "../Storage/TransfersEventEmitter.sol";
 
 
-contract ShelteringTransfers is DmpBasedDesignator {
+contract ShelteringTransfers is DmpAtlasSelectionBase {
 
     ShelteringTransfersStore private shelteringTransfersStore;
     Challenges private challenges;
@@ -30,7 +30,7 @@ contract ShelteringTransfers is DmpBasedDesignator {
     constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
         ShelteringTransfersStore _shelteringTransfersStore,
         Challenges _challenges, TransfersEventEmitter _transfersEventEmitter)
-    public DmpBasedDesignator(_head, _time, _sheltering, _atlasStakeStore, _config) {
+    public DmpAtlasSelectionBase(_head, _time, _sheltering, _atlasStakeStore, _config) {
         shelteringTransfersStore = _shelteringTransfersStore;
         challenges = _challenges;
         transfersEventEmitter = _transfersEventEmitter;

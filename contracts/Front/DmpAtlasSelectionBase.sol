@@ -20,7 +20,7 @@ import "../Middleware/Sheltering.sol";
 import "../Storage/AtlasStakeStore.sol";
 
 
-contract DmpBasedDesignator is Base {
+contract DmpAtlasSelectionBase is Base {
 
     using SafeMath for uint;
     using SafeMath for uint32;
