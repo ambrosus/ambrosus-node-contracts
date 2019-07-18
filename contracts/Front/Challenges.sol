@@ -116,6 +116,16 @@ contract Challenges is DmpAtlasSelectionBase {
         refundAddress.transfer(feeToReturn + revokedReward + penalty);
     }
 
+    function canResolve(address resolverId, bytes32 shelteringInviteId) public view returns (bool) {
+        bytes32 bundleId = getBundle(shelteringInviteId);
+
+        // solium-disable-next-line operator-whitespace
+        return isInProgress(shelteringInviteId) &&
+        !sheltering.isSheltering(bundleId, resolverId) &&
+        resolverId == getDesignatedShelterer(shelteringInviteId) &&
+        atlasStakeStore.getStake(resolverId) > 0;
+    }
+
     function getBundle(bytes32 shelteringInviteId) public view returns (bytes32) {
         (, bytes32 bundleId,,,,,) = challengesStore.getChallenge(shelteringInviteId);
         return bundleId;

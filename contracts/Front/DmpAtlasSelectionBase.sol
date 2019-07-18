@@ -43,20 +43,8 @@ contract DmpAtlasSelectionBase is Base {
 
     function() public payable {}
 
-    function getBundle(bytes32 shelteringInviteId) public view returns (bytes32);
     function computeDmpBaseHash(bytes32 shelteringInviteId) public view returns (bytes32);
     function getCreationTime(bytes32 shelteringInviteId) public view returns (uint64);
-    function isInProgress(bytes32 shelteringInviteId) public view returns (bool);
-
-    function canResolve(address resolverId, bytes32 shelteringInviteId) public view returns (bool) {
-        bytes32 bundleId = getBundle(shelteringInviteId);
-
-        // solium-disable-next-line operator-whitespace
-        return isInProgress(shelteringInviteId) &&
-        !sheltering.isSheltering(bundleId, resolverId) &&
-        resolverId == getDesignatedShelterer(shelteringInviteId) &&
-        atlasStakeStore.getStake(resolverId) > 0;
-    }
 
     function getDesignatedShelterer(bytes32 shelteringInviteId) public view returns (address) {
         uint challengeDuration = time.currentTimestamp().sub(getCreationTime(shelteringInviteId));

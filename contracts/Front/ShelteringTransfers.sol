@@ -62,6 +62,16 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
         shelteringTransfersStore.remove(transferId);
     }
 
+    function canResolve(address resolverId, bytes32 shelteringInviteId) public view returns (bool) {
+        bytes32 bundleId = getBundle(shelteringInviteId);
+
+        // solium-disable-next-line operator-whitespace
+        return isInProgress(shelteringInviteId) &&
+        !sheltering.isSheltering(bundleId, resolverId) &&
+        resolverId == getDesignatedShelterer(shelteringInviteId) &&
+        atlasStakeStore.getStake(resolverId) > 0;
+    }
+
     function getTransferId(address sheltererId, bytes32 bundleId) public view returns(bytes32) {
         return shelteringTransfersStore.getTransferId(sheltererId, bundleId);
     }
