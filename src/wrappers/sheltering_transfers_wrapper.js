@@ -7,16 +7,11 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {MIN_BLOCK_TIME} from '../constants';
 import ManagedContractWrapper from './managed_contract_wrapper';
 
 export default class ShelteringTransfersWrapper extends ManagedContractWrapper {
   get getContractName() {
     return 'shelteringTransfers';
-  }
-
-  async earliestMeaningfulBlock(transferDuration) {
-    return Math.max(0, await this.web3.eth.getBlockNumber() - Math.ceil(transferDuration / MIN_BLOCK_TIME));
   }
 
   async resolve(transferId) {

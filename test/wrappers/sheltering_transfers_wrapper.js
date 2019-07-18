@@ -18,31 +18,7 @@ chai.use(chaiAsPromised);
 
 describe('ShelteringTransfers Wrapper', () => {
   let shelteringTransfersWrapper;
-  let web3Mock;
   const defaultAddress = '0xdeadface';
-
-  describe('earliestMeaningfulBlock', () => {
-    const blockNumber = 1752205;
-    const transferDuration = 4 * 24 * 60 * 60;
-
-    beforeEach(async () => {
-      web3Mock = {
-        eth: {
-          getBlockNumber: sinon.stub().resolves(blockNumber)
-        }
-      };
-      shelteringTransfersWrapper = new ShelteringTransfersWrapper({}, web3Mock, defaultAddress);
-    });
-
-    it('computes earliest block', async () => {
-      expect(await shelteringTransfersWrapper.earliestMeaningfulBlock(transferDuration)).to.equal(1683085); // 1752205 - 4 * 24 * 60 * 60 / 5
-    });
-
-    it('returns 0 when block count is too small for any transfer to expire', async () => {
-      web3Mock.eth.getBlockNumber.resolves(10);
-      expect(await shelteringTransfersWrapper.earliestMeaningfulBlock(transferDuration)).to.equal(0);
-    });
-  });
 
   describe('resolve', () => {
     const transferId = '0x123';
