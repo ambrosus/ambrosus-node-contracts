@@ -43,25 +43,25 @@ contract DmpAtlasSelectionBase is Base {
 
     function() public payable {}
 
-    function getRequestedBundle(bytes32 requestId) public view returns (bytes32);
-    function computeRequestDmpBaseHash(bytes32 requestId) public view returns (bytes32);
-    function getRequestCreationTime(bytes32 requestId) public view returns (uint64);
-    function requestIsInProgress(bytes32 requestId) public view returns (bool);
+    function getBundle(bytes32 requestId) public view returns (bytes32);
+    function computeDmpBaseHash(bytes32 requestId) public view returns (bytes32);
+    function getCreationTime(bytes32 requestId) public view returns (uint64);
+    function isInProgress(bytes32 requestId) public view returns (bool);
 
     function canResolve(address resolverId, bytes32 requestId) public view returns (bool) {
-        bytes32 bundleId = getRequestedBundle(requestId);
+        bytes32 bundleId = getBundle(requestId);
 
         // solium-disable-next-line operator-whitespace
-        return requestIsInProgress(requestId) &&
+        return isInProgress(requestId) &&
         !sheltering.isSheltering(bundleId, resolverId) &&
-        resolverId == getRequestDesignatedShelterer(requestId) &&
+        resolverId == getDesignatedShelterer(requestId) &&
         atlasStakeStore.getStake(resolverId) > 0;
     }
 
-    function getRequestDesignatedShelterer(bytes32 requestId) public view returns (address) {
-        uint challengeDuration = time.currentTimestamp().sub(getRequestCreationTime(requestId));
+    function getDesignatedShelterer(bytes32 requestId) public view returns (address) {
+        uint challengeDuration = time.currentTimestamp().sub(getCreationTime(requestId));
         uint currentRound = challengeDuration.div(config.ROUND_DURATION());
-        bytes32 dmpBaseHash = computeRequestDmpBaseHash(requestId);
+        bytes32 dmpBaseHash = computeDmpBaseHash(requestId);
         uint32 dmpIndex;
 
         if (currentRound < config.FIRST_PHASE_DURATION().div(config.ROUND_DURATION())) {

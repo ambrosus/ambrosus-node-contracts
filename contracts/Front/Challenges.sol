@@ -92,7 +92,7 @@ contract Challenges is DmpAtlasSelectionBase {
     }
 
     function markAsExpired(bytes32 challengeId) public {
-        require(requestIsInProgress(challengeId));
+        require(isInProgress(challengeId));
         require(challengeIsTimedOut(challengeId));
 
         (address sheltererId, bytes32 bundleId, address challengerId, uint feePerChallenge,, uint8 activeCount,) = challengesStore.getChallenge(challengeId);
@@ -116,26 +116,26 @@ contract Challenges is DmpAtlasSelectionBase {
         refundAddress.transfer(feeToReturn + revokedReward + penalty);
     }
 
-    function getRequestedBundle(bytes32 requestId) public view returns (bytes32) {
+    function getBundle(bytes32 requestId) public view returns (bytes32) {
         (, bytes32 bundleId,,,,,) = challengesStore.getChallenge(requestId);
         return bundleId;
     }
 
-    function computeRequestDmpBaseHash(bytes32 requestId) public view returns (bytes32) {
+    function computeDmpBaseHash(bytes32 requestId) public view returns (bytes32) {
         return keccak256(abi.encodePacked(requestId, getChallengeSequenceNumber(requestId)));
     }
 
-    function getRequestCreationTime(bytes32 requestId) public view returns (uint64) {
+    function getCreationTime(bytes32 requestId) public view returns (uint64) {
         (,,,, uint64 creationTime,,) = challengesStore.getChallenge(requestId);
         return creationTime;
     }
 
-    function requestIsInProgress(bytes32 requestId) public view returns (bool) {
+    function isInProgress(bytes32 requestId) public view returns (bool) {
         return getActiveChallengesCount(requestId) > 0;
     }
 
     function challengeIsTimedOut(bytes32 challengeId) public view returns (bool) {
-        uint64 creationTime = getRequestCreationTime(challengeId);
+        uint64 creationTime = getCreationTime(challengeId);
         return time.currentTimestamp() > creationTime.add(config.CHALLENGE_DURATION());
     }
 
@@ -173,7 +173,7 @@ contract Challenges is DmpAtlasSelectionBase {
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
-        require(!requestIsInProgress(getChallengeId(sheltererId, bundleId)));
+        require(!isInProgress(getChallengeId(sheltererId, bundleId)));
         require(sheltering.isSheltering(bundleId, sheltererId));
 
         uint shelteringCap = sheltering.getShelteringCap();
@@ -183,7 +183,7 @@ contract Challenges is DmpAtlasSelectionBase {
     }
 
     function validateSystemChallenge(address uploaderId, bytes32 bundleId) private view {
-        require(!requestIsInProgress(getChallengeId(uploaderId, bundleId)));
+        require(!isInProgress(getChallengeId(uploaderId, bundleId)));
         require(sheltering.getBundleUploader(bundleId) == uploaderId);
     }
 

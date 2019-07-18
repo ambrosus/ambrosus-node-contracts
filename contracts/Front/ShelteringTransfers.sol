@@ -71,28 +71,28 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
         return donorId;
     }
 
-    function getRequestedBundle(bytes32 requestId) public view returns (bytes32) {
+    function getBundle(bytes32 requestId) public view returns (bytes32) {
         (, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(requestId);
         return bundleId;
     }
 
-    function computeRequestDmpBaseHash(bytes32 requestId) public view returns (bytes32) {
+    function computeDmpBaseHash(bytes32 requestId) public view returns (bytes32) {
         return requestId;
     }
 
-    function getRequestCreationTime(bytes32 requestId) public view returns (uint64) {
+    function getCreationTime(bytes32 requestId) public view returns (uint64) {
         (,, uint64 creationTime) = shelteringTransfersStore.getTransfer(requestId);
         return creationTime;
     }
 
-    function requestIsInProgress(bytes32 requestId) public view returns (bool) {
+    function isInProgress(bytes32 requestId) public view returns (bool) {
         (address donorId,, ) = shelteringTransfersStore.getTransfer(requestId);
         return donorId != address(0x0);
     }
 
     function requireTransferPossible(address donorId, bytes32 bundleId) private view {
         require(sheltering.isSheltering(bundleId, donorId));
-        require(!requestIsInProgress(getTransferId(donorId, bundleId)));
-        require(!challenges.requestIsInProgress(challenges.getChallengeId(donorId, bundleId)));
+        require(!isInProgress(getTransferId(donorId, bundleId)));
+        require(!challenges.isInProgress(challenges.getChallengeId(donorId, bundleId)));
     }
 }

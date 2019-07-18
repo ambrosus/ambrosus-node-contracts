@@ -60,13 +60,13 @@ describe('ShelteringTransfers Contract', () => {
   const startTransfer = async (bundleId, sender) => shelteringTransfers.methods.start(bundleId).send({from: sender});
   const resolveTransfer = async (transferId, sender) => shelteringTransfers.methods.resolve(transferId).send({from: sender, gasPrice: '0'});
   const cancelTransfer = async (transferId, sender) => shelteringTransfers.methods.cancel(transferId).send({from: sender});
-  const requestIsInProgress = async (transferId) => shelteringTransfers.methods.requestIsInProgress(transferId).call();
+  const isInProgress = async (transferId) => shelteringTransfers.methods.isInProgress(transferId).call();
   const getDonor = async (transferId) => shelteringTransfers.methods.getDonor(transferId).call();
-  const getRequestedBundle = async (transferId) => shelteringTransfers.methods.getRequestedBundle(transferId).call();
+  const getBundle = async (transferId) => shelteringTransfers.methods.getBundle(transferId).call();
   const getTransferId = async (donor, bundleId) => shelteringTransfers.methods.getTransferId(donor, bundleId).call();
   const canResolve = async (resolver, transferId) => shelteringTransfers.methods.canResolve(resolver, transferId).call();
-  const getRequestDesignatedShelterer = async (transferId) => shelteringTransfers.methods.getRequestDesignatedShelterer(transferId).call();
-  const getRequestCreationTime = async (transferId) => shelteringTransfers.methods.getRequestCreationTime(transferId).call();
+  const getDesignatedShelterer = async (transferId) => shelteringTransfers.methods.getDesignatedShelterer(transferId).call();
+  const getCreationTime = async (transferId) => shelteringTransfers.methods.getCreationTime(transferId).call();
 
   const startChallenge = async (sheltererId, bundleId, challengerId, fee) => challenges.methods.start(sheltererId, bundleId).send({from: challengerId, value: fee});
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
@@ -80,6 +80,7 @@ describe('ShelteringTransfers Contract', () => {
   const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
   const setTimestamp = async (timestamp, sender = deployer) => time.methods.setCurrentTimestamp(timestamp).send({from: sender});
   const setNumberOfStakers = async (numberOfStakers, sender = deployer) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from: sender});
+  const setStake = async (nodeId, stake, sender = deployer) => atlasStakeStore.methods.setStakeAmount(nodeId, stake).send({from: sender});
 
   const timestampToPayoutPeriod = (timestamp) => Math.floor(timestamp / PAYOUT_PERIOD_UNIT);
 
@@ -149,11 +150,11 @@ describe('ShelteringTransfers Contract', () => {
 
     it('Transfer is in progress after successfully started', async () => {
       await startTransfer(bundleId, atlas);
-      expect(await requestIsInProgress(transferId)).to.equal(true);
+      expect(await isInProgress(transferId)).to.equal(true);
     });
 
     it('Transfer is not in progress until started', async () => {
-      expect(await requestIsInProgress(transferId)).to.equal(false);
+      expect(await isInProgress(transferId)).to.equal(false);
     });
 
     it('Emits proper event', async () => {
@@ -180,11 +181,11 @@ describe('ShelteringTransfers Contract', () => {
       });
 
       it('Bundle id', async () => {
-        expect(await getRequestedBundle(transferId)).to.equal(bundleId);
+        expect(await getBundle(transferId)).to.equal(bundleId);
       });
 
       it('Creation time', async () => {
-        expect(await getRequestCreationTime(transferId)).to.equal(transferTimestamp.toString());
+        expect(await getCreationTime(transferId)).to.equal(transferTimestamp.toString());
       });
     });
   });
@@ -199,12 +200,17 @@ describe('ShelteringTransfers Contract', () => {
       while (resolver === atlas) {
         currentTimestamp += ROUND_DURATION;
         await setTimestamp(currentTimestamp);
-        resolver = await getRequestDesignatedShelterer(transferId);
+        resolver = await getDesignatedShelterer(transferId);
       }
     });
 
     it('canResolve returns true if transfer can be resolved', async () => {
-      expect(await canResolve(resolver, transferId)).to.equal(true);
+      expect(await canResolve(resolver, transferId)).to.be.true;
+    });
+
+    it('canResolve returns false if resolver has no stake', async () => {
+      await setStake(resolver, '0');
+      expect(await canResolve(resolver, transferId)).to.be.false;
     });
 
     it('Fails if the transfer does not exist', async () => {
@@ -249,8 +255,8 @@ describe('ShelteringTransfers Contract', () => {
     it('Removes the transfer from store', async () => {
       await resolveTransfer(transferId, resolver);
       expect(await getDonor(transferId)).to.equal('0x0000000000000000000000000000000000000000');
-      expect(utils.hexToUtf8(await getRequestedBundle(transferId))).to.equal('');
-      expect(await requestIsInProgress(transferId)).to.be.false;
+      expect(utils.hexToUtf8(await getBundle(transferId))).to.equal('');
+      expect(await isInProgress(transferId)).to.be.false;
     });
 
     it('Transfers granted reward from donor to recipient', async () => {
@@ -277,9 +283,9 @@ describe('ShelteringTransfers Contract', () => {
 
     it('Removes transfer', async () => {
       await cancelTransfer(transferId, atlas);
-      expect(await requestIsInProgress(transferId)).to.be.false;
+      expect(await isInProgress(transferId)).to.be.false;
       expect(await getDonor(transferId)).to.equal('0x0000000000000000000000000000000000000000');
-      expect(utils.hexToUtf8(await getRequestedBundle(transferId))).to.equal('');
+      expect(utils.hexToUtf8(await getBundle(transferId))).to.equal('');
     });
 
     it('Emits proper event', async () => {

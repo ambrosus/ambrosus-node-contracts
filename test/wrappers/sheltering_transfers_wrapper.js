@@ -165,19 +165,19 @@ describe('ShelteringTransfers Wrapper', () => {
   describe('isInProgress', () => {
     const transferId = '0x123';
     const result = 'res';
-    let requestIsInProgressStub;
-    let requestIsInProgressCallStub;
+    let isInProgressStub;
+    let isInProgressCallStub;
 
     beforeEach(async () => {
-      requestIsInProgressStub = sinon.stub();
-      requestIsInProgressCallStub = sinon.stub().resolves(result);
+      isInProgressStub = sinon.stub();
+      isInProgressCallStub = sinon.stub().resolves(result);
       const contractMock = {
         methods: {
-          requestIsInProgress: requestIsInProgressStub
+          isInProgress: isInProgressStub
         }
       };
-      requestIsInProgressStub.returns({
-        call: requestIsInProgressCallStub
+      isInProgressStub.returns({
+        call: isInProgressCallStub
       });
       shelteringTransfersWrapper = new ShelteringTransfersWrapper();
       sinon.stub(shelteringTransfersWrapper, 'contract').resolves(contractMock);
@@ -185,27 +185,27 @@ describe('ShelteringTransfers Wrapper', () => {
 
     it('calls contract method with correct arguments', async () => {
       expect(await shelteringTransfersWrapper.isInProgress(transferId)).to.equal(result);
-      expect(requestIsInProgressStub).to.be.calledWith(transferId);
-      expect(requestIsInProgressCallStub).to.be.called;
+      expect(isInProgressStub).to.be.calledWith(transferId);
+      expect(isInProgressCallStub).to.be.called;
     });
   });
 
   describe('getTransferCreationTime', () => {
     const transferId = '0x123';
     const result = '16012361';
-    let getRequestCreationTimeStub;
-    let getRequestCreationTimeCallStub;
+    let getCreationTimeStub;
+    let getCreationTimeCallStub;
 
     beforeEach(async () => {
-      getRequestCreationTimeStub = sinon.stub();
-      getRequestCreationTimeCallStub = sinon.stub().resolves(result);
+      getCreationTimeStub = sinon.stub();
+      getCreationTimeCallStub = sinon.stub().resolves(result);
       const contractMock = {
         methods: {
-          getRequestCreationTime: getRequestCreationTimeStub
+          getCreationTime: getCreationTimeStub
         }
       };
-      getRequestCreationTimeStub.returns({
-        call: getRequestCreationTimeCallStub
+      getCreationTimeStub.returns({
+        call: getCreationTimeCallStub
       });
       shelteringTransfersWrapper = new ShelteringTransfersWrapper();
       sinon.stub(shelteringTransfersWrapper, 'contract').resolves(contractMock);
@@ -213,8 +213,8 @@ describe('ShelteringTransfers Wrapper', () => {
 
     it('calls contract method with correct arguments', async () => {
       expect(await shelteringTransfersWrapper.getTransferCreationTime(transferId)).to.equal(result);
-      expect(getRequestCreationTimeStub).to.be.calledWith(transferId);
-      expect(getRequestCreationTimeCallStub).to.be.called;
+      expect(getCreationTimeStub).to.be.calledWith(transferId);
+      expect(getCreationTimeCallStub).to.be.called;
     });
   });
 });
