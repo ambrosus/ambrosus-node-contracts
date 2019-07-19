@@ -24,9 +24,10 @@ describe('ShelteringTransfersStore Contract', () => {
   let shelteringTransfersStore;
   let exampleTransferId;
   const exampleBundleId = utils.keccak256('bundleId');
+  const creationTime = '1500000000';
 
   const store = (donorId, bundleId, sender = contextAddress) =>
-    shelteringTransfersStore.methods.store(donorId, bundleId).send({from: sender});
+    shelteringTransfersStore.methods.store(donorId, bundleId, creationTime).send({from: sender});
   const remove = (transferId, sender = contextAddress) =>
     shelteringTransfersStore.methods.remove(transferId).send({from: sender});
   const getTransfer = (transferId) =>
@@ -61,10 +62,11 @@ describe('ShelteringTransfersStore Contract', () => {
       const storedTransfer = await getTransfer(exampleTransferId);
       expect(storedTransfer.donorId).to.equal(donorAddress);
       expect(storedTransfer.bundleId).to.equal(exampleBundleId);
+      expect(storedTransfer.creationTime).to.equal(creationTime);
     });
 
     it('should return transfer id', async () => {
-      expect(await shelteringTransfersStore.methods.store(donorAddress, exampleBundleId).call()).to.equal(exampleTransferId);
+      expect(await shelteringTransfersStore.methods.store(donorAddress, exampleBundleId, creationTime).call()).to.equal(exampleTransferId);
     });
 
     it('should be context internal', async () => {

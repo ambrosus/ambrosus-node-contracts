@@ -51,16 +51,16 @@ export default class ChallengeWrapper extends ManagedContractWrapper {
 
   async getChallengeCreationTime(challengeId) {
     const contract = await this.contract();
-    return contract.methods.getChallengeCreationTime(challengeId).call();
+    return contract.methods.getCreationTime(challengeId).call();
   }
 
   async isInProgress(challengeId) {
     const contract = await this.contract();
-    return contract.methods.challengeIsInProgress(challengeId).call();
+    return contract.methods.isInProgress(challengeId).call();
   }
 
   async getChallengeDesignatedShelterer(challengeId) {
     const contract = await this.contract();
-    return contract.methods.getChallengeDesignatedShelterer(challengeId).call();
+    return contract.methods.getDesignatedShelterer(challengeId).call();
   }
 }

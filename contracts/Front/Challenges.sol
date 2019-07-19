@@ -21,31 +21,24 @@ import "../Middleware/Sheltering.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Storage/ChallengesStore.sol";
 import "../Storage/ChallengesEventEmitter.sol";
+import "../Front/DmpAtlasSelectionBase.sol";
 
 
-contract Challenges is Base {
+contract Challenges is DmpAtlasSelectionBase {
 
     using SafeMath for uint;
     using SafeMath for uint32;
     using SafeMath for uint64;
     using SafeMathExtensions for uint;
 
-    Time private time;
-    Sheltering private sheltering;
-    AtlasStakeStore private atlasStakeStore;
-    Config private config;
     Fees private fees;
     ChallengesStore private challengesStore;
     ChallengesEventEmitter private challengesEventEmitter;
 
     constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
         Fees _fees, ChallengesStore _challengesStore, ChallengesEventEmitter _challengesEventEmitter)
-    public Base(_head)
+    public DmpAtlasSelectionBase(_head, _time, _sheltering, _atlasStakeStore, _config)
     {
-        time = _time;
-        sheltering = _sheltering;
-        atlasStakeStore = _atlasStakeStore;
-        config = _config;
         fees = _fees;
         challengesStore = _challengesStore;
         challengesEventEmitter = _challengesEventEmitter;
@@ -99,7 +92,7 @@ contract Challenges is Base {
     }
 
     function markAsExpired(bytes32 challengeId) public {
-        require(challengeIsInProgress(challengeId));
+        require(isInProgress(challengeId));
         require(challengeIsTimedOut(challengeId));
 
         (address sheltererId, bytes32 bundleId, address challengerId, uint feePerChallenge,, uint8 activeCount,) = challengesStore.getChallenge(challengeId);
@@ -123,18 +116,36 @@ contract Challenges is Base {
         refundAddress.transfer(feeToReturn + revokedReward + penalty);
     }
 
-    function canResolve(address resolverId, bytes32 challengeId) public view returns (bool) {
-        bytes32 bundleId = getChallengedBundle(challengeId);
+    function canResolve(address resolverId, bytes32 shelteringInviteId) public view returns (bool) {
+        bytes32 bundleId = getBundle(shelteringInviteId);
 
         // solium-disable-next-line operator-whitespace
-        return challengeIsInProgress(challengeId) &&
+        return isInProgress(shelteringInviteId) &&
         !sheltering.isSheltering(bundleId, resolverId) &&
-        resolverId == getChallengeDesignatedShelterer(challengeId) &&
+        resolverId == getDesignatedShelterer(shelteringInviteId) &&
         atlasStakeStore.getStake(resolverId) > 0;
     }
 
+    function getBundle(bytes32 shelteringInviteId) public view returns (bytes32) {
+        (, bytes32 bundleId,,,,,) = challengesStore.getChallenge(shelteringInviteId);
+        return bundleId;
+    }
+
+    function computeDmpBaseHash(bytes32 shelteringInviteId) public view returns (bytes32) {
+        return keccak256(abi.encodePacked(shelteringInviteId, getChallengeSequenceNumber(shelteringInviteId)));
+    }
+
+    function getCreationTime(bytes32 shelteringInviteId) public view returns (uint64) {
+        (,,,, uint64 creationTime,,) = challengesStore.getChallenge(shelteringInviteId);
+        return creationTime;
+    }
+
+    function isInProgress(bytes32 shelteringInviteId) public view returns (bool) {
+        return getActiveChallengesCount(shelteringInviteId) > 0;
+    }
+
     function challengeIsTimedOut(bytes32 challengeId) public view returns (bool) {
-        uint64 creationTime = getChallengeCreationTime(challengeId);
+        uint64 creationTime = getCreationTime(challengeId);
         return time.currentTimestamp() > creationTime.add(config.CHALLENGE_DURATION());
     }
 
@@ -143,40 +154,14 @@ contract Challenges is Base {
         return sheltererId;
     }
 
-    function getChallengedBundle(bytes32 challengeId) public view returns (bytes32) {
-        (, bytes32 bundleId,,,,,) = challengesStore.getChallenge(challengeId);
-        return bundleId;
-    }
-
     function getChallenger(bytes32 challengeId) public view returns (address) {
         (,, address challengerId,,,,) = challengesStore.getChallenge(challengeId);
         return challengerId;
     }
 
-    function getChallengeDesignatedShelterer(bytes32 challengeId) public view returns (address) {
-        uint challengeDuration = time.currentTimestamp().sub(getChallengeCreationTime(challengeId));
-        uint currentRound = challengeDuration.div(config.ROUND_DURATION());
-        bytes32 dmpBaseHash = keccak256(abi.encodePacked(challengeId, getChallengeSequenceNumber(challengeId)));
-        uint32 dmpIndex;
-
-        if (currentRound < config.FIRST_PHASE_DURATION().div(config.ROUND_DURATION())) {
-            (uint atlasCount, uint32 dmpTier) = getDesignatedSheltererTier(dmpBaseHash);
-            dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasCount, currentRound);
-            return atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(dmpTier), dmpIndex);
-        } else {
-            dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasStakeStore.getNumberOfStakers(), currentRound);
-            return atlasStakeStore.getStakerAtIndex(dmpIndex);
-        }
-    }
-
     function getChallengeFee(bytes32 challengeId) public view returns (uint) {
         (,,, uint feePerChallenge,,,) = challengesStore.getChallenge(challengeId);
         return feePerChallenge;
-    }
-
-    function getChallengeCreationTime(bytes32 challengeId) public view returns (uint64) {
-        (,,,, uint64 creationTime,,) = challengesStore.getChallenge(challengeId);
-        return creationTime;
     }
 
     function getActiveChallengesCount(bytes32 challengeId) public view returns (uint8) {
@@ -189,10 +174,6 @@ contract Challenges is Base {
         return sequenceNumber;
     }
 
-    function challengeIsInProgress(bytes32 challengeId) public view returns (bool) {
-        return getActiveChallengesCount(challengeId) > 0;
-    }
-
     function isSystemChallenge(bytes32 challengeId) public view returns (bool) {
         return getChallenger(challengeId) == 0x0;
     }
@@ -201,24 +182,8 @@ contract Challenges is Base {
         return challengesStore.getChallengeId(sheltererId, bundleId);
     }
 
-    function getDesignatedSheltererTier(bytes32 dmpBaseHash) private view returns(uint, uint32) {
-        uint32 length = config.ATLAS_TIERS_COUNT();
-        uint[] memory atlasTiersCounts = new uint[](length);
-        uint[] memory atlasRelativeStrengths = new uint[](length);
-
-        for (uint i = 0; i < length; i++) {
-            atlasTiersCounts[i] = atlasStakeStore.getNumberOfStakersWithStake(config.ATLAS_STAKE(i));
-            atlasRelativeStrengths[i] = config.ATLAS_RELATIVE_STRENGTHS(i);
-        }
-
-        uint32 dmpTier = DmpAlgorithm.selectingAtlasTier(dmpBaseHash, atlasTiersCounts, atlasRelativeStrengths);
-        uint atlasCount = atlasTiersCounts[dmpTier];
-
-        return (atlasCount, dmpTier);
-    }
-
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
-        require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId)));
+        require(!isInProgress(getChallengeId(sheltererId, bundleId)));
         require(sheltering.isSheltering(bundleId, sheltererId));
 
         uint shelteringCap = sheltering.getShelteringCap();
@@ -228,7 +193,7 @@ contract Challenges is Base {
     }
 
     function validateSystemChallenge(address uploaderId, bytes32 bundleId) private view {
-        require(!challengeIsInProgress(getChallengeId(uploaderId, bundleId)));
+        require(!isInProgress(getChallengeId(uploaderId, bundleId)));
         require(sheltering.getBundleUploader(bundleId) == uploaderId);
     }
 

@@ -91,7 +91,7 @@ describe('Challenge Wrapper', () => {
           start: startChallengeStub
         }
       };
-      challengeWrapper = new ChallengeWrapper({}, {}, defaultAddress, true);
+      challengeWrapper = new ChallengeWrapper({}, {}, defaultAddress);
       sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
     });
 
@@ -220,19 +220,19 @@ describe('Challenge Wrapper', () => {
   describe('isInProgress', () => {
     const challengeId = '0x123';
     const result = 'res';
-    let challengeIsInProgressStub;
-    let challengeIsInProgressCallStub;
+    let isInProgressStub;
+    let isInProgressCallStub;
 
     beforeEach(async () => {
-      challengeIsInProgressStub = sinon.stub();
-      challengeIsInProgressCallStub = sinon.stub().resolves(result);
+      isInProgressStub = sinon.stub();
+      isInProgressCallStub = sinon.stub().resolves(result);
       const contractMock = {
         methods: {
-          challengeIsInProgress: challengeIsInProgressStub
+          isInProgress: isInProgressStub
         }
       };
-      challengeIsInProgressStub.returns({
-        call: challengeIsInProgressCallStub
+      isInProgressStub.returns({
+        call: isInProgressCallStub
       });
       challengeWrapper = new ChallengeWrapper();
       sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
@@ -240,27 +240,27 @@ describe('Challenge Wrapper', () => {
 
     it('calls contract method with correct arguments', async () => {
       expect(await challengeWrapper.isInProgress(challengeId)).to.equal(result);
-      expect(challengeIsInProgressStub).to.be.calledWith(challengeId);
-      expect(challengeIsInProgressCallStub).to.be.called;
+      expect(isInProgressStub).to.be.calledWith(challengeId);
+      expect(isInProgressCallStub).to.be.called;
     });
   });
 
   describe('getChallengeCreationTime', () => {
     const challengeId = '0x123';
     const result = '16012361';
-    let getChallengeCreationTimeStub;
-    let getChallengeCreationTimeCallStub;
+    let getCreationTimeStub;
+    let getCreationTimeCallStub;
 
     beforeEach(async () => {
-      getChallengeCreationTimeStub = sinon.stub();
-      getChallengeCreationTimeCallStub = sinon.stub().resolves(result);
+      getCreationTimeStub = sinon.stub();
+      getCreationTimeCallStub = sinon.stub().resolves(result);
       const contractMock = {
         methods: {
-          getChallengeCreationTime: getChallengeCreationTimeStub
+          getCreationTime: getCreationTimeStub
         }
       };
-      getChallengeCreationTimeStub.returns({
-        call: getChallengeCreationTimeCallStub
+      getCreationTimeStub.returns({
+        call: getCreationTimeCallStub
       });
       challengeWrapper = new ChallengeWrapper();
       sinon.stub(challengeWrapper, 'contract').resolves(contractMock);
@@ -268,8 +268,8 @@ describe('Challenge Wrapper', () => {
 
     it('calls contract method with correct arguments', async () => {
       expect(await challengeWrapper.getChallengeCreationTime(challengeId)).to.equal(result);
-      expect(getChallengeCreationTimeStub).to.be.calledWith(challengeId);
-      expect(getChallengeCreationTimeCallStub).to.be.called;
+      expect(getCreationTimeStub).to.be.calledWith(challengeId);
+      expect(getCreationTimeCallStub).to.be.called;
     });
   });
 });

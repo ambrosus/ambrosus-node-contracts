@@ -78,15 +78,15 @@ describe('Challenges Contract', () => {
 
   const getChallengeId = async (sheltererId, bundleId) => challenges.methods.getChallengeId(sheltererId, bundleId).call();
   const getChallengeSequenceNumber = async (challengeId) => challenges.methods.getChallengeSequenceNumber(challengeId).call();
-  const getChallengeCreationTime = async (challengeId) => challenges.methods.getChallengeCreationTime(challengeId).call();
+  const getCreationTime = async (challengeId) => challenges.methods.getCreationTime(challengeId).call();
   const getChallenger = async (challengeId) => challenges.methods.getChallenger(challengeId).call();
   const getChallengedShelterer = async (challengeId) => challenges.methods.getChallengedShelterer(challengeId).call();
-  const getChallengedBundle = async (challengeId) => challenges.methods.getChallengedBundle(challengeId).call();
+  const getBundle = async (challengeId) => challenges.methods.getBundle(challengeId).call();
   const getChallengeFee = async (challengeId) => challenges.methods.getChallengeFee(challengeId).call();
   const getActiveChallengesCount = async (challengeId) => challenges.methods.getActiveChallengesCount(challengeId).call();
-  const challengeIsInProgress = async (challengeId) => challenges.methods.challengeIsInProgress(challengeId).call();
+  const isInProgress = async (challengeId) => challenges.methods.isInProgress(challengeId).call();
   const canResolve = async (resolver, challengeId) => challenges.methods.canResolve(resolver, challengeId).call();
-  const getChallengeDesignatedShelterer = async (challengeId) => challenges.methods.getChallengeDesignatedShelterer(challengeId).call();
+  const getDesignatedShelterer = async (challengeId) => challenges.methods.getDesignatedShelterer(challengeId).call();
 
   const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(timestamp).send({from: context});
   const currentTimestamp = async () => time.methods.currentTimestamp().call();
@@ -208,7 +208,7 @@ describe('Challenges Contract', () => {
 
     it('Stores challengerId as 0x0', async () => {
       await startChallengeForSystem(uploader, bundleId, SYSTEM_CHALLENGES_COUNT, context, systemChallengeFee);
-      expect(await getChallengeCreationTime(systemChallengeId)).to.equal(now.toString());
+      expect(await getCreationTime(systemChallengeId)).to.equal(now.toString());
       expect(await getChallenger(systemChallengeId)).to.equal('0x0000000000000000000000000000000000000000');
     });
 
@@ -253,7 +253,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Bundle id', async () => {
-        expect(await getChallengedBundle(challengeId)).to.equal(bundleId);
+        expect(await getBundle(challengeId)).to.equal(bundleId);
       });
 
       it('Challenger id', async () => {
@@ -265,7 +265,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Challenge setup time', async () => {
-        expect(await getChallengeCreationTime(challengeId)).to.equal(challengeBlockTimestamp.toString());
+        expect(await getCreationTime(challengeId)).to.equal(challengeBlockTimestamp.toString());
       });
 
       it('Challenge active count', async () => {
@@ -273,7 +273,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Challenge in progress', async () => {
-        expect(await challengeIsInProgress(challengeId)).to.equal(true);
+        expect(await isInProgress(challengeId)).to.equal(true);
       });
     });
   });
@@ -298,7 +298,7 @@ describe('Challenges Contract', () => {
     });
 
     it('Challenge is not in progress until started', async () => {
-      expect(await challengeIsInProgress(challengeId)).to.equal(false);
+      expect(await isInProgress(challengeId)).to.equal(false);
     });
 
     it(`Should increase nextChallengeSequenceNumber by 1`, async () => {
@@ -373,7 +373,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Bundle id', async () => {
-        expect(await getChallengedBundle(challengeId)).to.equal(bundleId);
+        expect(await getBundle(challengeId)).to.equal(bundleId);
       });
 
       it('Challenger id', async () => {
@@ -385,7 +385,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Challenge setup time', async () => {
-        expect(await getChallengeCreationTime(challengeId)).to.equal(challengeBlockTimestamp.toString());
+        expect(await getCreationTime(challengeId)).to.equal(challengeBlockTimestamp.toString());
       });
 
       it('Challenge active count', async () => {
@@ -393,7 +393,7 @@ describe('Challenges Contract', () => {
       });
 
       it('Challenge in progress', async () => {
-        expect(await challengeIsInProgress(challengeId)).to.equal(true);
+        expect(await isInProgress(challengeId)).to.equal(true);
       });
     });
   });
@@ -414,7 +414,7 @@ describe('Challenges Contract', () => {
       await removeLastStaker(shelterer, ATLAS1_STAKE);
       await setNumberOfStakers(5);
 
-      resolver = await getChallengeDesignatedShelterer(challengeId);
+      resolver = await getDesignatedShelterer(challengeId);
     });
 
     it('Emits proper event', async () => {
@@ -446,7 +446,7 @@ describe('Challenges Contract', () => {
 
     it('Removes challenge if active count was 1', async () => {
       await resolveChallenge(challengeId, resolver);
-      expect(await challengeIsInProgress(challengeId)).to.equal(false);
+      expect(await isInProgress(challengeId)).to.equal(false);
     });
 
     it('Does not increase challenges sequence number if not a system challenge', async () => {
@@ -513,7 +513,7 @@ describe('Challenges Contract', () => {
       const systemFee = userChallengeFee.mul(new BN('3'));
       await startChallengeForSystem(uploader, bundleId, 3, context, systemFee);
       challengeId = await lastChallengeId();
-      resolver = await getChallengeDesignatedShelterer(challengeId);
+      resolver = await getDesignatedShelterer(challengeId);
       await resolveChallenge(challengeId, resolver);
       expect(await getActiveChallengesCount(challengeId)).to.equal('2');
     });
@@ -524,11 +524,11 @@ describe('Challenges Contract', () => {
       challengeId = await lastChallengeId();
 
       expect(await getChallengeSequenceNumber(challengeId)).to.equal('2');
-      resolver = await getChallengeDesignatedShelterer(challengeId);
+      resolver = await getDesignatedShelterer(challengeId);
       await resolveChallenge(challengeId, resolver);
       expect(await getChallengeSequenceNumber(challengeId)).to.equal('3');
 
-      const anotherResolver = await getChallengeDesignatedShelterer(challengeId);
+      const anotherResolver = await getDesignatedShelterer(challengeId);
 
       if (anotherResolver !== resolver) {
         await resolveChallenge(challengeId, anotherResolver);
@@ -541,9 +541,9 @@ describe('Challenges Contract', () => {
     it('Removes system challenge if active count was 1', async () => {
       await startChallengeForSystem(uploader, bundleId, 1, context, userChallengeFee);
       challengeId = await lastChallengeId();
-      resolver = await getChallengeDesignatedShelterer(challengeId);
+      resolver = await getDesignatedShelterer(challengeId);
       await resolveChallenge(challengeId, resolver);
-      expect(await challengeIsInProgress(challengeId)).to.equal(false);
+      expect(await isInProgress(challengeId)).to.equal(false);
     });
   });
 
@@ -611,9 +611,9 @@ describe('Challenges Contract', () => {
 
     it(`Deletes challenge with active count equal 1`, async () => {
       await setTimestamp(now + challengeTimeout + 1);
-      expect(await challengeIsInProgress(challengeId)).to.equal(true);
+      expect(await isInProgress(challengeId)).to.equal(true);
       await markChallengeAsExpired(challengeId, challenger);
-      expect(await challengeIsInProgress(challengeId)).to.equal(false);
+      expect(await isInProgress(challengeId)).to.equal(false);
     });
 
     it('Challenge can be marked as expired even after the shelterer has lost all of the stake', async () => {
@@ -648,7 +648,7 @@ describe('Challenges Contract', () => {
     it(`Returns fee to creator (part of the fee if partially resolved)`, async () => {
       await addToKycWhitelist(atlases[0], ATLAS, ATLAS1_STAKE);
       await onboardAsAtlas(url, atlases[0], ATLAS1_STAKE);
-      resolver = await getChallengeDesignatedShelterer(systemChallengeId);
+      resolver = await getDesignatedShelterer(systemChallengeId);
       await resolveChallenge(systemChallengeId, resolver);
 
       await setTimestamp(now + challengeTimeout + 1);
@@ -660,7 +660,7 @@ describe('Challenges Contract', () => {
       await setTimestamp(now + challengeTimeout + 1);
       expect(await getActiveChallengesCount(systemChallengeId)).to.equal('5');
       await markChallengeAsExpired(systemChallengeId, totalStranger);
-      expect(await challengeIsInProgress(systemChallengeId)).to.equal(false);
+      expect(await isInProgress(systemChallengeId)).to.equal(false);
     });
   });
 
@@ -672,7 +672,7 @@ describe('Challenges Contract', () => {
     const atlas3 = [];
 
     const getCurrentRound = async (challengeId) => {
-      const creationTime = await getChallengeCreationTime(challengeId);
+      const creationTime = await getCreationTime(challengeId);
       const currentTime = await currentTimestamp();
       return Math.floor((currentTime - creationTime) / ROUND_DURATION);
     };
@@ -733,7 +733,7 @@ describe('Challenges Contract', () => {
 
       await setTimestamp(now);
       await atlasChosenByType(challengeId, 1, 2, 2);
-      resolver = await getChallengeDesignatedShelterer(challengeId);
+      resolver = await getDesignatedShelterer(challengeId);
 
       expect(resolver).to.equal(trueResolver);
     });
@@ -750,7 +750,7 @@ describe('Challenges Contract', () => {
 
       await setTimestamp(now + (ROUND_DURATION * 5));
       await atlasChosenByType(challengeId, 1, 2, 2);
-      resolver = await getChallengeDesignatedShelterer(challengeId);
+      resolver = await getDesignatedShelterer(challengeId);
 
       expect(resolver).to.equal(trueResolver);
     });
@@ -765,7 +765,7 @@ describe('Challenges Contract', () => {
 
       await setTimestamp(now + FIRST_PHASE_DURATION + ROUND_DURATION);
       await atlasChosen(challengeId, 5);
-      resolver = await getChallengeDesignatedShelterer(challengeId);
+      resolver = await getDesignatedShelterer(challengeId);
 
       expect(resolver).to.equal(trueResolver);
     });
@@ -783,13 +783,13 @@ describe('Challenges Contract', () => {
       await setTimestamp(now + (ROUND_DURATION * 5));
 
       await atlasChosenByType(challengeId, 0, 5, 0);
-      resolver = await getChallengeDesignatedShelterer(challengeId);
+      resolver = await getDesignatedShelterer(challengeId);
 
       expect(resolver).to.equal(trueResolver);
     });
 
     it('Fails to get resolver if no resolver in the system', async () => {
-      await expect(getChallengeDesignatedShelterer(challengeId)).to.be.eventually.rejected;
+      await expect(getDesignatedShelterer(challengeId)).to.be.eventually.rejected;
     });
   });
 });
