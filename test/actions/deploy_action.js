@@ -29,6 +29,7 @@ describe('Deploy Actions', () => {
   const exampleDeployResult = 'deployResult';
   const defaultAddress = '0xbeefdead';
   const validatorProxyAddress = '0x382919';
+  const contractsVersion = '0.0.58';
   const genesisContracts = {
     head: '0x92f858c22417249e4ee11b2683ef6fca7bad0555',
     validatorSet: '0xf0c80fb9fb22bef8269cb6feb9a51130288a671f',
@@ -49,7 +50,8 @@ describe('Deploy Actions', () => {
     mockHeadWrapper = {
       availableStorageCatalogueContracts: Object.keys(exampleStorageContracts),
       contractAddressByName: sinon.stub().callsFake(async (contractName) => exampleStorageContracts[contractName]),
-      address: sinon.stub().returns(genesisContracts.head)
+      address: sinon.stub().returns(genesisContracts.head),
+      contractsVersion: sinon.stub().returns(contractsVersion)
     };
 
     mockValidatorSetWrapper = {
