@@ -31,14 +31,18 @@ contract Challenges is DmpAtlasSelectionBase {
     using SafeMath for uint64;
     using SafeMathExtensions for uint;
 
+    Time private time;
+    Sheltering private sheltering;
     Fees private fees;
     ChallengesStore private challengesStore;
     ChallengesEventEmitter private challengesEventEmitter;
 
     constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
         Fees _fees, ChallengesStore _challengesStore, ChallengesEventEmitter _challengesEventEmitter)
-    public DmpAtlasSelectionBase(_head, _time, _sheltering, _atlasStakeStore, _config)
+    public DmpAtlasSelectionBase(_head, _atlasStakeStore, _config)
     {
+        time = _time;
+        sheltering = _sheltering;
         fees = _fees;
         challengesStore = _challengesStore;
         challengesEventEmitter = _challengesEventEmitter;
@@ -92,7 +96,7 @@ contract Challenges is DmpAtlasSelectionBase {
     }
 
     function markAsExpired(bytes32 challengeId) public {
-        require(isInProgress(challengeId));
+        require(challengeIsInProgress(challengeId));
         require(challengeIsTimedOut(challengeId));
 
         (address sheltererId, bytes32 bundleId, address challengerId, uint feePerChallenge,, uint8 activeCount,) = challengesStore.getChallenge(challengeId);
@@ -116,36 +120,18 @@ contract Challenges is DmpAtlasSelectionBase {
         refundAddress.transfer(feeToReturn + revokedReward + penalty);
     }
 
-    function canResolve(address resolverId, bytes32 shelteringInviteId) public view returns (bool) {
-        bytes32 bundleId = getBundle(shelteringInviteId);
+    function canResolve(address resolverId, bytes32 challengeId) public view returns (bool) {
+        bytes32 bundleId = getChallengedBundle(challengeId);
 
         // solium-disable-next-line operator-whitespace
-        return isInProgress(shelteringInviteId) &&
+        return challengeIsInProgress(challengeId) &&
         !sheltering.isSheltering(bundleId, resolverId) &&
-        resolverId == getDesignatedShelterer(shelteringInviteId) &&
+        resolverId == getChallengeDesignatedShelterer(challengeId) &&
         atlasStakeStore.getStake(resolverId) > 0;
     }
 
-    function getBundle(bytes32 shelteringInviteId) public view returns (bytes32) {
-        (, bytes32 bundleId,,,,,) = challengesStore.getChallenge(shelteringInviteId);
-        return bundleId;
-    }
-
-    function computeDmpBaseHash(bytes32 shelteringInviteId) public view returns (bytes32) {
-        return keccak256(abi.encodePacked(shelteringInviteId, getChallengeSequenceNumber(shelteringInviteId)));
-    }
-
-    function getCreationTime(bytes32 shelteringInviteId) public view returns (uint64) {
-        (,,,, uint64 creationTime,,) = challengesStore.getChallenge(shelteringInviteId);
-        return creationTime;
-    }
-
-    function isInProgress(bytes32 shelteringInviteId) public view returns (bool) {
-        return getActiveChallengesCount(shelteringInviteId) > 0;
-    }
-
     function challengeIsTimedOut(bytes32 challengeId) public view returns (bool) {
-        uint64 creationTime = getCreationTime(challengeId);
+        uint64 creationTime = getChallengeCreationTime(challengeId);
         return time.currentTimestamp() > creationTime.add(config.CHALLENGE_DURATION());
     }
 
@@ -154,14 +140,40 @@ contract Challenges is DmpAtlasSelectionBase {
         return sheltererId;
     }
 
+    function getChallengedBundle(bytes32 challengeId) public view returns (bytes32) {
+        (, bytes32 bundleId,,,,,) = challengesStore.getChallenge(challengeId);
+        return bundleId;
+    }
+
     function getChallenger(bytes32 challengeId) public view returns (address) {
         (,, address challengerId,,,,) = challengesStore.getChallenge(challengeId);
         return challengerId;
     }
 
+    function getChallengeDesignatedShelterer(bytes32 challengeId) public view returns (address) {
+        uint challengeDuration = time.currentTimestamp().sub(getChallengeCreationTime(challengeId));
+        uint currentRound = challengeDuration.div(config.ROUND_DURATION());
+        bytes32 dmpBaseHash = keccak256(abi.encodePacked(challengeId, getChallengeSequenceNumber(challengeId)));
+        uint32 dmpIndex;
+
+        if (currentRound < config.FIRST_PHASE_DURATION().div(config.ROUND_DURATION())) {
+            (uint atlasCount, uint32 dmpTier) = getDesignatedSheltererTier(dmpBaseHash);
+            dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasCount, currentRound);
+            return atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(dmpTier), dmpIndex);
+        } else {
+            dmpIndex = DmpAlgorithm.qualifyShelterer(dmpBaseHash, atlasStakeStore.getNumberOfStakers(), currentRound);
+            return atlasStakeStore.getStakerAtIndex(dmpIndex);
+        }
+    }
+
     function getChallengeFee(bytes32 challengeId) public view returns (uint) {
         (,,, uint feePerChallenge,,,) = challengesStore.getChallenge(challengeId);
         return feePerChallenge;
+    }
+
+    function getChallengeCreationTime(bytes32 challengeId) public view returns (uint64) {
+        (,,,, uint64 creationTime,,) = challengesStore.getChallenge(challengeId);
+        return creationTime;
     }
 
     function getActiveChallengesCount(bytes32 challengeId) public view returns (uint8) {
@@ -174,6 +186,10 @@ contract Challenges is DmpAtlasSelectionBase {
         return sequenceNumber;
     }
 
+    function challengeIsInProgress(bytes32 challengeId) public view returns (bool) {
+        return getActiveChallengesCount(challengeId) > 0;
+    }
+
     function isSystemChallenge(bytes32 challengeId) public view returns (bool) {
         return getChallenger(challengeId) == 0x0;
     }
@@ -183,7 +199,7 @@ contract Challenges is DmpAtlasSelectionBase {
     }
 
     function validateChallenge(address sheltererId, bytes32 bundleId) private view {
-        require(!isInProgress(getChallengeId(sheltererId, bundleId)));
+        require(!challengeIsInProgress(getChallengeId(sheltererId, bundleId)));
         require(sheltering.isSheltering(bundleId, sheltererId));
 
         uint shelteringCap = sheltering.getShelteringCap();
@@ -193,7 +209,7 @@ contract Challenges is DmpAtlasSelectionBase {
     }
 
     function validateSystemChallenge(address uploaderId, bytes32 bundleId) private view {
-        require(!isInProgress(getChallengeId(uploaderId, bundleId)));
+        require(!challengeIsInProgress(getChallengeId(uploaderId, bundleId)));
         require(sheltering.getBundleUploader(bundleId) == uploaderId);
     }
 

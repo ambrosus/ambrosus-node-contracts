@@ -12,9 +12,10 @@ pragma solidity ^0.4.23;
 import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
+import "../Lib/SafeMathExtensions.sol";
 import "../Lib/DmpAlgorithm.sol";
-import "../Front/DmpAtlasSelectionBase.sol";
 import "../Front/Challenges.sol";
+import "../Front/DmpAtlasSelectionBase.sol";
 import "../Middleware/Sheltering.sol";
 import "../Storage/AtlasStakeStore.sol";
 import "../Storage/ShelteringTransfersStore.sol";
@@ -23,6 +24,13 @@ import "../Storage/TransfersEventEmitter.sol";
 
 contract ShelteringTransfers is DmpAtlasSelectionBase {
 
+    using SafeMath for uint;
+    using SafeMath for uint32;
+    using SafeMath for uint64;
+    using SafeMathExtensions for uint;
+
+    Time private time;
+    Sheltering private sheltering;
     ShelteringTransfersStore private shelteringTransfersStore;
     Challenges private challenges;
     TransfersEventEmitter private transfersEventEmitter;
@@ -30,7 +38,9 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
     constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
         ShelteringTransfersStore _shelteringTransfersStore,
         Challenges _challenges, TransfersEventEmitter _transfersEventEmitter)
-    public DmpAtlasSelectionBase(_head, _time, _sheltering, _atlasStakeStore, _config) {
+    public DmpAtlasSelectionBase(_head, _atlasStakeStore, _config) {
+        time = _time;
+        sheltering = _sheltering;
         shelteringTransfersStore = _shelteringTransfersStore;
         challenges = _challenges;
         transfersEventEmitter = _transfersEventEmitter;
@@ -62,16 +72,6 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
         shelteringTransfersStore.remove(transferId);
     }
 
-    function canResolve(address resolverId, bytes32 shelteringInviteId) public view returns (bool) {
-        bytes32 bundleId = getBundle(shelteringInviteId);
-
-        // solium-disable-next-line operator-whitespace
-        return isInProgress(shelteringInviteId) &&
-        !sheltering.isSheltering(bundleId, resolverId) &&
-        resolverId == getDesignatedShelterer(shelteringInviteId) &&
-        atlasStakeStore.getStake(resolverId) > 0;
-    }
-
     function getTransferId(address sheltererId, bytes32 bundleId) public view returns(bytes32) {
         return shelteringTransfersStore.getTransferId(sheltererId, bundleId);
     }
@@ -81,28 +81,49 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
         return donorId;
     }
 
-    function getBundle(bytes32 shelteringInviteId) public view returns (bytes32) {
-        (, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(shelteringInviteId);
+    function getTransferredBundle(bytes32 transferId) public view returns(bytes32) {
+        (, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(transferId);
         return bundleId;
     }
 
-    function computeDmpBaseHash(bytes32 shelteringInviteId) public view returns (bytes32) {
-        return shelteringInviteId;
+    function transferIsInProgress(bytes32 transferId) public view returns(bool) {
+        (address donorId,, ) = shelteringTransfersStore.getTransfer(transferId);
+        return donorId != address(0x0);
     }
 
-    function getCreationTime(bytes32 shelteringInviteId) public view returns (uint64) {
-        (,, uint64 creationTime) = shelteringTransfersStore.getTransfer(shelteringInviteId);
+    function canResolve(address resolverId, bytes32 transferId) public view returns (bool) {
+        (, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(transferId);
+
+        // solium-disable-next-line operator-whitespace
+        return transferIsInProgress(transferId) &&
+        !sheltering.isSheltering(bundleId, resolverId) &&
+        resolverId == getTransferDesignatedShelterer(transferId) &&
+        atlasStakeStore.getStake(resolverId) > 0;
+    }
+
+    function getTransferCreationTime(bytes32 transferId) public view returns (uint64) {
+        (,, uint64 creationTime) = shelteringTransfersStore.getTransfer(transferId);
         return creationTime;
     }
 
-    function isInProgress(bytes32 shelteringInviteId) public view returns (bool) {
-        (address donorId,, ) = shelteringTransfersStore.getTransfer(shelteringInviteId);
-        return donorId != address(0x0);
+    function getTransferDesignatedShelterer(bytes32 transferId) public view returns (address) {
+        uint transferDuration = time.currentTimestamp().sub(getTransferCreationTime(transferId));
+        uint currentRound = transferDuration.div(config.ROUND_DURATION());
+        uint32 dmpIndex;
+
+        if (currentRound < config.FIRST_PHASE_DURATION().div(config.ROUND_DURATION())) {
+            (uint atlasCount, uint32 dmpTier) = getDesignatedSheltererTier(transferId);
+            dmpIndex = DmpAlgorithm.qualifyShelterer(transferId, atlasCount, currentRound);
+            return atlasStakeStore.getStakerWithStakeAtIndex(config.ATLAS_STAKE(dmpTier), dmpIndex);
+        } else {
+            dmpIndex = DmpAlgorithm.qualifyShelterer(transferId, atlasStakeStore.getNumberOfStakers(), currentRound);
+            return atlasStakeStore.getStakerAtIndex(dmpIndex);
+        }
     }
 
     function requireTransferPossible(address donorId, bytes32 bundleId) private view {
         require(sheltering.isSheltering(bundleId, donorId));
-        require(!isInProgress(getTransferId(donorId, bundleId)));
-        require(!challenges.isInProgress(challenges.getChallengeId(donorId, bundleId)));
+        require(!transferIsInProgress(getTransferId(donorId, bundleId)));
+        require(!challenges.challengeIsInProgress(challenges.getChallengeId(donorId, bundleId)));
     }
 }

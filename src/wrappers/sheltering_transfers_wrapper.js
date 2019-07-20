@@ -41,12 +41,12 @@ export default class ShelteringTransfersWrapper extends ManagedContractWrapper {
 
   async getTransferredBundle(transferId) {
     const contract = await this.contract();
-    return contract.methods.getRequestedBundle(transferId).call();
+    return contract.methods.getTransferredBundle(transferId).call();
   }
 
   async isInProgress(transferId) {
     const contract = await this.contract();
-    return contract.methods.isInProgress(transferId).call();
+    return contract.methods.transferIsInProgress(transferId).call();
   }
 
   async canResolve(transferId) {
@@ -56,11 +56,11 @@ export default class ShelteringTransfersWrapper extends ManagedContractWrapper {
 
   async getTransferCreationTime(transferId) {
     const contract = await this.contract();
-    return contract.methods.getCreationTime(transferId).call();
+    return contract.methods.getTransferCreationTime(transferId).call();
   }
 
   async getTransferDesignatedShelterer(transferId) {
     const contract = await this.contract();
-    return contract.methods.getDesignatedShelterer(transferId).call();
+    return contract.methods.getTransferDesignatedShelterer(transferId).call();
   }
 }
