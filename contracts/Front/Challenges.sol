@@ -144,6 +144,18 @@ contract Challenges is DmpAtlasSelectionBase {
         return getActiveChallengesCount(shelteringInviteId) > 0;
     }
 
+    function getChallengeCreationTime(bytes32 challengeId) public view returns (uint64) {
+        return getCreationTime(challengeId);
+    }
+
+    function challengeIsInProgress(bytes32 challengeId) public view returns (bool) {
+        return isInProgress(challengeId);
+    }
+
+    function getChallengeDesignatedShelterer(bytes32 challengeId) public view returns (address) {
+        return getDesignatedShelterer(challengeId);
+    }
+
     function challengeIsTimedOut(bytes32 challengeId) public view returns (bool) {
         uint64 creationTime = getCreationTime(challengeId);
         return time.currentTimestamp() > creationTime.add(config.CHALLENGE_DURATION());
