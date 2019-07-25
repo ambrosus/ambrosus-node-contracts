@@ -8,6 +8,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import chai, {expect} from 'chai';
+import sinon from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
 import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
 import contractJsons from '../../src/contract_jsons';
@@ -35,6 +36,30 @@ describe('ValidatorSet Wrapper', () => {
 
   it('getOwner returns the owner address', async () => {
     await expect(wrapper.getOwner()).to.eventually.equal(ownerAddress);
+  });
+  describe('getValidators', () => {
+    let getValidatorsStub;
+    let getValidatorsCallStub;
+
+    beforeEach(async () => {
+      getValidatorsStub = sinon.stub();
+      getValidatorsCallStub = sinon.stub();
+      const contractMock = {
+        methods: {
+          getValidators: getValidatorsStub.returns({
+            call: getValidatorsCallStub.resolves(true)
+          })
+        }
+      };
+      wrapper = new ValidatorSetWrapper(contract.options.address, web3, ownerAddress);
+      wrapper.contract = contractMock;
+    });
+
+    it('calls contract method correctly', async () => {
+      await wrapper.getValidators();
+      expect(getValidatorsStub).to.be.calledOnce;
+      expect(getValidatorsCallStub).to.be.calledOnce;
+    });
   });
 });
 
