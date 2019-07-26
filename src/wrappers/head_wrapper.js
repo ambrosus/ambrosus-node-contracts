@@ -43,6 +43,7 @@ export default class HeadWrapper extends GenesisContractWrapper {
       'rolesStore',
       'shelteringTransfersStore',
       'challengesEventEmitter',
+      'transfersEventEmitter',
       'rolesEventEmitter'
     ];
   }
