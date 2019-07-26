@@ -14,4 +14,8 @@ export default class ValidatorSetWrapper extends GenesisContractWrapper {
   constructor(validatorSetContractAddress, web3, defaultAddress) {
     super(validatorSetContractAddress, contractJsons.validatorSet, web3, defaultAddress);
   }
+
+  async getValidators() {
+    return this.contract.methods.getValidators().call();
+  }
 }
