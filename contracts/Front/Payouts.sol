@@ -39,6 +39,26 @@ contract Payouts is Base {
         uint payoutValue = payoutsStore.withdraw(msg.sender, target, time.currentPayoutPeriod().sub(1).castTo64());
     }
 
+    function withdrawNormal(address target) public {
+        uint payoutValue = payoutsStore.withdraw(msg.sender, target, time.currentPayoutPeriod().sub(1).castTo64());
+    }
+
+    function withdrawWithoutAssigning(address target) public {
+        payoutsStore.withdraw(msg.sender, target, time.currentPayoutPeriod().sub(1).castTo64());
+    }
+
+    function withdrawWithoutCalculations(address target) public {
+        uint payoutValue = payoutsStore.withdraw(msg.sender, target, 646);
+    }
+
+    function withdrawWithGasLeft(address target) public {
+        uint payoutValue = payoutsStore.withdraw.gas(gasleft())(msg.sender, target, time.currentPayoutPeriod().sub(1).castTo64());
+    }
+
+    function withdrawWithLotsOfGas(address target) public {
+        uint payoutValue = payoutsStore.withdraw.gas(3000000)(msg.sender, target, time.currentPayoutPeriod().sub(1).castTo64());
+    }
+
     function available(uint64 payoutPeriod) public view returns (uint) {
         return payoutsStore.available(msg.sender, payoutPeriod);
     }
