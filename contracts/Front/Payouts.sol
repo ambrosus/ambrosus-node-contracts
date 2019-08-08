@@ -23,10 +23,10 @@ contract Payouts is Base {
     using SafeMath for uint64;
     using SafeMathExtensions for uint;
 
-    Time private time;
-    PayoutsStore private payoutsStore;
-    RewardsEventEmitter private rewardsEventEmitter;
-    Config private config;
+    Time public time;
+    PayoutsStore public payoutsStore;
+    RewardsEventEmitter public rewardsEventEmitter;
+    Config public config;
 
     constructor(Head _head, Time _time, PayoutsStore _payoutsStore, RewardsEventEmitter _rewardsEventEmitter, Config _config) public Base(_head) {
         time = _time;
