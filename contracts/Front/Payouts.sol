@@ -36,8 +36,8 @@ contract Payouts is Base {
     }
 
     function withdraw(address target) public {
-        uint payoutValue = payoutsStore.withdraw(msg.sender, target, time.currentPayoutPeriod().sub(1).castTo64());
-        rewardsEventEmitter.atlasPayoutWithdrawal(target, msg.sender, payoutValue);
+        uint64 payoutPeriod = time.currentPayoutPeriod().sub(1).castTo64();
+        require(address(payoutsStore).call(bytes4(keccak256("withdraw(address,address,uint64)")), msg.sender, target, payoutPeriod));
     }
 
     function available(uint64 payoutPeriod) public view returns (uint) {
