@@ -198,22 +198,6 @@ describe('Payouts Contract', () => {
       await expectBalanceChange(withdrawTarget, '9', async () => withdraw(withdrawTarget, beneficiary));
       await expectBalanceChange(withdrawTarget, '0', async () => withdraw(withdrawTarget, beneficiary));
     });
-
-    it(`emits proper event`, async () => {
-      const payoutValue = 10;
-      await injectGrantRepeating(beneficiary, 8, 9, payoutValue);
-
-      await expectEventEmission(
-        web3,
-        () => withdraw(withdrawTarget, beneficiary),
-        rewardsEventEmitter,
-        'AtlasPayoutWithdrawal',
-        {
-          target: withdrawTarget,
-          beneficiary,
-          value: payoutValue.toString()
-        });
-    });
   });
 
   describe('Available', () => {
