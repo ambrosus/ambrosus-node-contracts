@@ -16,14 +16,14 @@ contract ShelteringTransfersStore is Base {
     struct Transfer {
         address donorId;
         bytes32 bundleId;
-        uint64 creationTime;
+        uint creationTime;
     }
 
     mapping(bytes32 => Transfer) transfers;
 
     constructor(Head _head) public Base(_head) { }
 
-    function store(address donorId, bytes32 bundleId, uint64 creationTime) public onlyContextInternalCalls returns(bytes32) {
+    function store(address donorId, bytes32 bundleId, uint creationTime) public onlyContextInternalCalls returns(bytes32) {
         bytes32 transferId = getTransferId(donorId, bundleId);
         transfers[transferId] = Transfer(donorId, bundleId, creationTime);
         return transferId;
@@ -33,7 +33,7 @@ contract ShelteringTransfersStore is Base {
         delete transfers[transferId];
     }
 
-    function getTransfer(bytes32 transferId) public view onlyContextInternalCalls returns(address donorId, bytes32 bundleId, uint64 creationTime) {
+    function getTransfer(bytes32 transferId) public view onlyContextInternalCalls returns(address donorId, bytes32 bundleId, uint creationTime) {
         donorId = transfers[transferId].donorId;
         bundleId = transfers[transferId].bundleId;
         creationTime = transfers[transferId].creationTime;

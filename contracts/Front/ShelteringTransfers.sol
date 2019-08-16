@@ -13,6 +13,7 @@ import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Time.sol";
 import "../Lib/DmpAlgorithm.sol";
+import "../Lib/SafeMathExtensions.sol";
 import "../Front/DmpAtlasSelectionBase.sol";
 import "../Front/Challenges.sol";
 import "../Middleware/Sheltering.sol";
@@ -22,6 +23,8 @@ import "../Storage/TransfersEventEmitter.sol";
 
 
 contract ShelteringTransfers is DmpAtlasSelectionBase {
+
+    using SafeMathExtensions for uint;
 
     ShelteringTransfersStore private shelteringTransfersStore;
     Challenges private challenges;
@@ -91,8 +94,8 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
     }
 
     function getCreationTime(bytes32 shelteringInviteId) public view returns (uint64) {
-        (,, uint64 creationTime) = shelteringTransfersStore.getTransfer(shelteringInviteId);
-        return creationTime;
+        (,, uint creationTime) = shelteringTransfersStore.getTransfer(shelteringInviteId);
+        return creationTime.castTo64();
     }
 
     function isInProgress(bytes32 shelteringInviteId) public view returns (bool) {
