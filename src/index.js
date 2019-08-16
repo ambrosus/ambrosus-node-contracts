@@ -25,6 +25,7 @@ import UploadsWrapper from './wrappers/uploads_wrapper';
 import BlockchainStateWrapper from './wrappers/blockchain_state_wrapper';
 import ChallengesEventEmitterWrapper from './wrappers/challenges_event_emitter_wrapper';
 import TransfersEventEmitterWrapper from './wrappers/transfers_event_emitter_wrapper';
+import RewardsEventEmitterWrapper from './wrappers/rewards_event_emitter_wrapper';
 import BundleStoreWrapper from './wrappers/bundle_store_wrapper';
 import RolesEventEmitterWrapper from './wrappers/roles_event_emitter_wrapper';
 import WhitelistActions from './actions/whitelist_actions';
@@ -63,6 +64,7 @@ module.exports = {
   BlockchainStateWrapper,
   ChallengesEventEmitterWrapper,
   TransfersEventEmitterWrapper,
+  RewardsEventEmitterWrapper,
   WhitelistActions,
   OnboardActions,
   UploadActions,
