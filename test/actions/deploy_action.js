@@ -54,7 +54,7 @@ describe('Deploy Actions', () => {
     mockHeadWrapper = {
       availableStorageCatalogueContracts: Object.keys(exampleExtStorageContracts),
       contractAddressByName: sinon.stub().callsFake(async (contractName) => exampleExtStorageContracts[contractName]),
-      address: sinon.stub().returns(genesisContracts.head),
+      address: sinon.stub().returns(genesisContracts.head)
     };
 
     mockValidatorSetWrapper = {
