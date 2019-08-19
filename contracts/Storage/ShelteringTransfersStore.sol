@@ -10,13 +10,17 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
+import "../Lib/SafeMathExtensions.sol";
 
 
 contract ShelteringTransfersStore is Base {
+
+    using SafeMathExtensions for uint;
+
     struct Transfer {
         address donorId;
         bytes32 bundleId;
-        uint creationTime;
+        uint64 creationTime;
     }
 
     mapping(bytes32 => Transfer) transfers;
@@ -25,7 +29,7 @@ contract ShelteringTransfersStore is Base {
 
     function store(address donorId, bytes32 bundleId, uint creationTime) public onlyContextInternalCalls returns(bytes32) {
         bytes32 transferId = getTransferId(donorId, bundleId);
-        transfers[transferId] = Transfer(donorId, bundleId, creationTime);
+        transfers[transferId] = Transfer(donorId, bundleId, creationTime.castTo64());
         return transferId;
     }
 
@@ -33,10 +37,13 @@ contract ShelteringTransfersStore is Base {
         delete transfers[transferId];
     }
 
-    function getTransfer(bytes32 transferId) public view onlyContextInternalCalls returns(address donorId, bytes32 bundleId, uint creationTime) {
-        donorId = transfers[transferId].donorId;
-        bundleId = transfers[transferId].bundleId;
-        creationTime = transfers[transferId].creationTime;
+    function getTransfer(bytes32 transferId) public view onlyContextInternalCalls returns(address, bytes32, uint64) {
+        Transfer storage transfer = transfers[transferId];
+        return (
+            transfer.donorId,
+            transfer.bundleId,
+            transfer.creationTime
+        );
     }
 
     function getTransferId(address sheltererId, bytes32 bundleId) public view onlyContextInternalCalls returns(bytes32) {
