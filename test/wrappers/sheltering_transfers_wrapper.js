@@ -217,4 +217,88 @@ describe('ShelteringTransfers Wrapper', () => {
       expect(getCreationTimeCallStub).to.be.called;
     });
   });
+
+  describe('getDonor', () => {
+    const transferId = '0x123';
+    const result = 'donorId';
+    let getDonorStub;
+    let getDonorCallStub;
+
+    beforeEach(async () => {
+      getDonorStub = sinon.stub();
+      getDonorCallStub = sinon.stub().resolves(result);
+      const contractMock = {
+        methods: {
+          getDonor: getDonorStub
+        }
+      };
+      getDonorStub.returns({
+        call: getDonorCallStub
+      });
+      shelteringTransfersWrapper = new ShelteringTransfersWrapper();
+      sinon.stub(shelteringTransfersWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await shelteringTransfersWrapper.getDonor(transferId)).to.equal(result);
+      expect(getDonorStub).to.be.calledWith(transferId);
+      expect(getDonorCallStub).to.be.called;
+    });
+  });
+
+  describe('getTransferredBundle', () => {
+    const transferId = '0x123';
+    const result = 'bundleId';
+    let getBundleStub;
+    let getBundleCallStub;
+
+    beforeEach(async () => {
+      getBundleStub = sinon.stub();
+      getBundleCallStub = sinon.stub().resolves(result);
+      const contractMock = {
+        methods: {
+          getBundle: getBundleStub
+        }
+      };
+      getBundleStub.returns({
+        call: getBundleCallStub
+      });
+      shelteringTransfersWrapper = new ShelteringTransfersWrapper();
+      sinon.stub(shelteringTransfersWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await shelteringTransfersWrapper.getTransferredBundle(transferId)).to.equal(result);
+      expect(getBundleStub).to.be.calledWith(transferId);
+      expect(getBundleCallStub).to.be.called;
+    });
+  });
+
+  describe('getTransferDesignatedShelterer', () => {
+    const transferId = '0x123';
+    const result = 'sheltererId';
+    let getDesignatedSheltererStub;
+    let getDesignatedSheltererCallStub;
+
+    beforeEach(async () => {
+      getDesignatedSheltererStub = sinon.stub();
+      getDesignatedSheltererCallStub = sinon.stub().resolves(result);
+      const contractMock = {
+        methods: {
+          getDesignatedShelterer: getDesignatedSheltererStub
+        }
+      };
+      getDesignatedSheltererStub.returns({
+        call: getDesignatedSheltererCallStub
+      });
+      shelteringTransfersWrapper = new ShelteringTransfersWrapper();
+      sinon.stub(shelteringTransfersWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      expect(await shelteringTransfersWrapper.getTransferDesignatedShelterer(transferId)).to.equal(result);
+      expect(getDesignatedSheltererStub).to.be.calledWith(transferId);
+      expect(getDesignatedSheltererCallStub).to.be.called;
+    });
+  });
 });
