@@ -24,8 +24,6 @@ import "../Storage/TransfersEventEmitter.sol";
 
 contract ShelteringTransfers is DmpAtlasSelectionBase {
 
-    using SafeMathExtensions for uint;
-
     ShelteringTransfersStore private shelteringTransfersStore;
     Challenges private challenges;
     TransfersEventEmitter private transfersEventEmitter;
@@ -70,9 +68,9 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
 
         // solium-disable-next-line operator-whitespace
         return isInProgress(shelteringInviteId) &&
-        !sheltering.isSheltering(bundleId, resolverId) &&
-        resolverId == getDesignatedShelterer(shelteringInviteId) &&
-        atlasStakeStore.getStake(resolverId) > 0;
+            !sheltering.isSheltering(bundleId, resolverId) &&
+            resolverId == getDesignatedShelterer(shelteringInviteId) &&
+            atlasStakeStore.getStake(resolverId) > 0;
     }
 
     function getTransferId(address sheltererId, bytes32 bundleId) public view returns(bytes32) {
@@ -94,8 +92,8 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
     }
 
     function getCreationTime(bytes32 shelteringInviteId) public view returns (uint64) {
-        (,, uint creationTime) = shelteringTransfersStore.getTransfer(shelteringInviteId);
-        return creationTime.castTo64();
+        (,, uint64 creationTime) = shelteringTransfersStore.getTransfer(shelteringInviteId);
+        return creationTime;
     }
 
     function isInProgress(bytes32 shelteringInviteId) public view returns (bool) {
