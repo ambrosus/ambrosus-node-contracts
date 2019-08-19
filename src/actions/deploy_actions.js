@@ -58,9 +58,8 @@ export default class DeployActions {
   async recycleStorageContracts() {
     const storageContractNames = this.headWrapper.availableStorageCatalogueContracts;
     const recycled = {};
-    const doPatch = this.headWrapper.contractsVersion() === '0.0.62';
     for (const contractName of storageContractNames) {
-      if (doPatch && contractName === 'shelteringTransfersStore') {
+      if (contractName === 'shelteringTransfersStore') {
         continue;
       }
       recycled[contractName] = await this.headWrapper.contractAddressByName(contractName);
