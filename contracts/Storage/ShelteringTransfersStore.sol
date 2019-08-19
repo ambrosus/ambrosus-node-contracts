@@ -15,8 +15,6 @@ import "../Lib/SafeMathExtensions.sol";
 
 contract ShelteringTransfersStore is Base {
 
-//    using SafeMathExtensions for uint;
-
     struct Transfer {
         address donorId;
         bytes32 bundleId;
