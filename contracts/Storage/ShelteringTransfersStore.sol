@@ -15,12 +15,12 @@ import "../Lib/SafeMathExtensions.sol";
 
 contract ShelteringTransfersStore is Base {
 
-    using SafeMathExtensions for uint;
+//    using SafeMathExtensions for uint;
 
     struct Transfer {
         address donorId;
         bytes32 bundleId;
-        uint64 creationTime;
+        uint creationTime;
     }
 
     mapping(bytes32 => Transfer) transfers;
@@ -29,7 +29,7 @@ contract ShelteringTransfersStore is Base {
 
     function store(address donorId, bytes32 bundleId, uint creationTime) public onlyContextInternalCalls returns(bytes32) {
         bytes32 transferId = getTransferId(donorId, bundleId);
-        transfers[transferId] = Transfer(donorId, bundleId, creationTime.castTo64());
+        transfers[transferId] = Transfer(donorId, bundleId, creationTime);
         return transferId;
     }
 
@@ -37,7 +37,7 @@ contract ShelteringTransfersStore is Base {
         delete transfers[transferId];
     }
 
-    function getTransfer(bytes32 transferId) public view onlyContextInternalCalls returns(address, bytes32, uint64) {
+    function getTransfer(bytes32 transferId) public view onlyContextInternalCalls returns(address, bytes32, uint) {
         Transfer storage transfer = transfers[transferId];
         return (
             transfer.donorId,
