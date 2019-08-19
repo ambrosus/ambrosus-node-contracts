@@ -60,9 +60,9 @@ describe('ShelteringTransfersStore Contract', () => {
     it('should store the transfer', async () => {
       await store(donorAddress, exampleBundleId);
       const storedTransfer = await getTransfer(exampleTransferId);
-      expect(storedTransfer.donorId).to.equal(donorAddress);
-      expect(storedTransfer.bundleId).to.equal(exampleBundleId);
-      expect(storedTransfer.creationTime).to.equal(creationTime);
+      expect(storedTransfer[0]).to.equal(donorAddress);
+      expect(storedTransfer[1]).to.equal(exampleBundleId);
+      expect(storedTransfer[2]).to.equal(creationTime);
     });
 
     it('should return transfer id', async () => {
@@ -82,8 +82,8 @@ describe('ShelteringTransfersStore Contract', () => {
     it('should remove transfer', async () => {
       await remove(exampleTransferId);
       const removedTransfer = await getTransfer(exampleTransferId);
-      expect(removedTransfer.donorId).to.equal('0x0000000000000000000000000000000000000000');
-      expect(removedTransfer.bundleId).to.equal('0x0000000000000000000000000000000000000000000000000000000000000000');
+      expect(removedTransfer[0]).to.equal('0x0000000000000000000000000000000000000000');
+      expect(removedTransfer[1]).to.equal('0x0000000000000000000000000000000000000000000000000000000000000000');
     });
 
     it('should be context internal', async () => {
