@@ -41,7 +41,7 @@ export default class ShelteringTransfersWrapper extends ManagedContractWrapper {
 
   async getTransferredBundle(transferId) {
     const contract = await this.contract();
-    return contract.methods.getRequestedBundle(transferId).call();
+    return contract.methods.getBundle(transferId).call();
   }
 
   async isInProgress(transferId) {
