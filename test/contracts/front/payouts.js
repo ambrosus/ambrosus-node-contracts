@@ -32,6 +32,7 @@ describe('Payouts Contract', () => {
   let time;
   let snapshotId;
 
+  const addShelteringReward = (beneficiary, beginTimestamp, numberOfPeriods, value, from = validUser) => payouts.methods.addShelteringReward(beneficiary, beginTimestamp, numberOfPeriods).send({from, value});
   const grantShelteringReward = (beneficiary, numberOfPeriods, value, from = validUser) => payouts.methods.grantShelteringReward(beneficiary, numberOfPeriods).send({from, value});
   const revokeShelteringReward = (beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress, from = validUser) => payouts.methods.revokeShelteringReward(beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress).send({from});
   const revokeShelteringRewardCall = (beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress, from = validUser) => payouts.methods.revokeShelteringReward(beneficiary, beginTimestamp, numberOfPeriods, value, refundAddress).call({from});
@@ -108,6 +109,49 @@ describe('Payouts Contract', () => {
     it(`is a contextInternalCall`, async () => {
       await expect(grantShelteringReward(beneficiary, 12, 12000, validUser)).to.be.eventually.fulfilled;
       await expect(grantShelteringReward(beneficiary, 12, 12000, otherUser)).to.be.eventually.rejected;
+    });
+  });
+
+  describe('Adding a sheltering reward', () => {
+    it('increases funds available for withdrawal (unaligned period)', async () => {
+      await addShelteringReward(beneficiary, PAYOUT_PERIOD_UNIT * 10.4, 3, 100000);
+
+      expect(await available(10, beneficiary)).to.be.equal('0');
+      expect(await available(11, beneficiary)).to.be.equal('26000');
+      expect(await available(12, beneficiary)).to.be.equal('26000');
+      expect(await available(13, beneficiary)).to.be.equal('48000');
+      expect(await available(14, beneficiary)).to.be.equal('0');
+    });
+
+    it('increases funds available for withdrawal (grant not divisible by period number)', async () => {
+      await addShelteringReward(beneficiary, PAYOUT_PERIOD_UNIT * 10.4, 7, 100000);
+
+      expect(await available(10, beneficiary)).to.be.equal('0');
+      expect(await available(11, beneficiary)).to.be.equal('11142');
+      expect(await available(12, beneficiary)).to.be.equal('11142');
+      expect(await available(13, beneficiary)).to.be.equal('11142');
+      expect(await available(14, beneficiary)).to.be.equal('11142');
+      expect(await available(15, beneficiary)).to.be.equal('11142');
+      expect(await available(16, beneficiary)).to.be.equal('11142');
+      expect(await available(17, beneficiary)).to.be.equal('33148');
+      expect(await available(18, beneficiary)).to.be.equal('0');
+    });
+
+    it('can be used multiple times', async () => {
+      await addShelteringReward(beneficiary, PAYOUT_PERIOD_UNIT * 10.4, 3, 100000);
+      await setTimestamp(PAYOUT_PERIOD_UNIT * 11);
+      await addShelteringReward(beneficiary, PAYOUT_PERIOD_UNIT * 10.4, 3, 100000);
+
+      expect(await available(10, beneficiary)).to.be.equal('0'); // 0 + 0
+      expect(await available(11, beneficiary)).to.be.equal('52000'); // 26000 + 26000
+      expect(await available(12, beneficiary)).to.be.equal('52000'); // 26000 + 26000
+      expect(await available(13, beneficiary)).to.be.equal('96000'); // 48000 + 48000
+      expect(await available(14, beneficiary)).to.be.equal('0'); // 0
+    });
+
+    it(`is a contextInternalCall`, async () => {
+      await expect(addShelteringReward(beneficiary, PAYOUT_PERIOD_UNIT * 10.4, 12, 12000, validUser)).to.be.eventually.fulfilled;
+      await expect(addShelteringReward(beneficiary, PAYOUT_PERIOD_UNIT * 10.4, 12, 12000, otherUser)).to.be.eventually.rejected;
     });
   });
 

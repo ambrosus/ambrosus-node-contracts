@@ -64,6 +64,25 @@ contract Payouts is Base {
         );
     }
 
+    function addShelteringReward(address beneficiary, uint64 beginTimestamp, uint64 numberOfPeriods) public payable onlyContextInternalCalls {
+        (uint rewardRegular, uint rewardBonus) = calculateRewards(numberOfPeriods, msg.value);
+
+        uint64 firstPeriod = time.payoutPeriod(beginTimestamp).add(1).castTo64();
+        uint64 lastPeriod = firstPeriod.add(numberOfPeriods).sub(1).castTo64();
+
+        payoutsStore.grantForPeriods.value(rewardRegular.mul(numberOfPeriods))(
+            beneficiary,
+            firstPeriod,
+            lastPeriod
+        );
+
+        payoutsStore.grantForPeriods.value(rewardBonus)(
+            beneficiary,
+            lastPeriod,
+            lastPeriod
+        );
+    }
+
     function revokeShelteringReward(address beneficiary, uint64 beginTimestamp, uint64 numberOfPeriods, uint amount, address refundAddress)
         public onlyContextInternalCalls returns (uint refund)
     {
