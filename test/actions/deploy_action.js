@@ -38,11 +38,6 @@ describe('Deploy Actions', () => {
     contractA: '0x1234',
     contractB: '0xABCD'
   };
-  const exampleExtStorageContracts = {
-    contractA: '0x1234',
-    contractB: '0xABCD',
-    shelteringTransfersStore: '0x5678'
-  };
 
   beforeEach(() => {
     mockDeployer = {
@@ -52,8 +47,8 @@ describe('Deploy Actions', () => {
     };
 
     mockHeadWrapper = {
-      availableStorageCatalogueContracts: Object.keys(exampleExtStorageContracts),
-      contractAddressByName: sinon.stub().callsFake(async (contractName) => exampleExtStorageContracts[contractName]),
+      availableStorageCatalogueContracts: Object.keys(exampleStorageContracts),
+      contractAddressByName: sinon.stub().callsFake(async (contractName) => exampleStorageContracts[contractName]),
       address: sinon.stub().returns(genesisContracts.head)
     };
 
@@ -144,11 +139,7 @@ describe('Deploy Actions', () => {
     it('fetches as many storage catalogue contained contracts as possible, except shelteringTransfersStore', async () => {
       await expect(deployActions.recycleStorageContracts()).to.eventually.be.deep.equal(exampleStorageContracts);
       for (const contractName of mockHeadWrapper.availableStorageCatalogueContracts) {
-        if (contractName === 'shelteringTransfersStore') {
-          expect(mockHeadWrapper.contractAddressByName).to.not.be.calledWith(contractName);
-        } else {
-          expect(mockHeadWrapper.contractAddressByName).to.have.been.calledWith(contractName);
-        }
+        expect(mockHeadWrapper.contractAddressByName).to.have.been.calledWith(contractName);
       }
     });
   });

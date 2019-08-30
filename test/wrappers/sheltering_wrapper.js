@@ -54,6 +54,37 @@ describe('Sheltering Wrapper', () => {
     });
   });
 
+  describe('addSheltererReward', () => {
+    const sheltererId = '0xc0ffee';
+    const bundleId = '0xbeef';
+    const reward = '10';
+    const defaultAddress = '0x123';
+    let addSheltererRewardStub;
+    let addSheltererRewardSendStub;
+    let contractMock;
+
+    beforeEach(() => {
+      addSheltererRewardStub = sinon.stub();
+      addSheltererRewardSendStub = sinon.stub();
+      addSheltererRewardStub.returns({
+        send: addSheltererRewardSendStub
+      });
+      contractMock = {
+        methods: {
+          addSheltererReward: addSheltererRewardStub
+        }
+      };
+      shelteringWrapper = new ShelteringWrapper({}, {}, defaultAddress);
+      sinon.stub(shelteringWrapper, 'contract').resolves(contractMock);
+    });
+
+    it('calls contract method with correct arguments', async () => {
+      await shelteringWrapper.addSheltererReward(sheltererId, bundleId, reward);
+      expect(addSheltererRewardStub).to.be.calledWith(sheltererId, bundleId);
+      expect(addSheltererRewardSendStub).to.be.calledWith({from: defaultAddress, value: reward});
+    });
+  });
+
   describe('getBundleUploader', () => {
     let getBundleUploaderStub;
     let getBundleUploaderCallStub;

@@ -80,6 +80,18 @@ contract Sheltering is Base {
         addSheltererInternal(bundleId, shelterer, msg.value, 0);
     }
 
+    function addSheltererReward(address shelterer, bytes32 bundleId) public payable {
+        require(atlasStakeStore.isStaking(shelterer));
+
+        uint64 beginTimestamp = bundleStore.getShelteringStartDate(bundleId, shelterer);
+        require(beginTimestamp > 0);
+
+        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
+
+        uint64 payoutPeriods = storagePeriods.mul(time.PAYOUT_TO_STORAGE_PERIOD_MULTIPLIER()).castTo64();
+        payouts.addShelteringReward.value(msg.value)(shelterer, beginTimestamp, payoutPeriods);
+    }
+
     function removeShelterer(bytes32 bundleId, address shelterer, address refundAddress) public onlyContextInternalCalls returns (uint) {
         uint64 beginTimestamp = bundleStore.getShelteringStartDate(bundleId, shelterer);
         require(beginTimestamp > 0);
