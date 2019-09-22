@@ -103,7 +103,9 @@ contract Sheltering is Base {
         bundleStore.removeShelterer(bundleId, shelterer);
 
         uint64 payoutPeriods = storagePeriods.mul(time.PAYOUT_TO_STORAGE_PERIOD_MULTIPLIER()).castTo64();
-        uint refundValue = payouts.revokeShelteringReward(shelterer, beginTimestamp, payoutPeriods, totalReward, address(this));
+        uint64 donorBeginPeriod = time.payoutPeriod(beginTimestamp);
+        uint64 uploadPeriod = time.payoutPeriod(bundleStore.getUploadTimestamp(bundleId));
+        uint refundValue = payouts.revokeShelteringReward(shelterer, beginTimestamp, payoutPeriods.sub(donorBeginPeriod.sub(uploadPeriod)).castTo64(), totalReward, address(this));
 
         refundAddress.transfer(refundValue);
 
@@ -121,11 +123,11 @@ contract Sheltering is Base {
     function transferSheltering(bytes32 bundleId, address donorId, address recipientId) public onlyContextInternalCalls {
         require(donorId != recipientId);
 
-        uint64 donorBeginPeriod = time.payoutPeriod(bundleStore.getShelteringStartDate(bundleId, donorId));
         uint64 currentPeriod = time.currentPayoutPeriod();
+        uint64 uploadPeriod = time.payoutPeriod(bundleStore.getUploadTimestamp(bundleId));
 
         uint refund = this.removeShelterer(bundleId, donorId, this);
-        addSheltererInternal(bundleId, recipientId, refund, currentPeriod.sub(donorBeginPeriod).castTo64());
+        addSheltererInternal(bundleId, recipientId, refund, currentPeriod.sub(uploadPeriod).castTo64());
     }
 
     function getShelteringCap() public view returns (uint) {
