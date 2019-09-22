@@ -38,7 +38,6 @@ describe('Sheltering Contract', () => {
   let sheltering;
   let rolesStore;
   let time;
-  let payouts;
   let payoutsStore;
   let atlasStakeStore;
   let snapshotId;
@@ -84,9 +83,6 @@ describe('Sheltering Contract', () => {
   const withdrawPayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.withdraw(beneficiaryId, beneficiaryId, payoutPeriod).send({from: deployer});
   const setTimestamp = async (timestamp, sender = deployer) => time.methods.setCurrentTimestamp(timestamp).send({from: sender});
   const setNumberOfStakers = async (numberOfStakers) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from: deployer});
-  const available = async (payoutPeriod, sender) => payouts.methods.available(payoutPeriod).call({from: sender});
-  const withdraw = async (target, sender) => payouts.methods.withdraw(target).send({from: sender});
-
 
   const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount.toString());
   const timestampToPayoutPeriod = (timestamp) => Math.floor(timestamp / PAYOUT_PERIOD_UNIT);
@@ -94,7 +90,7 @@ describe('Sheltering Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     [deployer, hermes, atlas, atlas2, atlas3, other] = await web3.eth.getAccounts();
-    ({bundleStore, sheltering, atlasStakeStore, rolesStore, payouts, payoutsStore, time} = await deploy({
+    ({bundleStore, sheltering, atlasStakeStore, rolesStore, payoutsStore, time} = await deploy({
       web3,
       sender: deployer,
       contracts: {
@@ -383,7 +379,7 @@ describe('Sheltering Contract', () => {
         expect(await isSheltering(bundleId, atlas2)).to.be.false;
         await transferSheltering(bundleId, atlas, atlas2);
         expect(await isSheltering(bundleId, atlas2)).to.be.true;
-       });
+      });
 
       it('keeps a similar expiration date', async () => {
         // similar -> in the same payout period, but can have different timestamp
@@ -394,7 +390,6 @@ describe('Sheltering Contract', () => {
       });
 
       it('transfers reward (not yet paid-out) to recipient', async () => {
-        const uploadPeriod = timestampToPayoutPeriod(bundleUploadTimestamp);
         const firstPeriodToCheck = timestampToPayoutPeriod(transferTimestamp);
         const lastPeriodToCheck = timestampToPayoutPeriod(await shelteringExpirationDate(bundleId, atlas));
 
@@ -421,7 +416,6 @@ describe('Sheltering Contract', () => {
       });
 
       it('transfers reward (with paid-out) to recipient', async () => {
-        const uploadPeriod = timestampToPayoutPeriod(bundleUploadTimestamp);
         const firstPeriodToCheck = timestampToPayoutPeriod(transferTimestamp);
         const lastPeriodToCheck = timestampToPayoutPeriod(await shelteringExpirationDate(bundleId, atlas));
 

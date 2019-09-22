@@ -105,7 +105,8 @@ contract Sheltering is Base {
         uint64 payoutPeriods = storagePeriods.mul(time.PAYOUT_TO_STORAGE_PERIOD_MULTIPLIER()).castTo64();
         uint64 donorBeginPeriod = time.payoutPeriod(beginTimestamp);
         uint64 uploadPeriod = time.payoutPeriod(bundleStore.getUploadTimestamp(bundleId));
-        uint refundValue = payouts.revokeShelteringReward(shelterer, beginTimestamp, payoutPeriods.sub(donorBeginPeriod.sub(uploadPeriod)).castTo64(), totalReward, address(this));
+        uint refundValue = payouts.revokeShelteringReward(shelterer,
+            beginTimestamp, payoutPeriods.sub(donorBeginPeriod.sub(uploadPeriod)).castTo64(), totalReward, address(this));
 
         refundAddress.transfer(refundValue);
 
