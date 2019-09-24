@@ -32,6 +32,7 @@ describe('Sheltering Contract', () => {
   let hermes;
   let atlas;
   let atlas2;
+  let atlas3;
   let other;
   let bundleStore;
   let sheltering;
@@ -79,16 +80,16 @@ describe('Sheltering Contract', () => {
     bundleStore.methods.addShelterer(bundleId, shelterer, reward, payoutPeriodsReduction, currentTimestamp).send({from: sender});
   const getCurrentPayoutPeriod = async () => time.methods.currentPayoutPeriod().call();
   const availablePayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.available(beneficiaryId, payoutPeriod).call();
+  const withdrawPayout = async (beneficiaryId, payoutPeriod) => payoutsStore.methods.withdraw(beneficiaryId, beneficiaryId, payoutPeriod).send({from: deployer});
   const setTimestamp = async (timestamp, sender = deployer) => time.methods.setCurrentTimestamp(timestamp).send({from: sender});
   const setNumberOfStakers = async (numberOfStakers) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from: deployer});
-
 
   const expectBalanceChange = async (account, amount, codeBlock) => expect((await observeBalanceChange(web3, account, codeBlock)).toString()).to.eq(amount.toString());
   const timestampToPayoutPeriod = (timestamp) => Math.floor(timestamp / PAYOUT_PERIOD_UNIT);
 
   before(async () => {
     web3 = await createWeb3();
-    [deployer, hermes, atlas, atlas2, other] = await web3.eth.getAccounts();
+    [deployer, hermes, atlas, atlas2, atlas3, other] = await web3.eth.getAccounts();
     ({bundleStore, sheltering, atlasStakeStore, rolesStore, payoutsStore, time} = await deploy({
       web3,
       sender: deployer,
@@ -109,6 +110,7 @@ describe('Sheltering Contract', () => {
     await setTimestamp(bundleUploadTimestamp);
     await depositStake(atlas, atlasStake);
     await depositStake(atlas2, atlasStake);
+    await depositStake(atlas3, atlasStake);
   });
 
   beforeEach(async () => {
@@ -397,9 +399,51 @@ describe('Sheltering Contract', () => {
 
         await transferSheltering(bundleId, atlas, atlas2);
 
+        await setTimestamp(transferTimestamp + (PAYOUT_PERIOD_UNIT * 2.3));
         expect(await availablePayout(atlas, lastPeriodToCheck)).to.equal('0');
         expect(await availablePayout(atlas2, lastPeriodToCheck)).to.not.equal('0');
         expect(await availablePayout(atlas2, lastPeriodToCheck + 1)).to.equal('0');
+
+        await setTimestamp(transferTimestamp + (PAYOUT_PERIOD_UNIT * 4.3));
+        await transferSheltering(bundleId, atlas2, atlas3);
+
+        await setTimestamp(transferTimestamp + (PAYOUT_PERIOD_UNIT * 6.3));
+
+        expect(await availablePayout(atlas2, lastPeriodToCheck)).to.equal('0');
+        expect(await availablePayout(atlas3, lastPeriodToCheck - 1)).to.equal('11142');
+        expect(await availablePayout(atlas3, lastPeriodToCheck)).to.equal('33148');
+        expect(await availablePayout(atlas3, lastPeriodToCheck + 1)).to.equal('0');
+      });
+
+      it('transfers reward (with paid-out) to recipient', async () => {
+        const firstPeriodToCheck = timestampToPayoutPeriod(transferTimestamp);
+        const lastPeriodToCheck = timestampToPayoutPeriod(await shelteringExpirationDate(bundleId, atlas));
+
+        await withdrawPayout(atlas, (await getCurrentPayoutPeriod()) - 1);
+
+        expect(await availablePayout(atlas2, firstPeriodToCheck - 1)).to.equal('0');
+        expect(await availablePayout(atlas, firstPeriodToCheck)).to.not.equal('0');
+        expect(await availablePayout(atlas2, firstPeriodToCheck)).to.equal('0');
+
+        await transferSheltering(bundleId, atlas, atlas2);
+
+        await setTimestamp(transferTimestamp + (PAYOUT_PERIOD_UNIT * 2.3));
+        await withdrawPayout(atlas2, (await getCurrentPayoutPeriod()) - 1);
+
+        expect(await availablePayout(atlas, lastPeriodToCheck)).to.equal('0');
+        expect(await availablePayout(atlas2, lastPeriodToCheck)).to.not.equal('0');
+        expect(await availablePayout(atlas2, lastPeriodToCheck + 1)).to.equal('0');
+
+        await setTimestamp(transferTimestamp + (PAYOUT_PERIOD_UNIT * 4.3));
+        await transferSheltering(bundleId, atlas2, atlas3);
+
+        await setTimestamp(transferTimestamp + (PAYOUT_PERIOD_UNIT * 6.3));
+        await withdrawPayout(atlas3, (await getCurrentPayoutPeriod()) - 1);
+
+        expect(await availablePayout(atlas2, lastPeriodToCheck)).to.equal('0');
+        expect(await availablePayout(atlas3, lastPeriodToCheck - 1)).to.equal('9731');
+        expect(await availablePayout(atlas3, lastPeriodToCheck)).to.equal('28949');
+        expect(await availablePayout(atlas3, lastPeriodToCheck + 1)).to.equal('0');
       });
     });
 
