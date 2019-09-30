@@ -57,8 +57,6 @@ describe('Sheltering Contract', () => {
     sheltering.methods.storeBundle(bundleId, uploader, storagePeriods).send({from: sender});
   const addShelterer = async (bundleId, shelterer, amount, sender = deployer) =>
     sheltering.methods.addShelterer(bundleId, shelterer).send({from: sender, value: amount});
-  const addSheltererReward = async (shelterer, bundleId, reward, sender = deployer) =>
-    sheltering.methods.addSheltererReward(shelterer, bundleId).send({from: sender, value: reward});
   const removeShelterer = async (bundleId, shelterer, refundAddress, sender = deployer) =>
     sheltering.methods.removeShelterer(bundleId, shelterer, refundAddress).send({from: sender});
   const penalizeShelterer = async (shelterer, refundAddress, sender = deployer) =>
@@ -218,42 +216,6 @@ describe('Sheltering Contract', () => {
 
     it('is context internal', async () => {
       await expect(addShelterer(bundleId, atlas, totalReward, other)).to.be.eventually.rejected;
-    });
-  });
-
-  describe('Adding shelterer reward', () => {
-    beforeEach(async () => {
-      await storeBundle(bundleId, hermes, storagePeriods);
-    });
-
-    it('grants reward', async () => {
-      const currentPayoutPeriod = parseInt(await getCurrentPayoutPeriod(), 10);
-      expect(await availablePayout(atlas, currentPayoutPeriod + 2)).to.equal('0');
-      await addShelterer(bundleId, atlas, totalReward);
-      await addSheltererReward(atlas, bundleId, totalReward);
-      expect(await availablePayout(atlas, currentPayoutPeriod + 2)).to.equal('12000'); // 2* (100000 * 0.78 / 13) = 12000
-    });
-
-    it(`fails if not sheltered`, async () => {
-      await expect(addSheltererReward(atlas, bundleId, totalReward)).to.be.eventually.rejected;
-    });
-
-    it('fails if not an atlas', async () => {
-      await addShelterer(bundleId, atlas, totalReward);
-      await expect(addSheltererReward(other, bundleId, totalReward)).to.be.eventually.rejected;
-    });
-
-    it(`not increments storage used`, async () => {
-      expect(await getShelteredBundlesCount(atlas)).to.equal('0');
-      await addShelterer(bundleId, atlas, totalReward);
-      expect(await getShelteredBundlesCount(atlas)).to.equal('1');
-      await addSheltererReward(atlas, bundleId, totalReward);
-      expect(await getShelteredBundlesCount(atlas)).to.equal('1');
-    });
-
-    it('is not context internal', async () => {
-      await addShelterer(bundleId, atlas, totalReward);
-      await expect(addSheltererReward(atlas, bundleId, totalReward, other)).to.be.eventually.fulfilled;
     });
   });
 

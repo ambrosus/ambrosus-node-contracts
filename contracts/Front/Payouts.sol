@@ -64,11 +64,9 @@ contract Payouts is Base {
         );
     }
 
-    function addShelteringReward(address beneficiary, uint64 beginTimestamp, uint64 numberOfPeriods) public payable onlyContextInternalCalls {
+    function addShelteringReward(address beneficiary, uint64 firstPeriod, uint64 lastPeriod) public payable {
+        uint64 numberOfPeriods = lastPeriod.sub(firstPeriod).add(1).castTo64();
         (uint rewardRegular, uint rewardBonus) = calculateRewards(numberOfPeriods, msg.value);
-
-        uint64 firstPeriod = time.payoutPeriod(beginTimestamp).add(1).castTo64();
-        uint64 lastPeriod = firstPeriod.add(numberOfPeriods).sub(1).castTo64();
 
         payoutsStore.grantForPeriods.value(rewardRegular.mul(numberOfPeriods))(
             beneficiary,
