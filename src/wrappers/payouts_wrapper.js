@@ -20,6 +20,12 @@ export default class PayoutsWrapper extends ManagedContractWrapper {
     return contract.methods.available(payoutPeriod).call();
   }
 
+  // Resolves in AMB * 10^(-18) units
+  async availablePayoutAmountInPeriodForAddress(target, payoutPeriod) {
+    const contract = await this.contract();
+    return contract.methods.availableForAddress(target, payoutPeriod).call();
+  }
+
   async withdraw() {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.withdraw(this.defaultAddress));
