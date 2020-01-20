@@ -44,6 +44,10 @@ contract Payouts is Base {
         return payoutsStore.available(msg.sender, payoutPeriod);
     }
 
+    function availableForAddress(address target, uint64 payoutPeriod) public view returns (uint) {
+        return payoutsStore.available(target, payoutPeriod);
+    }
+
     function grantShelteringReward(address beneficiary, uint64 numberOfPeriods) public payable onlyContextInternalCalls {
         (uint rewardRegular, uint rewardBonus) = calculateRewards(numberOfPeriods, msg.value);
 
