@@ -12,7 +12,6 @@ import chaiAsPromised from 'chai-as-promised';
 import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
 import {APOLLO, HERMES, APOLLO_DEPOSIT} from '../../../src/constants';
-import BN from 'bn.js';
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
