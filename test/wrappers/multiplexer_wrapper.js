@@ -117,6 +117,20 @@ describe('Multiplexer wrapper', () => {
     });
   });
 
+  describe('retireApollo', () => {
+    const candidateAddress = '0x123';
+
+    beforeEach(() => {
+      prepareTest('retireApollo');
+    });
+
+    it('calls contract method with correct arguments and returns data', async () => {
+      expect(await multiplexerWrapper.retireApollo(candidateAddress)).to.equal(exampleABI);
+      expect(contractMethodStub).to.be.calledWith(candidateAddress);
+      expect(contractMethodEncodeAbiStub).to.be.calledOnce;
+    });
+  });
+
   describe('setBaseUploadFee', () => {
     const fee = '42';
 

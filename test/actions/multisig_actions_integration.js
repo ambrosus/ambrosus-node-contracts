@@ -21,7 +21,10 @@ import FeesWrapper from '../../src/wrappers/fees_wrapper';
 import ValidatorProxyWrapper from '../../src/wrappers/validator_proxy_wrapper';
 import MultisigActions from '../../src/actions/multisig_actions';
 import MultisigFunctions from '../../src/utils/multisig_functions';
-
+import {
+  APOLLO,
+  APOLLO_DEPOSIT
+} from '../../src/constants';
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -39,13 +42,17 @@ describe('Multisig actions integration', () => {
   let fees;
   let validatorSet;
   let blockRewards;
+  let apolloDepositStore;
+  let roles;
   let snapshotId;
+
+  const onboardAsApollo = async (sender, value) => roles.methods.onboardAsApollo().send({from: sender, value});
 
   before(async () => {
     web3 = await createWeb3();
     [owner, otherOwner, otherAddress] = await web3.eth.getAccounts();
     multisigContract = await deployContract(web3, multisig, [[owner, otherOwner], 2]);
-    ({multiplexer, head, kycWhitelist, fees, validatorSet, blockRewards} = await deploy({
+    ({multiplexer, head, kycWhitelist, fees, validatorSet, blockRewards, apolloDepositStore, roles} = await deploy({
       web3,
       contracts: {
         multiplexer: true,
@@ -55,6 +62,10 @@ describe('Multisig actions integration', () => {
         blockRewards: true,
         validatorSet: true,
         kycWhitelistStore: true,
+        apolloDepositStore: true,
+        roles: true,
+        rolesStore: true,
+        rolesEventEmitter: true,
         config: true,
         time: true
       },
@@ -224,6 +235,15 @@ describe('Multisig actions integration', () => {
 
     it('removeFromWhitelist', async () => {
       await executeTransaction((multisigActions) => multisigActions.addToWhitelist(otherAddress, 2, '0'));
+      await executeTransaction((multisigActions) => multisigActions.removeFromWhitelist(otherAddress));
+      expect(await kycWhitelist.methods.isWhitelisted(otherAddress).call()).to.be.false;
+    });
+
+    it('retireApollo', async () => {
+      await executeTransaction((multisigActions) => multisigActions.addToWhitelist(otherAddress, APOLLO, APOLLO_DEPOSIT));
+      await onboardAsApollo(otherAddress, APOLLO_DEPOSIT);
+      await executeTransaction((multisigActions) => multisigActions.retireApollo(otherAddress));
+      expect(await apolloDepositStore.methods.isDepositing(otherAddress).call()).to.be.false;
       await executeTransaction((multisigActions) => multisigActions.removeFromWhitelist(otherAddress));
       expect(await kycWhitelist.methods.isWhitelisted(otherAddress).call()).to.be.false;
     });
