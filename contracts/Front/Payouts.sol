@@ -37,7 +37,7 @@ contract Payouts is Base {
 
     function withdraw(address target) public {
         uint64 payoutPeriod = time.currentPayoutPeriod().sub(1).castTo64();
-        require(address(payoutsStore).call(bytes4(keccak256("withdraw(address,address,uint64)")), msg.sender, target, payoutPeriod));
+        require(address(payoutsStore).call(bytes4(keccak256("withdraw(address,address,uint64)")), msg.sender, target, payoutPeriod));        
     }
 
     function available(uint64 payoutPeriod) public view returns (uint) {

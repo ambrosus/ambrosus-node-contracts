@@ -11,7 +11,8 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import deploy from '../../helpers/deploy';
-import {HERMES} from '../../../src/constants';
+import {APOLLO, HERMES, APOLLO_DEPOSIT} from '../../../src/constants';
+import BN from 'bn.js';
 
 chai.use(chaiAsPromised);
 const {expect} = chai;
@@ -21,20 +22,27 @@ describe('Multiplexer', () => {
   let oldOwner;
   let newOwner;
   let otherAddress;
+  let apollo;
   let superUser;
   let head;
   let multiplexer;
   let kycWhitelist;
   let fees;
+  let roles;
   let validatorSet;
   let blockRewards;
   let validatorProxy;
+  let apolloDepositStore;
   let snapshotId;
 
   const transferOwnership = (newOwner, from = oldOwner) => multiplexer.methods.transferContractsOwnership(newOwner).send({from});
   const changeContext = (newContext, from = oldOwner) => multiplexer.methods.changeContext(newContext).send({from});
   const addToWhitelistAsHermes = (candidate, from = oldOwner) => multiplexer.methods.addToWhitelist(candidate, HERMES, 0).send({from});
+  const addToWhitelistAsApollo = (candidate, from = oldOwner) => multiplexer.methods.addToWhitelist(candidate, APOLLO, APOLLO_DEPOSIT).send({from});
+  const isDepositing = async (address) => apolloDepositStore.methods.isDepositing(address).call();
+  const onboardAsApollo = async (sender, value) => roles.methods.onboardAsApollo().send({from: sender, value});
   const removeFromWhitelist = (candidate, from = oldOwner) => multiplexer.methods.removeFromWhitelist(candidate).send({from});
+  const retireApollo = (candidate, from = oldOwner) => multiplexer.methods.retireApollo(candidate).send({from});
   const setBaseUploadFee = (fee, from = oldOwner) => multiplexer.methods.setBaseUploadFee(fee).send({from});
   const transferOwnershipForValidatorSet = (newOwner, from = oldOwner) => multiplexer.methods.transferOwnershipForValidatorSet(newOwner).send({from});
   const transferOwnershipForBlockRewards = (newOwner, from = oldOwner) => multiplexer.methods.transferOwnershipForBlockRewards(newOwner).send({from});
@@ -44,8 +52,8 @@ describe('Multiplexer', () => {
 
   before(async () => {
     web3 = await createWeb3();
-    [oldOwner, newOwner, otherAddress, superUser] = await web3.eth.getAccounts();
-    ({head, multiplexer, kycWhitelist, fees, validatorProxy, validatorSet, blockRewards} = await deploy({
+    [oldOwner, newOwner, otherAddress, superUser, apollo] = await web3.eth.getAccounts();
+    ({head, multiplexer, kycWhitelist, fees, roles, validatorProxy, validatorSet, blockRewards, apolloDepositStore} = await deploy({
       web3,
       contracts: {
         multiplexer: true,
@@ -55,8 +63,12 @@ describe('Multiplexer', () => {
         blockRewards: true,
         validatorSet: true,
         kycWhitelistStore: true,
+        roles: true,
+        rolesStore: true,
+        apolloDepositStore: true,
         config: true,
-        time: true
+        time: true,
+        rolesEventEmitter: true
       },
       params: {
         multiplexer: {
@@ -140,6 +152,22 @@ describe('Multiplexer', () => {
 
     it('throws when not an owner removes from whitelist', async () => {
       await expect(removeFromWhitelist(otherAddress, otherAddress)).to.be.rejected;
+    });
+  });
+
+  describe('Retire apollo', () => {
+    beforeEach(async () => {
+      await addToWhitelistAsApollo(apollo);
+      await onboardAsApollo(apollo, APOLLO_DEPOSIT);
+    });
+
+    it('retire', async () => {
+      await retireApollo(apollo);
+      expect(await isDepositing(apollo)).to.be.false;
+    });
+
+    it('throws when not an owner retire apollo', async () => {
+      await expect(retireApollo(apollo, otherAddress)).to.be.rejected;
     });
   });
 
