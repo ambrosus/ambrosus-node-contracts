@@ -139,4 +139,16 @@ contract Roles is Base {
         }
         rolesStore.setRole(node, Consts.NodeType.NONE);
     }
+
+    function retireApollo(address apollo) public onlyContextInternalCalls {
+        require(rolesStore.getRole(apollo) == Consts.NodeType.APOLLO);
+        rolesStore.setRole(apollo, Consts.NodeType.NONE);
+
+        uint amountToTransfer = apolloDepositStore.releaseDeposit(apollo, this);
+        validatorProxy.removeValidator(apollo);
+
+        rolesEventEmitter.nodeRetired(apollo, amountToTransfer, Consts.NodeType.APOLLO);
+
+        apollo.transfer(amountToTransfer);
+    }
 }
