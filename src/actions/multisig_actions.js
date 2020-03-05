@@ -89,6 +89,10 @@ export default class MultisigActions {
     return this.submitTransaction(await this.multiplexerWrapper.removeFromWhitelist(candidateAddress));
   }
 
+  async retireApollo(apolloAddress) {
+    return this.submitTransaction(await this.multiplexerWrapper.retireApollo(apolloAddress));
+  }
+
   async setBaseUploadFee(fee) {
     return this.submitTransaction(await this.multiplexerWrapper.setBaseUploadFee(fee));
   }

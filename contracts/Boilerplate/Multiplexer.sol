@@ -9,8 +9,10 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 pragma solidity ^0.4.23;
 
+import "../Configuration/Consts.sol";
 import "../Boilerplate/Head.sol";
 import "../Front/KycWhitelist.sol";
+import "../Front/Roles.sol";
 import "../Configuration/Fees.sol";
 import "../Middleware/ValidatorProxy.sol";
 
@@ -20,12 +22,23 @@ contract Multiplexer is ConstructorOwnable {
     KycWhitelist public kycWhitelist;
     Fees public fees;
     ValidatorProxy public validatorProxy;
+    Roles private roles;
 
-    constructor(address _owner, Head _head, KycWhitelist _kycWhitelist, Fees _fees, ValidatorProxy _validatorProxy) public ConstructorOwnable(_owner) {
+    constructor(
+        address _owner,
+        Head _head,
+        KycWhitelist _kycWhitelist,
+        Fees _fees,
+        ValidatorProxy _validatorProxy,
+        Roles _roles
+    )
+    public ConstructorOwnable(_owner)
+    {
         head = _head;
         kycWhitelist = _kycWhitelist;
         fees = _fees;
         validatorProxy = _validatorProxy;
+        roles = _roles;
     }
 
     function transferContractsOwnership(address newOwner) public onlyOwner {
@@ -61,5 +74,9 @@ contract Multiplexer is ConstructorOwnable {
 
     function setBaseReward(uint256 _baseReward) public onlyOwner {
         validatorProxy.setBaseReward(_baseReward);
+    }
+
+    function retireApollo(address apollo) public onlyOwner {
+        roles.retireApollo(apollo);
     }
 }

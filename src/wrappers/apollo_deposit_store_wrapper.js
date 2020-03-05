@@ -7,7 +7,15 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-require('events').EventEmitter.defaultMaxListeners = 110;
-process.env.NODE_ENV = 'test';
-process.env.WEB3_RPC = 'ganache';
-process.env.WEB3_NODEPRIVATEKEY = '0xfa654acfc59f0e4fe3bd57082ad28fbba574ac55fe96e915f17de27ad9c77696';
+import ManagedContractWrapper from './managed_contract_wrapper';
+
+export default class ApolloDepositStoreWrapper extends ManagedContractWrapper {
+  get getContractName() {
+    return 'apolloDepositStore';
+  }
+
+  async isDepositing(nodeAddress) {
+    const contract = await this.contract();
+    return contract.methods.isDepositing(nodeAddress).call();
+  }
+}

@@ -60,6 +60,7 @@ describe('Roles Contract', () => {
   const retireAtlas = async (sender) => roles.methods.retireAtlas().send({from: sender, gasPrice: '0'});
   const retireHermes = async (sender) => roles.methods.retireHermes().send({from: sender});
   const retireApollo = async (sender) => roles.methods.retireApollo().send({from: sender, gasPrice: '0'});
+  const retireApolloByAddress = async (address, sender) => roles.methods.retireApollo(address).send({from: sender, gasPrice: '0'});
   const setUrl = async (sender, url) => roles.methods.setUrl(url).send({from: sender});
   const canOnboardAsAtlas = async (address, value) => roles.methods.canOnboard(address, ATLAS, value).call();
   const canOnboardAsHermes = async (address, value) => roles.methods.canOnboard(address, HERMES, value).call();
@@ -374,6 +375,15 @@ describe('Roles Contract', () => {
             role: APOLLO
           }
         );
+      });
+
+      it('retire Apollo by address', async () => {
+        await retireApolloByAddress(apollo, owner);
+        expect(await getRole(apollo)).to.equal('0');
+      });
+
+      it('throw if not owner retire Apollo by address', async () => {
+        await expect(retireApolloByAddress(apollo, apollo)).to.be.eventually.rejected;
       });
     });
 
