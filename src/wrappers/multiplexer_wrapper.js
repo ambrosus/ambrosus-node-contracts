@@ -35,6 +35,10 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
     return this.contract.methods.removeFromWhitelist(candidateAddress).encodeABI();
   }
 
+  async retireApollo(apolloAddress) {
+    return this.contract.methods.retireApollo(apolloAddress).encodeABI();
+  }
+
   async setBaseUploadFee(fee) {
     return this.contract.methods.setBaseUploadFee(fee).encodeABI();
   }
