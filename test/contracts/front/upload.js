@@ -44,9 +44,14 @@ describe('Upload Contract', () => {
   let other;
   let hermes;
   let snapshotId;
+  let developer;
 
   const expectedMinersFee = () => fee.mul(new BN(3)).div(new BN(10));
+  const expectedDeveloperFee = () => fee.div(new BN(2));
+  const expectedMinersWithoutDeveloperFee = () => fee.mul(new BN(3)).div(new BN(20));
   const registerBundle = (bundleId, storagePeriods, uploader, fee) => uploads.methods.registerBundle(bundleId, storagePeriods).send({from: uploader, value: fee, gasPrice: '0'});
+  const setDeveloper = (developer, from = hermes) => fees.methods.setDeveloper(developer).send({from, gasPrice: '0'});
+  const setDeveloperUploadFee = (fee, from = hermes) => fees.methods.setDeveloperUploadFee(fee).send({from, gasPrice: '0'});
 
   before(async () => {
     web3 = await createWeb3();
@@ -65,7 +70,7 @@ describe('Upload Contract', () => {
         challengesEventEmitter: true,
         rewardsEventEmitter: true}
     }));
-    [hermes, atlas, other] = await web3.eth.getAccounts();
+    [hermes, atlas, other, developer] = await web3.eth.getAccounts();
     fee = new BN(await fees.methods.getFeeForUpload(1).call());
     await rolesStore.methods.setRole(hermes, HERMES).send({from: hermes});
     await rolesStore.methods.setRole(atlas, ATLAS).send({from: hermes});
@@ -133,6 +138,20 @@ describe('Upload Contract', () => {
     const balanceAfter = new BN(await web3.eth.getBalance(COINBASE));
     const actualFee = balanceAfter.sub(balanceBefore).sub(BLOCK_REWARD);
     expect(actualFee.eq(expectedMinersFee())).to.be.true;
+  });
+
+  it('Pay fee to miner and developer', async () => {
+    await setDeveloper(developer);
+    await setDeveloperUploadFee('500000');
+    const minerBalanceBefore = new BN(await web3.eth.getBalance(COINBASE));
+    const developerBalanceBefore = new BN(await web3.eth.getBalance(developer));
+    await registerBundle(bundleId, 1, hermes, fee);
+    const minerBalanceAfter = new BN(await web3.eth.getBalance(COINBASE));
+    const developerBalanceAfter = new BN(await web3.eth.getBalance(developer));
+    const actualMinerFee = minerBalanceAfter.sub(minerBalanceBefore).sub(BLOCK_REWARD);
+    expect(actualMinerFee.eq(expectedMinersWithoutDeveloperFee())).to.be.true;
+    const actualDeveloperFee = developerBalanceAfter.sub(developerBalanceBefore);
+    expect(actualDeveloperFee.eq(expectedDeveloperFee())).to.be.true;
   });
 
   it('Emits event signalizing payout of miner fee', async () => {

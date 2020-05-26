@@ -79,4 +79,18 @@ contract Multiplexer is ConstructorOwnable {
     function retireApollo(address apollo) public onlyOwner {
         roles.retireApollo(apollo);
     }
+
+    function setDeveloperFee(uint256 _developerFee) public onlyOwner {
+        fees.setDeveloperFee(_developerFee);
+        fees.setDeveloperUploadFee(_developerFee);
+    }
+
+    function setDeveloper(address _developer) public onlyOwner {
+        fees.setDeveloper(_developer);
+    }
+
+    function setSupportFee(address _support, uint256 _fee) public onlyOwner {
+        fees.setSupport(_support);
+        fees.setSupportFee(_fee);
+    }
 }

@@ -131,15 +131,6 @@ contract Roles is Base {
         return kycWhitelist.hasRoleAssigned(node, role) && amount == kycWhitelist.getRequiredDeposit(node);
     }
 
-    function retire(address node, Consts.NodeType role) private {
-        require(rolesStore.getRole(node) == role);
-
-        if (role == Consts.NodeType.ATLAS || role == Consts.NodeType.HERMES) {
-            rolesStore.setUrl(node, "");
-        }
-        rolesStore.setRole(node, Consts.NodeType.NONE);
-    }
-
     function retireApollo(address apollo) public onlyContextInternalCalls {
         require(rolesStore.getRole(apollo) == Consts.NodeType.APOLLO);
         rolesStore.setRole(apollo, Consts.NodeType.NONE);
@@ -150,5 +141,14 @@ contract Roles is Base {
         rolesEventEmitter.nodeRetired(apollo, amountToTransfer, Consts.NodeType.APOLLO);
 
         apollo.transfer(amountToTransfer);
+    }
+
+    function retire(address node, Consts.NodeType role) private {
+        require(rolesStore.getRole(node) == role);
+
+        if (role == Consts.NodeType.ATLAS || role == Consts.NodeType.HERMES) {
+            rolesStore.setUrl(node, "");
+        }
+        rolesStore.setRole(node, Consts.NodeType.NONE);
     }
 }

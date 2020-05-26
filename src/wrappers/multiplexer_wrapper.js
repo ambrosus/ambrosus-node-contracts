@@ -54,4 +54,16 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
   async setBaseReward(newBaseReward) {
     return this.contract.methods.setBaseReward(newBaseReward).encodeABI();
   }
+
+  async setDeveloper(developer) {
+    return this.contract.methods.setDeveloper(developer).encodeABI();
+  }
+
+  async setDeveloperFee(developerFee) {
+    return this.contract.methods.setDeveloperFee(developerFee).encodeABI();
+  }
+
+  async setSupportFee(support, fee) {
+    return this.contract.methods.setSupportFee(support, fee).encodeABI();
+  }
 }

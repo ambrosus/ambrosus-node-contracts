@@ -50,8 +50,14 @@ contract Uploads is Base {
         require(storagePeriods > 0);
         require(msg.value == fee);
 
+        uint developerFee = fees.getDeveloperUploadFee(fee);
+        if (developerFee > 0 && fees.developer() != address(0)) {
+            fees.developer().transfer(developerFee);
+            fee = fee.sub(developerFee);
+        }
+
         sheltering.storeBundle(bundleId, msg.sender, storagePeriods);
-        (uint challengeFee, uint validatorsFee) = fees.calculateFeeSplit(msg.value);
+        (uint challengeFee, uint validatorsFee) = fees.calculateFeeSplit(fee);
         block.coinbase.transfer(validatorsFee);
         rewardsEventEmitter.apolloBundleReward(msg.sender, bundleId, validatorsFee);
         challenges.startForSystem.value(challengeFee)(msg.sender, bundleId, SYSTEM_CHALLENGES_COUNT);
