@@ -22,6 +22,7 @@ contract Fees is Base, Ownable {
     using SafeMath for uint;
     using SafeMathExtensions for uint;
 
+    uint constant private MILLION = 1000000;
     uint constant public CHALLENGER_FEE_DIVIDER = 10;
     uint constant public CHALLENGER_FEE_MULTIPLIER = 7;
     uint constant public UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO = 10;
@@ -50,7 +51,7 @@ contract Fees is Base, Ownable {
     }
 
     function setDeveloperFee(uint fee) public onlyOwner {
-        require(fee >= 0);
+        require(fee >= 0 && fee <= MILLION);
         developerFeePPM = fee;
     }
 
@@ -66,7 +67,7 @@ contract Fees is Base, Ownable {
 
     function getDeveloperUploadFee(uint amount) public view returns (uint) {
         if (developerUploadFeePPM > 0) {
-            return amount.mul(developerUploadFeePPM).div(1000000);
+            return amount.mul(developerUploadFeePPM).div(MILLION);
         } else {
             return 0;
         }
@@ -84,7 +85,7 @@ contract Fees is Base, Ownable {
 
     function getFeeForChallenge(uint64 storagePeriods) public view returns (uint) {
         if (developerUploadFeePPM > 0) {
-            return getFeeForUpload(storagePeriods).mul(developerUploadFeePPM).div(1000000).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
+            return getFeeForUpload(storagePeriods).mul(developerUploadFeePPM).div(MILLION).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
         } else {
             return getFeeForUpload(storagePeriods).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
         }

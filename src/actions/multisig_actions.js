@@ -132,4 +132,16 @@ export default class MultisigActions {
   async getOwners() {
     return this.multisigWrapper.getOwners();
   }
+
+  async setDeveloper(developer) {
+    return this.submitTransaction(await this.multiplexerWrapper.setDeveloper(developer));
+  }
+
+  async setDeveloperFee(fee) {
+    return this.submitTransaction(await this.multiplexerWrapper.setDeveloperFee(fee));
+  }
+
+  async setSupportFee(support, fee) {
+    return this.submitTransaction(await this.multiplexerWrapper.setSupportFee(support, fee));
+  }
 }
