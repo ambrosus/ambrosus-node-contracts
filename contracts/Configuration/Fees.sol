@@ -67,7 +67,8 @@ contract Fees is Base, Ownable {
 
     function getDeveloperUploadFee(uint amount) public view returns (uint) {
         if (developerUploadFeePPM > 0) {
-            return amount.mul(developerUploadFeePPM).div(MILLION);
+            uint fee = amount.sub(amount.mul(developerUploadFeePPM).div(MILLION)).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO).mul(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
+            return amount - fee;
         } else {
             return 0;
         }
@@ -85,7 +86,8 @@ contract Fees is Base, Ownable {
 
     function getFeeForChallenge(uint64 storagePeriods) public view returns (uint) {
         if (developerUploadFeePPM > 0) {
-            return getFeeForUpload(storagePeriods).mul(developerUploadFeePPM).div(MILLION).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
+            uint fee = getFeeForUpload(storagePeriods);
+            return fee.sub(fee.mul(developerUploadFeePPM).div(MILLION)).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO).mul(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
         } else {
             return getFeeForUpload(storagePeriods).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
         }

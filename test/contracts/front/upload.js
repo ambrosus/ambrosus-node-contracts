@@ -46,9 +46,12 @@ describe('Upload Contract', () => {
   let snapshotId;
   let developer;
 
-  const expectedMinersFee = () => fee.mul(new BN(3)).div(new BN(10));
-  const expectedDeveloperFee = () => fee.div(new BN(2));
-  const expectedMinersWithoutDeveloperFee = () => fee.mul(new BN(3)).div(new BN(20));
+  const bn10 = new BN(10);
+  const developerFee = new BN(333333);
+  const nonDeveloperFee = () => fee.sub(fee.mul(developerFee).div(new BN(1000000))).div(bn10).mul(bn10);
+  const expectedMinersFee = () => fee.mul(new BN(3)).div(bn10);
+  const expectedDeveloperFee = () => fee.sub(nonDeveloperFee());
+  const expectedMinersWithoutDeveloperFee = () => nonDeveloperFee().mul(new BN(3)).div(bn10);
   const registerBundle = (bundleId, storagePeriods, uploader, fee) => uploads.methods.registerBundle(bundleId, storagePeriods).send({from: uploader, value: fee, gasPrice: '0'});
   const setDeveloper = (developer, from = hermes) => fees.methods.setDeveloper(developer).send({from, gasPrice: '0'});
   const setDeveloperUploadFee = (fee, from = hermes) => fees.methods.setDeveloperUploadFee(fee).send({from, gasPrice: '0'});
@@ -142,7 +145,7 @@ describe('Upload Contract', () => {
 
   it('Pay fee to miner and developer', async () => {
     await setDeveloper(developer);
-    await setDeveloperUploadFee('500000');
+    await setDeveloperUploadFee(developerFee);
     const minerBalanceBefore = new BN(await web3.eth.getBalance(COINBASE));
     const developerBalanceBefore = new BN(await web3.eth.getBalance(developer));
     await registerBundle(bundleId, 1, hermes, fee);
