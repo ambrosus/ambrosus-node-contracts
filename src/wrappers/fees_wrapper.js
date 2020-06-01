@@ -33,4 +33,29 @@ export default class FeesWrapper extends ManagedOwnableContractWrapper {
     const contract = await this.contract();
     return contract.methods.getPenalty(nominalStake, penaltiesCount, lastPenaltyTime).call();
   }
+
+  async getDeveloper() {
+    const contract = await this.contract();
+    return contract.methods.developer().call();
+  }
+
+  async setDeveloper(developer) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.setDeveloper(developer));
+  }
+
+  async getDeveloperFee() {
+    const contract = await this.contract();
+    return contract.methods.developerFeePPM().call();
+  }
+
+  async setDeveloperFee(fee) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.setDeveloperFee(fee));
+  }
+
+  async setSupportFee(support, fee) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.setSupportFee(support, fee));
+  }
 }

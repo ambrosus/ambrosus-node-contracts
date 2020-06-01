@@ -29,6 +29,8 @@ describe('Fees Contract', () => {
   let basicFee;
   let from;
   let other;
+  let developer;
+  let support;
   let snapshotId;
 
   const getPenalty = async (nominalStake, penaltiesCount, lastPenaltyTime) => {
@@ -36,15 +38,25 @@ describe('Fees Contract', () => {
     return [result['0'], result['1']];
   };
 
-  const changeBaseFee = async (fee, from) =>
-    fees.methods.setBaseUploadFee(utils.toWei(fee, 'ether')).send({from});
+  const changeBaseFee = async (fee, from) => fees.methods.setBaseUploadFee(utils.toWei(fee, 'ether')).send({from});
+  const setDeveloper = async (developer, from) => fees.methods.setDeveloper(developer).send({from});
+  const setSupport = async (support, from) => fees.methods.setSupport(support).send({from});
+  const setSupportFee = async (fee, from) => fees.methods.setSupportFee(fee).send({from});
+  const setDeveloperFee = async (fee, from) => fees.methods.setDeveloperFee(fee).send({from});
+  const setDeveloperUploadFee = async (fee, from) => fees.methods.setDeveloperUploadFee(fee).send({from});
 
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
   const getFeeForUpload = async (storagePeriods) => fees.methods.getFeeForUpload(storagePeriods).call();
 
+  const bn10 = new BN(10);
+  const developerFeePPM = new BN(333333);
+  const nonDeveloperFee = (fee) => fee.sub(fee.mul(developerFeePPM).div(new BN(1000000))).div(bn10)
+    .mul(bn10);
+  const developerFee = (fee) => fee.sub(nonDeveloperFee(fee));
+
   before(async () => {
     web3 = await createWeb3();
-    [from, other] = await web3.eth.getAccounts();
+    [from, other, developer, support] = await web3.eth.getAccounts();
     ({fees, time} = await deploy({
       web3,
       contracts: {
@@ -78,6 +90,26 @@ describe('Fees Contract', () => {
 
   it('Only an owner can modify basic fee', async () => {
     await expect(changeBaseFee('20', other)).to.be.eventually.rejected;
+  });
+
+  it('Only an owner can modify developer account', async () => {
+    await expect(setDeveloper(developer, other)).to.be.eventually.rejected;
+  });
+
+  it('Only an owner can modify developer fee', async () => {
+    await expect(setDeveloperFee('20', other)).to.be.eventually.rejected;
+  });
+
+  it('Only an owner can modify developer upload fee', async () => {
+    await expect(setDeveloperUploadFee('20', other)).to.be.eventually.rejected;
+  });
+
+  it('Only an owner can modify support fee', async () => {
+    await expect(setSupportFee(support, '20', other)).to.be.eventually.rejected;
+  });
+
+  it(`Developer fee can be set to 0`, async () => {
+    await expect(setDeveloperUploadFee('0', from)).to.be.fulfilled;
   });
 
   describe('Challenge fees', () => {
@@ -150,6 +182,42 @@ describe('Fees Contract', () => {
           .add(new BN(validatorsFee))
           .toString()
       ).to.equal(basicFee);
+    });
+  });
+
+  describe('Developer and support fees', () => {
+    it('Sets developer account correctly', async () => {
+      await expect(setDeveloper(developer, from)).to.be.fulfilled;
+      expect(await fees.methods.developer().call()).to.equal(developer);
+    });
+
+    it('Sets support account correctly', async () => {
+      await expect(setSupport(support, from)).to.be.fulfilled;
+      expect(await fees.methods.support().call()).to.equal(support);
+    });
+
+    it('Sets developer fee correctly', async () => {
+      await expect(setDeveloperFee('250000', from)).to.be.fulfilled;
+      const ppm = await fees.methods.developerFeePPM().call();
+      expect(ppm).to.equal('250000');
+    });
+
+    it('Sets developer upload fee correctly', async () => {
+      await expect(setDeveloperUploadFee('500000', from)).to.be.fulfilled;
+      const ppm = await fees.methods.developerUploadFeePPM().call();
+      expect(ppm).to.equal('500000');
+    });
+
+    it('Sets support fee correctly', async () => {
+      await expect(setSupportFee('100000', from)).to.be.fulfilled;
+      expect(await fees.methods.supportFeePPM().call()).to.equal('100000');
+    });
+
+    it('Calculates fee correctly', async () => {
+      const fee = new BN(1000000000);
+      await expect(setDeveloperUploadFee(developerFeePPM, from)).to.be.fulfilled;
+      const developerFeeValue = await fees.methods.getDeveloperUploadFee(fee).call();
+      expect(developerFeeValue).to.equal(developerFee(fee).toString(10));
     });
   });
 

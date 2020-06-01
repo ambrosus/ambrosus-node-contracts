@@ -22,6 +22,8 @@ describe('Multiplexer', () => {
   let newOwner;
   let otherAddress;
   let apollo;
+  let developer;
+  let support;
   let superUser;
   let head;
   let multiplexer;
@@ -46,12 +48,15 @@ describe('Multiplexer', () => {
   const transferOwnershipForValidatorSet = (newOwner, from = oldOwner) => multiplexer.methods.transferOwnershipForValidatorSet(newOwner).send({from});
   const transferOwnershipForBlockRewards = (newOwner, from = oldOwner) => multiplexer.methods.transferOwnershipForBlockRewards(newOwner).send({from});
   const setBaseReward = (newBaseReward, from = oldOwner) => multiplexer.methods.setBaseReward(newBaseReward).send({from});
+  const setDeveloperFee = (developerFee, from = oldOwner) => multiplexer.methods.setDeveloperFee(developerFee).send({from});
+  const setSupportFee = (support, supportFee, from = oldOwner) => multiplexer.methods.setSupportFee(support, supportFee).send({from});
+  const setDeveloper = (developer, from = oldOwner) => multiplexer.methods.setDeveloper(developer).send({from});
 
   const baseReward = '2000000000000000000';
 
   before(async () => {
     web3 = await createWeb3();
-    [oldOwner, newOwner, otherAddress, superUser, apollo] = await web3.eth.getAccounts();
+    [oldOwner, newOwner, otherAddress, superUser, apollo, developer, support] = await web3.eth.getAccounts();
     ({head, multiplexer, kycWhitelist, fees, roles, validatorProxy, validatorSet, blockRewards, apolloDepositStore} = await deploy({
       web3,
       contracts: {
@@ -180,6 +185,44 @@ describe('Multiplexer', () => {
 
     it('throws when not an owner tries to change fee', async () => {
       await expect(setBaseUploadFee(otherAddress, otherAddress)).to.be.rejected;
+    });
+  });
+
+  describe('Set developer fee', () => {
+    const exampleDeveloperFee = '500000';
+
+    it('sets developer fee', async () => {
+      await setDeveloperFee(exampleDeveloperFee);
+      expect(await fees.methods.developerUploadFeePPM().call()).to.equal(exampleDeveloperFee);
+    });
+
+    it('throws when not an owner tries to change developer fee', async () => {
+      await expect(setDeveloperFee(otherAddress, otherAddress)).to.be.rejected;
+    });
+  });
+
+  describe('Set developer account', () => {
+    it('sets developer account', async () => {
+      await setDeveloper(developer);
+      expect(await fees.methods.developer().call()).to.equal(developer);
+    });
+
+    it('throws when not an owner tries to change developer account', async () => {
+      await expect(setDeveloper(otherAddress, otherAddress)).to.be.rejected;
+    });
+  });
+
+  describe('Set support fee', () => {
+    const exampleSupportFee = '500000';
+
+    it('sets support fee', async () => {
+      await setSupportFee(support, exampleSupportFee);
+      expect(await fees.methods.support().call()).to.equal(support);
+      expect(await fees.methods.supportFeePPM().call()).to.equal(exampleSupportFee);
+    });
+
+    it('throws when not an owner tries to change developer fee', async () => {
+      await expect(setDeveloperFee(otherAddress, otherAddress)).to.be.rejected;
     });
   });
 

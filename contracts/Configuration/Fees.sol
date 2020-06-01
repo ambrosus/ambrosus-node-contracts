@@ -22,11 +22,17 @@ contract Fees is Base, Ownable {
     using SafeMath for uint;
     using SafeMathExtensions for uint;
 
+    uint constant private MILLION = 1000000;
     uint constant public CHALLENGER_FEE_DIVIDER = 10;
     uint constant public CHALLENGER_FEE_MULTIPLIER = 7;
     uint constant public UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO = 10;
 
     uint public baseUploadFee = 10 ether;
+    uint public supportFeePPM = 0;
+    uint public developerFeePPM = 0;
+    uint public developerUploadFeePPM = 0;
+    address public developer;
+    address public support;
     Config private config;
     Time private time;
 
@@ -34,6 +40,38 @@ contract Fees is Base, Ownable {
     constructor(Head _head, Config _config, Time _time) public Base(_head) {
         config = _config;
         time = _time;
+    }
+
+    function setDeveloper(address _developer) public onlyOwner {
+        developer = _developer;
+    }
+
+    function setSupport(address _support) public onlyOwner {
+        support = _support;
+    }
+
+    function setDeveloperFee(uint fee) public onlyOwner {
+        require(fee >= 0 && fee <= MILLION);
+        developerFeePPM = fee;
+    }
+
+    function setDeveloperUploadFee(uint fee) public onlyOwner {
+        require(fee >= 0);
+        developerUploadFeePPM = fee;
+    }
+
+    function setSupportFee(uint fee) public onlyOwner {
+        require(fee >= 0);
+        supportFeePPM = fee;
+    }
+
+    function getDeveloperUploadFee(uint amount) public view returns (uint) {
+        if (developerUploadFeePPM > 0) {
+            uint fee = amount.sub(amount.mul(developerUploadFeePPM).div(MILLION)).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO).mul(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
+            return amount - fee;
+        } else {
+            return 0;
+        }
     }
 
     function setBaseUploadFee(uint fee) public onlyOwner {
@@ -47,7 +85,12 @@ contract Fees is Base, Ownable {
     }
 
     function getFeeForChallenge(uint64 storagePeriods) public view returns (uint) {
-        return getFeeForUpload(storagePeriods).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
+        if (developerUploadFeePPM > 0) {
+            uint fee = getFeeForUpload(storagePeriods);
+            return fee.sub(fee.mul(developerUploadFeePPM).div(MILLION)).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO).mul(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
+        } else {
+            return getFeeForUpload(storagePeriods).div(UPLOAD_FEE_TO_CHALLENGE_FEE_RATIO);
+        }
     }
 
     function calculateFeeSplit(uint value) public pure returns (uint challengeFee, uint validatorsFee) {
