@@ -48,6 +48,11 @@ describe('Fees Contract', () => {
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();
   const getFeeForUpload = async (storagePeriods) => fees.methods.getFeeForUpload(storagePeriods).call();
 
+  const bn10 = new BN(10);
+  const developerFeePPM = new BN(333333);
+  const nonDeveloperFee = (fee) => fee.sub(fee.mul(developerFeePPM).div(new BN(1000000))).div(bn10).mul(bn10);
+  const developerFee = (fee) => fee.sub(nonDeveloperFee(fee));
+
   before(async () => {
     web3 = await createWeb3();
     [from, other, developer, support] = await web3.eth.getAccounts();
@@ -192,14 +197,14 @@ describe('Fees Contract', () => {
 
     it('Sets developer fee correctly', async () => {
       await expect(setDeveloperFee('250000', from)).to.be.fulfilled;
-      const developerFee = await fees.methods.developerFeePPM().call();
-      expect(developerFee).to.equal('250000');
+      const ppm = await fees.methods.developerFeePPM().call();
+      expect(ppm).to.equal('250000');
     });
 
     it('Sets developer upload fee correctly', async () => {
       await expect(setDeveloperUploadFee('500000', from)).to.be.fulfilled;
-      const developerFee = await fees.methods.developerUploadFeePPM().call();
-      expect(developerFee).to.equal('500000');
+      const ppm = await fees.methods.developerUploadFeePPM().call();
+      expect(ppm).to.equal('500000');
     });
 
     it('Sets support fee correctly', async () => {
@@ -208,9 +213,10 @@ describe('Fees Contract', () => {
     });
 
     it('Calculates fee correctly', async () => {
-      await expect(setDeveloperUploadFee('500000', from)).to.be.fulfilled;
-      const developerFee = await fees.methods.getDeveloperUploadFee('500000').call();
-      expect(developerFee).to.equal('250000');
+      const fee = new BN(1000000000);
+      await expect(setDeveloperUploadFee(developerFeePPM, from)).to.be.fulfilled;
+      const developerFeeValue = await fees.methods.getDeveloperUploadFee(fee).call();
+      expect(developerFeeValue).to.equal(developerFee(fee).toString(10));
     });
   });
 
