@@ -50,7 +50,8 @@ describe('Fees Contract', () => {
 
   const bn10 = new BN(10);
   const developerFeePPM = new BN(333333);
-  const nonDeveloperFee = (fee) => fee.sub(fee.mul(developerFeePPM).div(new BN(1000000))).div(bn10).mul(bn10);
+  const nonDeveloperFee = (fee) => fee.sub(fee.mul(developerFeePPM).div(new BN(1000000))).div(bn10)
+    .mul(bn10);
   const developerFee = (fee) => fee.sub(nonDeveloperFee(fee));
 
   before(async () => {

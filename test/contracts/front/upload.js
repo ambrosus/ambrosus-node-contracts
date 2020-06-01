@@ -48,10 +48,12 @@ describe('Upload Contract', () => {
 
   const bn10 = new BN(10);
   const developerFee = new BN(333333);
-  const nonDeveloperFee = () => fee.sub(fee.mul(developerFee).div(new BN(1000000))).div(bn10).mul(bn10);
+  const nonDeveloperFee = () => fee.sub(fee.mul(developerFee).div(new BN(1000000))).div(bn10)
+    .mul(bn10);
   const expectedMinersFee = () => fee.mul(new BN(3)).div(bn10);
   const expectedDeveloperFee = () => fee.sub(nonDeveloperFee());
-  const expectedMinersWithoutDeveloperFee = () => nonDeveloperFee().mul(new BN(3)).div(bn10);
+  const expectedMinersWithoutDeveloperFee = () => nonDeveloperFee().mul(new BN(3))
+    .div(bn10);
   const registerBundle = (bundleId, storagePeriods, uploader, fee) => uploads.methods.registerBundle(bundleId, storagePeriods).send({from: uploader, value: fee, gasPrice: '0'});
   const setDeveloper = (developer, from = hermes) => fees.methods.setDeveloper(developer).send({from, gasPrice: '0'});
   const setDeveloperUploadFee = (fee, from = hermes) => fees.methods.setDeveloperUploadFee(fee).send({from, gasPrice: '0'});
