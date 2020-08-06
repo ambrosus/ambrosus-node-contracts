@@ -101,6 +101,15 @@ contract Sheltering is Base {
         return refundValue;
     }
 
+    function removeExpiredBundle(bytes32 bundleId, address shelterer) public {
+        uint64 expirationDate = getShelteringExpirationDate(bundleId, shelterer);
+        require(expirationDate > 0);
+        require(time.currentTimestamp() > expirationDate);
+
+        atlasStakeStore.decrementShelteredBundlesCount(shelterer);
+        bundleStore.removeShelterer(bundleId, shelterer);
+    }
+
     function penalizeShelterer(address sheltererId, address refundAddress) public onlyContextInternalCalls returns(uint) {
         (uint penaltiesCount, uint64 lastPenaltyTime) = atlasStakeStore.getPenaltiesHistory(sheltererId);
         uint basicStake = atlasStakeStore.getBasicStake(sheltererId);
