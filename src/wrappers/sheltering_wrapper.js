@@ -44,4 +44,9 @@ export default class ShelteringWrapper extends ManagedContractWrapper {
     const contract = await this.contract();
     return contract.methods.getBundleUploader(bundleId).call();
   }
+
+  async removeExpiredBundle(bundleId, shelterer = this.defaultAddress) {
+    const contract = await this.contract();
+    return contract.methods.removeExpiredBundle(bundleId, shelterer).send({from: this.defaultAddress});
+  }
 }
