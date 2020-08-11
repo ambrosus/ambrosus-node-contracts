@@ -59,8 +59,11 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
     }
 
     function cancel(bytes32 transferId) public {
-        (address donorId, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(transferId);
-        require(msg.sender == donorId);
+        (address donorId, bytes32 bundleId, uint creationTime) = shelteringTransfersStore.getTransfer(transferId);
+        require(creationTime > 0);
+        if ((time.currentTimestamp() < creationTime.add(config.CHALLENGE_DURATION())) && sheltering.isSheltering(bundleId, donorId)) {
+            require(msg.sender == donorId);
+        }
         transfersEventEmitter.transferCancelled(transferId, donorId, bundleId);
         shelteringTransfersStore.remove(transferId);
     }
