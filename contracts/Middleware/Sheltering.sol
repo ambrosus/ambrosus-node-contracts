@@ -102,8 +102,12 @@ contract Sheltering is Base {
     }
 
     function removeExpiredBundle(bytes32 bundleId, address shelterer) public {
-        uint64 expirationDate = getShelteringExpirationDate(bundleId, shelterer);
-        require(expirationDate > 0);
+        require(bundleStore.getShelteringStartDate(bundleId, shelterer) > 0);
+
+        uint64 uploadTimestamp = bundleStore.getUploadTimestamp(bundleId);
+        require(uploadTimestamp > 0);
+        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
+        uint64 expirationDate = uploadTimestamp.add(storagePeriods.mul(time.STORAGE_PERIOD_DURATION())).castTo64();
         require(time.currentTimestamp() > expirationDate);
 
         atlasStakeStore.decrementShelteredBundlesCount(shelterer);
