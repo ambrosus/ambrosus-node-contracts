@@ -130,6 +130,8 @@ contract Sheltering is Base {
 
         atlasStakeStore.decrementShelteredBundlesCount(shelterer);
         bundleStore.removeShelterer(bundleId, shelterer);
+
+        bundleStore.getUploader(bundleId).transfer(msg.value);
     }
 
     function penalizeShelterer(address sheltererId, address refundAddress) public onlyContextInternalCalls returns(uint) {
