@@ -108,7 +108,25 @@ contract Sheltering is Base {
         require(uploadTimestamp > 0);
         uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
         uint64 expirationDate = uploadTimestamp.add(storagePeriods.mul(time.STORAGE_PERIOD_DURATION())).castTo64();
+        uint64 shelteringExpirationDate = getShelteringExpirationDate(bundleId, shelterer);
+        require(shelteringExpirationDate > 0);
+        if (shelteringExpirationDate < expirationDate) {
+            expirationDate = shelteringExpirationDate;
+        }
         require(time.currentTimestamp() > expirationDate);
+
+        atlasStakeStore.decrementShelteredBundlesCount(shelterer);
+        bundleStore.removeShelterer(bundleId, shelterer);
+    }
+
+    function dropBundle(bytes32 bundleId, address shelterer) public payable {
+        require(bundleStore.getUploadTimestamp(bundleId) > 0);
+        require(bundleStore.getShelteringStartDate(bundleId, shelterer) > 0);
+        require(getShelteringExpirationDate(bundleId, shelterer) > 0);
+
+        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
+        uint fee = fees.getFeeForChallenge(storagePeriods);
+        require(msg.value >= fee);
 
         atlasStakeStore.decrementShelteredBundlesCount(shelterer);
         bundleStore.removeShelterer(bundleId, shelterer);
