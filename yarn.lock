@@ -2646,9 +2646,9 @@ express@^4.14.0:
     vary "~1.1.2"
 
 extend@~3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/extend/-/extend-3.0.1.tgz#a755ea7bc1adfcc5a31ce7e762dbaadc5e636444"
-  integrity sha1-p1Xqe8Gt/MWjHOfnYtuq3F5jZEQ=
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/extend/-/extend-3.0.2.tgz#f8b1136b4071fbd8eb140aff858b1019ec2915fa"
+  integrity sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==
 
 external-editor@^2.0.4:
   version "2.2.0"
@@ -6462,7 +6462,7 @@ web3-utils@1.0.0-beta.34:
 
 web3@1.0.0-beta.34, web3@^1.0.0-beta.30:
   version "1.0.0-beta.34"
-  resolved "http://registry.npmjs.org/web3/-/web3-1.0.0-beta.34.tgz#347e561b784098cb5563315f490479a1d91f2ab1"
+  resolved "https://registry.npmjs.org/web3/-/web3-1.0.0-beta.34.tgz#347e561b784098cb5563315f490479a1d91f2ab1"
   integrity sha1-NH5WG3hAmMtVYzFfSQR5odkfKrE=
   dependencies:
     web3-bzz "1.0.0-beta.34"
