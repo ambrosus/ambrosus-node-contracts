@@ -142,14 +142,24 @@ contract Sheltering is Base {
         return atlasStakeStore.slash(sheltererId, refundAddress, penaltyAmount);
     }
 
-    function transferSheltering(bytes32 bundleId, address donorId, address recipientId) public onlyContextInternalCalls {
+    function transferSheltering(bytes32 bundleId, address donorId, address recipientId) public onlyContextInternalCalls returns(bool) {
         require(donorId != recipientId);
 
         uint64 currentPeriod = time.currentPayoutPeriod();
         uint64 uploadPeriod = time.payoutPeriod(bundleStore.getUploadTimestamp(bundleId));
 
         uint refund = this.removeShelterer(bundleId, donorId, this);
-        addSheltererInternal(bundleId, recipientId, refund, currentPeriod.sub(uploadPeriod).castTo64());
+
+        uint64 storagePeriods = bundleStore.getStoragePeriodsCount(bundleId);
+        uint64 payoutPeriodReduction = currentPeriod.sub(uploadPeriod).castTo64();
+        uint64 payoutPeriods = storagePeriods.mul(time.PAYOUT_TO_STORAGE_PERIOD_MULTIPLIER()).sub(payoutPeriodReduction).castTo64();
+        if (payoutPeriods > 0) {
+            addSheltererInternal(bundleId, recipientId, refund, payoutPeriodReduction);
+            return true;
+        } else {
+            bundleStore.getUploader(bundleId).transfer(refund);
+            return false;
+        }
     }
 
     function getShelteringCap() public view returns (uint) {

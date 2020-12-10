@@ -52,9 +52,11 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
 
         (address donorId, bytes32 bundleId, ) = shelteringTransfersStore.getTransfer(transferId);
 
-        sheltering.transferSheltering(bundleId, donorId, msg.sender);
-
-        transfersEventEmitter.transferResolved(transferId, donorId, bundleId, msg.sender);
+        if (sheltering.transferSheltering(bundleId, donorId, msg.sender)) {
+            transfersEventEmitter.transferResolved(transferId, donorId, bundleId, msg.sender);
+        } else {
+            transfersEventEmitter.transferCancelled(transferId, donorId, bundleId);
+        }
         shelteringTransfersStore.remove(transferId);
     }
 
