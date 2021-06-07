@@ -59,6 +59,6 @@
     "sinon": "^6.1.4",
     "sinon-chai": "^3.2.0",
     "solium": "^1.1.7",
-    "truffle": "^5.3.9"
+    "truffle": "^4.1.17"
   }
 }
