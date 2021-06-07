@@ -19,7 +19,7 @@ export default class BlockchainStateWrapper {
   }
 
   async isAddressAContract(address) {
-    return await this.web3.eth.getCode(address) !== '0x0';
+    return await this.web3.eth.getCode(address) !== '0x';
   }
 
   async getBalance(address) {

@@ -71,18 +71,15 @@ describe('Validator set contract', () => {
     // NOTE: web3 incorrectly reports a failed deployment as successful, as a workaround we try to call a different method which should then fail.
     const zeroAddress = '0x0000000000000000000000000000000000000000';
     it('throws if no initial validators are provided', async () => {
-      const contract = await deploy(web3, deployer, owner, [], superUser);
-      await expect(getValidators(contract)).to.eventually.be.rejected;
+      await expect(deploy(web3, deployer, owner, [], superUser)).to.eventually.be.rejected;
     });
 
     it('throws if super user  is 0x0', async () => {
-      const contract = await deploy(web3, deployer, owner, exampleValidatorAddresses, zeroAddress);
-      await expect(getValidators(contract)).to.eventually.be.rejected;
+      await expect(deploy(web3, deployer, owner, exampleValidatorAddresses, zeroAddress)).to.eventually.be.rejected;
     });
 
     it('throws if owner is 0x0', async () => {
-      const contract = await deploy(web3, deployer, zeroAddress, exampleValidatorAddresses, superUser);
-      await expect(getValidators(contract)).to.eventually.be.rejected;
+      await expect(deploy(web3, deployer, zeroAddress, exampleValidatorAddresses, superUser)).to.eventually.be.rejected;
     });
   });
 
