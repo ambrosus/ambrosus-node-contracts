@@ -47,7 +47,8 @@ const startGanacheServer = (privateKeys) => new Promise((resolve, reject) => {
     accounts: [
       ...accountRequests,
       ...Array(9).fill({balance: '10000000000000000000000000000000000'})
-    ]
+    ],
+    blockTime: 1 // add automatic mining over time
   });
   server.listen(PORT, (err) => {
     if (err) {
@@ -107,7 +108,10 @@ const resetEnvFile = async function () {
   return deployEnvFile;
 };
 
-const sleep = async (time) => new Promise((resolve) => setTimeout(resolve, time));
+const msleep = async (mSecs) => {
+  // eslint-disable-next-line no-undef
+  await Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, mSecs);
+};
 
 startGanacheServer(
   [
@@ -214,7 +218,7 @@ startGanacheServer(
       if (!penaltyBefore.includes('750 AMB')) {
         throw new Error('Expected penalty to equal 750 AMB');
       }
-      await sleep(20000);
+      await msleep(20000);
       await execute(`yarn task challenge status 0x7c2c31dbe720b0c3da6fe529b84aa402e102f1675413b052ea736e5730b44342`, hermesEnv);
       await execute(`yarn task challenge expire 0x7c2c31dbe720b0c3da6fe529b84aa402e102f1675413b052ea736e5730b44342`, hermesEnv);
       const penaltyAfter = await execute(`yarn task challenge nextPenalty ${atlasUser.address}`, hermesEnv);
