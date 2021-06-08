@@ -161,4 +161,7 @@ const extractGasUsedFromError = (error) => {
   return result ? result[1] : undefined;
 };
 
-runGasBenchmark();
+runGasBenchmark().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
