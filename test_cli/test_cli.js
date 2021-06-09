@@ -108,10 +108,7 @@ const resetEnvFile = async function () {
   return deployEnvFile;
 };
 
-const msleep = async (mSecs) => {
-  // eslint-disable-next-line no-undef
-  await Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, mSecs);
-};
+const msleep = async (time) => new Promise((resolve) => setTimeout(resolve, time));
 
 startGanacheServer(
   [

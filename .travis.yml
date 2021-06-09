@@ -1,11 +1,11 @@
-dist: xenial
+dist: trusty
 language: node_js
 cache:
   yarn: true
   directories:
   - node_modules
 node_js:
-  - '14'
+  - '10'
 install:
   - yarn install
 jobs:
