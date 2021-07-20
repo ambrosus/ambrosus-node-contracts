@@ -93,4 +93,12 @@ contract Multiplexer is ConstructorOwnable {
         fees.setSupport(_support);
         fees.setSupportFee(_fee);
     }
+
+    function addAdmin(address _admin) public onlyOwner {
+        fees.addAdmin(_admin);
+    }
+
+    function removeAdmin(address _admin) public onlyOwner {
+        fees.removeAdmin(_admin);
+    }
 }

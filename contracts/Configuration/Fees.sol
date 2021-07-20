@@ -36,6 +36,8 @@ contract Fees is Base, Ownable {
     Config private config;
     Time private time;
 
+    mapping (address => bool) public isAdmin;
+    address[] public admins;
 
     constructor(Head _head, Config _config, Time _time) public Base(_head) {
         config = _config;
@@ -103,6 +105,28 @@ contract Fees is Base, Ownable {
             return (nominalStake.div(config.PENALTY_DIVIDER()), 1);
         } else {
             return (nominalStake.mul(penaltiesCount.safePow2()).div(config.PENALTY_DIVIDER()), penaltiesCount + 1);
+        }
+    }
+
+    function getAdmins() public view returns (address[]) {
+        return admins;
+    }
+
+    function addAdmin(address admin) public onlyOwner {
+        isAdmin[admin] = true;
+        admins.push(admin);
+    }
+
+    function removeAdmin(address admin) public onlyOwner {
+        if (isAdmin[admin]) {
+            isAdmin[admin] = false;
+            for (uint i=0; i<admins.length - 1; i++) {
+                if (admins[i] == admin) {
+                    admins[i] = admins[admins.length - 1];
+                    break;
+                }
+            }
+            admins.length -= 1;
         }
     }
 }
