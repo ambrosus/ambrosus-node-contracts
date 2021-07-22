@@ -142,7 +142,7 @@ describe('Upload Contract', () => {
     await registerBundle(bundleId, 1, hermes, fee);
     const balanceAfter = new BN(await web3.eth.getBalance(COINBASE));
     const actualFee = balanceAfter.sub(balanceBefore).sub(BLOCK_REWARD);
-    expect(actualFee.eq(expectedMinersFee())).to.be.true;
+    expect(actualFee.eq(expectedMinersFee().sub(new BN('1000000000000000000')))).to.be.true;
   });
 
   it('Pay fee to miner and developer', async () => {
@@ -154,7 +154,7 @@ describe('Upload Contract', () => {
     const minerBalanceAfter = new BN(await web3.eth.getBalance(COINBASE));
     const developerBalanceAfter = new BN(await web3.eth.getBalance(developer));
     const actualMinerFee = minerBalanceAfter.sub(minerBalanceBefore).sub(BLOCK_REWARD);
-    expect(actualMinerFee.eq(expectedMinersWithoutDeveloperFee())).to.be.true;
+    expect(actualMinerFee.eq(expectedMinersWithoutDeveloperFee().sub(new BN('1000000000000000000')))).to.be.true;
     const actualDeveloperFee = developerBalanceAfter.sub(developerBalanceBefore);
     expect(actualDeveloperFee.eq(expectedDeveloperFee())).to.be.true;
   });

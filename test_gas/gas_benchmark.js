@@ -71,11 +71,11 @@ const runGasBenchmark = async () => {
 
   const lastSystemResolver = await getChallengeDesignatedShelterer(systemChallengeId);
   if (lastSystemResolver !== atlassian[0]) {
-    incorrectResolver = atlassian[0];
+    [incorrectResolver] = atlassian;
   } else if (lastSystemResolver !== atlassian[1]) {
-    incorrectResolver = atlassian[1];
+    [, incorrectResolver] = atlassian;
   } else {
-    incorrectResolver = atlassian[2];
+    [, , incorrectResolver] = atlassian;
   }
 
   try {
@@ -112,6 +112,7 @@ const setupEnvironment = async () => {
       shelteringTransfersStore: true,
       challengesStore: true,
       rolesEventEmitter: true,
+      rewardsEventEmitter: true,
       challengesEventEmitter: true,
       transfersEventEmitter: true
     }}));
@@ -126,12 +127,12 @@ const setTimestamp = async (timestamp) => time.methods.setCurrentTimestamp(times
 
 const onboardAsAtlas = async (address) => {
   const url = `${address}@atlasUrl.com`;
-  return await roles.methods.onboardAsAtlas(url).send({from: address, value: ATLAS1_STAKE});
+  return roles.methods.onboardAsAtlas(url).send({from: address, value: ATLAS1_STAKE});
 };
 
 const onboardAsHermes = async (address) => {
   const url = `${address}@hermesUrl.com`;
-  return await roles.methods.onboardAsHermes(url).send({from: address});
+  return roles.methods.onboardAsHermes(url).send({from: address});
 };
 
 const getFeeForUpload = async (storagePeriods) => new BN(await fees.methods.getFeeForUpload(storagePeriods).call());

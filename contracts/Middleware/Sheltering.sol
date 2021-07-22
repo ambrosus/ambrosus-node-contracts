@@ -102,6 +102,7 @@ contract Sheltering is Base {
     }
 
     function removeExpiredBundle(bytes32 bundleId, address shelterer) public {
+        require(fees.isAdmin(msg.sender));
         require(bundleStore.getShelteringStartDate(bundleId, shelterer) > 0);
 
         uint64 uploadTimestamp = bundleStore.getUploadTimestamp(bundleId);

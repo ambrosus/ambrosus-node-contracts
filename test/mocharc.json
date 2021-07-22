@@ -1,0 +1,8 @@
+{
+  "require": [
+    "babel-register",
+    "test/mocha_env.js"
+  ],
+  "recursive": true,
+  "timeout": 10000
+}
