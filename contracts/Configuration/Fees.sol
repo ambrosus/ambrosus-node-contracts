@@ -120,7 +120,7 @@ contract Fees is Base, Ownable {
     function removeAdmin(address admin) public onlyOwner {
         if (isAdmin[admin]) {
             isAdmin[admin] = false;
-            for (uint i=0; i<admins.length - 1; i++) {
+            for (uint i = 0; i<admins.length - 1; i++) {
                 if (admins[i] == admin) {
                     admins[i] = admins[admins.length - 1];
                     break;
