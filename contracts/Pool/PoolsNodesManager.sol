@@ -10,6 +10,7 @@ import "../Storage/AtlasStakeStore.sol";
 import "../Storage/RolesStore.sol";
 import "../Storage/ApolloDepositStore.sol";
 import "../Storage/RolesEventEmitter.sol";
+import "../Storage/PoolsNodesStorage.sol";
 
 import "./IPoolsNodesManager.sol";
 import "./PoolNode.sol";
@@ -27,7 +28,7 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
     }
 
     mapping(address => bool) pools;
-    NodeInfo[] private nodes;
+    PoolsNodesStorage private poolsNodesStorage;
     Config private config;
     KycWhitelistStore private kycWhitelistStore;
     ValidatorProxy private validatorProxy;
@@ -42,6 +43,7 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
     }
 
     constructor(
+        PoolsNodesStorage _poolsNodesStorage,
         Config _config,
         KycWhitelistStore _kycWhitelistStore,
         ValidatorProxy _validatorProxy,
@@ -50,6 +52,7 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
         ApolloDepositStore _apolloDepositStore,
         RolesEventEmitter _rolesEventEmitter
     ) public {
+        poolsNodesStorage = _poolsNodesStorage;
         config = _config;
         kycWhitelistStore = _kycWhitelistStore;
         validatorProxy = _validatorProxy;
@@ -60,22 +63,10 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
     }
 
     function onboard(Consts.NodeType nodeType) external payable onlyPoolsCalls returns (address) {
-        PoolNode node;
-        for (uint idx = 0; idx < nodes.length; idx++) {
-            if (nodes[idx].pool == address(0)) {
-                node = nodes[idx].node;
-                nodes[idx].pool = msg.sender;
-                nodes[idx].nodeType = nodeType;
-                break;
-            }
-        }
+        PoolNode node = PoolNode(poolsNodesStorage.lockNode(msg.sender, nodeType));
         if (address(node) == address(0)) {
             node = new PoolNode(this);
-            NodeInfo memory info;
-            info.node = node;
-            info.pool = msg.sender;
-            info.nodeType = nodeType;
-            nodes.push(info);
+            poolsNodesStorage.addNode(address(node), msg.sender, nodeType);
         }
         node.setPool(msg.sender);
         if (nodeType == Consts.NodeType.APOLLO) {
@@ -91,22 +82,17 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
     }
 
     function retire(address nodeAddress) external onlyPoolsCalls returns (uint) {
-        for (uint idx = 0; idx < nodes.length; idx++) {
-            if (address(nodes[idx].node) == nodeAddress && nodes[idx].pool == msg.sender) {
-                nodes[idx].pool = address(0);
-                nodes[idx].node.setPool(address(0));
-                if (nodes[idx].nodeType == Consts.NodeType.APOLLO) {
-                    uint amountToTransfer = apolloDepositStore.releaseDeposit(nodeAddress, this);
-                    validatorProxy.removeValidator(nodeAddress);
-                    rolesEventEmitter.nodeRetired(nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
-                    emit PoolNodeRetired(msg.sender, nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
-                    msg.sender.transfer(amountToTransfer);
-                    return amountToTransfer;
-                }
-                break;
-            }
+        poolsNodesStorage.unlockNode(nodeAddress);
+        PoolNode(nodeAddress).setPool(address(0));
+        Consts.NodeType nodeType = poolsNodesStorage.getNodeType(nodeAddress);
+        if (nodeType == Consts.NodeType.APOLLO) {
+            uint amountToTransfer = apolloDepositStore.releaseDeposit(nodeAddress, this);
+            validatorProxy.removeValidator(nodeAddress);
+            rolesEventEmitter.nodeRetired(nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
+            emit PoolNodeRetired(msg.sender, nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
+            msg.sender.transfer(amountToTransfer);
+            return amountToTransfer;
         }
-        revert("Node not registered");
     }
 
     function add(address pool) public onlyOwner {
