@@ -65,7 +65,7 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
     function onboard(Consts.NodeType nodeType) external payable onlyPoolsCalls returns (address) {
         PoolNode node = PoolNode(poolsNodesStorage.lockNode(msg.sender, nodeType));
         if (address(node) == address(0)) {
-            node = new PoolNode(this);
+            node = new PoolNode(address(poolsNodesStorage));
             emit PoolNodeCreated(address(this));
             poolsNodesStorage.addNode(address(node), msg.sender, nodeType);
         }
