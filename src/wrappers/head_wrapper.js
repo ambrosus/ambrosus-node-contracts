@@ -30,7 +30,8 @@ export default class HeadWrapper extends GenesisContractWrapper {
       'sheltering',
       'uploads',
       'config',
-      'validatorProxy'
+      'validatorProxy',
+      'poolsNodesManager'
     ];
 
     this.availableStorageCatalogueContracts = [
@@ -45,7 +46,8 @@ export default class HeadWrapper extends GenesisContractWrapper {
       'challengesEventEmitter',
       'transfersEventEmitter',
       'rewardsEventEmitter',
-      'rolesEventEmitter'
+      'rolesEventEmitter',
+      'poolsNodesStorage'
     ];
   }
 

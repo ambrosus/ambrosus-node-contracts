@@ -18,6 +18,7 @@ import "./PoolNode.sol";
 
 contract PoolsNodesManager is Ownable, IPoolsNodesManager {
 
+    event PoolNodeCreated(address nodeAddress);
     event PoolNodeOnboarded(address poolAddress, address nodeAddress, uint placedDeposit, string nodeUrl, Consts.NodeType role);
     event PoolNodeRetired(address poolAddress, address nodeAddress, uint releasedDeposit, Consts.NodeType role);
 
@@ -27,7 +28,6 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
         Consts.NodeType nodeType;
     }
 
-    mapping(address => bool) pools;
     PoolsNodesStorage private poolsNodesStorage;
     Config private config;
     KycWhitelistStore private kycWhitelistStore;
@@ -38,7 +38,7 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
     RolesEventEmitter private rolesEventEmitter;
 
     modifier onlyPoolsCalls() {
-        require(pools[address(msg.sender)], "The message sender is not pool");
+        require(poolsNodesStorage.isPool(address(msg.sender)), "The message sender is not pool");
         _;
     }
 
@@ -66,6 +66,7 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
         PoolNode node = PoolNode(poolsNodesStorage.lockNode(msg.sender, nodeType));
         if (address(node) == address(0)) {
             node = new PoolNode(this);
+            emit PoolNodeCreated(address(this));
             poolsNodesStorage.addNode(address(node), msg.sender, nodeType);
         }
         node.setPool(msg.sender);
@@ -93,15 +94,14 @@ contract PoolsNodesManager is Ownable, IPoolsNodesManager {
             msg.sender.transfer(amountToTransfer);
             return amountToTransfer;
         }
+        return 0;
     }
 
-    function add(address pool) public onlyOwner {
-        require(!pools[pool], "Pool already registered");
-        pools[pool] = true;
+    function addPool(address pool) public onlyOwner {
+        poolsNodesStorage.addPool(pool);
     }
 
-    function remove(address pool) public onlyOwner {
-        require(pools[pool], "Pool not registered");
-        delete pools[pool];
+    function removePool(address pool) public onlyOwner {
+        poolsNodesStorage.removePool(pool);
     }
 }

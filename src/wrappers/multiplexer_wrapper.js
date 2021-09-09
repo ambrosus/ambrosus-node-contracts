@@ -66,4 +66,20 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
   async setSupportFee(support, fee) {
     return this.contract.methods.setSupportFee(support, fee).encodeABI();
   }
+
+  async addAdmin(admin) {
+    return this.contract.methods.addAdmin(admin).encodeABI();
+  }
+
+  async removeAdmin(admin) {
+    return this.contract.methods.removeAdmin(admin).encodeABI();
+  }
+
+  async addPool(pool) {
+    return this.contract.methods.addPool(pool).encodeABI();
+  }
+
+  async removePool(pool) {
+    return this.contract.methods.removePool(pool).encodeABI();
+  }
 }

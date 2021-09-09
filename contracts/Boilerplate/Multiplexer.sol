@@ -15,6 +15,7 @@ import "../Front/KycWhitelist.sol";
 import "../Front/Roles.sol";
 import "../Configuration/Fees.sol";
 import "../Middleware/ValidatorProxy.sol";
+import "../Pool/PoolsNodesManager.sol";
 
 
 contract Multiplexer is ConstructorOwnable {
@@ -22,7 +23,8 @@ contract Multiplexer is ConstructorOwnable {
     KycWhitelist public kycWhitelist;
     Fees public fees;
     ValidatorProxy public validatorProxy;
-    Roles private roles;
+    Roles public roles;
+    PoolsNodesManager public poolsNodesManager;
 
     constructor(
         address _owner,
@@ -30,7 +32,8 @@ contract Multiplexer is ConstructorOwnable {
         KycWhitelist _kycWhitelist,
         Fees _fees,
         ValidatorProxy _validatorProxy,
-        Roles _roles
+        Roles _roles,
+        PoolsNodesManager _poolsNodesManager
     )
     public ConstructorOwnable(_owner)
     {
@@ -39,6 +42,7 @@ contract Multiplexer is ConstructorOwnable {
         fees = _fees;
         validatorProxy = _validatorProxy;
         roles = _roles;
+        poolsNodesManager = _poolsNodesManager;
     }
 
     function transferContractsOwnership(address newOwner) public onlyOwner {
@@ -100,5 +104,13 @@ contract Multiplexer is ConstructorOwnable {
 
     function removeAdmin(address _admin) public onlyOwner {
         fees.removeAdmin(_admin);
+    }
+
+    function addPool(address _pool) public onlyOwner {
+        poolsNodesManager.addPool(_pool);
+    }
+
+    function removePool(address _pool) public onlyOwner {
+        poolsNodesManager.removePool(_pool);
     }
 }

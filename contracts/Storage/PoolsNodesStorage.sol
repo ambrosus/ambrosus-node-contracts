@@ -6,6 +6,9 @@ import "../Boilerplate/Head.sol";
 
 contract PoolsNodesStorage is Base {
 
+    event StakingPoolAdded(address poolAddress);
+    event StakingPoolRemoved(address poolAddress);
+
     struct NodeInfo {
         address pool;
         Consts.NodeType nodeType;
@@ -13,6 +16,7 @@ contract PoolsNodesStorage is Base {
 
     mapping(address => NodeInfo) private nodes;
     address[] private index;
+    mapping(address => bool) pools;
 
     constructor(Head _head) public Base(_head) { }
 
@@ -46,5 +50,21 @@ contract PoolsNodesStorage is Base {
 
     function getNodeType(address node) public view returns (Consts.NodeType) {
         return nodes[node].nodeType;
+    }
+
+    function addPool(address pool) public onlyContextInternalCalls {
+        require(!pools[pool], "Pool already registered");
+        pools[pool] = true;
+        emit StakingPoolAdded(pool);
+    }
+
+    function removePool(address pool) public onlyContextInternalCalls {
+        require(pools[pool], "Pool not registered");
+        delete pools[pool];
+        emit StakingPoolRemoved(pool);
+    }
+
+    function isPool(address pool) public view returns (bool) {
+        return pools[pool];
     }
 }
