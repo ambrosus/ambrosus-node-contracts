@@ -5,7 +5,7 @@ import "../Consensus/ConstructorOwnable.sol";
 contract PoolNode is ConstructorOwnable {
     address private pool;
 
-    constructor(address owner) ConstructorOwnable(owner) {
+    constructor(address owner) public ConstructorOwnable(owner) {
     }
 
     function() public payable {}
