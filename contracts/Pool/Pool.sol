@@ -2,8 +2,8 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./IPoolsNodesManager.sol";
-import "./IPoolNode.sol";
+import "./PoolsNodesManager.sol";
+import "./PoolNode.sol";
 import "./PoolToken.sol";
 
 contract Pool is Ownable {
@@ -11,13 +11,13 @@ contract Pool is Ownable {
     using SafeMath for uint;
 
     struct NodeInfo {
-        IPoolNode node;
+        PoolNode node;
         uint stake;
     }
 
     uint constant private MILLION = 1000000;
 
-    IPoolsNodesManager private _manager;
+    PoolsNodesManager private _manager;
     PoolToken private _token;
     uint private _totalStake;
     Consts.NodeType public nodeType;
@@ -27,7 +27,7 @@ contract Pool is Ownable {
     uint private _feePPM;
 
     // todo use Ownable constructor?
-    constructor(Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, IPoolsNodesManager manager) public payable {
+    constructor(Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, PoolsNodesManager manager) public payable {
         require(msg.value == poolNodeStake, "Send value not equals node stake value");
         require(poolMinStakeValue > 0, "Pool min stake value is zero");
         require(address(manager) != address(0), "Manager can not be zero");
@@ -53,7 +53,7 @@ contract Pool is Ownable {
         if (address(this).balance >= nodeStake) {  // todo ???
             address node = _manager.onboard.value(nodeStake)(nodeType);
             require(node != address(0), "Node deploy error");
-            _addNode(IPoolNode(node), nodeStake);
+            _addNode(PoolNode(node), nodeStake);
         }
         return tokens;
     }
@@ -115,7 +115,7 @@ contract Pool is Ownable {
         return 1 ether;
     }
 
-    function _addNode(IPoolNode node, uint aStake) private {
+    function _addNode(PoolNode node, uint aStake) private {
         NodeInfo memory info;
         info.node = node;
         info.stake = aStake;

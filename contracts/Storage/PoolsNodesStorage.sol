@@ -2,7 +2,7 @@ pragma solidity ^0.4.23;
 
 import "../Configuration/Consts.sol";
 import "../Boilerplate/Head.sol";
-import "../Pool/IPoolNode.sol";
+import "../Pool/PoolNode.sol";
 
 
 contract PoolsNodesStorage is Base {
@@ -27,7 +27,7 @@ contract PoolsNodesStorage is Base {
         // TODO: Add owner check
         nodes[node] = NodeInfo(pool, nodeType);
         index.push(node);
-        IPoolNode(node).setPool(pool);
+        PoolNode(node).setPool(pool);
     }
 
     function lockNode(address pool, Consts.NodeType nodeType) public onlyContextInternalCalls returns (address) {
@@ -39,7 +39,7 @@ contract PoolsNodesStorage is Base {
             if (nodes[node].pool == address(0)) {
                 nodes[node].pool = pool;
                 nodes[node].nodeType = nodeType;
-                IPoolNode(node).setPool(pool);
+                PoolNode(node).setPool(pool);
                 return node;
             }
         }
@@ -50,7 +50,7 @@ contract PoolsNodesStorage is Base {
     function unlockNode(address node) public onlyContextInternalCalls {
         require(getNodeType(node) != Consts.NodeType.NONE, "Node not exists");
         nodes[node].pool = address(0);
-        IPoolNode(node).setPool(address(0));
+        PoolNode(node).setPool(address(0));
     }
 
     function getNodeType(address node) public view returns (Consts.NodeType) {

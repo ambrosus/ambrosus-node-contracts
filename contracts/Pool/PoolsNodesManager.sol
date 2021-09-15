@@ -11,12 +11,10 @@ import "../Storage/RolesStore.sol";
 import "../Storage/ApolloDepositStore.sol";
 import "../Storage/RolesEventEmitter.sol";
 import "../Storage/PoolsNodesStorage.sol";
-
-import "./IPoolsNodesManager.sol";
 import "./PoolNode.sol";
 
 
-contract PoolsNodesManager is Ownable, IPoolsNodesManager {
+contract PoolsNodesManager is Ownable {
 
     event PoolNodeCreated(address nodeAddress);
     event PoolNodeOnboarded(address poolAddress, address nodeAddress, uint placedDeposit, string nodeUrl, Consts.NodeType role);
