@@ -78,4 +78,11 @@ describe('Pool', () => {
       // expect(poolBalance2.sub(poolBalance)).to.be.equal(-2000544213264334396n); // why?
     });
   });
+
+  it('fee', async () => {
+    expect(await pool.methods.getFee().call()).to.be.equal('0');
+    await expect(pool.methods.setFee(10).send({other})).to.be.rejected;
+    await pool.methods.setFee(10).send({from});
+    expect(await pool.methods.getFee().call()).to.be.equal('10');
+  });
 });
