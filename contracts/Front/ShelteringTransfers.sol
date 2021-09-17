@@ -11,6 +11,7 @@ pragma solidity ^0.4.23;
 
 import "../Boilerplate/Head.sol";
 import "../Configuration/Config.sol";
+import "../Configuration/Fees.sol";
 import "../Configuration/Time.sol";
 import "../Lib/DmpAlgorithm.sol";
 import "../Lib/SafeMathExtensions.sol";
@@ -29,14 +30,16 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
     ShelteringTransfersStore private shelteringTransfersStore;
     Challenges private challenges;
     TransfersEventEmitter private transfersEventEmitter;
+    Fees private fees;
 
     constructor(Head _head, Time _time, Sheltering _sheltering, AtlasStakeStore _atlasStakeStore, Config _config,
         ShelteringTransfersStore _shelteringTransfersStore,
-        Challenges _challenges, TransfersEventEmitter _transfersEventEmitter)
+        Challenges _challenges, TransfersEventEmitter _transfersEventEmitter, Fees _fees)
     public DmpAtlasSelectionBase(_head, _time, _sheltering, _atlasStakeStore, _config) {
         shelteringTransfersStore = _shelteringTransfersStore;
         challenges = _challenges;
         transfersEventEmitter = _transfersEventEmitter;
+        fees = _fees;
     }
 
     function() public payable {}
@@ -45,6 +48,13 @@ contract ShelteringTransfers is DmpAtlasSelectionBase {
         requireTransferPossible(msg.sender, bundleId);
         bytes32 transferId = shelteringTransfersStore.store(msg.sender, bundleId, time.currentTimestamp());
         transfersEventEmitter.transferStarted(transferId, msg.sender, bundleId);
+    }
+
+    function startForce(address shelterer, bytes32 bundleId) public {
+        require(fees.isAdmin(msg.sender));
+        requireTransferPossible(shelterer, bundleId);
+        bytes32 transferId = shelteringTransfersStore.store(shelterer, bundleId, time.currentTimestamp());
+        transfersEventEmitter.transferStarted(transferId, shelterer, bundleId);
     }
 
     function resolve(bytes32 transferId) public {
