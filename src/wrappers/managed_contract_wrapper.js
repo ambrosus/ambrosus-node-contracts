@@ -27,11 +27,11 @@ export default class ManagedContractWrapper extends ContractWrapper {
     if (contractAddress === undefined) {
       throw new Error('Contract is not deployed');
     }
-    if (this._address !== contractAddress) {
-      this._contract = loadContract(this.web3, contractJsons[this.getContractName].abi, contractAddress);
-      this._address = contractAddress;
+    if (this.contractAddress !== contractAddress) {
+      this.contractObject = loadContract(this.web3, contractJsons[this.getContractName].abi, contractAddress);
+      this.contractAddress = contractAddress;
     }
-    return this._contract;
+    return this.contractObject;
   }
 
   get getContractName() {

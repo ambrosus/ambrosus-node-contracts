@@ -22,8 +22,7 @@ contract PoolToken is StandardToken, Ownable {
         emit Transfer(_who, address(0), _value);
     }
 
-    function _mint(address _to, uint256 _amount) private returns (bool)
-    {
+    function _mint(address _to, uint256 _amount) private returns (bool) {
         totalSupply_ = totalSupply_.add(_amount);
         balances[_to] = balances[_to].add(_amount);
         emit Transfer(address(0), _to, _amount);

@@ -9,13 +9,13 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import ContractWrapper from './contract_wrapper';
 import {loadContract} from '../utils/web3_tools';
-import {poolsNodesManager} from '../contract_jsons';
+import contractJsons from '../contract_jsons';
 
 export default class PoolsNodesManagerWrapper extends ContractWrapper {
   constructor(contractAddress, web3, defaultAddress) {
     super(web3, defaultAddress);
     this.address = contractAddress;
-    this.contract = loadContract(web3, poolsNodesManager.abi, contractAddress);
+    this.contract = loadContract(web3, contractJsons.poolsNodesManager.abi, contractAddress);
   }
 
   async poolsNodesCreated(fromBlock, toBlock) {

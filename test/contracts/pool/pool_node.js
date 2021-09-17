@@ -14,8 +14,6 @@ import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../.
 import PoolNode from '../../../src/contracts/PoolNode.json';
 import {utils} from 'web3';
 
-const BN = utils.BN;
-
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
@@ -33,7 +31,9 @@ async function asyncExpectToBeReverted(asyncFunc, message) {
 
 describe('PoolNode Contract', () => {
   let web3;
-  let owner, addr1, addr2;
+  let owner;
+  let addr1;
+  let addr2;
   let snapshotId;
   let poolNode;
 
@@ -70,17 +70,17 @@ describe('PoolNode Contract', () => {
 
     await setPool(poolAddr);
 
-    const reward = new BN('12345678901234567890');
+    const reward = new utils.BN('12345678901234567890');
     await web3.eth.sendTransaction({from:addr2, to:contractAddr, value:reward, gasPrise:'1', gas:'1000000'});
     expect(await web3.eth.getBalance(contractAddr)).to.equal(reward.toString());
 
-    const poolBalanceBeforeWithdraw = new BN(await web3.eth.getBalance(poolAddr));
+    const poolBalanceBeforeWithdraw = new utils.BN(await web3.eth.getBalance(poolAddr));
 
-    const gasPrice = new BN('1');
+    const gasPrice = new utils.BN('1');
     const {gasUsed} = await withdraw(poolAddr, {gasPrice:'1'});
-    const withdrawFee = gasPrice.mul(new BN(gasUsed));
+    const withdrawFee = gasPrice.mul(new utils.BN(gasUsed));
 
-    const poolBalanceAfterWithdraw = new BN(await web3.eth.getBalance(poolAddr));
+    const poolBalanceAfterWithdraw = new utils.BN(await web3.eth.getBalance(poolAddr));
 
     expect(await web3.eth.getBalance(contractAddr)).to.equal('0');
 

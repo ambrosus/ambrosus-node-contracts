@@ -42,7 +42,7 @@ describe('Pool', () => {
       }
     }));
 
-    pool = await deployContract(web3, PoolsJson, ['1', 10, 1, poolsNodesManager._address], {value: 10});
+    pool = await deployContract(web3, PoolsJson, ['1', 10, 1, poolsNodesManager.address], {value: 10});
   });
 
   beforeEach(async () => {
@@ -57,7 +57,7 @@ describe('Pool', () => {
     it('stake ok', async () => {
       // todo split test
 
-      await poolsNodesManager.methods.addPool(pool._address).send({from});
+      await poolsNodesManager.methods.addPool(pool.address).send({from});
 
       // todo doesn't work
       await pool.methods.stake().send({value: 10000000000000, from}); // 1 token for this price

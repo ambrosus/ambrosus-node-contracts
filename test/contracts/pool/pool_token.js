@@ -14,8 +14,6 @@ import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../.
 import PoolToken from '../../../src/contracts/PoolToken.json';
 import {utils} from 'web3';
 
-const BN = utils.BN;
-
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
@@ -33,19 +31,21 @@ async function asyncExpectToBeReverted(asyncFunc, message) {
 
 describe('PoolToken Contract', () => {
   let web3;
-  let owner, addr1, addr2;
+  let owner;
+  let addr1;
+  let addr2;
   let snapshotId;
   let poolToken;
 
-  let mintAmount = new BN('1000000000000000000000000000000000000');
+  const mintAmount = new utils.BN('1000000000000000000000000000000000000');
 
   const mint = (to, amount, senderAddress = owner) => poolToken.methods.mint(to, amount).send({from: senderAddress});
   const burn = (account, amount, senderAddress = owner) => poolToken.methods.burn(account, amount).send({from: senderAddress});
   const balanceOf = (_who, senderAddress = owner) => poolToken.methods.balanceOf(_who).call({from: senderAddress});
   const totalSupply = (senderAddress = owner) => poolToken.methods.totalSupply().call({from: senderAddress});
   const transfer = (_to, _value, senderAddress = owner) => poolToken.methods.transfer(_to, _value).send({from: senderAddress});
-  const transferFrom = (_from, _to, _value, senderAddress = owner) => poolToken.methods.transferFrom(_from, _to, _value).send({from: senderAddress});
-  
+  // const transferFrom = (_from, _to, _value, senderAddress = owner) => poolToken.methods.transferFrom(_from, _to, _value).send({from: senderAddress});
+
   before(async () => {
     web3 = await createWeb3();
     [owner, addr1, addr2] = await web3.eth.getAccounts();
@@ -74,7 +74,7 @@ describe('PoolToken Contract', () => {
 
   it('burn', async () => {
     await asyncExpectToBeReverted(() => burn(addr1, mintAmount, addr1), 'should revert when sender != owner');
-    await asyncExpectToBeReverted(() => burn(addr1, mintAmount.add(new BN(1))), 'should revert when balance < amount');
+    await asyncExpectToBeReverted(() => burn(addr1, mintAmount.add(new utils.BN(1))), 'should revert when balance < amount');
 
     await burn(addr1, mintAmount);
     expect(await totalSupply()).to.equal('0');
