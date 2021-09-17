@@ -1,0 +1,91 @@
+/*
+Copyright: Ambrosus Inc.
+Email: tech@ambrosus.io
+
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
+*/
+
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
+import PoolToken from '../../../src/contracts/PoolToken.json';
+import {utils} from 'web3';
+
+const BN = utils.BN;
+
+chai.use(sinonChai);
+chai.use(chaiAsPromised);
+
+const {expect, assert} = chai;
+
+async function asyncExpectToBeReverted(asyncFunc, message) {
+  try {
+    await asyncFunc();
+  } catch (err) {
+    assert.include(err.message.split('\n')[0], 'reverted', message);
+    return;
+  }
+  assert.fail(message);
+}
+
+describe('PoolToken Contract', () => {
+  let web3;
+  let owner, addr1, addr2;
+  let snapshotId;
+  let poolToken;
+
+  let mintAmount = new BN('1000000000000000000000000000000000000');
+
+  const mint = (to, amount, senderAddress = owner) => poolToken.methods.mint(to, amount).send({from: senderAddress});
+  const burn = (account, amount, senderAddress = owner) => poolToken.methods.burn(account, amount).send({from: senderAddress});
+  const balanceOf = (_who, senderAddress = owner) => poolToken.methods.balanceOf(_who).call({from: senderAddress});
+  const totalSupply = (senderAddress = owner) => poolToken.methods.totalSupply().call({from: senderAddress});
+  const transfer = (_to, _value, senderAddress = owner) => poolToken.methods.transfer(_to, _value).send({from: senderAddress});
+  const transferFrom = (_from, _to, _value, senderAddress = owner) => poolToken.methods.transferFrom(_from, _to, _value).send({from: senderAddress});
+  
+  before(async () => {
+    web3 = await createWeb3();
+    [owner, addr1, addr2] = await web3.eth.getAccounts();
+    poolToken = await deployContract(web3, PoolToken);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await makeSnapshot(web3);
+    await mint(addr1, mintAmount);
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(web3, snapshotId);
+  });
+
+  it('PoolToken: mint', async () => {
+    expect(await totalSupply()).to.equal(mintAmount.toString());
+    expect(await balanceOf(addr1)).to.equal(mintAmount.toString());
+
+    await mint(addr1, mintAmount);
+    expect(await totalSupply()).to.equal(mintAmount.add(mintAmount).toString());
+    expect(await balanceOf(addr1)).to.equal(mintAmount.add(mintAmount).toString());
+
+    await asyncExpectToBeReverted(() => mint(addr1, mintAmount, addr1), 'should revert when sender != owner');
+  });
+
+  it('PoolToken: burn', async () => {
+    await asyncExpectToBeReverted(() => burn(addr1, mintAmount, addr1), 'should revert when sender != owner');
+    await asyncExpectToBeReverted(() => burn(addr1, mintAmount.add(new BN(1))), 'should revert when balance < amount');
+
+    await burn(addr1, mintAmount);
+    expect(await totalSupply()).to.equal('0');
+    expect(await balanceOf(addr1)).to.equal('0');
+  });
+
+  it('PoolToken: transfer', async () => {
+    await transfer(addr2, mintAmount, addr1);
+    expect(await balanceOf(addr1)).to.equal('0');
+    expect(await balanceOf(addr2)).to.equal(mintAmount.toString());
+
+    await asyncExpectToBeReverted(() => transfer(addr2, mintAmount, addr1), 'should revert when balance < amount');
+  });
+});
