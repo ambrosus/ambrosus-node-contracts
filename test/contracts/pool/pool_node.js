@@ -56,13 +56,13 @@ describe('PoolNode Contract', () => {
     await restoreSnapshot(web3, snapshotId);
   });
 
-  it('PoolNode: transferOwnership', async () => {
+  it('transferOwnership', async () => {
     expect(await getOwner()).to.equal(owner);
     await transferOwnership(addr1);
     expect(await getOwner()).to.equal(addr1);
   });
 
-  it('PoolNode: setPool, withrdaw', async () => {
+  it('setPool, withrdaw', async () => {
     await asyncExpectToBeReverted(() => withdraw(), 'should revert when sender != pool');
 
     const poolAddr = addr1;

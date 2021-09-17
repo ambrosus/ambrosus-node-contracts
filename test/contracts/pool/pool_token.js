@@ -61,7 +61,7 @@ describe('PoolToken Contract', () => {
     await restoreSnapshot(web3, snapshotId);
   });
 
-  it('PoolToken: mint', async () => {
+  it('mint', async () => {
     expect(await totalSupply()).to.equal(mintAmount.toString());
     expect(await balanceOf(addr1)).to.equal(mintAmount.toString());
 
@@ -72,7 +72,7 @@ describe('PoolToken Contract', () => {
     await asyncExpectToBeReverted(() => mint(addr1, mintAmount, addr1), 'should revert when sender != owner');
   });
 
-  it('PoolToken: burn', async () => {
+  it('burn', async () => {
     await asyncExpectToBeReverted(() => burn(addr1, mintAmount, addr1), 'should revert when sender != owner');
     await asyncExpectToBeReverted(() => burn(addr1, mintAmount.add(new BN(1))), 'should revert when balance < amount');
 
@@ -81,7 +81,7 @@ describe('PoolToken Contract', () => {
     expect(await balanceOf(addr1)).to.equal('0');
   });
 
-  it('PoolToken: transfer', async () => {
+  it('transfer', async () => {
     await transfer(addr2, mintAmount, addr1);
     expect(await balanceOf(addr1)).to.equal('0');
     expect(await balanceOf(addr2)).to.equal(mintAmount.toString());
