@@ -24,7 +24,14 @@ export default class ManagedContractWrapper extends ContractWrapper {
 
   async contract() {
     const contractAddress = await this.headWrapper.contractAddressByName(this.getContractName);
-    return loadContract(this.web3, contractJsons[this.getContractName].abi, contractAddress);
+    if (contractAddress === undefined) {
+      throw new Error('Contract is not deployed');
+    }
+    if (this._address !== contractAddress) {
+      this._contract = loadContract(this.web3, contractJsons[this.getContractName].abi, contractAddress);
+      this._address = contractAddress;
+    }
+    return this._contract;
   }
 
   get getContractName() {
