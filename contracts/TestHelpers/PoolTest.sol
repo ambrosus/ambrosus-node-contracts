@@ -11,17 +11,13 @@ pragma solidity ^0.4.23;
 
 import "../Configuration/Consts.sol";
 import "../Storage/PoolsNodesStorage.sol";
-import "../Pool/PoolNode.sol";
 
 contract PoolTest {
-  constructor() public { }
-
   function testLockUnlockNode(address stor, address node) public {
     PoolsNodesStorage st = PoolsNodesStorage(stor);
     address lockedNode = st.lockNode(address(this), Consts.NodeType.ATLAS);
     require(lockedNode == address(0), "lockNode should return address(0) when no unlocked nodes availiable");
 
-    //PoolNode pn = new PoolNode(stor);
     st.addNode(node, address(0), Consts.NodeType.ATLAS);
 
     lockedNode = st.lockNode(address(this), Consts.NodeType.ATLAS);
