@@ -7,27 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinonChai from 'sinon-chai';
+import {expect, asyncExpectToBeReverted} from '../../helpers/chaiPreconf';
 import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
 import PoolToken from '../../../src/contracts/PoolToken.json';
 import {utils} from 'web3';
 
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
-
-const {expect, assert} = chai;
-
-async function asyncExpectToBeReverted(asyncFunc, message) {
-  try {
-    await asyncFunc();
-  } catch (err) {
-    assert.include(err.message.split('\n')[0], 'reverted', message);
-    return;
-  }
-  assert.fail(message);
-}
+const {toBN} = utils;
 
 describe('PoolToken Contract', () => {
   let web3;
@@ -37,7 +22,7 @@ describe('PoolToken Contract', () => {
   let snapshotId;
   let poolToken;
 
-  const mintAmount = new utils.BN('1000000000000000000000000000000000000');
+  const mintAmount = toBN('1000000000000000000000000000000000000');
 
   const mint = (to, amount, senderAddress = owner) => poolToken.methods.mint(to, amount).send({from: senderAddress});
   const burn = (account, amount, senderAddress = owner) => poolToken.methods.burn(account, amount).send({from: senderAddress});
@@ -74,7 +59,7 @@ describe('PoolToken Contract', () => {
 
   it('burn', async () => {
     await asyncExpectToBeReverted(() => burn(addr1, mintAmount, addr1), 'should revert when sender != owner');
-    await asyncExpectToBeReverted(() => burn(addr1, mintAmount.add(new utils.BN(1))), 'should revert when balance < amount');
+    await asyncExpectToBeReverted(() => burn(addr1, mintAmount.add(toBN(1))), 'should revert when balance < amount');
 
     await burn(addr1, mintAmount);
     expect(await totalSupply()).to.equal('0');

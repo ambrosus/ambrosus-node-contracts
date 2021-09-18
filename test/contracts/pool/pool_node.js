@@ -7,27 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinonChai from 'sinon-chai';
+import {expect, asyncExpectToBeReverted} from '../../helpers/chaiPreconf';
 import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
 import PoolNode from '../../../src/contracts/PoolNode.json';
 import {utils} from 'web3';
 
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
-
-const {expect, assert} = chai;
-
-async function asyncExpectToBeReverted(asyncFunc, message) {
-  try {
-    await asyncFunc();
-  } catch (err) {
-    assert.include(err.message.split('\n')[0], 'reverted', message);
-    return;
-  }
-  assert.fail(message);
-}
+const {toBN} = utils;
 
 describe('PoolNode Contract', () => {
   let web3;
@@ -70,17 +55,17 @@ describe('PoolNode Contract', () => {
 
     await setPool(poolAddr);
 
-    const reward = new utils.BN('12345678901234567890');
-    await web3.eth.sendTransaction({from:addr2, to:contractAddr, value:reward, gasPrise:'1', gas:'1000000'});
+    const gasPrice = toBN('1');
+    const reward = toBN('12345678901234567890');
+    await web3.eth.sendTransaction({from:addr2, to:contractAddr, value:reward, gasPrice});
     expect(await web3.eth.getBalance(contractAddr)).to.equal(reward.toString());
 
-    const poolBalanceBeforeWithdraw = new utils.BN(await web3.eth.getBalance(poolAddr));
+    const poolBalanceBeforeWithdraw = toBN(await web3.eth.getBalance(poolAddr));
 
-    const gasPrice = new utils.BN('1');
-    const {gasUsed} = await withdraw(poolAddr, {gasPrice:'1'});
-    const withdrawFee = gasPrice.mul(new utils.BN(gasUsed));
+    const {gasUsed} = await withdraw(poolAddr, {gasPrice});
+    const withdrawFee = gasPrice.mul(toBN(gasUsed));
 
-    const poolBalanceAfterWithdraw = new utils.BN(await web3.eth.getBalance(poolAddr));
+    const poolBalanceAfterWithdraw = toBN(await web3.eth.getBalance(poolAddr));
 
     expect(await web3.eth.getBalance(contractAddr)).to.equal('0');
 

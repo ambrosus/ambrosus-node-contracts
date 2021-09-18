@@ -7,30 +7,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinonChai from 'sinon-chai';
+import {expect, asyncExpectToBeReverted} from '../../helpers/chaiPreconf';
 import deploy from '../../helpers/deploy';
 import {deployContract, createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import PoolNode from '../../../src/contracts/PoolNode.json';
 import PoolTest from '../../../src/contracts/PoolTest.json';
 import {ROLE_CODES} from '../../../src/constants';
-
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
-
-const {expect, assert} = chai;
-
-
-async function asyncExpectToBeReverted(asyncFunc, message) {
-  try {
-    await asyncFunc();
-  } catch (err) {
-    assert.include(err.message.split('\n')[0], 'reverted', message);
-    return;
-  }
-  assert.fail(message);
-}
 
 describe('PoolsNodesStorage Contract', () => {
   let web3;
