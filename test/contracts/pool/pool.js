@@ -21,7 +21,7 @@ chai.use(chaiAsPromised);
 
 const {expect} = chai;
 
-describe('Pool', () => {
+describe('Pool Contract', () => {
   let web3;
   let from;
   let other;
@@ -42,7 +42,7 @@ describe('Pool', () => {
       }
     }));
 
-    pool = await deployContract(web3, PoolsJson, ['1', 10, 1, poolsNodesManager.address], {value: 10});
+    pool = await deployContract(web3, PoolsJson, ['1', 10, 1, poolsNodesManager.options.address], {value: 10});
   });
 
   beforeEach(async () => {
@@ -57,7 +57,7 @@ describe('Pool', () => {
     it('stake ok', async () => {
       // todo split test
 
-      await poolsNodesManager.methods.addPool(pool.address).send({from});
+      await poolsNodesManager.methods.addPool(pool.options.address).send({from});
 
       // todo doesn't work
       await pool.methods.stake().send({value: 10000000000000, from}); // 1 token for this price
