@@ -13,17 +13,17 @@ import "../Configuration/Consts.sol";
 import "../Storage/PoolsNodesStorage.sol";
 
 contract PoolTest {
-  function testLockUnlockNode(address stor, address node) public {
-    PoolsNodesStorage st = PoolsNodesStorage(stor);
-    address lockedNode = st.lockNode(address(this), Consts.NodeType.ATLAS);
-    require(lockedNode == address(0), "lockNode should return address(0) when no unlocked nodes availiable");
+    function testLockUnlockNode(address stor, address node) public {
+        PoolsNodesStorage st = PoolsNodesStorage(stor);
+        address lockedNode = st.lockNode(address(this), Consts.NodeType.ATLAS);
+        require(lockedNode == address(0), "lockNode should return address(0) when no unlocked nodes availiable");
 
-    st.addNode(node, address(0), Consts.NodeType.ATLAS);
+        st.addNode(node, address(0), Consts.NodeType.ATLAS);
 
-    lockedNode = st.lockNode(address(this), Consts.NodeType.ATLAS);
-    require(lockedNode != address(0), "lockNode should return locked node address when unlocked nodes availiable");
+        lockedNode = st.lockNode(address(this), Consts.NodeType.ATLAS);
+        require(lockedNode != address(0), "lockNode should return locked node address when unlocked nodes availiable");
 
-    st.unlockNode(lockedNode);
-    st.unlockNode(lockedNode); // unlock unlocked node should work
-  }
+        st.unlockNode(lockedNode);
+        st.unlockNode(lockedNode); // unlock unlocked node should work
+    }
 }
