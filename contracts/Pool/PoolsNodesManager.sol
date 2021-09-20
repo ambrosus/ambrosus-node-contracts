@@ -60,6 +60,8 @@ contract PoolsNodesManager is Ownable {
         rolesEventEmitter = _rolesEventEmitter;
     }
 
+    function() public payable {}
+
     function onboard(Consts.NodeType nodeType) external payable onlyPoolsCalls returns (address) {
         PoolNode node = PoolNode(poolsNodesStorage.lockNode(msg.sender, nodeType));
         if (address(node) == address(0)) {
