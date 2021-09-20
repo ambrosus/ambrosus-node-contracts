@@ -64,10 +64,9 @@ contract PoolsNodesManager is Ownable {
         PoolNode node = PoolNode(poolsNodesStorage.lockNode(msg.sender, nodeType));
         if (address(node) == address(0)) {
             node = new PoolNode(address(poolsNodesStorage));
-            emit PoolNodeCreated(address(this));
+            emit PoolNodeCreated(address(node));
             poolsNodesStorage.addNode(address(node), msg.sender, nodeType);
         }
-        node.setPool(msg.sender);
         if (nodeType == Consts.NodeType.APOLLO) {
             require(msg.value >= config.APOLLO_DEPOSIT(), "Invalid deposit value");
             kycWhitelistStore.set(address(node), Consts.NodeType.APOLLO, msg.value);
@@ -82,7 +81,6 @@ contract PoolsNodesManager is Ownable {
 
     function retire(address nodeAddress) external onlyPoolsCalls returns (uint) {
         poolsNodesStorage.unlockNode(nodeAddress);
-        PoolNode(nodeAddress).setPool(address(0));
         Consts.NodeType nodeType = poolsNodesStorage.getNodeType(nodeAddress);
         if (nodeType == Consts.NodeType.APOLLO) {
             uint amountToTransfer = apolloDepositStore.releaseDeposit(nodeAddress, this);
