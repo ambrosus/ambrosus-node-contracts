@@ -6,6 +6,7 @@ import "./PoolsNodesManager.sol";
 import "./PoolNode.sol";
 import "./PoolToken.sol";
 
+
 contract Pool is Ownable {
 
     using SafeMath for uint;

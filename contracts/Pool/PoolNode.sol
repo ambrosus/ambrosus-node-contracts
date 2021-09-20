@@ -2,6 +2,7 @@ pragma solidity ^0.4.23;
 
 import "../Consensus/ConstructorOwnable.sol";
 
+
 contract PoolNode is ConstructorOwnable {
     address private pool;
 

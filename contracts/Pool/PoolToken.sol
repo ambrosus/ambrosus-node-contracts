@@ -3,6 +3,7 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
+
 contract PoolToken is StandardToken, Ownable {
     function burn(address account, uint amount) public onlyOwner() {
         _burn(account, amount);
