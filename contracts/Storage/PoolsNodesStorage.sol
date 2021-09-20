@@ -59,6 +59,7 @@ contract PoolsNodesStorage is Base {
 
     function addPool(address pool) public onlyContextInternalCalls {
         require(!pools[pool], "Pool already registered");
+        require(pool != address(0), "Pool must not be 0x0");
         pools[pool] = true;
         emit StakingPoolAdded(pool);
     }

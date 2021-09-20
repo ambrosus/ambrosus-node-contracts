@@ -75,8 +75,9 @@ contract PoolsNodesManager is Ownable {
             validatorProxy.addValidator(address(node), msg.value);
             rolesEventEmitter.nodeOnboarded(address(node), msg.value, "", Consts.NodeType.APOLLO);
             emit PoolNodeOnboarded(msg.sender, address(node), msg.value, "", Consts.NodeType.APOLLO);
+            return node;
         }
-        return node;
+        revert("Unsupported node type");
     }
 
     function retire(address nodeAddress) external onlyPoolsCalls returns (uint) {
