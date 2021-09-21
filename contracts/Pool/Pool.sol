@@ -11,6 +11,9 @@ contract Pool is Ownable {
 
     using SafeMath for uint;
 
+    event PoolStakeChanged(address pool, address user, int stake);
+    event PoolReward(address pool, uint reward);
+
     struct NodeInfo {
         PoolNode node;
         uint stake;
@@ -51,6 +54,7 @@ contract Pool is Ownable {
         // todo return (msg.value % tokenPrice) to user ?
         _token.mint(msg.sender, tokens);
         _totalStake = _totalStake.add(msg.value);
+        emit PoolStakeChanged(address(this), msg.sender, int(msg.value));
         if (address(this).balance >= nodeStake) {  // todo ???
             address node = _manager.onboard.value(nodeStake)(nodeType);
             require(node != address(0), "Node deploy error");
@@ -72,6 +76,7 @@ contract Pool is Ownable {
         }
         _totalStake = _totalStake.sub(deposit);
         msg.sender.transfer(deposit);
+        emit PoolStakeChanged(address(this), msg.sender, -int(deposit));
     }
 
     function viewStake() public view returns (uint) {
@@ -118,6 +123,7 @@ contract Pool is Ownable {
             owner.transfer(fee);
         }
         _totalStake = _totalStake.add(reward);
+        emit PoolReward(address(this), reward);
         if (_totalStake > 0) {
             return _totalStake.div(_token.totalSupply());
         }
