@@ -21,8 +21,8 @@ describe('PoolsNodesManager Contract', () => {
   let web3;
   let owner;
   let initialApollo;
-  let addr1;
-  let addr2;
+  let pool;
+  let spender;
 
   let node;
   let manager;
@@ -42,7 +42,6 @@ describe('PoolsNodesManager Contract', () => {
   const retire = (nodeAddress, senderAddress = owner) => poolsNodesManager.methods.retire(nodeAddress).send({from: senderAddress});
 
   const testOnboardRetire = (manager, nodeType, senderAddress = owner, options = {}) => poolTest.methods.testOnboardRetire(manager, nodeType).send({from: senderAddress, ...options});
-  const testRetire = (node, manager, senderAddress = owner, options = {}) => poolTest.methods.testRetire(node, manager).send({from: senderAddress, ...options});
 
   const addToWhitelist = (addrs, senderAddress = owner) => context.methods.addToWhitelist(addrs).send({from: senderAddress});
 
@@ -51,7 +50,7 @@ describe('PoolsNodesManager Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     web3.eth.handleRevert = true;
-    [owner, initialApollo, addr1, addr2] = await web3.eth.getAccounts();
+    [owner, initialApollo, pool, spender] = await web3.eth.getAccounts();
 
     ({poolsNodesManager, poolsNodesStorage, context} = await deploy({
       web3,
@@ -100,30 +99,25 @@ describe('PoolsNodesManager Contract', () => {
   });
 
   it('addPool, removePool', async () => {
-    const poolAddr = addr1;
-
     await asyncExpectToBeReverted(() => addPool(ZERO_ADDRESS), 'shoud revert when pool = address(0)');
     await asyncExpectToBeReverted(() => removePool(ZERO_ADDRESS), 'shoud revert when pool = address(0)');
 
-    await addPool(poolAddr);
-    await asyncExpectToBeReverted(() => addPool(poolAddr), 'shoud revert when pool already registered');
+    await addPool(pool);
+    await asyncExpectToBeReverted(() => addPool(pool), 'shoud revert when pool already registered');
 
-    await removePool(poolAddr);
-    await asyncExpectToBeReverted(() => removePool(poolAddr), 'shoud revert when pool not registered');
+    await removePool(pool);
+    await asyncExpectToBeReverted(() => removePool(pool), 'shoud revert when pool not registered');
   });
 
   it('onboard, retire', async () => {
-    const poolAddr = addr1;
-    const spender = addr2;
+    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.APOLLO, pool), 'shoud revert when sender is not pool');
 
-    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.APOLLO, poolAddr), 'shoud revert when sender is not pool');
-
-    await addPool(poolAddr);
-    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.NONE, poolAddr), 'shoud revert when nodeType = NONE');
-    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.HERMES, poolAddr), 'shoud revert when nodeType = HERMES');
-    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.ATLAS, poolAddr), 'shoud revert when nodeType = ATLAS');
-    await asyncExpectToBeReverted(() => retire(ZERO_ADDRESS, poolAddr), 'shoud revert when nodeAddress = address(0)');
-    await removePool(poolAddr);
+    await addPool(pool);
+    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.NONE, pool), 'shoud revert when nodeType = NONE');
+    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.HERMES, pool), 'shoud revert when nodeType = HERMES');
+    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.ATLAS, pool), 'shoud revert when nodeType = ATLAS');
+    await asyncExpectToBeReverted(() => retire(ZERO_ADDRESS, pool), 'shoud revert when nodeAddress = address(0)');
+    await removePool(pool);
 
     await addPool(poolTest.options.address);
 
@@ -139,20 +133,20 @@ describe('PoolsNodesManager Contract', () => {
   });
 
   it('retiring not onboarded ATLAS', async () => {
-    await addPool(poolTest.options.address);
-    await addNode(node, addr1, ROLE_CODES.ATLAS);
-    await testRetire(node, manager);  // retire returns 0
+    await addPool(pool);
+    await addNode(node, pool, ROLE_CODES.ATLAS);
+    await asyncExpectToBeReverted(() => retire(node, pool), 'should revert when nodeType = ATLAS');
   });
 
   it('retiring not onboarded HERMES', async () => {
-    await addPool(poolTest.options.address);
-    await addNode(node, addr1, ROLE_CODES.HERMES);
-    await testRetire(node, manager);  // retire returns 0
+    await addPool(pool);
+    await addNode(node, pool, ROLE_CODES.HERMES);
+    await asyncExpectToBeReverted(() => retire(node, pool), 'should revert when nodeType = HERMES');
   });
 
   it('retiring not onboarded APOLLO', async () => {
-    await addPool(poolTest.options.address);
-    await addNode(node, addr1, ROLE_CODES.APOLLO);
-    await asyncExpectToBeReverted(() => testRetire(node, manager), 'should revert when retiring not onboarded APOLLO node');
+    await addPool(pool);
+    await addNode(node, pool, ROLE_CODES.APOLLO);
+    await asyncExpectToBeReverted(() => retire(node, pool), 'should revert when retiring not onboarded APOLLO node');
   });
 });
