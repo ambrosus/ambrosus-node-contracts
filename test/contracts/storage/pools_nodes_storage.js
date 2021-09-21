@@ -12,7 +12,7 @@ import deploy from '../../helpers/deploy';
 import {deployContract, createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import PoolNode from '../../../src/contracts/PoolNode.json';
 import PoolTest from '../../../src/contracts/PoolTest.json';
-import {ROLE_CODES} from '../../../src/constants';
+import {ROLE_CODES, ZERO_ADDRESS} from '../../../src/constants';
 
 describe('PoolsNodesStorage Contract', () => {
   let web3;
@@ -70,6 +70,9 @@ describe('PoolsNodesStorage Contract', () => {
   it('isPool, addPool, removePool', async () => {
     const poolAddr = addr1;
     expect(await isPool(poolAddr)).to.equal(false);
+
+    await asyncExpectToBeReverted(() => addPool(ZERO_ADDRESS), 'shoud revert when pool = address(0)');
+
     await addPool(poolAddr);
     expect(await isPool(poolAddr)).to.equal(true);
     await asyncExpectToBeReverted(() => addPool(poolAddr), 'shoud revert when pool already registered');
@@ -93,11 +96,10 @@ describe('PoolsNodesStorage Contract', () => {
     const node = poolNode.options.address;
     const stor = poolsNodesStorage.options.address;
     const pool = addr2;
-    const zeroAddr = '0x0000000000000000000000000000000000000000';
 
     await asyncExpectToBeReverted(() => unlockNode(node), 'shoud revert when node not added');
     await asyncExpectToBeReverted(() => lockNode(pool, ROLE_CODES.NONE), 'shoud revert when nodeType = NONE');
-    await asyncExpectToBeReverted(() => lockNode(zeroAddr, ROLE_CODES.ATLAS), 'shoud revert when pool address = address(0)');
+    await asyncExpectToBeReverted(() => lockNode(ZERO_ADDRESS, ROLE_CODES.ATLAS), 'shoud revert when pool address = address(0)');
 
     await testLockUnlockNode(stor, node);
   });

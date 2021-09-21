@@ -33,6 +33,7 @@ describe('PoolToken Contract', () => {
 
   before(async () => {
     web3 = await createWeb3();
+    web3.eth.handleRevert = true;
     [owner, addr1, addr2] = await web3.eth.getAccounts();
     poolToken = await deployContract(web3, PoolToken);
   });

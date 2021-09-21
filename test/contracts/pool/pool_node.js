@@ -10,6 +10,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {expect, asyncExpectToBeReverted} from '../../helpers/chaiPreconf';
 import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
 import PoolNode from '../../../src/contracts/PoolNode.json';
+import {ZERO_ADDRESS} from '../../../src/constants';
 import {utils} from 'web3';
 
 const {toBN} = utils;
@@ -29,6 +30,7 @@ describe('PoolNode Contract', () => {
 
   before(async () => {
     web3 = await createWeb3();
+    web3.eth.handleRevert = true;
     [owner, addr1, addr2] = await web3.eth.getAccounts();
     poolNode = await deployContract(web3, PoolNode, [owner]);
   });
@@ -43,6 +45,7 @@ describe('PoolNode Contract', () => {
 
   it('transferOwnership', async () => {
     expect(await getOwner()).to.equal(owner);
+    await asyncExpectToBeReverted(() => transferOwnership(ZERO_ADDRESS), 'should revert when newOwner = address(0)');
     await transferOwnership(addr1);
     expect(await getOwner()).to.equal(addr1);
   });
@@ -53,6 +56,7 @@ describe('PoolNode Contract', () => {
     const poolAddr = addr1;
     const contractAddr = poolNode.options.address;
 
+    await asyncExpectToBeReverted(() => setPool(poolAddr, addr2), 'should revert when sender != owner');
     await setPool(poolAddr);
 
     const gasPrice = toBN('1');
@@ -69,10 +73,10 @@ describe('PoolNode Contract', () => {
 
     expect(await web3.eth.getBalance(contractAddr)).to.equal('0');
 
-    const accum = poolBalanceAfterWithdraw
-      .add(withdrawFee)
-      .sub(reward)
-      .sub(poolBalanceBeforeWithdraw);
+    const accum = poolBalanceBeforeWithdraw
+      .add(reward)
+      .sub(withdrawFee)
+      .sub(poolBalanceAfterWithdraw);
     expect(accum.toString()).to.equal('0');
   });
 });

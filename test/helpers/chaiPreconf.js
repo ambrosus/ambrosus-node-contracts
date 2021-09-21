@@ -23,6 +23,7 @@ export const asyncExpectToBeReverted = async (asyncFunc, message) => {
     await asyncFunc();
   } catch (err) {
     chai.assert.include(err.message.split('\n')[0], 'reverted', message);
+    // console.log('REVERTED:', asyncFunc.toString().match(/{.*}$/)[0], err.reason);
     return;
   }
   chai.assert.fail(message);
