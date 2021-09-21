@@ -87,7 +87,7 @@ contract Pool is Ownable {
         _feePPM = fee;
     }
 
-    function computeEstimateTokenPrice() private view returns (uint) {
+    function getTotalStake() public view returns (uint) {
         uint reward;
         for (uint idx = 0; idx < _nodes.length; idx++) {
             reward = reward.add(address(_nodes[idx].node).balance);
@@ -95,7 +95,15 @@ contract Pool is Ownable {
         if (_feePPM > 0) {
             reward = reward.sub(reward.mul(_feePPM).div(MILLION));
         }
-        return _totalStake.add(reward).div(_token.totalSupply());
+        return _totalStake.add(reward);
+    }
+
+    function getTokenPrice() public view returns (uint) {
+        return computeEstimateTokenPrice();
+    }
+
+    function computeEstimateTokenPrice() private view returns (uint) {
+        return getTotalStake().div(_token.totalSupply());
     }
 
     // todo why compute..() makes transfer?
