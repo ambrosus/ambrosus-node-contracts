@@ -1,0 +1,30 @@
+name: Publish a docker image
+
+on: push
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v3
+        id: meta_collector
+        with:
+          images: ghcr.io/ambrosus/ambrosus-node-contracts
+
+      - uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ${{ steps.meta_collector.outputs.tags }}
+          labels: ${{ steps.meta_collector.outputs.labels }}
