@@ -53,7 +53,7 @@ export default class BaseFeeTask extends TaskBase {
   }
 
   async getDeveloper() {
-    return this.feesWrapper.getDeveloper();
+    console.log(await this.feesWrapper.getDeveloper());
   }
 
   async setDeveloper(developer) {
@@ -61,7 +61,7 @@ export default class BaseFeeTask extends TaskBase {
   }
 
   async getDeveloperFee() {
-    return this.feesWrapper.getDeveloperFee();
+    console.log(await this.feesWrapper.getDeveloperFee());
   }
 
   async setDeveloperFee(fee) {
@@ -69,7 +69,7 @@ export default class BaseFeeTask extends TaskBase {
   }
 
   async getDeveloperUploadFee() {
-    return this.feesWrapper.getDeveloperUploadFee();
+    console.log(await this.feesWrapper.getDeveloperUploadFee());
   }
 
   async setDeveloperUploadFee(fee) {
