@@ -46,9 +46,4 @@ contract PoolTest {
 
         msg.sender.transfer(amountToTransfer);
     }
-
-    function testRetire(address node, address manager) public {
-        uint amountToTransfer = PoolsNodesManager(manager).retire(node);
-        require(amountToTransfer == 0, "returned amount != 0");
-    }
 }
