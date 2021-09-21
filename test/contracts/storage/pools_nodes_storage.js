@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {expect, asyncExpectToBeReverted} from '../../helpers/chaiPreconf';
+import {expect, assert} from '../../helpers/chaiPreconf';
 import deploy from '../../helpers/deploy';
 import {deployContract, createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
 import PoolNode from '../../../src/contracts/PoolNode.json';
@@ -71,25 +71,25 @@ describe('PoolsNodesStorage Contract', () => {
     const poolAddr = addr1;
     expect(await isPool(poolAddr)).to.equal(false);
 
-    await asyncExpectToBeReverted(() => addPool(ZERO_ADDRESS), 'shoud revert when pool = address(0)');
+    await assert.isReverted(addPool(ZERO_ADDRESS));
 
     await addPool(poolAddr);
     expect(await isPool(poolAddr)).to.equal(true);
-    await asyncExpectToBeReverted(() => addPool(poolAddr), 'shoud revert when pool already registered');
+    await assert.isReverted(addPool(poolAddr));
 
     await removePool(poolAddr);
     expect(await isPool(poolAddr)).to.equal(false);
-    await asyncExpectToBeReverted(() => removePool(poolAddr), 'shoud revert when pool not registered');
+    await assert.isReverted(removePool(poolAddr));
   });
 
   it('addNode', async () => {
     const node = poolNode.options.address;
     const pool = addr2;
     expect(await getNodeType(node)).to.equal(ROLE_CODES.NONE);
-    await asyncExpectToBeReverted(() => addNode(node, pool, ROLE_CODES.NONE), 'shoud revert when nodeType = NONE');
+    await assert.isReverted(addNode(node, pool, ROLE_CODES.NONE));
     await addNode(node, pool, ROLE_CODES.ATLAS);
     expect(await getNodeType(node)).to.equal(ROLE_CODES.ATLAS);
-    await asyncExpectToBeReverted(() => addNode(node, pool, ROLE_CODES.ATLAS), 'shoud revert when node already exists');
+    await assert.isReverted(addNode(node, pool, ROLE_CODES.ATLAS));
   });
 
   it('lockNode, unlockNode', async () => {
@@ -97,9 +97,9 @@ describe('PoolsNodesStorage Contract', () => {
     const stor = poolsNodesStorage.options.address;
     const pool = addr2;
 
-    await asyncExpectToBeReverted(() => unlockNode(node), 'shoud revert when node not added');
-    await asyncExpectToBeReverted(() => lockNode(pool, ROLE_CODES.NONE), 'shoud revert when nodeType = NONE');
-    await asyncExpectToBeReverted(() => lockNode(ZERO_ADDRESS, ROLE_CODES.ATLAS), 'shoud revert when pool address = address(0)');
+    await assert.isReverted(unlockNode(node));
+    await assert.isReverted(lockNode(pool, ROLE_CODES.NONE));
+    await assert.isReverted(lockNode(ZERO_ADDRESS, ROLE_CODES.ATLAS));
 
     await testLockUnlockNode(stor, node);
   });

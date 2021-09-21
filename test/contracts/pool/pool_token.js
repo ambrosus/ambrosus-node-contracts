@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {expect, asyncExpectToBeReverted} from '../../helpers/chaiPreconf';
+import {expect, assert} from '../../helpers/chaiPreconf';
 import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
 import PoolToken from '../../../src/contracts/PoolToken.json';
 import {utils} from 'web3';
@@ -55,12 +55,12 @@ describe('PoolToken Contract', () => {
     expect(await totalSupply()).to.equal(mintAmount.add(mintAmount).toString());
     expect(await balanceOf(addr1)).to.equal(mintAmount.add(mintAmount).toString());
 
-    await asyncExpectToBeReverted(() => mint(addr1, mintAmount, addr1), 'should revert when sender != owner');
+    await assert.isReverted(mint(addr1, mintAmount, addr1));
   });
 
   it('burn', async () => {
-    await asyncExpectToBeReverted(() => burn(addr1, mintAmount, addr1), 'should revert when sender != owner');
-    await asyncExpectToBeReverted(() => burn(addr1, mintAmount.add(toBN(1))), 'should revert when balance < amount');
+    await assert.isReverted(burn(addr1, mintAmount, addr1));
+    await assert.isReverted(burn(addr1, mintAmount.add(toBN(1))));
 
     await burn(addr1, mintAmount);
     expect(await totalSupply()).to.equal('0');
@@ -72,6 +72,6 @@ describe('PoolToken Contract', () => {
     expect(await balanceOf(addr1)).to.equal('0');
     expect(await balanceOf(addr2)).to.equal(mintAmount.toString());
 
-    await asyncExpectToBeReverted(() => transfer(addr2, mintAmount, addr1), 'should revert when balance < amount');
+    await assert.isReverted(transfer(addr2, mintAmount, addr1));
   });
 });

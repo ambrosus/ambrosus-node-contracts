@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {expect, asyncExpectToBeReverted} from '../../helpers/chaiPreconf';
+import {expect, assert} from '../../helpers/chaiPreconf';
 import deploy from '../../helpers/deploy';
 import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
 import PoolNode from '../../../src/contracts/PoolNode.json';
@@ -99,24 +99,24 @@ describe('PoolsNodesManager Contract', () => {
   });
 
   it('addPool, removePool', async () => {
-    await asyncExpectToBeReverted(() => addPool(ZERO_ADDRESS), 'shoud revert when pool = address(0)');
-    await asyncExpectToBeReverted(() => removePool(ZERO_ADDRESS), 'shoud revert when pool = address(0)');
+    await assert.isReverted(addPool(ZERO_ADDRESS));
+    await assert.isReverted(removePool(ZERO_ADDRESS));
 
     await addPool(pool);
-    await asyncExpectToBeReverted(() => addPool(pool), 'shoud revert when pool already registered');
+    await assert.isReverted(addPool(pool));
 
     await removePool(pool);
-    await asyncExpectToBeReverted(() => removePool(pool), 'shoud revert when pool not registered');
+    await assert.isReverted(removePool(pool));
   });
 
   it('onboard, retire', async () => {
-    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.APOLLO, pool), 'shoud revert when sender is not pool');
+    await assert.isReverted(onboard(ROLE_CODES.APOLLO, pool));
 
     await addPool(pool);
-    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.NONE, pool), 'shoud revert when nodeType = NONE');
-    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.HERMES, pool), 'shoud revert when nodeType = HERMES');
-    await asyncExpectToBeReverted(() => onboard(ROLE_CODES.ATLAS, pool), 'shoud revert when nodeType = ATLAS');
-    await asyncExpectToBeReverted(() => retire(ZERO_ADDRESS, pool), 'shoud revert when nodeAddress = address(0)');
+    await assert.isReverted(onboard(ROLE_CODES.NONE, pool));
+    await assert.isReverted(onboard(ROLE_CODES.HERMES, pool));
+    await assert.isReverted(onboard(ROLE_CODES.ATLAS, pool));
+    await assert.isReverted(retire(ZERO_ADDRESS, pool));
     await removePool(pool);
 
     await addPool(poolTest.options.address);
@@ -135,18 +135,18 @@ describe('PoolsNodesManager Contract', () => {
   it('retiring not onboarded ATLAS', async () => {
     await addPool(pool);
     await addNode(node, pool, ROLE_CODES.ATLAS);
-    await asyncExpectToBeReverted(() => retire(node, pool), 'should revert when nodeType = ATLAS');
+    await assert.isReverted(retire(node, pool));
   });
 
   it('retiring not onboarded HERMES', async () => {
     await addPool(pool);
     await addNode(node, pool, ROLE_CODES.HERMES);
-    await asyncExpectToBeReverted(() => retire(node, pool), 'should revert when nodeType = HERMES');
+    await assert.isReverted(retire(node, pool));
   });
 
   it('retiring not onboarded APOLLO', async () => {
     await addPool(pool);
     await addNode(node, pool, ROLE_CODES.APOLLO);
-    await asyncExpectToBeReverted(() => retire(node, pool), 'should revert when retiring not onboarded APOLLO node');
+    await assert.isReverted(retire(node, pool));
   });
 });
