@@ -93,7 +93,7 @@ contract PoolsNodesManager is Ownable {
             msg.sender.transfer(amountToTransfer);
             return amountToTransfer;
         }
-        return 0;
+        revert("Unsupported node type");
     }
 
     function addPool(address pool) public onlyOwner {
