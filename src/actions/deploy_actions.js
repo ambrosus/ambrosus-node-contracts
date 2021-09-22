@@ -59,9 +59,10 @@ export default class DeployActions {
     const storageContractNames = this.headWrapper.availableStorageCatalogueContracts;
     const recycled = {};
     for (const contractName of storageContractNames) {
-      const address = await this.headWrapper.contractAddressByName(contractName);
-      if (address) {
-        recycled[contractName] = address;
+      try {
+        recycled[contractName] = await this.headWrapper.contractAddressByName(contractName);
+      } catch (error) {
+        console.log(error);
       }
     }
     return recycled;
