@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import {expect, asyncExpectToBeReverted} from '../../helpers/chaiPreconf';
+import {expect, assert} from '../../helpers/chaiPreconf';
 import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
 import PoolNode from '../../../src/contracts/PoolNode.json';
 import {ZERO_ADDRESS} from '../../../src/constants';
@@ -45,18 +45,18 @@ describe('PoolNode Contract', () => {
 
   it('transferOwnership', async () => {
     expect(await getOwner()).to.equal(owner);
-    await asyncExpectToBeReverted(() => transferOwnership(ZERO_ADDRESS), 'should revert when newOwner = address(0)');
+    await assert.isReverted(transferOwnership(ZERO_ADDRESS));
     await transferOwnership(addr1);
     expect(await getOwner()).to.equal(addr1);
   });
 
   it('setPool, withrdaw', async () => {
-    await asyncExpectToBeReverted(() => withdraw(), 'should revert when sender != pool');
+    await assert.isReverted(withdraw());
 
     const poolAddr = addr1;
     const contractAddr = poolNode.options.address;
 
-    await asyncExpectToBeReverted(() => setPool(poolAddr, addr2), 'should revert when sender != owner');
+    await assert.isReverted(setPool(poolAddr, addr2));
     await setPool(poolAddr);
 
     const gasPrice = toBN('1');
