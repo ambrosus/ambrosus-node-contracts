@@ -53,34 +53,62 @@ export default class BaseFeeTask extends TaskBase {
   }
 
   async getDeveloper() {
-    console.log(await this.feesWrapper.getDeveloper());
+    try {
+      console.log(await this.feesWrapper.getDeveloper());
+    } catch (error) {
+      console.log('0x0');
+    }
   }
 
   async setDeveloper(developer) {
+    if (!developer) {
+      return;
+    }
     return this.feesWrapper.setDeveloper(developer);
   }
 
   async getDeveloperFee() {
-    console.log(await this.feesWrapper.getDeveloperFee());
+    try {
+      console.log(await this.feesWrapper.getDeveloperFee());
+    } catch (error) {
+      console.log('0');
+    }
   }
 
   async setDeveloperFee(fee) {
+    if (!fee) {
+      return;
+    }
     return this.feesWrapper.setDeveloperFee(fee);
   }
 
   async getDeveloperUploadFee() {
-    console.log(await this.feesWrapper.getDeveloperUploadFee());
+    try {
+      console.log(await this.feesWrapper.getDeveloperUploadFee());
+    } catch (error) {
+      console.log('0');
+    }
   }
 
   async setDeveloperUploadFee(fee) {
+    if (!fee) {
+      return;
+    }
     return this.feesWrapper.setDeveloperUploadFee(fee);
   }
 
   async getAdmins() {
-    console.log((await this.feesWrapper.getAdmins()).join(','));
+    try {
+      console.log((await this.feesWrapper.getAdmins()).join(','));
+    } catch (error) {
+      console.log('');
+    }
   }
 
   async addAdmin(admin) {
+    if (!admin) {
+      return;
+    }
     return this.feesWrapper.addAdmin(admin);
   }
 

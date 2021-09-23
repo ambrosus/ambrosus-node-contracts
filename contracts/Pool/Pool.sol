@@ -11,7 +11,7 @@ contract Pool is Ownable {
 
     using SafeMath for uint;
 
-    event PoolStakeChanged(address pool, address user, int stake);
+    event PoolStakeChanged(address pool, address user, int stake, int tokens);
     event PoolReward(address pool, uint reward);
 
     struct NodeInfo {
@@ -47,7 +47,7 @@ contract Pool is Ownable {
     // receive eth from node
     function() public payable {}
 
-    function stake() public payable returns (uint) {
+    function stake() public payable {
         require(msg.value >= minStakeValue, "Pool: stake value tool low");
         uint tokenPrice = computePreciseTokenPrice();
         uint tokens = msg.value.div(tokenPrice);
@@ -55,13 +55,12 @@ contract Pool is Ownable {
         // todo return (msg.value % tokenPrice) to user ?
         token.mint(msg.sender, tokens);
         totalStake = totalStake.add(msg.value);
-        emit PoolStakeChanged(address(this), msg.sender, int(msg.value));
+        emit PoolStakeChanged(address(this), msg.sender, int(msg.value), int(tokens));
         if (address(this).balance >= nodeStake) {  // todo ???
             address node = _manager.onboard.value(nodeStake)(nodeType);
             require(node != address(0), "Node deploy error");
             _addNode(PoolNode(node), nodeStake);
         }
-        return tokens;
     }
 
     function unstake(uint tokens) public {
@@ -77,7 +76,7 @@ contract Pool is Ownable {
         }
         totalStake = totalStake.sub(deposit);
         msg.sender.transfer(deposit);
-        emit PoolStakeChanged(address(this), msg.sender, -int(deposit));
+        emit PoolStakeChanged(address(this), msg.sender, -int(deposit), -int(tokens));
     }
 
     function viewStake() public view returns (uint) {
