@@ -14,7 +14,7 @@ import "../Storage/PoolsNodesStorage.sol";
 import "./PoolNode.sol";
 
 
-contract PoolsNodesManager is Ownable {
+contract PoolsNodesManager is Base, Ownable {
 
     struct NodeInfo {
         PoolNode node;
@@ -37,6 +37,7 @@ contract PoolsNodesManager is Ownable {
     }
 
     constructor(
+        Head _head,
         PoolsNodesStorage _poolsNodesStorage,
         Config _config,
         KycWhitelistStore _kycWhitelistStore,
@@ -45,7 +46,7 @@ contract PoolsNodesManager is Ownable {
         RolesStore _rolesStore,
         ApolloDepositStore _apolloDepositStore,
         RolesEventEmitter _rolesEventEmitter
-    ) public {
+    ) public Base(_head) {
         poolsNodesStorage = _poolsNodesStorage;
         config = _config;
         kycWhitelistStore = _kycWhitelistStore;
