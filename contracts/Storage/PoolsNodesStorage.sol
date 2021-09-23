@@ -78,15 +78,15 @@ contract PoolsNodesStorage is Base {
         return pools[pool];
     }
 
-    function poolNodeCreated(address nodeAddress) public {
+    function poolNodeCreated(address nodeAddress) public onlyContextInternalCalls {
         emit PoolNodeCreated(nodeAddress);
     }
 
-    function poolNodeOnboarded(address poolAddress, address nodeAddress, uint placedDeposit, string memory nodeUrl, Consts.NodeType role) public {
+    function poolNodeOnboarded(address poolAddress, address nodeAddress, uint placedDeposit, string memory nodeUrl, Consts.NodeType role) public onlyContextInternalCalls {
         emit PoolNodeOnboarded(poolAddress, nodeAddress, placedDeposit, nodeUrl, role);
     }
 
-    function poolNodeRetired(address poolAddress, address nodeAddress, uint releasedDeposit, Consts.NodeType role) public {
+    function poolNodeRetired(address poolAddress, address nodeAddress, uint releasedDeposit, Consts.NodeType role) public onlyContextInternalCalls {
         emit PoolNodeRetired(poolAddress, nodeAddress, releasedDeposit, role);
     }
 }
