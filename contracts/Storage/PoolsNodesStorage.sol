@@ -7,8 +7,12 @@ import "../Pool/PoolNode.sol";
 
 contract PoolsNodesStorage is Base {
 
-    event StakingPoolAdded(address poolAddress);
-    event StakingPoolRemoved(address poolAddress);
+    event PoolAdded(address poolAddress);
+    event PoolRemoved(address poolAddress);
+
+    event PoolNodeCreated(address nodeAddress);
+    event PoolNodeOnboarded(address poolAddress, address nodeAddress, uint placedDeposit, string nodeUrl, Consts.NodeType role);
+    event PoolNodeRetired(address poolAddress, address nodeAddress, uint releasedDeposit, Consts.NodeType role);
 
     struct NodeInfo {
         address pool;
@@ -61,16 +65,28 @@ contract PoolsNodesStorage is Base {
         require(!pools[pool], "Pool already registered");
         require(pool != address(0), "Pool must not be 0x0");
         pools[pool] = true;
-        emit StakingPoolAdded(pool);
+        emit PoolAdded(pool);
     }
 
     function removePool(address pool) public onlyContextInternalCalls {
         require(pools[pool], "Pool not registered");
         delete pools[pool];
-        emit StakingPoolRemoved(pool);
+        emit PoolRemoved(pool);
     }
 
     function isPool(address pool) public view returns (bool) {
         return pools[pool];
+    }
+
+    function poolNodeCreated(address nodeAddress) public {
+        emit PoolNodeCreated(nodeAddress);
+    }
+
+    function poolNodeOnboarded(address poolAddress, address nodeAddress, uint placedDeposit, string memory nodeUrl, Consts.NodeType role) public {
+        emit PoolNodeOnboarded(poolAddress, nodeAddress, placedDeposit, nodeUrl, role);
+    }
+
+    function poolNodeRetired(address poolAddress, address nodeAddress, uint releasedDeposit, Consts.NodeType role) public {
+        emit PoolNodeRetired(poolAddress, nodeAddress, releasedDeposit, role);
     }
 }

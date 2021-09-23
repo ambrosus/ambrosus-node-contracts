@@ -16,11 +16,26 @@ export default class PoolsNodesStorageWrapper extends ManagedContractWrapper {
 
   async poolsAdded(fromBlock, toBlock) {
     const contract = await this.contract();
-    return contract.getPastEvents('StakingPoolAdded', {fromBlock, toBlock});
+    return contract.getPastEvents('PoolAdded', {fromBlock, toBlock});
   }
 
   async poolsRemoved(fromBlock, toBlock) {
     const contract = await this.contract();
-    return contract.getPastEvents('StakingPoolRemoved', {fromBlock, toBlock});
+    return contract.getPastEvents('PoolRemoved', {fromBlock, toBlock});
+  }
+
+  async poolsNodesCreated(fromBlock, toBlock) {
+    const contract = await this.contract();
+    return contract.getPastEvents('PoolNodeCreated', {fromBlock, toBlock});
+  }
+
+  async poolsNodesOnboarded(fromBlock, toBlock) {
+    const contract = await this.contract();
+    return contract.getPastEvents('PoolNodeOnboarded', {fromBlock, toBlock});
+  }
+
+  async poolsNodesRetired(fromBlock, toBlock) {
+    const contract = await this.contract();
+    return contract.getPastEvents('PoolNodeRetired', {fromBlock, toBlock});
   }
 }

@@ -16,10 +16,6 @@ import "./PoolNode.sol";
 
 contract PoolsNodesManager is Ownable {
 
-    event PoolNodeCreated(address nodeAddress);
-    event PoolNodeOnboarded(address poolAddress, address nodeAddress, uint placedDeposit, string nodeUrl, Consts.NodeType role);
-    event PoolNodeRetired(address poolAddress, address nodeAddress, uint releasedDeposit, Consts.NodeType role);
-
     struct NodeInfo {
         PoolNode node;
         address pool;
@@ -66,7 +62,7 @@ contract PoolsNodesManager is Ownable {
         PoolNode node = PoolNode(poolsNodesStorage.lockNode(msg.sender, nodeType));
         if (address(node) == address(0)) {
             node = new PoolNode(address(poolsNodesStorage));
-            emit PoolNodeCreated(address(node));
+            poolsNodesStorage.poolNodeCreated(address(node));
             poolsNodesStorage.addNode(address(node), msg.sender, nodeType);
         }
         if (nodeType == Consts.NodeType.APOLLO) {
@@ -76,7 +72,7 @@ contract PoolsNodesManager is Ownable {
             rolesStore.setRole(address(node), Consts.NodeType.APOLLO);
             validatorProxy.addValidator(address(node), msg.value);
             rolesEventEmitter.nodeOnboarded(address(node), msg.value, "", Consts.NodeType.APOLLO);
-            emit PoolNodeOnboarded(msg.sender, address(node), msg.value, "", Consts.NodeType.APOLLO);
+            poolsNodesStorage.poolNodeOnboarded(msg.sender, address(node), msg.value, "", Consts.NodeType.APOLLO);
             return node;
         }
         revert("Unsupported node type");
@@ -89,7 +85,7 @@ contract PoolsNodesManager is Ownable {
             uint amountToTransfer = apolloDepositStore.releaseDeposit(nodeAddress, this);
             validatorProxy.removeValidator(nodeAddress);
             rolesEventEmitter.nodeRetired(nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
-            emit PoolNodeRetired(msg.sender, nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
+            poolsNodesStorage.poolNodeRetired(msg.sender, nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
             msg.sender.transfer(amountToTransfer);
             return amountToTransfer;
         }
