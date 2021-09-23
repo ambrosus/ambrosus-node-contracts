@@ -59,6 +59,9 @@ export default class DeployActions {
     const storageContractNames = this.headWrapper.availableStorageCatalogueContracts;
     const recycled = {};
     for (const contractName of storageContractNames) {
+      if (contractName == 'poolsNodesStorage') {
+        continue;
+      }
       try {
         recycled[contractName] = await this.headWrapper.contractAddressByName(contractName);
       } catch (error) {
