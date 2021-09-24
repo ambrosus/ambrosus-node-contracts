@@ -7,9 +7,9 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import ManagedContractWrapper from './managed_contract_wrapper';
+import ManagedOwnableContractWrapper from './managed_ownable_contract_wrapper';
 
-export default class PoolsNodesManagerWrapper extends ManagedContractWrapper {
+export default class PoolsNodesManagerWrapper extends ManagedOwnableContractWrapper {
   get getContractName() {
     return 'poolsNodesManager';
   }
