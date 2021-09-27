@@ -73,6 +73,7 @@ contract Pool is Ownable {
         while (address(this).balance < deposit) { // todo ???
             _manager.retire(address(nodes[nodes.length-1].node));
             delete nodes[nodes.length-1];
+            nodes.length--;
         }
         totalStake = totalStake.sub(deposit);
         msg.sender.transfer(deposit);
