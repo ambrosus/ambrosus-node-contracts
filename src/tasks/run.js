@@ -53,6 +53,7 @@ import MultisigActions from '../actions/multisig_actions';
 import MultisigWrapper from '../wrappers/multisig_wrapper';
 import MultisigFunctions from '../utils/multisig_functions';
 import MultisigOwnersTask from './multisig_owners';
+import PoolingTask from './pooling';
 import BaseFeeTask from './base_fee';
 
 
@@ -107,6 +108,7 @@ const runTask = async () => {
   list.add('checkOwnership', new CheckOwnershipTask(web3));
   list.add('multisigOwners', new MultisigOwnersTask(multisigWrapper));
   list.add('fee', new BaseFeeTask(feesWrapper));
+  list.add('pooling', new PoolingTask(multisigActions));
 
   await list.run(args[0], args.slice(1));
 };
