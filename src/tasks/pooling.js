@@ -11,14 +11,17 @@ import TaskBase from './base/task_base';
 import {utils} from '../utils/web3_tools';
 
 export default class PoolingTask extends TaskBase {
-  constructor(multisigActions) {
+  constructor(multisigActions, poolActions) {
     super();
     this.multisigActions = multisigActions;
+    this.poolActions = poolActions;
   }
 
   async execute([command, ...options]) {
     if (command === 'add') {
       await this.addPool(options[0]);
+    } else if (command === 'activate') {
+      await this.activatePool(options[0], options[1]);
     } else {
       console.error('Unknown sub-command, see yarn task pooling help');
       process.exit(1);
@@ -30,6 +33,13 @@ export default class PoolingTask extends TaskBase {
       return this.multisigActions.addPool(poolAddress);
     }
     console.error('Wrong address, use: yarn task pooling add [pool address]');
+  }
+
+  async activatePool(poolAddress, stake) {
+    if (utils.isAddress(poolAddress)) {
+      return this.poolActions.activate(poolAddress, this.poolActions.web3.utils.toWei(stake, 'ether'));
+    }
+    console.error('Wrong address, use: yarn task pooling activate [pool address]');
   }
 
   help() {

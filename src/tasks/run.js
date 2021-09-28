@@ -53,6 +53,7 @@ import MultisigActions from '../actions/multisig_actions';
 import MultisigWrapper from '../wrappers/multisig_wrapper';
 import MultisigFunctions from '../utils/multisig_functions';
 import MultisigOwnersTask from './multisig_owners';
+import PoolActions from '../actions/pool_actions';
 import PoolingTask from './pooling';
 import BaseFeeTask from './base_fee';
 
@@ -90,6 +91,7 @@ const runTask = async () => {
   const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper, atlasStakeStoreWrapper);
   const adminActions = new AdministrativeActions(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper, poolsNodesManagerWrapper);
   const multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper, new MultisigFunctions(web3));
+  const poolActions = new PoolActions(web3);
 
   const list = new TaskList();
   const args = process.argv.slice(2);
@@ -108,7 +110,7 @@ const runTask = async () => {
   list.add('checkOwnership', new CheckOwnershipTask(web3));
   list.add('multisigOwners', new MultisigOwnersTask(multisigWrapper));
   list.add('fee', new BaseFeeTask(feesWrapper));
-  list.add('pooling', new PoolingTask(multisigActions));
+  list.add('pooling', new PoolingTask(multisigActions, poolActions));
 
   await list.run(args[0], args.slice(1));
 };
