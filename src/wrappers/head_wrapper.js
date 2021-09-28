@@ -49,6 +49,10 @@ export default class HeadWrapper extends GenesisContractWrapper {
       'rolesEventEmitter',
       'poolsNodesStorage'
     ];
+
+    this.cachedContextContract = null;
+    this.cachedCatalogueContract = null;
+    this.cachedStorageCatalogueContract = null;
   }
 
   async contractAddressByName(contractName) {
@@ -86,7 +90,11 @@ export default class HeadWrapper extends GenesisContractWrapper {
       this.clearContractAddressCache();
       this.updateContractAddressCache('context', contextAddress);
     }
-    return loadContract(this.web3, contractJsons.context.abi, contextAddress);
+    if (this.cachedContextContract) {
+      return this.cachedContextContract;
+    }
+    this.cachedContextContract = loadContract(this.web3, contractJsons.context.abi, contextAddress);
+    return this.cachedContextContract;
   }
 
   async catalogue() {
@@ -97,7 +105,11 @@ export default class HeadWrapper extends GenesisContractWrapper {
         .catalogue()
         .call());
     }
-    return loadContract(this.web3, contractJsons.catalogue.abi, this.cachedAddresses.catalogue);
+    if (this.cachedCatalogueContract) {
+      return this.cachedCatalogueContract;
+    }
+    this.cachedCatalogueContract = loadContract(this.web3, contractJsons.catalogue.abi, this.cachedAddresses.catalogue);
+    return this.cachedCatalogueContract;
   }
 
   async storageCatalogue() {
@@ -108,7 +120,11 @@ export default class HeadWrapper extends GenesisContractWrapper {
         .storageCatalogue()
         .call());
     }
-    return loadContract(this.web3, contractJsons.storageCatalogue.abi, this.cachedAddresses.storageCatalogue);
+    if (this.cachedStorageCatalogueContract) {
+      return this.cachedStorageCatalogueContract;
+    }
+    this.cachedStorageCatalogueContract = loadContract(this.web3, contractJsons.storageCatalogue.abi, this.cachedAddresses.storageCatalogue);
+    return this.cachedStorageCatalogueContract;
   }
 
   clearContractAddressCache() {
