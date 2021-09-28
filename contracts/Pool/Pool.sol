@@ -29,10 +29,11 @@ contract Pool is Ownable {
     uint public minStakeValue;
     NodeInfo[] public nodes;
     uint public fee;
+    bool public active;
+    uint private ownerStake;
 
     // todo use Ownable constructor?
-    constructor(Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, uint poolFee, PoolsNodesManager manager) public payable {
-        require(msg.value == poolNodeStake, "Send value not equals node stake value");
+    constructor(Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, uint poolFee, PoolsNodesManager manager) public {
         require(poolMinStakeValue > 0, "Pool min stake value is zero");
         require(address(manager) != address(0), "Manager can not be zero");
 
@@ -47,7 +48,28 @@ contract Pool is Ownable {
     // receive eth from node
     function() public payable {}
 
+    function activate() public payable onlyOwner {
+        require(!active, "Pool is already active");
+        require(msg.value == nodeStake, "Send value not equals node stake value");
+        active = true;
+        ownerStake = msg.value;
+        _onboardNodes();
+    }
+
+    function deactivate() public onlyOwner {
+        require(active, "Pool is not active");
+        require(totalStake <= minStakeValue.div(10), "Pool is not retired");
+        while (nodes.length > 0) {
+            _manager.retire(address(nodes[nodes.length-1].node));
+            delete nodes[nodes.length-1];
+            nodes.length--;
+        }
+        active = false;
+        msg.sender.transfer(address(this).balance);
+    }
+
     function stake() public payable {
+        require(active, "Pool is not active");
         require(msg.value >= minStakeValue, "Pool: stake value tool low");
         uint tokenPrice = computePreciseTokenPrice();
         uint tokens = msg.value.div(tokenPrice);
@@ -55,12 +77,9 @@ contract Pool is Ownable {
         // todo return (msg.value % tokenPrice) to user ?
         token.mint(msg.sender, tokens);
         totalStake = totalStake.add(msg.value);
+        ownerStake = nodeStake - (totalStake % nodeStake);
         emit PoolStakeChanged(address(this), msg.sender, int(msg.value), int(tokens));
-        if (address(this).balance >= nodeStake) {  // todo ???
-            address node = _manager.onboard.value(nodeStake)(nodeType);
-            require(node != address(0), "Node deploy error");
-            _addNode(PoolNode(node), nodeStake);
-        }
+        _onboardNodes();
     }
 
     function unstake(uint tokens) public {
@@ -70,7 +89,7 @@ contract Pool is Ownable {
         require(deposit <= totalStake);
 
         token.burn(msg.sender, tokens);
-        while (address(this).balance < deposit) { // todo ???
+        while (address(this).balance < deposit) {
             _manager.retire(address(nodes[nodes.length-1].node));
             delete nodes[nodes.length-1];
             nodes.length--;
@@ -86,11 +105,19 @@ contract Pool is Ownable {
 
     function getTotalStake() public view returns (uint) {
         uint reward;
-        for (uint idx = 0; idx < nodes.length; idx++) {
-            reward = reward.add(address(nodes[idx].node).balance);
-        }
-        if (fee > 0) {
-            reward = reward.sub(reward.mul(fee).div(MILLION));
+        if (nodes.length > 0) {
+            for (uint idx = 0; idx < nodes.length - 1; idx++) {
+                reward = reward.add(address(nodes[idx].node).balance);
+            }
+            uint lastReward = address(nodes[nodes.length - 1].node).balance;
+            uint ownerPart = lastReward;
+            if (ownerStake < nodeStake) {
+                ownerPart = ownerPart.mul(ownerStake).div(nodeStake);
+            }
+            reward = reward.add(lastReward).sub(ownerPart);
+            if (fee > 0) {
+                reward = reward.sub(reward.mul(fee).div(MILLION));
+            }
         }
         return totalStake.add(reward);
     }
@@ -110,22 +137,43 @@ contract Pool is Ownable {
     // todo why compute..() makes transfer?
     function computePreciseTokenPrice() private returns (uint) {
         uint reward;
-        for (uint idx = 0; idx < nodes.length; idx++) {
-            reward = reward.add(nodes[idx].node.withdraw());
-        }
-        if (reward > 0) {
-            if (fee > 0) {
-                uint ownerFee = reward.mul(fee).div(MILLION);
-                reward = reward.sub(ownerFee);
-                owner.transfer(ownerFee);
+        if (nodes.length > 0) {
+            for (uint idx = 0; idx < nodes.length - 1; idx++) {
+                reward = reward.add(nodes[idx].node.withdraw());
             }
-            totalStake = totalStake.add(reward);
-            emit PoolReward(address(this), reward);
+            uint lastReward = address(nodes[nodes.length - 1].node).balance;
+            uint ownerPart = lastReward;
+            if (ownerStake < nodeStake) {
+                ownerPart = ownerPart.mul(ownerStake).div(nodeStake);
+                owner.transfer(ownerPart);
+            }
+            reward = reward.add(lastReward).sub(ownerPart);
+            if (reward > 0) {
+                if (totalStake > 0) {
+                    if (fee > 0) {
+                        uint ownerFee = reward.mul(fee).div(MILLION);
+                        reward = reward.sub(ownerFee);
+                        owner.transfer(ownerFee);
+                    }
+                    totalStake = totalStake.add(reward);
+                    emit PoolReward(address(this), reward);
+                } else {
+                    owner.transfer(reward);
+                }
+            }
         }
         if (totalStake > 0) {
             return totalStake.div(token.totalSupply());
         }
         return 1 ether;
+    }
+
+    function _onboardNodes() private {
+        while (address(this).balance >= nodeStake) {
+            address node = _manager.onboard.value(nodeStake)(nodeType);
+            require(node != address(0), "Node deploy error");
+            _addNode(PoolNode(node), nodeStake);
+        }
     }
 
     function _addNode(PoolNode node, uint aStake) private {
