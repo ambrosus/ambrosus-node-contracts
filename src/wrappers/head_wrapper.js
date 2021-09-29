@@ -89,9 +89,10 @@ export default class HeadWrapper extends GenesisContractWrapper {
     if (this.cachedContractAddressHasChanged(contextAddress, 'context')) {
       this.clearContractAddressCache();
       this.updateContractAddressCache('context', contextAddress);
-    }
-    if (this.cachedContextContract) {
-      return this.cachedContextContract;
+    } else {
+      if (this.cachedContextContract) {
+        return this.cachedContextContract;
+      }
     }
     this.cachedContextContract = loadContract(this.web3, contractJsons.context.abi, contextAddress);
     return this.cachedContextContract;
@@ -104,9 +105,10 @@ export default class HeadWrapper extends GenesisContractWrapper {
         .methods
         .catalogue()
         .call());
-    }
-    if (this.cachedCatalogueContract) {
-      return this.cachedCatalogueContract;
+    } else {
+      if (this.cachedCatalogueContract) {
+        return this.cachedCatalogueContract;
+      }
     }
     this.cachedCatalogueContract = loadContract(this.web3, contractJsons.catalogue.abi, this.cachedAddresses.catalogue);
     return this.cachedCatalogueContract;
@@ -119,9 +121,10 @@ export default class HeadWrapper extends GenesisContractWrapper {
         .methods
         .storageCatalogue()
         .call());
-    }
-    if (this.cachedStorageCatalogueContract) {
-      return this.cachedStorageCatalogueContract;
+    } else {
+      if (this.cachedStorageCatalogueContract) {
+        return this.cachedStorageCatalogueContract;
+      }
     }
     this.cachedStorageCatalogueContract = loadContract(this.web3, contractJsons.storageCatalogue.abi, this.cachedAddresses.storageCatalogue);
     return this.cachedStorageCatalogueContract;
