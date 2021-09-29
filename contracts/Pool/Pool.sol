@@ -141,7 +141,7 @@ contract Pool is Ownable {
             for (uint idx = 0; idx < nodes.length - 1; idx++) {
                 reward = reward.add(nodes[idx].node.withdraw());
             }
-            uint lastReward = address(nodes[nodes.length - 1].node).balance;
+            uint lastReward = nodes[nodes.length - 1].node.withdraw();
             uint ownerPart = lastReward;
             if (ownerStake < nodeStake) {
                 ownerPart = ownerPart.mul(ownerStake).div(nodeStake);
