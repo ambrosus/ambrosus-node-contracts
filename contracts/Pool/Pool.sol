@@ -20,7 +20,7 @@ contract Pool is Ownable {
     }
 
     uint constant private MILLION = 1000000;
-    uint constant private BILLION = 1000000000;
+    uint constant private FIXEDPOINT = 1 ether;
 
     PoolsNodesManager private _manager;
     PoolToken public token;
@@ -73,7 +73,7 @@ contract Pool is Ownable {
         require(active, "Pool is not active");
         require(msg.value >= minStakeValue, "Pool: stake value tool low");
         uint tokenPrice = computePreciseTokenPrice();
-        uint tokens = msg.value.mul(BILLION).div(tokenPrice);
+        uint tokens = msg.value.mul(FIXEDPOINT).div(tokenPrice);
 
         // todo return (msg.value % tokenPrice) to user ?
         token.mint(msg.sender, tokens);
@@ -86,7 +86,7 @@ contract Pool is Ownable {
     function unstake(uint tokens) public {
         require(tokens <= token.balanceOf(msg.sender));
         uint tokenPrice = computePreciseTokenPrice();
-        uint deposit = tokenPrice.mul(tokens).div(BILLION);
+        uint deposit = tokenPrice.mul(tokens).div(FIXEDPOINT);
         require(deposit <= totalStake);
 
         token.burn(msg.sender, tokens);
@@ -130,7 +130,7 @@ contract Pool is Ownable {
     function computeEstimateTokenPrice() private view returns (uint) {
         uint total = token.totalSupply();
         if (total > 0) {
-            return getTotalStake().mul(BILLION).div(total);
+            return getTotalStake().mul(FIXEDPOINT).div(total);
         }
         return 1 ether;
     }
@@ -163,7 +163,7 @@ contract Pool is Ownable {
             }
         }
         if (totalStake > 0) {
-            return totalStake.mul(BILLION).div(token.totalSupply());
+            return totalStake.mul(FIXEDPOINT).div(token.totalSupply());
         }
         return 1 ether;
     }
