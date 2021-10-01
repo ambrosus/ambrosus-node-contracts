@@ -21,7 +21,8 @@ contract PoolsNodesStorage is Base {
 
     mapping(address => NodeInfo) private nodes;
     address[] private index;
-    mapping(address => bool) pools;
+    mapping(address => bool) public isPool;
+    address[] public pools;
 
     constructor(Head _head) public Base(_head) { }
 
@@ -62,20 +63,25 @@ contract PoolsNodesStorage is Base {
     }
 
     function addPool(address pool) public onlyContextInternalCalls {
-        require(!pools[pool], "Pool already registered");
+        require(!isPool[pool], "Pool already registered");
         require(pool != address(0), "Pool must not be 0x0");
-        pools[pool] = true;
+        isPool[pool] = true;
+        pools.push(pool);
         emit PoolAdded(pool);
     }
 
     function removePool(address pool) public onlyContextInternalCalls {
-        require(pools[pool], "Pool not registered");
-        delete pools[pool];
+        require(isPool[pool], "Pool not registered");
+        delete isPool[pool];
+        for (uint i = 0; i < pools.length - 1; i++) {
+            if (pools[i] == pool) {
+                pools[i] = pools[pools.length - 1];
+                delete pools[pools.length - 1];
+                pools.length -= 1;
+                break;
+            }
+        }
         emit PoolRemoved(pool);
-    }
-
-    function isPool(address pool) public view returns (bool) {
-        return pools[pool];
     }
 
     function poolNodeCreated(address nodeAddress) public onlyContextInternalCalls {

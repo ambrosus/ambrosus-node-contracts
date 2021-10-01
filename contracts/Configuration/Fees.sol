@@ -124,9 +124,10 @@ contract Fees is Base, Ownable {
         for (uint i = 0; i<admins.length - 1; i++) {
             if (admins[i] == admin) {
                 admins[i] = admins[admins.length - 1];
+                delete admins[admins.length - 1];
+                admins.length -= 1;
                 break;
             }
         }
-        admins.length -= 1;
     }
 }
