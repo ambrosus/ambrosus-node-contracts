@@ -127,15 +127,7 @@ contract Pool is Ownable {
         return computeEstimateTokenPrice();
     }
 
-    function computeEstimateTokenPrice() private view returns (uint) {
-        uint total = token.totalSupply();
-        if (total > 0) {
-            return getTotalStake().mul(FIXEDPOINT).div(total);
-        }
-        return 1 ether;
-    }
-
-    function computePreciseTokenPrice() private returns (uint) {
+    function distributeReward() public returns (uint) {
         uint reward;
         if (nodes.length > 0) {
             for (uint idx = 0; idx < nodes.length - 1; idx++) {
@@ -155,13 +147,25 @@ contract Pool is Ownable {
                         reward = reward.sub(ownerFee);
                         owner.transfer(ownerFee);
                     }
-                    totalStake = totalStake.add(reward);
                     emit PoolReward(address(this), reward);
                 } else {
                     owner.transfer(reward);
                 }
             }
         }
+        return reward;
+    }
+
+    function computeEstimateTokenPrice() private view returns (uint) {
+        uint total = token.totalSupply();
+        if (total > 0) {
+            return getTotalStake().mul(FIXEDPOINT).div(total);
+        }
+        return 1 ether;
+    }
+
+    function computePreciseTokenPrice() private returns (uint) {
+        totalStake = totalStake.add(distributeReward());
         if (totalStake > 0) {
             return totalStake.mul(FIXEDPOINT).div(token.totalSupply());
         }
