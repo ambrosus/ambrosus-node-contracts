@@ -42,7 +42,7 @@ import {InsufficientFundsToStartChallengeError, InsufficientFundsToUploadBundleE
 import AtlasStakeStoreWrapper from './wrappers/atlas_stake_store_wrapper';
 import ApolloDepositStoreWrapper from './wrappers/apollo_deposit_store_wrapper';
 import PoolsNodesManagerWrapper from './wrappers/pools_nodes_manager_wrapper';
-import PoolsNodesStorageWrapper from './wrappers/pools_nodes_storage_wrapper';
+import PoolsStoreWrapper from './wrappers/pools_store_wrapper';
 import MultiplexerWrapper from './wrappers/multiplexer_wrapper';
 import MultisigWrapper from './wrappers/multisig_wrapper';
 import MultisigActions from './actions/multisig_actions';
@@ -85,7 +85,7 @@ module.exports = {
   AtlasStakeStoreWrapper,
   ApolloDepositStoreWrapper,
   PoolsNodesManagerWrapper,
-  PoolsNodesStorageWrapper,
+  PoolsStoreWrapper,
   RolesEventEmitterWrapper,
   MultiplexerWrapper,
   MultisigWrapper,

@@ -3,7 +3,6 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./PoolsNodesManager.sol";
-import "./PoolNode.sol";
 import "./PoolToken.sol";
 
 
@@ -13,32 +12,36 @@ contract Pool is Ownable {
 
     event PoolStakeChanged(address pool, address user, int stake, int tokens);
     event PoolReward(address pool, uint reward);
-
-    struct NodeInfo {
-        PoolNode node;
-        uint stake;
-    }
+    event AddNodeRequest(address pool, uint stake, Consts.NodeType role);
 
     uint constant private MILLION = 1000000;
     uint constant private FIXEDPOINT = 1 ether;
 
     PoolsNodesManager private _manager;
+    address private _service;
     PoolToken public token;
     uint public totalStake;
     Consts.NodeType public nodeType;
     uint public nodeStake;
     uint public minStakeValue;
-    NodeInfo[] public nodes;
+    address[] public nodes;
     uint public fee;
     bool public active;
-    uint private ownerStake;
+    uint public ownerStake;
+    uint[] public requests;
+
+    modifier onlyService() {
+        require(address(msg.sender) == _service, "The message sender is not service");
+        _;
+    }
 
     // todo use Ownable constructor?
-    constructor(Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, uint poolFee, PoolsNodesManager manager) public {
+    constructor(Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, uint poolFee, PoolsNodesManager manager, address service) public {
         require(poolMinStakeValue > 0, "Pool min stake value is zero");
         require(address(manager) != address(0), "Manager can not be zero");
 
         _manager = manager;
+        _service = service;
         token = new PoolToken();
         nodeType = poolNodeType;
         nodeStake = poolNodeStake;
@@ -61,7 +64,7 @@ contract Pool is Ownable {
         require(active, "Pool is not active");
         require(totalStake <= minStakeValue.div(10), "Pool is not retired");
         while (nodes.length > 0) {
-            _manager.retire(address(nodes[nodes.length-1].node));
+            _manager.retire(nodes[nodes.length-1], nodeType);
             delete nodes[nodes.length-1];
             nodes.length--;
         }
@@ -69,10 +72,15 @@ contract Pool is Ownable {
         msg.sender.transfer(address(this).balance);
     }
 
+    function setService(address service) public onlyOwner {
+        require(service != address(0x0), "Service must not be 0x0");
+        _service = service;
+    }
+
     function stake() public payable {
         require(active, "Pool is not active");
         require(msg.value >= minStakeValue, "Pool: stake value tool low");
-        uint tokenPrice = computePreciseTokenPrice();
+        uint tokenPrice = getTokenPrice();
         uint tokens = msg.value.mul(FIXEDPOINT).div(tokenPrice);
 
         // todo return (msg.value % tokenPrice) to user ?
@@ -85,13 +93,13 @@ contract Pool is Ownable {
 
     function unstake(uint tokens) public {
         require(tokens <= token.balanceOf(msg.sender));
-        uint tokenPrice = computePreciseTokenPrice();
+        uint tokenPrice = getTokenPrice();
         uint deposit = tokenPrice.mul(tokens).div(FIXEDPOINT);
         require(deposit <= totalStake);
 
         token.burn(msg.sender, tokens);
         while (address(this).balance < deposit) {
-            _manager.retire(address(nodes[nodes.length-1].node));
+            _manager.retire(nodes[nodes.length-1], nodeType);
             delete nodes[nodes.length-1];
             nodes.length--;
         }
@@ -105,58 +113,10 @@ contract Pool is Ownable {
     }
 
     function getTotalStake() public view returns (uint) {
-        uint reward;
-        if (nodes.length > 0) {
-            for (uint idx = 0; idx < nodes.length - 1; idx++) {
-                reward = reward.add(address(nodes[idx].node).balance);
-            }
-            uint lastReward = address(nodes[nodes.length - 1].node).balance;
-            uint ownerPart = lastReward;
-            if (ownerStake < nodeStake) {
-                ownerPart = ownerPart.mul(ownerStake).div(nodeStake);
-            }
-            reward = reward.add(lastReward).sub(ownerPart);
-            if (fee > 0) {
-                reward = reward.sub(reward.mul(fee).div(MILLION));
-            }
-        }
-        return totalStake.add(reward);
+        return totalStake;
     }
 
     function getTokenPrice() public view returns (uint) {
-        return computeEstimateTokenPrice();
-    }
-
-    function distributeReward() public returns (uint) {
-        uint reward;
-        if (nodes.length > 0) {
-            for (uint idx = 0; idx < nodes.length - 1; idx++) {
-                reward = reward.add(nodes[idx].node.withdraw());
-            }
-            uint lastReward = nodes[nodes.length - 1].node.withdraw();
-            uint ownerPart = lastReward;
-            if (ownerStake < nodeStake) {
-                ownerPart = ownerPart.mul(ownerStake).div(nodeStake);
-                owner.transfer(ownerPart);
-            }
-            reward = reward.add(lastReward).sub(ownerPart);
-            if (reward > 0) {
-                if (totalStake > 0) {
-                    if (fee > 0) {
-                        uint ownerFee = reward.mul(fee).div(MILLION);
-                        reward = reward.sub(ownerFee);
-                        owner.transfer(ownerFee);
-                    }
-                    emit PoolReward(address(this), reward);
-                } else {
-                    owner.transfer(reward);
-                }
-            }
-        }
-        return reward;
-    }
-
-    function computeEstimateTokenPrice() private view returns (uint) {
         uint total = token.totalSupply();
         if (total > 0) {
             return getTotalStake().mul(FIXEDPOINT).div(total);
@@ -164,26 +124,43 @@ contract Pool is Ownable {
         return 1 ether;
     }
 
-    function computePreciseTokenPrice() private returns (uint) {
-        totalStake = totalStake.add(distributeReward());
-        if (totalStake > 0) {
-            return totalStake.mul(FIXEDPOINT).div(token.totalSupply());
-        }
-        return 1 ether;
-    }
-
     function _onboardNodes() private {
-        while (address(this).balance >= nodeStake) {
-            address node = _manager.onboard.value(nodeStake)(nodeType);
-            require(node != address(0), "Node deploy error");
-            _addNode(PoolNode(node), nodeStake);
+        uint requested;
+        for (uint idx = 0; idx < requests.length - 1; idx++) {
+            requested = requested.add(requests[idx]);
+        }
+        while (address(this).balance.sub(requested) >= nodeStake) {
+            requested = requested.add(nodeStake);
+            requests.push(nodeStake);
+            emit AddNodeRequest(address(this), nodeStake, nodeType);
         }
     }
 
-    function _addNode(PoolNode node, uint aStake) private {
-        NodeInfo memory info;
-        info.node = node;
-        info.stake = aStake;
-        nodes.push(info);
+    function addReward() public payable {
+        uint reward = msg.value;
+        if (nodes.length > 0 && nodes[nodes.length - 1] == msg.sender) {
+            if (ownerStake < nodeStake) {
+                reward = reward.sub(reward.mul(ownerStake).div(nodeStake));
+            } else {
+                reward = 0;
+            }
+        }
+        if (reward > 0) {
+            if (fee > 0) {
+                reward = reward.sub(reward.mul(fee).div(MILLION));
+            }
+            totalStake = totalStake.add(reward);
+            emit PoolReward(address(this), reward);
+        }
+        owner.transfer(msg.value.sub(reward));
+        _onboardNodes();
+    }
+
+    function addNode(address node) public onlyService {
+        require(node != address(0), "Node can not be zero");
+        require(requests.length > 0, "No active requests");
+        requests.length -= 1;
+        _manager.onboard.value(nodeStake)(node, nodeType);
+        nodes.push(node);
     }
 }

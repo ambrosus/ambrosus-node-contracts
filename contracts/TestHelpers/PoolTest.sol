@@ -10,26 +10,12 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 pragma solidity ^0.4.23;
 
 import "../Configuration/Consts.sol";
-import "../Storage/PoolsNodesStorage.sol";
+import "../Storage/PoolsStore.sol";
 import "../Pool/PoolsNodesManager.sol";
 
 contract PoolTest {
     function() public payable {}
-
-    function testLockUnlockNode(address stor, address node) public {
-        PoolsNodesStorage st = PoolsNodesStorage(stor);
-        address lockedNode = st.lockNode(address(this), Consts.NodeType.ATLAS);
-        require(lockedNode == address(0), "lockNode should return address(0) when no unlocked nodes availiable");
-
-        st.addNode(node, address(0), Consts.NodeType.ATLAS);
-
-        lockedNode = st.lockNode(address(this), Consts.NodeType.ATLAS);
-        require(lockedNode != address(0), "lockNode should return locked node address when unlocked nodes availiable");
-
-        st.unlockNode(lockedNode);
-        st.unlockNode(lockedNode); // unlock unlocked node should work
-    }
-
+/*
     function testOnboardRetire(address manager, Consts.NodeType nodeType) public payable {
         PoolsNodesManager pm = PoolsNodesManager(manager);
         require(nodeType == Consts.NodeType.APOLLO, "nodeType != APOLLO");
@@ -46,4 +32,5 @@ contract PoolTest {
 
         msg.sender.transfer(amountToTransfer);
     }
+*/
 }

@@ -41,7 +41,7 @@ import MultiplexerJson from './contracts/Multiplexer.json';
 import MultisigWalletJson from './contracts/MultiSigWallet.json';
 import RewardsEventEmitterJson from './contracts/RewardsEventEmitter.json';
 import PoolsNodesManagerJson from './contracts/PoolsNodesManager.json';
-import PoolsNodesStorageJson from './contracts/PoolsNodesStorage.json';
+import PoolsStoreJson from './contracts/PoolsStore.json';
 
 const contractJsons = {
   head: HeadJson,
@@ -74,7 +74,7 @@ const contractJsons = {
   transfersEventEmitter: TransfersEventEmitterJson,
   rewardsEventEmitter: RewardsEventEmitterJson,
   poolsNodesManager: PoolsNodesManagerJson,
-  poolsNodesStorage: PoolsNodesStorageJson,
+  poolsStore: PoolsStoreJson,
   multiplexer: MultiplexerJson
 };
 

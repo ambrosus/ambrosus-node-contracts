@@ -10,19 +10,12 @@ import "../Storage/AtlasStakeStore.sol";
 import "../Storage/RolesStore.sol";
 import "../Storage/ApolloDepositStore.sol";
 import "../Storage/RolesEventEmitter.sol";
-import "../Storage/PoolsNodesStorage.sol";
-import "./PoolNode.sol";
+import "../Storage/PoolsStore.sol";
 
 
 contract PoolsNodesManager is Base, Ownable {
 
-    struct NodeInfo {
-        PoolNode node;
-        address pool;
-        Consts.NodeType nodeType;
-    }
-
-    PoolsNodesStorage private poolsNodesStorage;
+    PoolsStore private poolsStore;
     Config private config;
     KycWhitelistStore private kycWhitelistStore;
     ValidatorProxy private validatorProxy;
@@ -32,13 +25,13 @@ contract PoolsNodesManager is Base, Ownable {
     RolesEventEmitter private rolesEventEmitter;
 
     modifier onlyPoolsCalls() {
-        require(poolsNodesStorage.isPool(address(msg.sender)), "The message sender is not pool");
+        require(poolsStore.isPool(address(msg.sender)), "The message sender is not pool");
         _;
     }
 
     constructor(
         Head _head,
-        PoolsNodesStorage _poolsNodesStorage,
+        PoolsStore _poolsStore,
         Config _config,
         KycWhitelistStore _kycWhitelistStore,
         ValidatorProxy _validatorProxy,
@@ -47,7 +40,7 @@ contract PoolsNodesManager is Base, Ownable {
         ApolloDepositStore _apolloDepositStore,
         RolesEventEmitter _rolesEventEmitter
     ) public Base(_head) {
-        poolsNodesStorage = _poolsNodesStorage;
+        poolsStore = _poolsStore;
         config = _config;
         kycWhitelistStore = _kycWhitelistStore;
         validatorProxy = _validatorProxy;
@@ -59,34 +52,24 @@ contract PoolsNodesManager is Base, Ownable {
 
     function() public payable {}
 
-    function onboard(Consts.NodeType nodeType) external payable onlyPoolsCalls returns (address) {
-        PoolNode node = PoolNode(poolsNodesStorage.lockNode(msg.sender, nodeType));
-        if (address(node) == address(0)) {
-            node = new PoolNode(address(poolsNodesStorage));
-            poolsNodesStorage.poolNodeCreated(address(node));
-            poolsNodesStorage.addNode(address(node), msg.sender, nodeType);
-        }
+    function onboard(address nodeAddress, Consts.NodeType nodeType) external payable onlyPoolsCalls {
         if (nodeType == Consts.NodeType.APOLLO) {
             require(msg.value >= config.APOLLO_DEPOSIT(), "Invalid deposit value");
-            kycWhitelistStore.set(address(node), Consts.NodeType.APOLLO, msg.value);
-            apolloDepositStore.storeDeposit.value(msg.value)(address(node));
-            rolesStore.setRole(address(node), Consts.NodeType.APOLLO);
-            validatorProxy.addValidator(address(node), msg.value);
-            rolesEventEmitter.nodeOnboarded(address(node), msg.value, "", Consts.NodeType.APOLLO);
-            poolsNodesStorage.poolNodeOnboarded(msg.sender, address(node), msg.value, "", Consts.NodeType.APOLLO);
-            return node;
+            kycWhitelistStore.set(nodeAddress, Consts.NodeType.APOLLO, msg.value);
+            apolloDepositStore.storeDeposit.value(msg.value)(nodeAddress);
+            rolesStore.setRole(nodeAddress, Consts.NodeType.APOLLO);
+            validatorProxy.addValidator(nodeAddress, msg.value);
+            rolesEventEmitter.nodeOnboarded(nodeAddress, msg.value, "", Consts.NodeType.APOLLO);
+            return;
         }
         revert("Unsupported node type");
     }
 
-    function retire(address nodeAddress) external onlyPoolsCalls returns (uint) {
-        poolsNodesStorage.unlockNode(nodeAddress);
-        Consts.NodeType nodeType = poolsNodesStorage.getNodeType(nodeAddress);
+    function retire(address nodeAddress, Consts.NodeType nodeType) external onlyPoolsCalls returns (uint) {
         if (nodeType == Consts.NodeType.APOLLO) {
             uint amountToTransfer = apolloDepositStore.releaseDeposit(nodeAddress, this);
             validatorProxy.removeValidator(nodeAddress);
             rolesEventEmitter.nodeRetired(nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
-            poolsNodesStorage.poolNodeRetired(msg.sender, nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
             msg.sender.transfer(amountToTransfer);
             return amountToTransfer;
         }
@@ -94,10 +77,10 @@ contract PoolsNodesManager is Base, Ownable {
     }
 
     function addPool(address pool) public onlyOwner {
-        poolsNodesStorage.addPool(pool);
+        poolsStore.addPool(pool);
     }
 
     function removePool(address pool) public onlyOwner {
-        poolsNodesStorage.removePool(pool);
+        poolsStore.removePool(pool);
     }
 }
