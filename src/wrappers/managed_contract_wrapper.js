@@ -16,6 +16,8 @@ export default class ManagedContractWrapper extends ContractWrapper {
   constructor(headWrapper, web3, defaultAddress) {
     super(web3, defaultAddress);
     this.headWrapper = headWrapper;
+    this.cachedContractObject = null;
+    this.cachedContractAddress = null;
   }
 
   async address() {
@@ -24,7 +26,14 @@ export default class ManagedContractWrapper extends ContractWrapper {
 
   async contract() {
     const contractAddress = await this.headWrapper.contractAddressByName(this.getContractName);
-    return loadContract(this.web3, contractJsons[this.getContractName].abi, contractAddress);
+    if (contractAddress === undefined) {
+      throw new Error('Contract is not deployed');
+    }
+    if (this.cachedContractAddress !== contractAddress) {
+      this.cachedContractObject = loadContract(this.web3, contractJsons[this.getContractName].abi, contractAddress);
+      this.cachedContractAddress = contractAddress;
+    }
+    return this.cachedContractObject;
   }
 
   get getContractName() {

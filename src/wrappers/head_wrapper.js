@@ -47,6 +47,10 @@ export default class HeadWrapper extends GenesisContractWrapper {
       'rewardsEventEmitter',
       'rolesEventEmitter'
     ];
+
+    this.cachedContextContract = null;
+    this.cachedCatalogueContract = null;
+    this.cachedStorageCatalogueContract = null;
   }
 
   async contractAddressByName(contractName) {
@@ -83,8 +87,13 @@ export default class HeadWrapper extends GenesisContractWrapper {
     if (this.cachedContractAddressHasChanged(contextAddress, 'context')) {
       this.clearContractAddressCache();
       this.updateContractAddressCache('context', contextAddress);
+    } else {
+      if (this.cachedContextContract) {
+        return this.cachedContextContract;
+      }
     }
-    return loadContract(this.web3, contractJsons.context.abi, contextAddress);
+    this.cachedContextContract = loadContract(this.web3, contractJsons.context.abi, contextAddress);
+    return this.cachedContextContract;
   }
 
   async catalogue() {
@@ -94,8 +103,13 @@ export default class HeadWrapper extends GenesisContractWrapper {
         .methods
         .catalogue()
         .call());
+    } else {
+      if (this.cachedCatalogueContract) {
+        return this.cachedCatalogueContract;
+      }
     }
-    return loadContract(this.web3, contractJsons.catalogue.abi, this.cachedAddresses.catalogue);
+    this.cachedCatalogueContract = loadContract(this.web3, contractJsons.catalogue.abi, this.cachedAddresses.catalogue);
+    return this.cachedCatalogueContract;
   }
 
   async storageCatalogue() {
@@ -105,8 +119,13 @@ export default class HeadWrapper extends GenesisContractWrapper {
         .methods
         .storageCatalogue()
         .call());
+    } else {
+      if (this.cachedStorageCatalogueContract) {
+        return this.cachedStorageCatalogueContract;
+      }
     }
-    return loadContract(this.web3, contractJsons.storageCatalogue.abi, this.cachedAddresses.storageCatalogue);
+    this.cachedStorageCatalogueContract = loadContract(this.web3, contractJsons.storageCatalogue.abi, this.cachedAddresses.storageCatalogue);
+    return this.cachedStorageCatalogueContract;
   }
 
   clearContractAddressCache() {
