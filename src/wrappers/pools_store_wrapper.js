@@ -23,4 +23,9 @@ export default class PoolsStoreWrapper extends ManagedContractWrapper {
     const contract = await this.contract();
     return contract.getPastEvents('PoolRemoved', {fromBlock, toBlock});
   }
+
+  async getPools() {
+    const contract = await this.contract();
+    return await contract.methods.pools().call();
+  }
 }

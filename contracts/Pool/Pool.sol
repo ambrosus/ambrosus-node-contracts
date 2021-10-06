@@ -104,6 +104,7 @@ contract Pool is Ownable {
             nodes.length--;
         }
         totalStake = totalStake.sub(deposit);
+        ownerStake = nodeStake - (totalStake % nodeStake);
         msg.sender.transfer(deposit);
         emit PoolStakeChanged(address(this), msg.sender, -int(deposit), -int(tokens));
     }
@@ -126,7 +127,7 @@ contract Pool is Ownable {
 
     function _onboardNodes() private {
         uint requested;
-        for (uint idx = 0; idx < requests.length - 1; idx++) {
+        for (uint idx = 0; idx < requests.length; idx++) {
             requested = requested.add(requests[idx]);
         }
         while (address(this).balance.sub(requested) >= nodeStake) {
