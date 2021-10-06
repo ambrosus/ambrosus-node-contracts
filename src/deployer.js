@@ -84,7 +84,7 @@ export default class Deployer {
       waiting,
       skipDeployment.reduce(
         (acc, key) => {
-          acc[key] = '0x0';
+          acc[key] = '0x0000000000000000000000000000000000000000';
           return acc;
         },
         {}

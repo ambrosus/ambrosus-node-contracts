@@ -61,6 +61,7 @@ describe('Base Contract', () => {
 
   it('onlyContextInternalCalls decorated methods can not be called by contracts that are not part of the context', async () => {
     await deployContext(web3, deployer, head, [calledContract.options.address]);
+    callerContract.handleRevert = true; // contract call is going to be reverted
     await expect(callerContract.methods.callOtherContract().call()).to.be.eventually.rejected;
   });
 
@@ -69,8 +70,7 @@ describe('Base Contract', () => {
     const zeroAddress = '0x0000000000000000000000000000000000000000';
 
     it('throws if owner is zero', async () => {
-      const head2 = await deployContract(web3, HeadJson, [zeroAddress], {from: deployer});
-      await expect(head2.methods.context().call()).to.be.eventually.rejected;
+      await expect(deployContract(web3, HeadJson, [zeroAddress], {from: deployer})).to.be.eventually.rejected;
     });
   });
 

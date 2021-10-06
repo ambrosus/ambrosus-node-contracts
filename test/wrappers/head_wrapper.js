@@ -93,7 +93,7 @@ describe('Head Wrapper', () => {
   });
 
   it('context method throws a meaningful error if context address is not set', async () => {
-    await headWrapper.setContext('0x0');
+    await headWrapper.setContext('0x0000000000000000000000000000000000000000');
     await expect(headWrapper.context()).to.eventually.be.rejectedWith('Context address is not set in the head contract');
   });
 

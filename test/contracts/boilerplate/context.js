@@ -52,18 +52,15 @@ describe('Context Contract', () => {
     const zeroAddress = '0x0000000000000000000000000000000000000000';
 
     it('throws if no storageCatalogue is provided', async () => {
-      context = await deploy(deployer, [trustedAddress], catalogueAddress, zeroAddress, '0');
-      await expect(catalogue(context)).to.be.eventually.rejected;
+      await expect(deploy(deployer, [trustedAddress], catalogueAddress, zeroAddress, '0')).to.be.eventually.rejected;
     });
 
     it('throws if no catalogue is provided', async () => {
-      context = await deploy(deployer, [trustedAddress], zeroAddress, storageCatalogueAddress, '0');
-      await expect(catalogue(context)).to.be.eventually.rejected;
+      await expect(deploy(deployer, [trustedAddress], zeroAddress, storageCatalogueAddress, '0')).to.be.eventually.rejected;
     });
 
     it('throws if trusted addresses are empty', async () => {
-      context = await deploy(deployer, [], catalogueAddress, storageCatalogueAddress, '0');
-      await expect(catalogue(context)).to.be.eventually.rejected;
+      await expect(deploy(deployer, [], catalogueAddress, storageCatalogueAddress, '0')).to.be.eventually.rejected;
     });
   });
 

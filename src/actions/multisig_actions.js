@@ -144,4 +144,12 @@ export default class MultisigActions {
   async setSupportFee(support, fee) {
     return this.submitTransaction(await this.multiplexerWrapper.setSupportFee(support, fee));
   }
+
+  async addAdmin(admin) {
+    return this.submitTransaction(await this.multiplexerWrapper.addAdmin(admin));
+  }
+
+  async removeAdmin(admin) {
+    return this.submitTransaction(await this.multiplexerWrapper.removeAdmin(admin));
+  }
 }
