@@ -49,9 +49,6 @@ contract Pool is Ownable {
         fee = poolFee;
     }
 
-    // receive eth from node
-    function() public payable {}
-
     function activate() public payable onlyOwner {
         require(!active, "Pool is already active");
         require(msg.value == nodeStake, "Send value not equals node stake value");
