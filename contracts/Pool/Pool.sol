@@ -10,10 +10,6 @@ contract Pool is Ownable {
 
     using SafeMath for uint;
 
-    event PoolStakeChanged(address pool, address user, int stake, int tokens);
-    event PoolReward(address pool, uint reward);
-    event AddNodeRequest(address pool, uint stake, Consts.NodeType role);
-
     uint constant private MILLION = 1000000;
     uint constant private FIXEDPOINT = 1 ether;
 
@@ -84,7 +80,7 @@ contract Pool is Ownable {
         token.mint(msg.sender, tokens);
         totalStake = totalStake.add(msg.value);
         ownerStake = nodeStake - (totalStake % nodeStake);
-        emit PoolStakeChanged(address(this), msg.sender, int(msg.value), int(tokens));
+        _manager.poolStakeChanged(msg.sender, int(msg.value), int(tokens));
         _onboardNodes();
     }
 
@@ -103,7 +99,7 @@ contract Pool is Ownable {
         totalStake = totalStake.sub(deposit);
         ownerStake = nodeStake - (totalStake % nodeStake);
         msg.sender.transfer(deposit);
-        emit PoolStakeChanged(address(this), msg.sender, -int(deposit), -int(tokens));
+        _manager.poolStakeChanged(msg.sender, -int(deposit), -int(tokens));
     }
 
     function viewStake() public view returns (uint) {
@@ -130,7 +126,7 @@ contract Pool is Ownable {
         while (address(this).balance.sub(requested) >= nodeStake) {
             requested = requested.add(nodeStake);
             requests.push(nodeStake);
-            emit AddNodeRequest(address(this), nodeStake, nodeType);
+            _manager.addNodeRequest(nodeStake, nodeType);
         }
     }
 
@@ -148,7 +144,7 @@ contract Pool is Ownable {
                 reward = reward.sub(reward.mul(fee).div(MILLION));
             }
             totalStake = totalStake.add(reward);
-            emit PoolReward(address(this), reward);
+            _manager.poolReward(reward);
         }
         owner.transfer(msg.value.sub(reward));
         _onboardNodes();

@@ -11,6 +11,7 @@ import "../Storage/RolesStore.sol";
 import "../Storage/ApolloDepositStore.sol";
 import "../Storage/RolesEventEmitter.sol";
 import "../Storage/PoolsStore.sol";
+import "../Storage/PoolEventsEmitter.sol";
 
 
 contract PoolsNodesManager is Base, Ownable {
@@ -23,6 +24,7 @@ contract PoolsNodesManager is Base, Ownable {
     RolesStore private rolesStore;
     ApolloDepositStore private apolloDepositStore;
     RolesEventEmitter private rolesEventEmitter;
+    PoolEventsEmitter private poolEventsEmitter;
 
     modifier onlyPoolsCalls() {
         require(poolsStore.isPool(address(msg.sender)), "The message sender is not pool");
@@ -38,7 +40,8 @@ contract PoolsNodesManager is Base, Ownable {
         AtlasStakeStore _atlasStakeStore,
         RolesStore _rolesStore,
         ApolloDepositStore _apolloDepositStore,
-        RolesEventEmitter _rolesEventEmitter
+        RolesEventEmitter _rolesEventEmitter,
+        PoolEventsEmitter _poolEventsEmitter
     ) public Base(_head) {
         poolsStore = _poolsStore;
         config = _config;
@@ -48,6 +51,7 @@ contract PoolsNodesManager is Base, Ownable {
         rolesStore = _rolesStore;
         apolloDepositStore = _apolloDepositStore;
         rolesEventEmitter = _rolesEventEmitter;
+        poolEventsEmitter = _poolEventsEmitter;
     }
 
     function() public payable {}
@@ -82,5 +86,17 @@ contract PoolsNodesManager is Base, Ownable {
 
     function removePool(address pool) public onlyOwner {
         poolsStore.removePool(pool);
+    }
+
+    function poolStakeChanged(address user, int stake, int tokens) public onlyPoolsCalls {
+        poolEventsEmitter.poolStakeChanged(msg.sender, user, stake, tokens);
+    }
+
+    function poolReward(uint reward) public onlyPoolsCalls {
+        poolEventsEmitter.poolReward(msg.sender, reward);
+    }
+
+    function addNodeRequest(uint stake, Consts.NodeType role) public onlyPoolsCalls {
+        poolEventsEmitter.addNodeRequest(msg.sender, stake, role);
     }
 }

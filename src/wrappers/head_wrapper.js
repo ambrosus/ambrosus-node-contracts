@@ -47,7 +47,8 @@ export default class HeadWrapper extends GenesisContractWrapper {
       'transfersEventEmitter',
       'rewardsEventEmitter',
       'rolesEventEmitter',
-      'poolsStore'
+      'poolsStore',
+      'poolEventsEmitter'
     ];
 
     this.cachedContextContract = null;
