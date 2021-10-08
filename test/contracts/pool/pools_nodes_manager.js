@@ -10,7 +10,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {expect, assert} from '../../helpers/chaiPreconf';
 import deploy from '../../helpers/deploy';
 import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
-import PoolNode from '../../../src/contracts/PoolNode.json';
 import PoolTest from '../../../src/contracts/PoolTest.json';
 import {ROLE_CODES, ZERO_ADDRESS, APOLLO_DEPOSIT} from '../../../src/constants';
 import {utils} from 'web3';
@@ -31,7 +30,6 @@ describe('PoolsNodesManager Contract', () => {
 
   let poolsNodesManager;
   let poolsNodesStorage;
-  let poolNode;
   let poolTest;
   let context;
 
@@ -81,12 +79,10 @@ describe('PoolsNodesManager Contract', () => {
       }
     }));
 
-    poolNode = await deployContract(web3, PoolNode, [poolsNodesStorage.options.address]);
     poolTest = await deployContract(web3, PoolTest);
 
     await addToWhitelist([poolTest.options.address]);
 
-    node = poolNode.options.address;
     manager = poolsNodesManager.options.address;
   });
 

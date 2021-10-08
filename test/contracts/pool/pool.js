@@ -12,7 +12,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {expect, assert} from '../../helpers/chaiPreconf';
 import deploy from '../../helpers/deploy';
 import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
-import PoolNode from '../../../src/contracts/PoolNode.json';
 import PoolTest from '../../../src/contracts/PoolTest.json';
 import PoolToken from '../../../src/contracts/PoolToken.json';
 import Pool from '../../../src/contracts/Pool.json';
@@ -46,7 +45,6 @@ describe('Pool Contract', () => {
   //let poolAtlas;
   let poolsNodesManager;
   let poolsNodesStorage;
-  //let poolNode;
   //let poolTest;
   let poolToken;
   //let context;
@@ -102,7 +100,6 @@ describe('Pool Contract', () => {
       }
     }));
 
-    //poolNode = await deployContract(web3, PoolNode, [poolsNodesStorage.options.address]);
     //poolTest = await deployContract(web3, PoolTest);
 
     //poolApollo = await deployContract(web3, Pool, [ROLE_CODES.APOLLO, apolloNodeStake, apolloMinStake, poolFee, poolsNodesManager.options.address]);
@@ -111,7 +108,6 @@ describe('Pool Contract', () => {
     //await addToWhitelist([poolTest.options.address]);
     // await addToWhitelist([poolContr.options.address]);
 
-    //node = poolNode.options.address;
     //manager = poolsNodesManager.options.address;
     //pool = poolApollo.options.address;
 

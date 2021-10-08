@@ -10,7 +10,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import {expect, assert} from '../../helpers/chaiPreconf';
 import deploy from '../../helpers/deploy';
 import {deployContract, createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
-import PoolNode from '../../../src/contracts/PoolNode.json';
 import PoolTest from '../../../src/contracts/PoolTest.json';
 import {ROLE_CODES, ZERO_ADDRESS} from '../../../src/constants';
 
@@ -21,7 +20,6 @@ describe('PoolsNodesStorage Contract', () => {
   let addr2;
   let snapshotId;
 
-  let poolNode;
   let poolsNodesStorage;
   let poolTest;
   let context;
@@ -53,7 +51,6 @@ describe('PoolsNodesStorage Contract', () => {
 
     ({poolsNodesStorage, context} = deployedContracts);
 
-    poolNode = await deployContract(web3, PoolNode, [poolsNodesStorage.options.address]);
     poolTest = await deployContract(web3, PoolTest);
 
     await addToWhitelist([poolTest.options.address]);
@@ -83,7 +80,6 @@ describe('PoolsNodesStorage Contract', () => {
   });
 
   it('addNode', async () => {
-    const node = poolNode.options.address;
     const pool = addr2;
     expect(await getNodeType(node)).to.equal(ROLE_CODES.NONE);
     await assert.isReverted(addNode(node, pool, ROLE_CODES.NONE));
@@ -93,7 +89,6 @@ describe('PoolsNodesStorage Contract', () => {
   });
 
   it('lockNode, unlockNode', async () => {
-    const node = poolNode.options.address;
     const stor = poolsNodesStorage.options.address;
     const pool = addr2;
 
