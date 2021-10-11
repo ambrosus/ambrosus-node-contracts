@@ -129,20 +129,23 @@ contract Pool is Ownable {
     }
 
     function addReward() public payable {
-        uint reward = msg.value;
-        if (nodes.length > 0 && nodes[nodes.length - 1] == msg.sender) {
-            if (ownerStake < nodeStake) {
-                reward = reward.sub(reward.mul(ownerStake).div(nodeStake));
-            } else {
-                reward = 0;
+        uint reward;
+        if (nodes.length > 0) {
+            reward = msg.value;
+            if (nodes[0] == msg.sender) {
+                if (ownerStake < nodeStake) {
+                    reward = reward.sub(reward.mul(ownerStake).div(nodeStake));
+                } else {
+                    reward = 0;
+                }
             }
-        }
-        if (reward > 0) {
-            if (fee > 0) {
-                reward = reward.sub(reward.mul(fee).div(MILLION));
+            if (reward > 0) {
+                if (fee > 0) {
+                    reward = reward.sub(reward.mul(fee).div(MILLION));
+                }
+                totalStake = totalStake.add(reward);
+                _manager.poolReward(reward);
             }
-            totalStake = totalStake.add(reward);
-            _manager.poolReward(reward);
         }
         owner.transfer(msg.value.sub(reward));
         _onboardNodes();
