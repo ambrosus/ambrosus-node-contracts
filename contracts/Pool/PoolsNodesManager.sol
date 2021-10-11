@@ -101,6 +101,6 @@ contract PoolsNodesManager is Base, Ownable {
     }
 
     function nextId() public returns (uint) {
-        return poolStore.nextId();
+        return poolsStore.nextId();
     }
 }
