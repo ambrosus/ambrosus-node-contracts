@@ -26,6 +26,8 @@ contract Pool is Ownable {
     uint public ownerStake;
     uint[] public requests;
 
+    function() public payable {}
+
     modifier onlyService() {
         require(address(msg.sender) == _service, "The message sender is not service");
         _;
@@ -57,9 +59,7 @@ contract Pool is Ownable {
         require(active, "Pool is not active");
         require(totalStake <= minStakeValue.div(10), "Pool is not retired");
         while (nodes.length > 0) {
-            _manager.retire(nodes[nodes.length-1], nodeType);
-            delete nodes[nodes.length-1];
-            nodes.length--;
+            _removeNode();
         }
         active = false;
         msg.sender.transfer(address(this).balance);
@@ -85,16 +85,14 @@ contract Pool is Ownable {
     }
 
     function unstake(uint tokens) public {
-        require(tokens <= token.balanceOf(msg.sender));
+        require(tokens <= token.balanceOf(msg.sender), "Sender has not enough tokens");
         uint tokenPrice = getTokenPrice();
         uint deposit = tokenPrice.mul(tokens).div(FIXEDPOINT);
-        require(deposit <= totalStake);
+        require(deposit <= totalStake, "Total stake is less than deposit");
 
         token.burn(msg.sender, tokens);
         while (address(this).balance < deposit) {
-            _manager.retire(nodes[nodes.length-1], nodeType);
-            delete nodes[nodes.length-1];
-            nodes.length--;
+            _removeNode();
         }
         totalStake = totalStake.sub(deposit);
         ownerStake = nodeStake - (totalStake % nodeStake);
@@ -156,5 +154,15 @@ contract Pool is Ownable {
         requests.length -= 1;
         _manager.onboard.value(nodeStake)(node, nodeType);
         nodes.push(node);
+    }
+
+    function _removeNode() private {
+        _manager.retire(nodes[nodes.length-1], nodeType);
+        delete nodes[nodes.length-1];
+        nodes.length--;
+    }
+
+    function getNodesCount() public view returns(uint) {
+        return nodes.length;
     }
 }
