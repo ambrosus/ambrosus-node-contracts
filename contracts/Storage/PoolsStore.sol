@@ -11,6 +11,7 @@ contract PoolsStore is Base {
 
     mapping(address => bool) public isPool;
     address[] public pools;
+    uint public id;
 
     constructor(Head _head) public Base(_head) { }
 
@@ -34,5 +35,10 @@ contract PoolsStore is Base {
             }
         }
         emit PoolRemoved(pool);
+    }
+
+    function nextId() public onlyContextInternalCalls returns (uint) {
+        id++;
+        return id;
     }
 }

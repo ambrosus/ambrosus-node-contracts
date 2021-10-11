@@ -25,6 +25,8 @@ contract Pool is Ownable {
     bool public active;
     uint public ownerStake;
     uint[] public requests;
+    string public name;
+    uint public id;
 
     function() public payable {}
 
@@ -34,7 +36,7 @@ contract Pool is Ownable {
     }
 
     // todo use Ownable constructor?
-    constructor(Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, uint poolFee, PoolsNodesManager manager, address service) public {
+    constructor(string memory poolName, Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, uint poolFee, PoolsNodesManager manager, address service) public {
         require(poolMinStakeValue > 0, "Pool min stake value is zero");
         require(address(manager) != address(0), "Manager can not be zero");
 
@@ -45,6 +47,8 @@ contract Pool is Ownable {
         nodeStake = poolNodeStake;
         minStakeValue = poolMinStakeValue;
         fee = poolFee;
+        name = poolName;
+        id = manager.nextId();
     }
 
     function activate() public payable onlyOwner {
@@ -68,6 +72,10 @@ contract Pool is Ownable {
     function setService(address service) public onlyOwner {
         require(service != address(0x0), "Service must not be 0x0");
         _service = service;
+    }
+
+    function setName(string memory newName) public onlyOwner {
+        name = newName;
     }
 
     function stake() public payable {
