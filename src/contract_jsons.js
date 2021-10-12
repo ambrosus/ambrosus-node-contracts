@@ -42,6 +42,7 @@ import MultisigWalletJson from './contracts/MultiSigWallet.json';
 import RewardsEventEmitterJson from './contracts/RewardsEventEmitter.json';
 import PoolsNodesManagerJson from './contracts/PoolsNodesManager.json';
 import PoolsStoreJson from './contracts/PoolsStore.json';
+import PoolJson from './contracts/Pool.json';
 import PoolEventsEmitterJson from './contracts/PoolEventsEmitter.json';
 
 const contractJsons = {
@@ -76,6 +77,7 @@ const contractJsons = {
   rewardsEventEmitter: RewardsEventEmitterJson,
   poolsNodesManager: PoolsNodesManagerJson,
   poolsStore: PoolsStoreJson,
+  pool: PoolJson,
   poolEventsEmitter: PoolEventsEmitterJson,
   multiplexer: MultiplexerJson
 };
@@ -86,5 +88,6 @@ export const contractSuperSpeedJsons = {
 };
 
 export const multisig = MultisigWalletJson;
+export const pool = PoolJson;
 
 export default contractJsons;
