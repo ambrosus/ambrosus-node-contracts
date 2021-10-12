@@ -63,4 +63,9 @@ export default class ShelteringTransfersWrapper extends ManagedContractWrapper {
     const contract = await this.contract();
     return contract.methods.getDesignatedShelterer(transferId).call();
   }
+
+  async force(shelterer, bundleId) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.startForce(shelterer, bundleId));
+  }
 }

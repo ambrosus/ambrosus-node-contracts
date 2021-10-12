@@ -113,20 +113,21 @@ contract Fees is Base, Ownable {
     }
 
     function addAdmin(address admin) public onlyOwner {
+        require(!isAdmin[admin], "Admin already exists");
         isAdmin[admin] = true;
         admins.push(admin);
     }
 
     function removeAdmin(address admin) public onlyOwner {
-        if (isAdmin[admin]) {
-            isAdmin[admin] = false;
-            for (uint i = 0; i<admins.length - 1; i++) {
-                if (admins[i] == admin) {
-                    admins[i] = admins[admins.length - 1];
-                    break;
-                }
+        require(isAdmin[admin], "Admin not exists");
+        isAdmin[admin] = false;
+        for (uint i = 0; i<admins.length - 1; i++) {
+            if (admins[i] == admin) {
+                admins[i] = admins[admins.length - 1];
+                delete admins[admins.length - 1];
+                admins.length -= 1;
+                break;
             }
-            admins.length -= 1;
         }
     }
 }

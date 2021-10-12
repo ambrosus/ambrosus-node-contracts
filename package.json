@@ -2,7 +2,7 @@
   "name": "ambrosus-node-contracts",
   "author": "Ambrosus",
   "description": "Smart contracts used in AMB-NET",
-  "version": "0.0.83",
+  "version": "0.0.84",
   "license": "MPL-2.0-no-copyleft-exception",
   "repository": "git@github.com:ambrosus/ambrosus-node-contracts.git",
   "main": "dist/index.js",
@@ -15,6 +15,7 @@
     "build": "yarn clean && yarn build:sol && yarn strip && yarn build:js",
     "build:js": "babel ./src -d ./dist --copy-files",
     "build:sol": "truffle compile all",
+    "coverage:sol": "truffle run coverage --file=\"test/contracts/*/*.js\"",
     "strip": "babel-node src/tools/strip_contracts.js src/contracts",
     "clean": "rm -fr ./src/contracts/* ./dist/*",
     "test:units": "mocha --config=./test/mocharc.json",
@@ -56,6 +57,7 @@
     "mocha": "^8.4.0",
     "sinon": "^11.1.1",
     "sinon-chai": "^3.7.0",
+    "solidity-coverage": "^0.7.17",
     "solium": "^1.2.5",
     "truffle": "^5.3.9"
   }

@@ -20,6 +20,7 @@ import "../Front/Challenges.sol";
 import "../Front/Uploads.sol";
 import "../Middleware/Sheltering.sol";
 import "../Middleware/ValidatorProxy.sol";
+import "../Pool/PoolsNodesManager.sol";
 
 import "../Storage/ApolloDepositStore.sol";
 import "../Storage/AtlasStakeStore.sol";
@@ -33,6 +34,8 @@ import "../Storage/RolesEventEmitter.sol";
 import "../Storage/TransfersEventEmitter.sol";
 import "../Storage/ChallengesEventEmitter.sol";
 import "../Storage/RewardsEventEmitter.sol";
+import "../Storage/PoolsStore.sol";
+import "../Storage/PoolEventsEmitter.sol";
 
 
 contract Catalogue {
@@ -47,6 +50,7 @@ contract Catalogue {
     Config public config;
     ValidatorProxy public validatorProxy;
     Time public time;
+    PoolsNodesManager public poolsNodesManager;
 
     constructor(
         KycWhitelist _kycWhitelist,
@@ -59,7 +63,8 @@ contract Catalogue {
         Sheltering _sheltering,
         Uploads _uploads,
         Config _config,
-        ValidatorProxy _validatorProxy
+        ValidatorProxy _validatorProxy,
+        PoolsNodesManager _poolsNodesManager
     ) public {
         kycWhitelist = _kycWhitelist;
         roles = _roles;
@@ -72,6 +77,7 @@ contract Catalogue {
         uploads = _uploads;
         config = _config;
         validatorProxy = _validatorProxy;
+        poolsNodesManager = _poolsNodesManager;
     }
 }
 
@@ -89,6 +95,8 @@ contract StorageCatalogue {
     TransfersEventEmitter public transfersEventEmitter;
     ChallengesEventEmitter public challengesEventEmitter;
     RewardsEventEmitter public rewardsEventEmitter;
+    PoolsStore public poolsStore;
+    PoolEventsEmitter public poolEventsEmitter;
 
     constructor(
         ApolloDepositStore _apolloDepositStore,
@@ -102,7 +110,9 @@ contract StorageCatalogue {
         RolesEventEmitter _rolesEventEmitter,
         TransfersEventEmitter _transfersEventEmitter,
         ChallengesEventEmitter _challengesEventEmitter,
-        RewardsEventEmitter _rewardsEventEmitter
+        RewardsEventEmitter _rewardsEventEmitter,
+        PoolsStore _poolsStore,
+        PoolEventsEmitter _poolEventsEmitter
     ) public {
         apolloDepositStore = _apolloDepositStore;
         atlasStakeStore = _atlasStakeStore;
@@ -116,5 +126,7 @@ contract StorageCatalogue {
         transfersEventEmitter = _transfersEventEmitter;
         challengesEventEmitter = _challengesEventEmitter;
         rewardsEventEmitter = _rewardsEventEmitter;
+        poolsStore = _poolsStore;
+        poolEventsEmitter = _poolEventsEmitter;
     }
 }
