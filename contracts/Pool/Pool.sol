@@ -2,6 +2,9 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../Boilerplate/Head.sol";
+import "../Boilerplate/Context.sol";
+import "../Boilerplate/Catalogue.sol";
 import "./PoolsNodesManager.sol";
 import "./PoolToken.sol";
 
@@ -13,7 +16,7 @@ contract Pool is Ownable {
     uint constant private MILLION = 1000000;
     uint constant private FIXEDPOINT = 1 ether;
 
-    PoolsNodesManager private _manager;
+    Head private _head = Head(address(0x0000000000000000000000000000000000000F10));
     address private _service;
     PoolToken public token;
     uint public totalStake;
@@ -36,11 +39,9 @@ contract Pool is Ownable {
     }
 
     // todo use Ownable constructor?
-    constructor(string memory poolName, Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, uint poolFee, PoolsNodesManager manager, address service) public {
+    constructor(string memory poolName, Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, uint poolFee, address service) public {
         require(poolMinStakeValue > 0, "Pool min stake value is zero");
-        require(address(manager) != address(0), "Manager can not be zero");
 
-        _manager = manager;
         _service = service;
         token = new PoolToken();
         nodeType = poolNodeType;
@@ -48,7 +49,7 @@ contract Pool is Ownable {
         minStakeValue = poolMinStakeValue;
         fee = poolFee;
         name = poolName;
-        id = manager.nextId();
+        id = getManager().nextId();
     }
 
     function activate() public payable onlyOwner {
@@ -88,7 +89,7 @@ contract Pool is Ownable {
         token.mint(msg.sender, tokens);
         totalStake = totalStake.add(msg.value);
         ownerStake = nodeStake - (totalStake % nodeStake);
-        _manager.poolStakeChanged(msg.sender, int(msg.value), int(tokens));
+        getManager().poolStakeChanged(msg.sender, int(msg.value), int(tokens));
         _onboardNodes();
     }
 
@@ -105,7 +106,7 @@ contract Pool is Ownable {
         totalStake = totalStake.sub(deposit);
         ownerStake = nodeStake - (totalStake % nodeStake);
         msg.sender.transfer(deposit);
-        _manager.poolStakeChanged(msg.sender, -int(deposit), -int(tokens));
+        getManager().poolStakeChanged(msg.sender, -int(deposit), -int(tokens));
     }
 
     function viewStake() public view returns (uint) {
@@ -132,7 +133,7 @@ contract Pool is Ownable {
         while (address(this).balance.sub(requested) >= nodeStake) {
             requested = requested.add(nodeStake);
             requests.push(nodeStake);
-            _manager.addNodeRequest(nodeStake, nodeType);
+            getManager().addNodeRequest(nodeStake, nodeType);
         }
     }
 
@@ -152,7 +153,7 @@ contract Pool is Ownable {
                     reward = reward.sub(reward.mul(fee).div(MILLION));
                 }
                 totalStake = totalStake.add(reward);
-                _manager.poolReward(reward);
+                getManager().poolReward(reward);
             }
         }
         owner.transfer(msg.value.sub(reward));
@@ -163,12 +164,12 @@ contract Pool is Ownable {
         require(node != address(0), "Node can not be zero");
         require(requests.length > 0, "No active requests");
         requests.length -= 1;
-        _manager.onboard.value(nodeStake)(node, nodeType);
+        getManager().onboard.value(nodeStake)(node, nodeType);
         nodes.push(node);
     }
 
     function _removeNode() private {
-        _manager.retire(nodes[nodes.length-1], nodeType);
+        getManager().retire(nodes[nodes.length-1], nodeType);
         delete nodes[nodes.length-1];
         nodes.length--;
     }
@@ -185,5 +186,9 @@ contract Pool is Ownable {
         for (i = from; i < to; i++) {
             _nodes[i - from] = nodes[i];
         }
+    }
+
+    function getManager() private view returns (PoolsNodesManager) {
+        return _head.context().catalogue().poolsNodesManager();
     }
 }
