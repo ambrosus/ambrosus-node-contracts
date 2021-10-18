@@ -19,4 +19,14 @@ export default class PoolActions {
     const contract = await loadContract(this.web3, PoolJson.abi, address);
     console.log(await contract.methods.activate().send({gas: DEFAULT_GAS, value, from: this.web3.eth.defaultAccount}));
   }
+
+  async stake(address, value) {
+    const contract = await loadContract(this.web3, PoolJson.abi, address);
+    console.log(await contract.methods.stake().send({gas: DEFAULT_GAS, value, from: this.web3.eth.defaultAccount}));
+  }
+
+  async unstake(address, value) {
+    const contract = await loadContract(this.web3, PoolJson.abi, address);
+    console.log(await contract.methods.unstake(value).send({gas: DEFAULT_GAS, from: this.web3.eth.defaultAccount}));
+  }
 }

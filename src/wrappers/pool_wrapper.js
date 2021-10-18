@@ -18,8 +18,16 @@ export default class PoolWrapper extends ContractWrapper {
     this.contract = loadContract(web3, pool.abi, contractAddress);
   }
 
+  async getNodesCount() {
+    return this.contract.methods.getNodesCount().call();
+  }
+
   async getNode(idx) {
     return this.contract.methods.nodes(idx).call();
+  }
+
+  async getNodes(from, to) {
+    return this.contract.methods.getNodes(from, to).call();
   }
 
   async addNode(address) {

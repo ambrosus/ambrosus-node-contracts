@@ -176,4 +176,14 @@ contract Pool is Ownable {
     function getNodesCount() public view returns(uint) {
         return nodes.length;
     }
+
+    function getNodes(uint from, uint to) public view returns (address[] _nodes) {
+        require(from >= 0 && from < nodes.length, "From index out of bounds");
+        require(to > from && to <= nodes.length, "To index out of bounds");
+        uint i;
+        _nodes = new address[](to - from);
+        for (i = from; i < to; i++) {
+            _nodes[i - from] = nodes[i];
+        }
+    }
 }

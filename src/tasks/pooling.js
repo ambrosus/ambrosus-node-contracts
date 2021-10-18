@@ -22,6 +22,10 @@ export default class PoolingTask extends TaskBase {
       await this.addPool(options[0]);
     } else if (command === 'activate') {
       await this.activatePool(options[0], options[1]);
+    } else if (command === 'stake') {
+      await this.stake(options[0], options[1]);
+    } else if (command === 'unstake') {
+      await this.unstake(options[0], options[1]);
     } else {
       console.error('Unknown sub-command, see yarn task pooling help');
       process.exit(1);
@@ -40,6 +44,20 @@ export default class PoolingTask extends TaskBase {
       return this.poolActions.activate(poolAddress, this.poolActions.web3.utils.toWei(stake, 'ether'));
     }
     console.error('Wrong address, use: yarn task pooling activate [pool address]');
+  }
+
+  async stake(poolAddress, value) {
+    if (utils.isAddress(poolAddress)) {
+      return this.poolActions.stake(poolAddress, this.poolActions.web3.utils.toWei(value, 'ether'));
+    }
+    console.error('Wrong address, use: yarn task pooling stake [pool address]');
+  }
+
+  async unstake(poolAddress, value) {
+    if (utils.isAddress(poolAddress)) {
+      return this.poolActions.unstake(poolAddress, this.poolActions.web3.utils.toWei(value, 'ether'));
+    }
+    console.error('Wrong address, use: yarn task pooling stake [pool address]');
   }
 
   help() {

@@ -41,4 +41,18 @@ contract PoolsStore is Base {
         id++;
         return id;
     }
+
+    function getPoolsCount() public view returns (uint) {
+        return pools.length;
+    }
+
+    function getPools(uint from, uint to) public view returns (address[] _pools) {
+        require(from >= 0 && from < pools.length, "From index out of bounds");
+        require(to > from && to <= pools.length, "To index out of bounds");
+        uint i;
+        _pools = new address[](to - from);
+        for (i = from; i < to; i++) {
+            _pools[i - from] = pools[i];
+        }
+    }
 }
