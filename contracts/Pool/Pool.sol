@@ -191,4 +191,8 @@ contract Pool is Ownable {
     function getManager() private view returns (PoolsNodesManager) {
         return _head.context().catalogue().poolsNodesManager();
     }
+
+    function getVersion() public view returns (string) {
+        return "0.0.1";
+    }
 }
