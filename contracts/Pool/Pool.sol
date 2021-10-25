@@ -16,7 +16,7 @@ contract Pool is Ownable {
     uint constant private MILLION = 1000000;
     uint constant private FIXEDPOINT = 1 ether;
 
-    Head private _head = Head(address(0x0000000000000000000000000000000000000F10));
+    Head private _head;
     address private _service;
     PoolToken public token;
     uint public totalStake;
@@ -38,10 +38,17 @@ contract Pool is Ownable {
         _;
     }
 
-    // todo use Ownable constructor?
-    constructor(string memory poolName, Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue, uint poolFee, address service) public {
-        require(poolMinStakeValue > 0, "Pool min stake value is zero");
+    function getVersion() public view returns (string) {
+        return "0.0.1";
+    }
 
+    // todo use Ownable constructor?
+    constructor(string memory poolName, Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue,
+        uint poolFee, address service, address head) public {
+        require(service != address(0x0), "Service must not be 0x0");
+        require(head != address(0x0), "Head must not be 0x0");
+        require(poolMinStakeValue > 0, "Pool min stake value is zero");
+        _head = Head(head);
         _service = service;
         token = new PoolToken();
         nodeType = poolNodeType;
@@ -49,7 +56,7 @@ contract Pool is Ownable {
         minStakeValue = poolMinStakeValue;
         fee = poolFee;
         name = poolName;
-        id = getManager().nextId();
+        id = _getManager().nextId();
     }
 
     function activate() public payable onlyOwner {
@@ -89,7 +96,7 @@ contract Pool is Ownable {
         token.mint(msg.sender, tokens);
         totalStake = totalStake.add(msg.value);
         ownerStake = nodeStake - (totalStake % nodeStake);
-        getManager().poolStakeChanged(msg.sender, int(msg.value), int(tokens));
+        _getManager().poolStakeChanged(msg.sender, int(msg.value), int(tokens));
         _onboardNodes();
     }
 
@@ -106,7 +113,7 @@ contract Pool is Ownable {
         totalStake = totalStake.sub(deposit);
         ownerStake = nodeStake - (totalStake % nodeStake);
         msg.sender.transfer(deposit);
-        getManager().poolStakeChanged(msg.sender, -int(deposit), -int(tokens));
+        _getManager().poolStakeChanged(msg.sender, -int(deposit), -int(tokens));
     }
 
     function viewStake() public view returns (uint) {
@@ -120,7 +127,7 @@ contract Pool is Ownable {
     function getTokenPrice() public view returns (uint) {
         uint total = token.totalSupply();
         if (total > 0) {
-            return getTotalStake().mul(FIXEDPOINT).div(total);
+            return totalStake.mul(FIXEDPOINT).div(total);
         }
         return 1 ether;
     }
@@ -133,7 +140,7 @@ contract Pool is Ownable {
         while (address(this).balance.sub(requested) >= nodeStake) {
             requested = requested.add(nodeStake);
             requests.push(nodeStake);
-            getManager().addNodeRequest(nodeStake, nodeType);
+            _getManager().addNodeRequest(nodeStake, nodeType);
         }
     }
 
@@ -153,7 +160,7 @@ contract Pool is Ownable {
                     reward = reward.sub(reward.mul(fee).div(MILLION));
                 }
                 totalStake = totalStake.add(reward);
-                getManager().poolReward(reward);
+                _getManager().poolReward(reward);
             }
         }
         owner.transfer(msg.value.sub(reward));
@@ -164,12 +171,12 @@ contract Pool is Ownable {
         require(node != address(0), "Node can not be zero");
         require(requests.length > 0, "No active requests");
         requests.length -= 1;
-        getManager().onboard.value(nodeStake)(node, nodeType);
+        _getManager().onboard.value(nodeStake)(node, nodeType);
         nodes.push(node);
     }
 
     function _removeNode() private {
-        getManager().retire(nodes[nodes.length-1], nodeType);
+        _getManager().retire(nodes[nodes.length-1], nodeType);
         delete nodes[nodes.length-1];
         nodes.length--;
     }
@@ -188,11 +195,7 @@ contract Pool is Ownable {
         }
     }
 
-    function getManager() private view returns (PoolsNodesManager) {
+    function _getManager() private view returns (PoolsNodesManager) {
         return _head.context().catalogue().poolsNodesManager();
-    }
-
-    function getVersion() public view returns (string) {
-        return "0.0.1";
     }
 }
