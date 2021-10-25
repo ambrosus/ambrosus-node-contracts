@@ -27,7 +27,8 @@ contract Pool is Ownable {
     uint public fee;
     bool public active;
     uint public ownerStake;
-    uint[] public requests;
+    uint private _requestStake;
+    uint private _requestId;
     string public name;
     uint public id;
 
@@ -39,7 +40,7 @@ contract Pool is Ownable {
     }
 
     function getVersion() public view returns (string) {
-        return "0.0.1";
+        return "0.0.2";
     }
 
     // todo use Ownable constructor?
@@ -120,10 +121,6 @@ contract Pool is Ownable {
         return token.balanceOf(msg.sender);
     }
 
-    function getTotalStake() public view returns (uint) {
-        return totalStake;
-    }
-
     function getTokenPrice() public view returns (uint) {
         uint total = token.totalSupply();
         if (total > 0) {
@@ -133,14 +130,9 @@ contract Pool is Ownable {
     }
 
     function _onboardNodes() private {
-        uint requested;
-        for (uint idx = 0; idx < requests.length; idx++) {
-            requested = requested.add(requests[idx]);
-        }
-        while (address(this).balance.sub(requested) >= nodeStake) {
-            requested = requested.add(nodeStake);
-            requests.push(nodeStake);
-            _getManager().addNodeRequest(nodeStake, nodeType);
+        if (_requestStake == 0 && address(this).balance >= nodeStake) {
+            _requestStake = nodeStake;
+            _getManager().addNodeRequest(_requestStake, ++_requestId, nodes.length, nodeType);
         }
     }
 
@@ -167,12 +159,20 @@ contract Pool is Ownable {
         _onboardNodes();
     }
 
-    function addNode(address node) public onlyService {
+    function addNode(uint requestId, address node, uint nodeId) public onlyService {
         require(node != address(0), "Node can not be zero");
-        require(requests.length > 0, "No active requests");
-        requests.length -= 1;
-        _getManager().onboard.value(nodeStake)(node, nodeType);
-        nodes.push(node);
+        require(_requestStake > 0, "No active requests");
+        uint status;
+        if (requestId == _requestId) {
+            if (nodeId == nodes.length && address(this).balance >= _requestStake) {
+                _getManager().onboard.value(_requestStake)(node, nodeType);
+                nodes.push(node);
+                status = 1;
+            }
+        }
+        _getManager().addNodeRequestResolved(requestId, status);
+        _requestStake = 0;
+        _onboardNodes();
     }
 
     function _removeNode() private {
