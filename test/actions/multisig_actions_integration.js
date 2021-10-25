@@ -14,6 +14,8 @@ import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../s
 import deploy from '../helpers/deploy';
 import MultiplexerWrapper from '../../src/wrappers/multiplexer_wrapper';
 import MultisigWrapper from '../../src/wrappers/multisig_wrapper';
+import BlockchainStateWrapper from '../../src/wrappers/blockchain_state_wrapper';
+import PoolsNodesManagerWrapper from '../../src/wrappers/pools_nodes_manager_wrapper';
 import AdministrativeActions from '../../src/actions/admin_actions';
 import HeadWrapper from '../../src/wrappers/head_wrapper';
 import KycWhitelistWrapper from '../../src/wrappers/kyc_whitelist_wrapper';
@@ -90,7 +92,9 @@ describe('Multisig actions integration', () => {
       headWrapper,
       new KycWhitelistWrapper(headWrapper, web3, owner),
       new FeesWrapper(headWrapper, web3, owner),
-      new ValidatorProxyWrapper(headWrapper, web3, owner)
+      new ValidatorProxyWrapper(headWrapper, web3, owner),
+      new BlockchainStateWrapper(web3),
+      new PoolsNodesManagerWrapper(headWrapper, web3, owner)
     );
     await adminActions.moveOwnershipsToMultiplexer(multiplexer.options.address);
     const multiplexerWrapper = new MultiplexerWrapper(multiplexer.options.address, web3, owner);

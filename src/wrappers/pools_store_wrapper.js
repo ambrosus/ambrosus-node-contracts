@@ -30,7 +30,7 @@ export default class PoolsStoreWrapper extends ManagedContractWrapper {
 
   async getPool(idx) {
     const contract = await this.contract();
-    return await contract.methods.pools(idx).call();
+    return contract.methods.pools(idx).call();
   }
 
   async getPools(from, to) {

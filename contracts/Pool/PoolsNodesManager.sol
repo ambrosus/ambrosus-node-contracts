@@ -96,8 +96,12 @@ contract PoolsNodesManager is Base, Ownable {
         poolEventsEmitter.poolReward(msg.sender, reward);
     }
 
-    function addNodeRequest(uint stake, Consts.NodeType role) public onlyPoolsCalls {
-        poolEventsEmitter.addNodeRequest(msg.sender, stake, role);
+    function addNodeRequest(uint stake, uint requestId, uint nodeId, Consts.NodeType role) public onlyPoolsCalls {
+        poolEventsEmitter.addNodeRequest(msg.sender, requestId, nodeId, stake, role);
+    }
+
+    function addNodeRequestResolved(uint requestId, uint status) public onlyPoolsCalls {
+        poolEventsEmitter.addNodeRequestResolved(msg.sender, requestId, status);
     }
 
     function nextId() public returns (uint) {
