@@ -59,7 +59,7 @@ export default class DeployActions {
     const storageContractNames = this.headWrapper.availableStorageCatalogueContracts;
     const recycled = {};
     for (const contractName of storageContractNames) {
-      if (contractName === 'poolsStore') {
+      if (contractName === 'poolsStore' || contractName === 'poolEventsEmitter') {
         continue;
       }
       try {
