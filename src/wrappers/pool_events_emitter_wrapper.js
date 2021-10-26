@@ -28,4 +28,9 @@ export default class PoolEventsEmitterWrapper extends ManagedContractWrapper {
     const contract = await this.contract();
     return contract.getPastEvents('AddNodeRequest', {fromBlock, toBlock});
   }
+
+  async addNodeRequestsResolved(fromBlock, toBlock) {
+    const contract = await this.contract();
+    return contract.getPastEvents('AddNodeRequestResolved', {fromBlock, toBlock});
+  }
 }
