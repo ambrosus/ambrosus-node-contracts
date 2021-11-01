@@ -18,7 +18,7 @@ contract PoolEventsEmitter is Base {
     constructor(Head _head) Base(_head) public {}
 
     event PoolStakeChanged(address pool, address user, int stake, int tokens);
-    event PoolReward(address pool, uint reward);
+    event PoolReward(address pool, uint reward, uint tokenPrice);
     event AddNodeRequest(address pool, uint id, uint nodeId, uint stake, Consts.NodeType role);
     event AddNodeRequestResolved(address pool, uint id, uint status);
 
@@ -26,8 +26,8 @@ contract PoolEventsEmitter is Base {
         emit PoolStakeChanged(pool, user, stake, tokens);
     }
 
-    function poolReward(address pool, uint reward) public onlyContextInternalCalls {
-        emit PoolReward(pool, reward);
+    function poolReward(address pool, uint reward, uint tokenPrice) public onlyContextInternalCalls {
+        emit PoolReward(pool, reward, tokenPrice);
     }
 
     function addNodeRequest(address pool, uint id, uint nodeId, uint stake, Consts.NodeType role) public onlyContextInternalCalls {

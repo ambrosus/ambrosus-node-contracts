@@ -38,7 +38,7 @@ contract Pool is Ownable {
         _;
     }
 
-    function getVersion() public view returns (string) {
+    function getVersion() public pure returns (string) {
         return "0.0.3";
     }
 
@@ -69,11 +69,15 @@ contract Pool is Ownable {
 
     function deactivate() public onlyOwner {
         require(active, "Pool is not active");
-        require(totalStake <= minStakeValue.div(10), "Pool is not retired");
         while (nodes.length > 0) {
             _removeNode();
         }
         active = false;
+    }
+
+    function ownerUnstake() public onlyOwner {
+        require(!active, "Pool is active");
+        require(address(this).balance <= nodeStake, "Pool is unstaked");
         msg.sender.transfer(address(this).balance);
     }
 
@@ -150,7 +154,7 @@ contract Pool is Ownable {
                     reward = reward.sub(reward.mul(fee).div(MILLION));
                 }
                 totalStake = totalStake.add(reward);
-                _getManager().poolReward(reward);
+                _getManager().poolReward(reward, getTokenPrice());
             }
         }
         owner.transfer(msg.value.sub(reward));
