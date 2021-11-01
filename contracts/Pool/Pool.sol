@@ -26,7 +26,6 @@ contract Pool is Ownable {
     address[] public nodes;
     uint public fee;
     bool public active;
-    uint public ownerStake;
     uint private _requestStake;
     uint private _requestId;
     string public name;
@@ -40,15 +39,16 @@ contract Pool is Ownable {
     }
 
     function getVersion() public view returns (string) {
-        return "0.0.2";
+        return "0.0.3";
     }
 
     // todo use Ownable constructor?
     constructor(string memory poolName, Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue,
         uint poolFee, address service, address head) public {
+        require(poolNodeStake > 0, "Pool node stake value is zero"); // node stake value is used as a divisor
+        require(poolMinStakeValue > 0, "Pool min stake value is zero");
         require(service != address(0x0), "Service must not be 0x0");
         require(head != address(0x0), "Head must not be 0x0");
-        require(poolMinStakeValue > 0, "Pool min stake value is zero");
         _head = Head(head);
         _service = service;
         token = new PoolToken();
@@ -64,7 +64,6 @@ contract Pool is Ownable {
         require(!active, "Pool is already active");
         require(msg.value == nodeStake, "Send value not equals node stake value");
         active = true;
-        ownerStake = msg.value;
         _onboardNodes();
     }
 
@@ -96,7 +95,6 @@ contract Pool is Ownable {
         // todo return (msg.value % tokenPrice) to user ?
         token.mint(msg.sender, tokens);
         totalStake = totalStake.add(msg.value);
-        ownerStake = nodeStake - (totalStake % nodeStake);
         _getManager().poolStakeChanged(msg.sender, int(msg.value), int(tokens));
         _onboardNodes();
     }
@@ -112,7 +110,6 @@ contract Pool is Ownable {
             _removeNode();
         }
         totalStake = totalStake.sub(deposit);
-        ownerStake = nodeStake - (totalStake % nodeStake);
         msg.sender.transfer(deposit);
         _getManager().poolStakeChanged(msg.sender, -int(deposit), -int(tokens));
     }
@@ -141,6 +138,7 @@ contract Pool is Ownable {
         if (nodes.length > 0) {
             reward = msg.value;
             if (nodes[0] == msg.sender) {
+                uint ownerStake = nodeStake - (totalStake % nodeStake);
                 if (ownerStake < nodeStake) {
                     reward = reward.sub(reward.mul(ownerStake).div(nodeStake));
                 } else {
