@@ -26,7 +26,6 @@ contract Pool is Ownable {
     address[] public nodes;
     uint public fee;
     bool public active;
-    uint public ownerStake;
     uint private _requestStake;
     uint private _requestId;
     string public name;
