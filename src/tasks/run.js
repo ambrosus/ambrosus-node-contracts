@@ -43,6 +43,8 @@ import ChallengeWrapper from '../wrappers/challenge_wrapper';
 import BlockchainStateWrapper from '../wrappers/blockchain_state_wrapper';
 import ChallengesEventEmitterWrapper from '../wrappers/challenges_event_emitter_wrapper';
 import AtlasStakeStoreWrapper from '../wrappers/atlas_stake_store_wrapper';
+import PoolsNodesManagerWrapper from '../wrappers/pools_nodes_manager_wrapper';
+import PoolsStoreWrapper from '../wrappers/pools_store_wrapper';
 import RetiringTask from './retire';
 import MoveOwnershipToMultiplexerTask from './move_ownership_to_multiplexer';
 import MultiplexerWrapper from '../wrappers/multiplexer_wrapper';
@@ -52,6 +54,8 @@ import MultisigActions from '../actions/multisig_actions';
 import MultisigWrapper from '../wrappers/multisig_wrapper';
 import MultisigFunctions from '../utils/multisig_functions';
 import MultisigOwnersTask from './multisig_owners';
+import PoolActions from '../actions/pool_actions';
+import PoolingTask from './pooling';
 import BaseFeeTask from './base_fee';
 
 
@@ -77,6 +81,8 @@ const runTask = async () => {
   const atlasStakeStoreWrapper = new AtlasStakeStoreWrapper(headWrapper, web3, nodeAddress);
   const multiplexerWrapper = new MultiplexerWrapper(config.multiplexerContractAddress, web3, nodeAddress);
   const multisigWrapper = new MultisigWrapper(config.multisigContractAddress, web3, nodeAddress);
+  const poolsNodesManagerWrapper = new PoolsNodesManagerWrapper(headWrapper, web3, nodeAddress);
+  const poolsStoreWrapper = new PoolsStoreWrapper(headWrapper, web3, nodeAddress);
 
   const deployActions = new DeployActions(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper);
   const whitelistActions = new WhitelistActions(kycWhitelistWrapper);
@@ -85,8 +91,9 @@ const runTask = async () => {
   const nodeServiceActions = new NodeServiceActions(rolesWrapper);
   const payoutsActions = new PayoutsActions(timeWrapper, payoutsWrapper);
   const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper, atlasStakeStoreWrapper);
-  const adminActions = new AdministrativeActions(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper);
+  const adminActions = new AdministrativeActions(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper, poolsNodesManagerWrapper);
   const multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper, new MultisigFunctions(web3));
+  const poolActions = new PoolActions(web3, poolsStoreWrapper);
 
   const list = new TaskList();
   const args = process.argv.slice(2);
@@ -105,6 +112,7 @@ const runTask = async () => {
   list.add('checkOwnership', new CheckOwnershipTask(web3));
   list.add('multisigOwners', new MultisigOwnersTask(multisigWrapper));
   list.add('fee', new BaseFeeTask(feesWrapper));
+  list.add('pooling', new PoolingTask(multisigActions, poolActions));
 
   await list.run(args[0], args.slice(1));
 };

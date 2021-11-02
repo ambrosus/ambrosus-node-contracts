@@ -152,4 +152,12 @@ export default class MultisigActions {
   async removeAdmin(admin) {
     return this.submitTransaction(await this.multiplexerWrapper.removeAdmin(admin));
   }
+
+  async addPool(pool) {
+    return this.submitTransaction(await this.multiplexerWrapper.addPool(pool));
+  }
+
+  async removePool(pool) {
+    return this.submitTransaction(await this.multiplexerWrapper.removePool(pool));
+  }
 }

@@ -24,7 +24,7 @@ contract Head is ConstructorOwnable {
     */
     constructor(address _owner) public ConstructorOwnable(_owner) {
     }
-        
+
     function setContext(Context _context) public onlyOwner {
         context = _context;
         emit ContextChange(context);

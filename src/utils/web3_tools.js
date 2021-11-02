@@ -155,7 +155,7 @@ export async function deployContract(web3, json, args = [], options = {}) {
     gasPrice: web3.utils.toWei('5', 'gwei')
   });
   const deploy = await contract.deploy({data: json.bytecode, arguments: args});
-  await deploy.estimateGas(); // will eventually fail if deploy is invalid
+  await deploy.estimateGas(options); // will eventually fail if deploy is invalid
 
   const sent =  await deploy.send({from: defaultAddress,
     gas: DEFAULT_GAS,

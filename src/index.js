@@ -32,7 +32,7 @@ import WhitelistActions from './actions/whitelist_actions';
 import OnboardActions from './actions/onboard_actions';
 import UploadActions from './actions/upload_actions';
 import Deployer from './deployer';
-import contractJsons from './contract_jsons.js';
+import contractJsons, {pool} from './contract_jsons.js';
 import FeesActions from './actions/fees_actions';
 import DeployActions from './actions/deploy_actions';
 import AdministrativeActions from './actions/admin_actions';
@@ -41,6 +41,9 @@ import ChallengeActions from './actions/challenge_actions';
 import {InsufficientFundsToStartChallengeError, InsufficientFundsToUploadBundleError} from './errors/errors';
 import AtlasStakeStoreWrapper from './wrappers/atlas_stake_store_wrapper';
 import ApolloDepositStoreWrapper from './wrappers/apollo_deposit_store_wrapper';
+import PoolsNodesManagerWrapper from './wrappers/pools_nodes_manager_wrapper';
+import PoolsStoreWrapper from './wrappers/pools_store_wrapper';
+import PoolEventsEmitterWrapper from './wrappers/pool_events_emitter_wrapper';
 import MultiplexerWrapper from './wrappers/multiplexer_wrapper';
 import MultisigWrapper from './wrappers/multisig_wrapper';
 import MultisigActions from './actions/multisig_actions';
@@ -77,12 +80,16 @@ module.exports = {
   ChallengeActions,
   constants,
   contractJsons,
+  pool,
   InsufficientFundsToUploadBundleError,
   InsufficientFundsToStartChallengeError,
   BundleStoreWrapper,
   AtlasStakeStoreWrapper,
   ApolloDepositStoreWrapper,
+  PoolsNodesManagerWrapper,
+  PoolsStoreWrapper,
   RolesEventEmitterWrapper,
+  PoolEventsEmitterWrapper,
   MultiplexerWrapper,
   MultisigWrapper,
   MultisigActions,
