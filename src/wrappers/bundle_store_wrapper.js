@@ -28,4 +28,15 @@ export default class BundleStoreWrapper extends ManagedContractWrapper {
     const contract = await this.contract();
     return contract.getPastEvents('SheltererRemoved', {fromBlock, toBlock});
   }
+
+  async getShelterers(bundleId) {
+    const contract = await this.contract();
+    const shelterers = await contract.methods.getShelterers(bundleId).call();
+    return shelterers.concat();
+  }
+
+  async getUploader(bundleId) {
+    const contract = await this.contract();
+    return contract.methods.getUploader(bundleId).call();
+  }
 }
