@@ -25,7 +25,8 @@ export default class PoolsStoreWrapper extends ManagedContractWrapper {
   }
 
   async getPoolsCount() {
-    return this.contract.methods.getPoolsCount().call();
+    const contract = await this.contract();
+    return contract.methods.getPoolsCount().call();
   }
 
   async getPool(idx) {
@@ -34,6 +35,7 @@ export default class PoolsStoreWrapper extends ManagedContractWrapper {
   }
 
   async getPools(from, to) {
-    return this.contract.methods.getPools(from, to).call();
+    const contract = await this.contract();
+    return contract.methods.getPools(from, to).call();
   }
 }

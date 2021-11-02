@@ -18,51 +18,67 @@ export default class PoolingTask extends TaskBase {
   }
 
   async execute([command, ...options]) {
-    if (command === 'add') {
-      await this.addPool(options[0]);
+    if (command === 'pools') {
+      await this.poolsList();
     } else if (command === 'activate') {
       await this.activatePool(options[0], options[1]);
+    } else if (command === 'deactivate') {
+      await this.deactivatePool(options[0]);
     } else if (command === 'stake') {
       await this.stake(options[0], options[1]);
     } else if (command === 'unstake') {
       await this.unstake(options[0], options[1]);
+    } else if (command === 'ownerUnstake') {
+      await this.ownerUnstake(options[0]);
     } else {
       console.error('Unknown sub-command, see yarn task pooling help');
       process.exit(1);
     }
   }
 
-  async addPool(poolAddress) {
-    if (utils.isAddress(poolAddress)) {
-      return this.multisigActions.addPool(poolAddress);
-    }
-    console.error('Wrong address, use: yarn task pooling add [pool address]');
+  async poolsList() {
+    return this.poolActions.getList();
   }
 
   async activatePool(poolAddress, stake) {
     if (utils.isAddress(poolAddress)) {
       return this.poolActions.activate(poolAddress, this.poolActions.web3.utils.toWei(stake, 'ether'));
     }
-    console.error('Wrong address, use: yarn task pooling activate [pool address]');
+    console.error('Wrong address, use: yarn task pooling activate [pool address, stake]');
+  }
+
+  async deactivatePool(poolAddress) {
+    if (utils.isAddress(poolAddress)) {
+      return this.poolActions.deactivate(poolAddress);
+    }
+    console.error('Wrong address, use: yarn task pooling deactivate [pool address]');
+  }
+
+  async ownerUnstake(poolAddress) {
+    if (utils.isAddress(poolAddress)) {
+      return this.poolActions.ownerUnstake(poolAddress);
+    }
+    console.error('Wrong address, use: yarn task pooling ownerUnstake [pool address]');
   }
 
   async stake(poolAddress, value) {
     if (utils.isAddress(poolAddress)) {
       return this.poolActions.stake(poolAddress, this.poolActions.web3.utils.toWei(value, 'ether'));
     }
-    console.error('Wrong address, use: yarn task pooling stake [pool address]');
+    console.error('Wrong address, use: yarn task pooling stake [pool address, stake]');
   }
 
   async unstake(poolAddress, value) {
     if (utils.isAddress(poolAddress)) {
       return this.poolActions.unstake(poolAddress, this.poolActions.web3.utils.toWei(value, 'ether'));
     }
-    console.error('Wrong address, use: yarn task pooling stake [pool address]');
+    console.error('Wrong address, use: yarn task pooling unstake [pool address, tokens]');
   }
 
   help() {
     return {
-      description: 'add new pool to manager'
+      options: '[pools/activate/deactivate/ownerUnstake/stake/unstake]',
+      description: 'operations with pools'
     };
   }
 }
