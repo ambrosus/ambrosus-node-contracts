@@ -20,6 +20,8 @@ export default class PoolingTask extends TaskBase {
   async execute([command, ...options]) {
     if (command === 'pools') {
       await this.poolsList();
+    } else if (command === 'create') {
+      await this.createPool(options[0], options[1], options[2], options[3]);
     } else if (command === 'activate') {
       await this.activatePool(options[0], options[1]);
     } else if (command === 'deactivate') {
@@ -28,12 +30,30 @@ export default class PoolingTask extends TaskBase {
       await this.stake(options[0], options[1]);
     } else if (command === 'unstake') {
       await this.unstake(options[0], options[1]);
-    } else if (command === 'ownerUnstake') {
-      await this.ownerUnstake(options[0]);
     } else {
       console.error('Unknown sub-command, see yarn task pooling help');
       process.exit(1);
     }
+  }
+
+  async createPool(name, minStake, fee, serviceAddress) {
+    if (!utils.isAddress(serviceAddress)) {
+      console.error('Wrong service address, use: yarn task pooling create [pool name, min stake, fee %, service address]');
+      return;
+    }
+    if (!name) {
+      console.error('Wrong pool name, use: yarn task pooling create [pool name, min stake, fee %, service address]');
+      return;
+    }
+    if (!fee || +fee < 0 || +fee > 100) {
+      console.error('Wrong fee value, use: yarn task pooling create [pool name, min stake, fee %, service address]');
+      return;
+    }
+    if (!minStake || +minStake < 0) {
+      console.error('Wrong min stake value, use: yarn task pooling create [pool name, min stake, fee %, service address]');
+      return;
+    }
+    return this.poolActions.createPool(name, this.poolActions.web3.utils.toWei(minStake, 'ether'), Math.floor((+fee) * 10000), serviceAddress);
   }
 
   async poolsList() {
@@ -54,13 +74,6 @@ export default class PoolingTask extends TaskBase {
     console.error('Wrong address, use: yarn task pooling deactivate [pool address]');
   }
 
-  async ownerUnstake(poolAddress) {
-    if (utils.isAddress(poolAddress)) {
-      return this.poolActions.ownerUnstake(poolAddress);
-    }
-    console.error('Wrong address, use: yarn task pooling ownerUnstake [pool address]');
-  }
-
   async stake(poolAddress, value) {
     if (utils.isAddress(poolAddress)) {
       return this.poolActions.stake(poolAddress, this.poolActions.web3.utils.toWei(value, 'ether'));
@@ -77,7 +90,7 @@ export default class PoolingTask extends TaskBase {
 
   help() {
     return {
-      options: '[pools/activate/deactivate/ownerUnstake/stake/unstake]',
+      options: '[create/pools/activate/deactivate/stake/unstake]',
       description: 'operations with pools'
     };
   }

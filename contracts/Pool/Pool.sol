@@ -73,12 +73,7 @@ contract Pool is Ownable {
             _removeNode();
         }
         active = false;
-    }
-
-    function ownerUnstake() public onlyOwner {
-        require(!active, "Pool is active");
-        require(address(this).balance <= nodeStake, "Pool is unstaked");
-        msg.sender.transfer(address(this).balance);
+        msg.sender.transfer(nodeStake);
     }
 
     function setService(address service) public onlyOwner {

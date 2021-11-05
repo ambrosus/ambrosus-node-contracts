@@ -93,7 +93,7 @@ const runTask = async () => {
   const challengeActions = new ChallengeActions(challengeWrapper, feesWrapper, shelteringWrapper, blockchainStateWrapper, atlasStakeStoreWrapper);
   const adminActions = new AdministrativeActions(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper, poolsNodesManagerWrapper);
   const multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper, new MultisigFunctions(web3));
-  const poolActions = new PoolActions(web3, poolsStoreWrapper);
+  const poolActions = new PoolActions(web3, poolsStoreWrapper, config.headContractAddress);
 
   const list = new TaskList();
   const args = process.argv.slice(2);
