@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-/* eslint-disable */
+/* eslint-disable prefer-arrow-callback, no-underscore-dangle, no-unused-vars */
 
 import {expect, assert} from '../../helpers/chaiPreconf';
 import deploy from '../../helpers/deploy';
@@ -38,13 +38,6 @@ const ZERO = toBN(0);
 const ONE = toBN(1);
 const gasPrice = ONE;
 
-async function printReason(promise) {
-  try {
-    await promise;
-    console.log('OK');
-  } catch(err) {console.log(err.message.split('\n')[0], err.reason)}
-}
-
 describe('Pool Contract', function() {
   let web3;
   let owner;
@@ -52,12 +45,8 @@ describe('Pool Contract', function() {
   let service;
   let node1;
   let node2;
-  let node3;
   let addr1;
   let addr2;
-  let addr3;
-  let addr4;
-
 
   let snapshotId;
 
@@ -72,7 +61,7 @@ describe('Pool Contract', function() {
   before(async function() {
     web3 = await createWeb3();
     web3.eth.handleRevert = true;
-    [owner, initialApollo, service, node1, node2, node3, addr1, addr2, addr3, addr4] = await web3.eth.getAccounts();
+    [owner, initialApollo, service, node1, node2, addr1, addr2] = await web3.eth.getAccounts();
 
     ({poolsNodesManager, poolEventsEmitter, head} = await deploy({
       web3,
@@ -220,7 +209,7 @@ describe('Pool Contract', function() {
             await poolContract.methods.activate().send({from:owner, value:apolloPoolNodeStake});
           });
           after(async function() {
-            await restoreSnapshot(web3,snapshotId_);
+            await restoreSnapshot(web3, snapshotId_);
           });
 
           it('activation reverts', async function() {
@@ -337,7 +326,7 @@ describe('Pool Contract', function() {
           await addNode(1, node1, 0, service);
         });
         after(async function() {
-          await restoreSnapshot(web3,snapshotId_);
+          await restoreSnapshot(web3, snapshotId_);
         });
 
         it('revets staking less than minimum amount', async function() {
@@ -455,7 +444,7 @@ describe('Pool Contract', function() {
         function calcPoolReward(reward, totalStake) {
           const ownerStake = apolloPoolNodeStake.sub(totalStake.mod(apolloPoolNodeStake));
           // console.log('xx',apolloPoolNodeStake.sub(ownerStake).toString());
-          let poolReward = ownerStake == apolloPoolNodeStake ? 0 : reward.sub(reward.mul(ownerStake).div(apolloPoolNodeStake));
+          let poolReward = ownerStake === apolloPoolNodeStake ? 0 : reward.sub(reward.mul(ownerStake).div(apolloPoolNodeStake));
           if (poolReward.gt(ZERO) && poolFee.gt(ZERO)) {
             // console.log('yy',poolReward.mul(poolFee).div(MILLION).toString());
             poolReward = poolReward.sub(poolReward.mul(poolFee).div(MILLION));
@@ -496,12 +485,52 @@ describe('Pool Contract', function() {
             await checkTx(owner, apolloPoolNodeStake, 0, 0, 0,
               () => deactivate());
           });
+          it('stake1 reward (100 times)', async function() {
+            async function checkReward()  {
+              const totalStake = toBN(await getTotalStake());
+              const reward = apolloPoolMinStake;
+              const poolReward = calcPoolReward(reward, totalStake);
+              const price = toBN(await getTokenPrice());
+              const totalTokens = totalStake.mul(FIXEDPOINT).div(price);
+              const priceChange = poolReward.mul(FIXEDPOINT).div(totalTokens);
+              const ownerBalanceBefore = toBN(await web3.eth.getBalance(owner));
+              await checkTx(node1, reward.neg(), 0, poolReward, priceChange,
+                () => addReward(node1, {value:reward}));
+              expect(ownerBalanceBefore.add(reward.sub(poolReward)).toString()).to.equal(await web3.eth.getBalance(owner));
+            }
+
+            const stakedAmount = apolloPoolMinStake;
+            for (let ix = 0; ix < 10; ix++) {
+              const price = toBN(await getTokenPrice());
+              const receivedTokens = stakedAmount.mul(FIXEDPOINT).div(price);
+              await checkTx(staker1, stakedAmount.neg(), receivedTokens, stakedAmount, 0,
+                // eslint-disable-next-line no-loop-func
+                () => stake(staker1, {value:stakedAmount}));
+              for (let jx = 0; jx < 10; jx++) {
+                await checkReward();
+              }
+            }
+          });
         });
         describe('onboard / retire', function() {
-          it('stake1 onboard unstake1(retire) deactivate(retire)', async function() {
-            await checkTx(staker1, apolloPoolNodeStake.neg(), apolloPoolNodeStake, apolloPoolNodeStake, 0,
-              () => stake(staker1, {value:apolloPoolNodeStake}));
-            await addNode(2, node2, 1, service);
+          it('stake1 onboard(AddNodeRequest addNode AddNodeRequestResolved(1)) unstake1(retire) deactivate(retire)', async function() {
+            const id = '2';
+            const nodeId = '1';
+            const pool = poolContract.options.address;
+            let {blockNumber} = await stake(staker1, {value:apolloPoolNodeStake});
+            await checkEvent(poolEventsEmitter, 'AddNodeRequest', blockNumber, {
+              pool,
+              id,
+              nodeId,
+              stake: apolloPoolNodeStake.toString(),
+              role: ROLE_CODES.APOLLO
+            });
+            ({blockNumber} = await addNode(id, node2, nodeId, service));
+            await checkEvent(poolEventsEmitter, 'AddNodeRequestResolved', blockNumber, {
+              pool,
+              id,
+              status: '1'
+            });
             expect(await getNodesCount()).to.equal('2');
             await checkTx(staker1, apolloPoolNodeStake, apolloPoolNodeStake.neg(), 0, 0,
               () => unstake(apolloPoolNodeStake, staker1));
@@ -509,6 +538,26 @@ describe('Pool Contract', function() {
             const poolBalance = toBN(await web3.eth.getBalance(poolContract.options.address));
             await checkTx(owner, apolloPoolNodeStake.add(poolBalance), 0, poolBalance.neg(), 0,
               () => deactivate());
+          });
+          it('stake1 onboard(AddNodeRequest unstake1 addNode AddNodeRequestResolved(0))', async function() {
+            const id = '2';
+            const nodeId = '1';
+            const pool = poolContract.options.address;
+            let {blockNumber} = await stake(staker1, {value:apolloPoolNodeStake});
+            await checkEvent(poolEventsEmitter, 'AddNodeRequest', blockNumber, {
+              pool,
+              id,
+              nodeId,
+              stake: apolloPoolNodeStake.toString(),
+              role: ROLE_CODES.APOLLO
+            });
+            await unstake(apolloPoolNodeStake, staker1);
+            ({blockNumber} = await addNode(id, node2, nodeId, service));
+            await checkEvent(poolEventsEmitter, 'AddNodeRequestResolved', blockNumber, {
+              pool,
+              id,
+              status: '0'
+            });
           });
           it('stake1 stake2 reward onboard unstake1 unstake2(retire) deactivate(retire)', async function() {
             await stake(staker1, {value:apolloPoolMinStake});
@@ -537,41 +586,6 @@ describe('Pool Contract', function() {
 
             await checkTx(owner, apolloPoolNodeStake, 0, 0, 0,
               () => deactivate());
-          });
-          it('stake1 reward (100 times)', async function() {
-
-            async function checkReward()  {
-              const totalStake = toBN(await getTotalStake());
-              const reward = apolloPoolMinStake;
-              const poolReward = calcPoolReward(reward, totalStake);
-              const price = toBN(await getTokenPrice());
-              const totalTokens = totalStake.mul(FIXEDPOINT).div(price);
-              const priceChange = poolReward.mul(FIXEDPOINT).div(totalTokens);
-              const ownerBalanceBefore = toBN(await web3.eth.getBalance(owner));
-              /*
-              console.log('checkReward:',
-                totalStake.toString(),
-                reward.toString(),
-                poolReward.toString(),
-                priceChange.toString(),
-                ownerBalanceBefore.add(reward.sub(poolReward)).sub(ownerBalanceBefore).toString()
-              );
-              */
-              await checkTx(node1, reward.neg(), 0, poolReward, priceChange,
-                () => addReward(node1, {value:reward}));
-              expect(ownerBalanceBefore.add(reward.sub(poolReward)).toString()).to.equal(await web3.eth.getBalance(owner));
-            }
-
-            const stakedAmount = apolloPoolMinStake;
-            for (let i=0; i < 10; i++) {
-              const price = toBN(await getTokenPrice());
-              const receivedTokens = stakedAmount.mul(FIXEDPOINT).div(price);
-              await checkTx(staker1, stakedAmount.neg(), receivedTokens, stakedAmount, 0,
-                () => stake(staker1, {value:stakedAmount}));
-              for (let j=0; j < 10; j++) {
-                await checkReward();
-              }
-            }
           });
         });
       });

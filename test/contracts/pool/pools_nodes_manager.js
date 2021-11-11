@@ -152,11 +152,11 @@ describe('PoolsNodesManager Contract', () => {
       role: ROLE_CODES.APOLLO
     });
 
-    ({blockNumber} = await addNodeRequestResolved('1', '2', pool));
+    ({blockNumber} = await addNodeRequestResolved('1', '1', pool));
     await checkEvent(poolEventsEmitter, 'AddNodeRequestResolved', blockNumber, {
       pool,
       id: '1',
-      status: '2'
+      status: '1'
     });
   });
 
