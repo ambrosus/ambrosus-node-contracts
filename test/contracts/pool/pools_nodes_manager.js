@@ -33,6 +33,7 @@ describe('PoolsNodesManager Contract', () => {
   let owner;
   let initialApollo;
   let pool;
+  let pool2;
   let node;
   let user;
 
@@ -57,7 +58,7 @@ describe('PoolsNodesManager Contract', () => {
   before(async () => {
     web3 = await createWeb3();
     web3.eth.handleRevert = true;
-    [owner, initialApollo, pool, node, user] = await web3.eth.getAccounts();
+    [owner, initialApollo, pool, pool2, node, user] = await web3.eth.getAccounts();
 
     ({poolsNodesManager, poolEventsEmitter, poolsStore, rolesEventEmitter} = await deploy({
       web3,
@@ -205,5 +206,17 @@ describe('PoolsNodesManager Contract', () => {
     await assert.isReverted(retire(node, ROLE_CODES.ATLAS, pool));
     await assert.isReverted(retire(node, ROLE_CODES.HERMES, pool));
     await assert.isReverted(retire(node, ROLE_CODES.APOLLO, pool));
+  });
+
+  it('retiring a node not owned by the pool', async () => {
+    await addPool(pool);
+
+    const gasPrice = '1';
+    await onboard(node, ROLE_CODES.APOLLO, pool, {value:APOLLO_DEPOSIT, gasPrice});
+
+    await addPool(pool2);
+
+    // this test disabled before next update
+    // await assert.isReverted(retire(node, ROLE_CODES.APOLLO, pool2, {gasPrice}));
   });
 });
