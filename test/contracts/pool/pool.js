@@ -147,17 +147,9 @@ describe('Pool Contract', function() {
       });
 
       // todo: check ownable
-
-      // todo: events?
-
-      // todo: requests count
-
       // todo: setService reverts when sender is not an owner
       // todo: addNode reverts when sender is not service
-
-      describe('when pool not added to manager', function() {
-        // onlyPoolsCalls
-      });
+      // todo: onlyPoolsCalls
 
       describe('when pool added to manager', function() {
         let snapshotId_;
@@ -443,10 +435,8 @@ describe('Pool Contract', function() {
 
         function calcPoolReward(reward, totalStake) {
           const ownerStake = apolloPoolNodeStake.sub(totalStake.mod(apolloPoolNodeStake));
-          // console.log('xx',apolloPoolNodeStake.sub(ownerStake).toString());
           let poolReward = ownerStake === apolloPoolNodeStake ? 0 : reward.sub(reward.mul(ownerStake).div(apolloPoolNodeStake));
           if (poolReward.gt(ZERO) && poolFee.gt(ZERO)) {
-            // console.log('yy',poolReward.mul(poolFee).div(MILLION).toString());
             poolReward = poolReward.sub(poolReward.mul(poolFee).div(MILLION));
           }
           return poolReward;
