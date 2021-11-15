@@ -15,16 +15,34 @@ import {utils} from 'web3';
 
 const {toBN} = utils;
 
+async function checkEvent(contract, eventName, blockNumber, values) {
+  const events = await contract.getPastEvents(eventName, {fromBlock:blockNumber, toBlock:blockNumber});
+  expect(events, `${eventName} event not found`).to.have.lengthOf(1);
+  if (values['0'] === undefined) {
+    let index = 0;
+    for (const key in values) {
+      values[index] = values[key];
+      index++;
+    }
+  }
+  expect(events[0].returnValues).to.deep.equal(values);
+}
+
 describe('PoolsNodesManager Contract', () => {
   let web3;
   let owner;
   let initialApollo;
   let pool;
+  let pool2;
   let node;
+  let user;
 
   let snapshotId;
 
   let poolsNodesManager;
+  let poolEventsEmitter;
+  let poolsStore;
+  let rolesEventEmitter;
 
   const addPool = (pool, senderAddress = owner) => poolsNodesManager.methods.addPool(pool).send({from: senderAddress});
   const removePool = (pool, senderAddress = owner) => poolsNodesManager.methods.removePool(pool).send({from: senderAddress});
@@ -32,12 +50,17 @@ describe('PoolsNodesManager Contract', () => {
   const onboard = (nodeAddress, nodeType, senderAddress = owner, options = {}) => poolsNodesManager.methods.onboard(nodeAddress, nodeType).send({from: senderAddress, ...options});
   const retire = (nodeAddress, nodeType, senderAddress = owner, options = {}) => poolsNodesManager.methods.retire(nodeAddress, nodeType).send({from: senderAddress, ...options});
 
+  const poolStakeChanged = (user, stake, tokens, senderAddress = owner) => poolsNodesManager.methods.poolStakeChanged(user, stake, tokens).send({from: senderAddress});
+  const poolReward = (reward, tokenPrice, senderAddress = owner) => poolsNodesManager.methods.poolReward(reward, tokenPrice).send({from: senderAddress});
+  const addNodeRequest = (stake, requestId, nodeId, role, senderAddress = owner) => poolsNodesManager.methods.addNodeRequest(stake, requestId, nodeId, role).send({from: senderAddress});
+  const addNodeRequestResolved = (requestId, status, senderAddress = owner) => poolsNodesManager.methods.addNodeRequestResolved(requestId, status).send({from: senderAddress});
+
   before(async () => {
     web3 = await createWeb3();
     web3.eth.handleRevert = true;
-    [owner, initialApollo, pool, node] = await web3.eth.getAccounts();
+    [owner, initialApollo, pool, pool2, node, user] = await web3.eth.getAccounts();
 
-    ({poolsNodesManager} = await deploy({
+    ({poolsNodesManager, poolEventsEmitter, poolsStore, rolesEventEmitter} = await deploy({
       web3,
       contracts: {
         config: true,
@@ -50,6 +73,7 @@ describe('PoolsNodesManager Contract', () => {
         validatorSet: true,
         blockRewards: true,
         poolsStore: true,
+        poolEventsEmitter: true,
         poolsNodesManager: true
       },
       params: {
@@ -75,15 +99,66 @@ describe('PoolsNodesManager Contract', () => {
     await restoreSnapshot(web3, snapshotId);
   });
 
+  it('nextId', async () => {
+    const nextId = poolsNodesManager.methods.nextId();
+    expect(await nextId.call({from: owner})).to.equal('1');
+    await nextId.send({from: owner});
+    expect(await nextId.call({from: owner})).to.equal('2');
+  });
+
   it('addPool, removePool', async () => {
     await assert.isReverted(addPool(ZERO_ADDRESS));
     await assert.isReverted(removePool(ZERO_ADDRESS));
 
-    await addPool(pool);
+    let {blockNumber} = await addPool(pool);
+    await checkEvent(poolsStore, 'PoolAdded', blockNumber, {
+      poolAddress: pool
+    });
+
     await assert.isReverted(addPool(pool));
 
-    await removePool(pool);
+    ({blockNumber} = await removePool(pool));
+    await checkEvent(poolsStore, 'PoolRemoved', blockNumber, {
+      poolAddress: pool
+    });
+
     await assert.isReverted(removePool(pool));
+  });
+
+  it('poolStakeChanged, poolReward, addNodeRequest, addNodeRequestResolved', async () => {
+    await addPool(pool);
+
+    const one = '1000000000000000000';
+    let {blockNumber} = await poolStakeChanged(user, one, one, pool);
+    await checkEvent(poolEventsEmitter, 'PoolStakeChanged', blockNumber, {
+      pool,
+      user,
+      stake: one,
+      tokens: one
+    });
+
+    ({blockNumber} = await poolReward(one, one, pool));
+    await checkEvent(poolEventsEmitter, 'PoolReward', blockNumber, {
+      pool,
+      reward: one,
+      tokenPrice: one
+    });
+
+    ({blockNumber} = await addNodeRequest(one, '1', '2', ROLE_CODES.APOLLO, pool));
+    await checkEvent(poolEventsEmitter, 'AddNodeRequest', blockNumber, {
+      pool,
+      id: '1',
+      nodeId: '2',
+      stake: one,
+      role: ROLE_CODES.APOLLO
+    });
+
+    ({blockNumber} = await addNodeRequestResolved('1', '1', pool));
+    await checkEvent(poolEventsEmitter, 'AddNodeRequestResolved', blockNumber, {
+      pool,
+      id: '1',
+      status: '1'
+    });
   });
 
   it('onboard, retire', async () => {
@@ -97,16 +172,28 @@ describe('PoolsNodesManager Contract', () => {
 
     let fee;
     let gasUsed;
+    let blockNumber;
     const gasPrice = toBN('1');
     const balance1 = toBN(await web3.eth.getBalance(pool));
-    ({gasUsed} = await onboard(node, ROLE_CODES.APOLLO, pool, {value:APOLLO_DEPOSIT, gasPrice}));
+    ({gasUsed, blockNumber} = await onboard(node, ROLE_CODES.APOLLO, pool, {value:APOLLO_DEPOSIT, gasPrice}));
+    await checkEvent(rolesEventEmitter, 'NodeOnboarded', blockNumber, {
+      nodeAddress:node,
+      placedDeposit:APOLLO_DEPOSIT,
+      nodeUrl:'',
+      role:ROLE_CODES.APOLLO
+    });
     fee = gasPrice.mul(toBN(gasUsed));
 
     const balance2 = toBN(await web3.eth.getBalance(pool));
     expect(balance1.sub(toBN(APOLLO_DEPOSIT)).sub(fee)
       .toString()).to.equal(balance2.toString());
 
-    ({gasUsed} = await retire(node, ROLE_CODES.APOLLO, pool, {gasPrice}));
+    ({gasUsed, blockNumber} = await retire(node, ROLE_CODES.APOLLO, pool, {gasPrice}));
+    await checkEvent(rolesEventEmitter, 'NodeRetired', blockNumber, {
+      nodeAddress:node,
+      releasedDeposit:APOLLO_DEPOSIT,
+      role:ROLE_CODES.APOLLO
+    });
     fee = gasPrice.mul(toBN(gasUsed));
 
     const balance3 = toBN(await web3.eth.getBalance(pool));
@@ -119,5 +206,17 @@ describe('PoolsNodesManager Contract', () => {
     await assert.isReverted(retire(node, ROLE_CODES.ATLAS, pool));
     await assert.isReverted(retire(node, ROLE_CODES.HERMES, pool));
     await assert.isReverted(retire(node, ROLE_CODES.APOLLO, pool));
+  });
+
+  it('retiring a node not owned by the pool', async () => {
+    await addPool(pool);
+
+    const gasPrice = '1';
+    await onboard(node, ROLE_CODES.APOLLO, pool, {value:APOLLO_DEPOSIT, gasPrice});
+
+    await addPool(pool2);
+
+    // this test disabled before next update
+    // await assert.isReverted(retire(node, ROLE_CODES.APOLLO, pool2, {gasPrice}));
   });
 });

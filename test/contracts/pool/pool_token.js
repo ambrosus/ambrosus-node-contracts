@@ -11,6 +11,7 @@ import {expect, assert} from '../../helpers/chaiPreconf';
 import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
 import PoolToken from '../../../src/contracts/PoolToken.json';
 import {utils} from 'web3';
+import {ZERO_ADDRESS} from '../../../src/constants';
 
 const {toBN} = utils;
 
@@ -40,7 +41,6 @@ describe('PoolToken Contract', () => {
 
   beforeEach(async () => {
     snapshotId = await makeSnapshot(web3);
-    await mint(addr1, mintAmount);
   });
 
   afterEach(async () => {
@@ -48,27 +48,50 @@ describe('PoolToken Contract', () => {
   });
 
   it('mint', async () => {
+    const receipt = await mint(addr1, mintAmount);
+    expect(receipt).to.have.deep.nested.property('events.Transfer.returnValues', {
+      0: ZERO_ADDRESS,
+      1: addr1,
+      2: mintAmount.toString(),
+      from: ZERO_ADDRESS,
+      to: addr1,
+      value: mintAmount.toString()
+    });
     expect(await totalSupply()).to.equal(mintAmount.toString());
     expect(await balanceOf(addr1)).to.equal(mintAmount.toString());
-
-    await mint(addr1, mintAmount);
-    expect(await totalSupply()).to.equal(mintAmount.add(mintAmount).toString());
-    expect(await balanceOf(addr1)).to.equal(mintAmount.add(mintAmount).toString());
 
     await assert.isReverted(mint(addr1, mintAmount, addr1));
   });
 
   it('burn', async () => {
+    await mint(addr1, mintAmount);
     await assert.isReverted(burn(addr1, mintAmount, addr1));
     await assert.isReverted(burn(addr1, mintAmount.add(toBN(1))));
 
-    await burn(addr1, mintAmount);
+    const receipt = await burn(addr1, mintAmount);
+    expect(receipt).to.have.deep.nested.property('events.Transfer.returnValues', {
+      0: addr1,
+      1: ZERO_ADDRESS,
+      2: mintAmount.toString(),
+      from: addr1,
+      to: ZERO_ADDRESS,
+      value: mintAmount.toString()
+    });
     expect(await totalSupply()).to.equal('0');
     expect(await balanceOf(addr1)).to.equal('0');
   });
 
   it('transfer', async () => {
-    await transfer(addr2, mintAmount, addr1);
+    await mint(addr1, mintAmount);
+    const receipt = await transfer(addr2, mintAmount, addr1);
+    expect(receipt).to.have.deep.nested.property('events.Transfer.returnValues', {
+      0: addr1,
+      1: addr2,
+      2: mintAmount.toString(),
+      from: addr1,
+      to: addr2,
+      value: mintAmount.toString()
+    });
     expect(await balanceOf(addr1)).to.equal('0');
     expect(await balanceOf(addr2)).to.equal(mintAmount.toString());
 
