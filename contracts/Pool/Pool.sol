@@ -73,9 +73,8 @@ contract Pool is Ownable {
 
     function deactivate(uint maxNodes) public onlyOwner {
         require(active, "Pool is not active");
-        while (nodes.length > 0 && maxNodes > 0) {
+        while (nodes.length > maxNodes) {
             _removeNode();
-            maxNodes--;
         }
         if (nodes.length == 0) {
             active = false;
