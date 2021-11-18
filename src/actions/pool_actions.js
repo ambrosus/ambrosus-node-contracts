@@ -17,11 +17,11 @@ export default class PoolActions {
     this.poolsStoreWrapper = poolsStoreWrapper;
   }
 
-  async createPool(name, minStake, fee, poolsServiceAddress) {
+  async createPool(name, minStake, fee, poolsServiceAddress, nodeStake, maxTotalStake) {
     const pool = await new this.web3.eth.Contract(PoolJson.abi, undefined, {
       gas: DEFAULT_GAS,
       gasPrice: this.web3.utils.toWei('5', 'gwei')
-    }).deploy({data: PoolJson.bytecode, arguments: [name, 3, this.web3.utils.toWei('250000', 'ether'), minStake, fee, poolsServiceAddress, this.headContractAddress]})
+    }).deploy({data: PoolJson.bytecode, arguments: [name, 3, nodeStake, minStake, fee, poolsServiceAddress, this.headContractAddress, maxTotalStake]})
       .send({
         from: this.web3.eth.defaultAccount,
         gas: DEFAULT_GAS
@@ -39,7 +39,8 @@ export default class PoolActions {
         const id = await contract.methods.id().call();
         const active = await contract.methods.active().call();
         const totalStake = await contract.methods.totalStake().call();
-        console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(totalStake, 'ether'));
+        const nodesCount = await contract.methods.getNodesCount().call();
+        console.log(id, active ? 'active' : '      ', name, address, nodesCount, this.web3.utils.fromWei(totalStake, 'ether'));
       }
     } else {
       console.log('No pools found');
