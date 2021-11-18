@@ -30,14 +30,12 @@ describe('PoolsStore Contract', () => {
     web3.eth.handleRevert = true;
     [owner, pool] = await web3.eth.getAccounts();
 
-    const deployedContracts = await deploy({
+    ({poolsStore} = await deploy({
       web3,
       contracts: {
         poolsStore: true
       }
-    });
-
-    ({poolsStore} = deployedContracts);
+    }));
   });
 
   beforeEach(async () => {
@@ -48,16 +46,31 @@ describe('PoolsStore Contract', () => {
     await restoreSnapshot(web3, snapshotId);
   });
 
+  it('nextId', async () => {
+    const nextId = poolsStore.methods.nextId();
+    expect(await nextId.call({from: owner})).to.equal('1');
+    await nextId.send({from: owner});
+    expect(await nextId.call({from: owner})).to.equal('2');
+  });
+
   it('isPool, addPool, removePool', async () => {
     expect(await isPool(pool)).to.equal(false);
 
     await assert.isReverted(addPool(ZERO_ADDRESS));
 
-    await addPool(pool);
+    let receipt = await addPool(pool);
+    expect(receipt).to.have.deep.nested.property('events.PoolAdded.returnValues', {
+      0: pool,
+      poolAddress: pool
+    });
     expect(await isPool(pool)).to.equal(true);
     await assert.isReverted(addPool(pool));
 
-    await removePool(pool);
+    receipt = await removePool(pool);
+    expect(receipt).to.have.deep.nested.property('events.PoolRemoved.returnValues', {
+      0: pool,
+      poolAddress: pool
+    });
     expect(await isPool(pool)).to.equal(false);
     await assert.isReverted(removePool(pool));
   });
