@@ -17,7 +17,7 @@ contract Pool is Ownable {
     uint constant private FIXEDPOINT = 1 ether;
 
     Head private _head;
-    address private _service;
+    address public service;
     PoolToken public token;
     uint public totalStake;
     uint public maxTotalStake;
@@ -36,7 +36,7 @@ contract Pool is Ownable {
     function() public payable {}
 
     modifier onlyService() {
-        require(address(msg.sender) == _service, "The message sender is not service");
+        require(address(msg.sender) == service, "The message sender is not service");
         _;
     }
 
@@ -46,14 +46,14 @@ contract Pool is Ownable {
 
     // todo use Ownable constructor?
     constructor(string memory poolName, Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue,
-        uint poolFee, address service, address head, uint poolMaxTotalStake) public {
+        uint poolFee, address poolService, address head, uint poolMaxTotalStake) public {
         require(poolNodeStake > 0, "Pool node stake value is zero"); // node stake value is used as a divisor
         require(poolMinStakeValue > 0, "Pool min stake value is zero");
         require(poolFee >= 0 && poolFee < MILLION, "Pool fee must be from 0 to 1000000");
         require(service != address(0x0), "Service must not be 0x0");
         require(head != address(0x0), "Head must not be 0x0");
         _head = Head(head);
-        _service = service;
+        service = poolService;
         token = new PoolToken();
         nodeType = poolNodeType;
         nodeStake = poolNodeStake;
@@ -82,9 +82,9 @@ contract Pool is Ownable {
         }
     }
 
-    function setService(address service) public onlyOwner {
+    function setService(address newService) public onlyOwner {
         require(service != address(0x0), "Service must not be 0x0");
-        _service = service;
+        service = newService;
     }
 
     function setName(string memory newName) public onlyOwner {
