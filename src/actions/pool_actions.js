@@ -54,7 +54,7 @@ export default class PoolActions {
 
   async deactivate(address) {
     const contract = await loadContract(this.web3, PoolJson.abi, address);
-    console.log(await contract.methods.deactivate(address).send({gas: DEFAULT_GAS, from: this.web3.eth.defaultAccount}));
+    console.log(await contract.methods.deactivate(0).send({gas: DEFAULT_GAS, from: this.web3.eth.defaultAccount}));
   }
 
   async stake(address, value) {
