@@ -83,7 +83,7 @@ contract Pool is Ownable {
     }
 
     function setService(address newService) public onlyOwner {
-        require(service != address(0x0), "Service must not be 0x0");
+        require(newService != address(0x0), "Service must not be 0x0");
         service = newService;
     }
 
