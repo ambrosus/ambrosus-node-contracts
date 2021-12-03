@@ -50,7 +50,7 @@ contract Pool is Ownable {
         require(poolNodeStake > 0, "Pool node stake value is zero"); // node stake value is used as a divisor
         require(poolMinStakeValue > 0, "Pool min stake value is zero");
         require(poolFee >= 0 && poolFee < MILLION, "Pool fee must be from 0 to 1000000");
-        require(service != address(0x0), "Service must not be 0x0");
+        require(poolService != address(0x0), "Service must not be 0x0");
         require(head != address(0x0), "Head must not be 0x0");
         _head = Head(head);
         service = poolService;
