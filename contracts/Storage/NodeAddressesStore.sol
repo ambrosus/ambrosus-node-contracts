@@ -23,10 +23,10 @@ contract NodeAddressesStore is Base {
     }
 
     function removeNode(address _staking) public onlyContextInternalCalls {
-        address _operating = staking[_staking];
+        address _operating = operating[_staking];
         if (address(0) != _operating) {
-            delete staking[_staking];
-            delete operating[_operating];
+            delete operating[_staking];
+            delete staking[_operating];
             emit NodeAddressesRemoved(_staking, _operating);
         }
     }

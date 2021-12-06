@@ -78,6 +78,7 @@ const contractJsons = {
   rewardsEventEmitter: RewardsEventEmitterJson,
   poolsNodesManager: PoolsNodesManagerJson,
   nodeAddressesStore: NodeAddressesStoreJson,
+  poolsStore: PoolsStoreJson,
   poolEventsEmitter: PoolEventsEmitterJson,
   multiplexer: MultiplexerJson
 };

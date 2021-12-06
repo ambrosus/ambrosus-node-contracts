@@ -21,7 +21,7 @@ import "../Storage/RolesEventEmitter.sol";
 import "../Storage/NodeAddressesStore.sol";
 
 
-contract Roles is Base {
+contract Roles is Base, Ownable {
 
     AtlasStakeStore private atlasStakeStore;
     RolesStore private rolesStore;
@@ -162,7 +162,7 @@ contract Roles is Base {
         return kycWhitelist.hasRoleAssigned(node, role) && amount == kycWhitelist.getRequiredDeposit(node);
     }
 
-    function retireApollo(address apollo) public onlyContextInternalCalls {
+    function retireApollo(address apollo) public onlyOwner {
         require(rolesStore.getRole(apollo) == Consts.NodeType.APOLLO);
         rolesStore.setRole(apollo, Consts.NodeType.NONE);
 
