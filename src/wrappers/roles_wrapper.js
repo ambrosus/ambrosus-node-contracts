@@ -39,10 +39,26 @@ export default class RolesWrapper extends ManagedContractWrapper {
     });
   }
 
+  async onboardAsApolloSafe(staking, address, deposit) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.onboardAsApolloSafe(address), {
+      from: staking,
+      value: deposit
+    });
+  }
+
   async onboardAsAtlas(address, stake, url) {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.onboardAsAtlas(url), {
       from: address,
+      value: stake
+    });
+  }
+
+  async onboardAsAtlasSafe(staking, address, stake, url) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.onboardAsAtlas(address, url), {
+      from: staking,
       value: stake
     });
   }

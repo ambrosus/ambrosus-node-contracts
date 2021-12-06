@@ -96,7 +96,7 @@ contract Roles is Base {
         rolesStore.setRole(nodeAddress, Consts.NodeType.APOLLO);
         validatorProxy.addValidator(nodeAddress, msg.value);
 
-        rolesEventEmitter.nodeOnboarded(msg.sender, msg.value, "", Consts.NodeType.APOLLO);
+        rolesEventEmitter.nodeOnboarded(nodeAddress, msg.value, "", Consts.NodeType.APOLLO);
     }
 
     function onboardAsHermes(string nodeUrl) public {
@@ -125,7 +125,7 @@ contract Roles is Base {
         retire(nodeAddress, Consts.NodeType.APOLLO);
 
         uint amountToTransfer = apolloDepositStore.releaseDeposit(msg.sender, this);
-        validatorProxy.removeValidator(msg.sender);
+        validatorProxy.removeValidator(nodeAddress);
         nodeAddressesStore.removeNode(msg.sender);
 
         rolesEventEmitter.nodeRetired(nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
