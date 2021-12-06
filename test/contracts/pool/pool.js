@@ -42,7 +42,7 @@ describe('Pool Contract', function() {
   let web3;
   let owner;
   let initialApollo;
-  let service;
+  let poolService;
   let node1;
   let node2;
   let addr1;
@@ -56,12 +56,13 @@ describe('Pool Contract', function() {
   let head;
 
   const apolloPoolNodeStake = toBN(APOLLO_DEPOSIT);
-  const apolloPoolMinStake = toBN(Math.floor(APOLLO_DEPOSIT / 1000));
+  const apolloPoolMinStake = apolloPoolNodeStake.div(toBN(1000));
+  const apolloPoolMaxTotalStake = apolloPoolNodeStake.mul(toBN(100));
 
   before(async function() {
     web3 = await createWeb3();
     web3.eth.handleRevert = true;
-    [owner, initialApollo, service, node1, node2, addr1, addr2] = await web3.eth.getAccounts();
+    [owner, initialApollo, poolService, node1, node2, addr1, addr2] = await web3.eth.getAccounts();
 
     ({poolsNodesManager, poolEventsEmitter, head} = await deploy({
       web3,
@@ -107,21 +108,21 @@ describe('Pool Contract', function() {
 
     describe('deploy', function() {
       it('success', async function() {
-        const poolContract = await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, apolloPoolMinStake, poolFee, service, head.options.address]);
+        const poolContract = await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, apolloPoolMinStake, poolFee, poolService, head.options.address, apolloPoolMaxTotalStake]);
         expect(poolContract).to.be.instanceof(web3.eth.Contract);
 
         // todo: check public vars initial state?
       });
 
       it('is payable', async () => {
-        const poolContract = await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, apolloPoolMinStake, poolFee, service, head.options.address]);
+        const poolContract = await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, apolloPoolMinStake, poolFee, poolService, head.options.address, apolloPoolMaxTotalStake]);
         const {status} = await web3.eth.sendTransaction({from:owner, to:poolContract.options.address, value:ONE, gas:DEFAULT_GAS});
         expect(status).to.be.true;
       });
 
       it('reverts when minimum stake value is zero', async function() {
         try {
-          await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, 0, poolFee, service, head.options.address]);
+          await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, 0, poolFee, poolService, head.options.address, apolloPoolMaxTotalStake]);
           throw new Error('deploy successful');
         } catch (err) {
           if (!err.message.match(/revert/)) {
@@ -130,7 +131,7 @@ describe('Pool Contract', function() {
         }
       });
 
-      // reverts when service is zero
+      // reverts when poolService is zero
       // reverts when head is zero
     });
 
@@ -140,7 +141,7 @@ describe('Pool Contract', function() {
 
       before(async function() {
         snapshotId_ = await makeSnapshot(web3);
-        poolContract = await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, apolloPoolMinStake, poolFee, service, head.options.address]);
+        poolContract = await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, apolloPoolMinStake, poolFee, poolService, head.options.address, apolloPoolMaxTotalStake]);
       });
       after(async function() {
         await restoreSnapshot(web3, snapshotId_);
@@ -148,7 +149,7 @@ describe('Pool Contract', function() {
 
       // todo: check ownable
       // todo: setService reverts when sender is not an owner
-      // todo: addNode reverts when sender is not service
+      // todo: addNode reverts when sender is not poolService
       // todo: onlyPoolsCalls
 
       describe('when pool added to manager', function() {
@@ -187,7 +188,7 @@ describe('Pool Contract', function() {
           });
 
           it('deactivation reverts', async function() {
-            await assert.isReverted(poolContract.methods.deactivate().send({from:owner}));
+            await assert.isReverted(poolContract.methods.deactivate(0).send({from:owner}));
           });
           it('stake reverts', async function() {
             await assert.isReverted(poolContract.methods.stake().send({from:owner, value:apolloPoolMinStake}));
@@ -214,12 +215,12 @@ describe('Pool Contract', function() {
 
           describe('deactivation', function() {
             it('success', async function() {
-              const {status} = await poolContract.methods.deactivate().send({from:owner});
+              const {status} = await poolContract.methods.deactivate(0).send({from:owner});
               expect(status).to.be.true;
             });
             it('owner stake returned', async function() {
               const balanceBeforeDeactivation = toBN(await web3.eth.getBalance(owner));
-              const {gasUsed} = await poolContract.methods.deactivate().send({from:owner, gasPrice});
+              const {gasUsed} = await poolContract.methods.deactivate(0).send({from:owner, gasPrice});
               const fee = gasPrice.mul(toBN(gasUsed));
               expect(await web3.eth.getBalance(owner)).to.equal(
                 balanceBeforeDeactivation
@@ -229,7 +230,7 @@ describe('Pool Contract', function() {
               );
             });
             it('reverts when sender not an owner', async function() {
-              await assert.isReverted(poolContract.methods.deactivate().send({from:addr1}));
+              await assert.isReverted(poolContract.methods.deactivate(0).send({from:addr1}));
             });
           });
         });
@@ -291,13 +292,13 @@ describe('Pool Contract', function() {
         before(async function() {
           snapshotId_ = await makeSnapshot(web3);
 
-          poolContract = await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, apolloPoolMinStake, poolFee, service, head.options.address]);
+          poolContract = await deployContract(web3, Pool, ['Apollo20', ROLE_CODES.APOLLO, apolloPoolNodeStake, apolloPoolMinStake, poolFee, poolService, head.options.address, apolloPoolMaxTotalStake]);
           await poolsNodesManager.methods.addPool(poolContract.options.address).send({from:owner});
           await poolContract.methods.activate().send({from:owner, value:apolloPoolNodeStake});
 
           stake = (senderAddress = owner, options = {}) => poolContract.methods.stake().send({from: senderAddress, gasPrice, ...options});
           unstake = (tokens, senderAddress = owner, options = {}) => poolContract.methods.unstake(tokens).send({from: senderAddress, gasPrice, ...options});
-          deactivate = (senderAddress = owner) => poolContract.methods.deactivate().send({from: senderAddress, gasPrice});
+          deactivate = (maxNodes = 0, senderAddress = owner) => poolContract.methods.deactivate(maxNodes).send({from: senderAddress, gasPrice});
           viewStake = (senderAddress = owner) => poolContract.methods.viewStake().call({from: senderAddress});
           getNodesCount = (senderAddress = owner) => poolContract.methods.getNodesCount().call({from: senderAddress});
 
@@ -315,7 +316,7 @@ describe('Pool Contract', function() {
           staker1 = addr1;
           staker2 = addr2;
 
-          await addNode(1, node1, 0, service);
+          await addNode(1, node1, 0, poolService);
         });
         after(async function() {
           await restoreSnapshot(web3, snapshotId_);
@@ -515,7 +516,7 @@ describe('Pool Contract', function() {
               stake: apolloPoolNodeStake.toString(),
               role: ROLE_CODES.APOLLO
             });
-            ({blockNumber} = await addNode(id, node2, nodeId, service));
+            ({blockNumber} = await addNode(id, node2, nodeId, poolService));
             await checkEvent(poolEventsEmitter, 'AddNodeRequestResolved', blockNumber, {
               pool,
               id,
@@ -542,7 +543,7 @@ describe('Pool Contract', function() {
               role: ROLE_CODES.APOLLO
             });
             await unstake(apolloPoolNodeStake, staker1);
-            ({blockNumber} = await addNode(id, node2, nodeId, service));
+            ({blockNumber} = await addNode(id, node2, nodeId, poolService));
             await checkEvent(poolEventsEmitter, 'AddNodeRequestResolved', blockNumber, {
               pool,
               id,
@@ -566,7 +567,7 @@ describe('Pool Contract', function() {
 
             expect(ownerBalanceBefore.add(reward.sub(poolReward)).toString()).to.equal(await web3.eth.getBalance(owner));
 
-            await addNode(2, node2, 1, service);
+            await addNode(2, node2, 1, poolService);
             expect(await getNodesCount()).to.equal('2');
 
             await unstake(await viewStake(staker1), staker1);

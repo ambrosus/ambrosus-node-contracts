@@ -17,9 +17,10 @@ contract Pool is Ownable {
     uint constant private FIXEDPOINT = 1 ether;
 
     Head private _head;
-    address private _service;
+    address public service;
     PoolToken public token;
     uint public totalStake;
+    uint public maxTotalStake;
     Consts.NodeType public nodeType;
     uint public nodeStake;
     uint public minStakeValue;
@@ -31,30 +32,33 @@ contract Pool is Ownable {
     string public name;
     uint public id;
 
+    // todo: Is it really necessary?
     function() public payable {}
 
     modifier onlyService() {
-        require(address(msg.sender) == _service, "The message sender is not service");
+        require(address(msg.sender) == service, "The message sender is not service");
         _;
     }
 
     function getVersion() public pure returns (string) {
-        return "0.0.3";
+        return "0.0.4";
     }
 
     // todo use Ownable constructor?
     constructor(string memory poolName, Consts.NodeType poolNodeType, uint poolNodeStake, uint poolMinStakeValue,
-        uint poolFee, address service, address head) public {
+        uint poolFee, address poolService, address head, uint poolMaxTotalStake) public {
         require(poolNodeStake > 0, "Pool node stake value is zero"); // node stake value is used as a divisor
         require(poolMinStakeValue > 0, "Pool min stake value is zero");
-        require(service != address(0x0), "Service must not be 0x0");
+        require(poolFee >= 0 && poolFee < MILLION, "Pool fee must be from 0 to 1000000");
+        require(poolService != address(0x0), "Service must not be 0x0");
         require(head != address(0x0), "Head must not be 0x0");
         _head = Head(head);
-        _service = service;
+        service = poolService;
         token = new PoolToken();
         nodeType = poolNodeType;
         nodeStake = poolNodeStake;
         minStakeValue = poolMinStakeValue;
+        maxTotalStake = poolMaxTotalStake;
         fee = poolFee;
         name = poolName;
         id = _getManager().nextId();
@@ -67,18 +71,20 @@ contract Pool is Ownable {
         _onboardNodes();
     }
 
-    function deactivate() public onlyOwner {
+    function deactivate(uint maxNodes) public onlyOwner {
         require(active, "Pool is not active");
-        while (nodes.length > 0) {
+        while (nodes.length > maxNodes) {
             _removeNode();
         }
-        active = false;
-        msg.sender.transfer(nodeStake);
+        if (nodes.length == 0) {
+            active = false;
+            msg.sender.transfer(nodeStake);
+        }
     }
 
-    function setService(address service) public onlyOwner {
-        require(service != address(0x0), "Service must not be 0x0");
-        _service = service;
+    function setService(address newService) public onlyOwner {
+        require(newService != address(0x0), "Service must not be 0x0");
+        service = newService;
     }
 
     function setName(string memory newName) public onlyOwner {
@@ -87,7 +93,8 @@ contract Pool is Ownable {
 
     function stake() public payable {
         require(active, "Pool is not active");
-        require(msg.value >= minStakeValue, "Pool: stake value tool low");
+        require(msg.value >= minStakeValue, "Pool: stake value too low");
+        require(maxTotalStake == 0 || msg.value.add(totalStake) <= maxTotalStake, "Pool: stake value too high");
         uint tokenPrice = getTokenPrice();
         uint tokens = msg.value.mul(FIXEDPOINT).div(tokenPrice);
 
@@ -126,7 +133,7 @@ contract Pool is Ownable {
     }
 
     function _onboardNodes() private {
-        if (_requestStake == 0 && address(this).balance >= nodeStake) {
+        if (active && _requestStake == 0 && address(this).balance >= nodeStake) {
             _requestStake = nodeStake;
             _getManager().addNodeRequest(_requestStake, ++_requestId, nodes.length, nodeType);
         }
@@ -160,7 +167,7 @@ contract Pool is Ownable {
         require(node != address(0), "Node can not be zero");
         require(_requestStake > 0, "No active requests");
         uint status;
-        if (requestId == _requestId) {
+        if (active && requestId == _requestId) {
             if (nodeId == nodes.length && address(this).balance >= _requestStake) {
                 _getManager().onboard.value(_requestStake)(node, nodeType);
                 nodes.push(node);
