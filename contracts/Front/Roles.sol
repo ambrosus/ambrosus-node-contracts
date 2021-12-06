@@ -18,6 +18,7 @@ import "../Storage/AtlasStakeStore.sol";
 import "../Storage/RolesStore.sol";
 import "../Storage/ApolloDepositStore.sol";
 import "../Storage/RolesEventEmitter.sol";
+import "../Storage/NodeAddressesStore.sol";
 
 
 contract Roles is Base {
@@ -29,6 +30,7 @@ contract Roles is Base {
     KycWhitelist private kycWhitelist;
     Config private config;
     RolesEventEmitter private rolesEventEmitter;
+    NodeAddressesStore private nodeAddressesStore;
 
     constructor(
         Head _head,
@@ -38,7 +40,8 @@ contract Roles is Base {
         ValidatorProxy _validatorProxy,
         KycWhitelist _kycWhitelist,
         Config _config,
-        RolesEventEmitter _rolesEventEmitter
+        RolesEventEmitter _rolesEventEmitter,
+        NodeAddressesStore _nodeAddressesStore
     ) 
         public Base(_head) 
     { 
@@ -49,6 +52,7 @@ contract Roles is Base {
         kycWhitelist = _kycWhitelist;
         config = _config;
         rolesEventEmitter = _rolesEventEmitter;
+        nodeAddressesStore = _nodeAddressesStore;
     }
 
     function() public payable {}
@@ -63,12 +67,34 @@ contract Roles is Base {
         rolesEventEmitter.nodeOnboarded(msg.sender, msg.value, nodeUrl, Consts.NodeType.ATLAS);
     }
 
+    function onboardAsAtlasSafe(address nodeAddress, string nodeUrl) public payable {
+        require(canOnboard(nodeAddress, Consts.NodeType.ATLAS, msg.value));
+
+        nodeAddressesStore.addNode(msg.sender, nodeAddress);
+        atlasStakeStore.depositStake.value(msg.value)(msg.sender);
+        rolesStore.setRole(nodeAddress, Consts.NodeType.ATLAS);
+        rolesStore.setUrl(nodeAddress, nodeUrl);
+
+        rolesEventEmitter.nodeOnboarded(nodeAddress, msg.value, nodeUrl, Consts.NodeType.ATLAS);
+    }
+
     function onboardAsApollo() public payable {
         require(canOnboard(msg.sender, Consts.NodeType.APOLLO, msg.value));
 
         apolloDepositStore.storeDeposit.value(msg.value)(msg.sender);
         rolesStore.setRole(msg.sender, Consts.NodeType.APOLLO);
         validatorProxy.addValidator(msg.sender, msg.value);
+
+        rolesEventEmitter.nodeOnboarded(msg.sender, msg.value, "", Consts.NodeType.APOLLO);
+    }
+
+    function onboardAsApolloSafe(address nodeAddress) public payable {
+        require(canOnboard(nodeAddress, Consts.NodeType.APOLLO, msg.value));
+
+        nodeAddressesStore.addNode(msg.sender, nodeAddress);
+        apolloDepositStore.storeDeposit.value(msg.value)(msg.sender);
+        rolesStore.setRole(nodeAddress, Consts.NodeType.APOLLO);
+        validatorProxy.addValidator(nodeAddress, msg.value);
 
         rolesEventEmitter.nodeOnboarded(msg.sender, msg.value, "", Consts.NodeType.APOLLO);
     }
@@ -83,22 +109,26 @@ contract Roles is Base {
     }
 
     function retireAtlas() public {
-        retire(msg.sender, Consts.NodeType.ATLAS);
+        address nodeAddress = getOperatingAddress(msg.sender);
+        retire(nodeAddress, Consts.NodeType.ATLAS);
 
         uint amountToTransfer = atlasStakeStore.releaseStake(msg.sender, this);
+        nodeAddressesStore.removeNode(msg.sender);
 
-        rolesEventEmitter.nodeRetired(msg.sender, amountToTransfer, Consts.NodeType.ATLAS);
+        rolesEventEmitter.nodeRetired(nodeAddress, amountToTransfer, Consts.NodeType.ATLAS);
 
         msg.sender.transfer(amountToTransfer);
     }
 
     function retireApollo() public {
-        retire(msg.sender, Consts.NodeType.APOLLO);
+        address nodeAddress = getOperatingAddress(msg.sender);
+        retire(nodeAddress, Consts.NodeType.APOLLO);
 
         uint amountToTransfer = apolloDepositStore.releaseDeposit(msg.sender, this);
         validatorProxy.removeValidator(msg.sender);
+        nodeAddressesStore.removeNode(msg.sender);
 
-        rolesEventEmitter.nodeRetired(msg.sender, amountToTransfer, Consts.NodeType.APOLLO);
+        rolesEventEmitter.nodeRetired(nodeAddress, amountToTransfer, Consts.NodeType.APOLLO);
 
         msg.sender.transfer(amountToTransfer);
     }
@@ -118,10 +148,11 @@ contract Roles is Base {
     }
 
     function setUrl(string nodeUrl) public {
-        string memory oldUrl = getUrl(msg.sender);
-        rolesStore.setUrl(msg.sender, nodeUrl);
-        string memory newUrl = getUrl(msg.sender);
-        rolesEventEmitter.nodeUrlChanged(msg.sender, oldUrl, newUrl);
+        address nodeAddress = getOperatingAddress(msg.sender);
+        string memory oldUrl = getUrl(nodeAddress);
+        rolesStore.setUrl(nodeAddress, nodeUrl);
+        string memory newUrl = getUrl(nodeAddress);
+        rolesEventEmitter.nodeUrlChanged(nodeAddress, oldUrl, newUrl);
     }
 
     function canOnboard(address node, Consts.NodeType role, uint amount) public view returns (bool) {
@@ -135,12 +166,14 @@ contract Roles is Base {
         require(rolesStore.getRole(apollo) == Consts.NodeType.APOLLO);
         rolesStore.setRole(apollo, Consts.NodeType.NONE);
 
-        uint amountToTransfer = apolloDepositStore.releaseDeposit(apollo, this);
+        address staking = getStakingAddress(apollo);
+        uint amountToTransfer = apolloDepositStore.releaseDeposit(staking, this);
         validatorProxy.removeValidator(apollo);
+        nodeAddressesStore.removeNode(apollo);
 
         rolesEventEmitter.nodeRetired(apollo, amountToTransfer, Consts.NodeType.APOLLO);
 
-        apollo.transfer(amountToTransfer);
+        staking.transfer(amountToTransfer);
     }
 
     function retire(address node, Consts.NodeType role) private {
@@ -150,5 +183,15 @@ contract Roles is Base {
             rolesStore.setUrl(node, "");
         }
         rolesStore.setRole(node, Consts.NodeType.NONE);
+    }
+
+    function getStakingAddress(address nodeAddress) private view returns (address) {
+        address staking = nodeAddressesStore.staking(nodeAddress);
+        return (address(0) == staking) ? nodeAddress : staking;
+    }
+
+    function getOperatingAddress(address nodeAddress) private view returns (address) {
+        address operating = nodeAddressesStore.operating(nodeAddress);
+        return (address(0) == operating) ? nodeAddress : operating;
     }
 }

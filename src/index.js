@@ -48,6 +48,7 @@ import MultiplexerWrapper from './wrappers/multiplexer_wrapper';
 import MultisigWrapper from './wrappers/multisig_wrapper';
 import MultisigActions from './actions/multisig_actions';
 import MultisigFunctions from './utils/multisig_functions';
+import NodeAddressesStoreWrapper from './wrappers/node_addresses_store_wrapper';
 const constants = require('./constants');
 
 module.exports = {
@@ -90,6 +91,7 @@ module.exports = {
   PoolsStoreWrapper,
   RolesEventEmitterWrapper,
   PoolEventsEmitterWrapper,
+  NodeAddressesStoreWrapper,
   MultiplexerWrapper,
   MultisigWrapper,
   MultisigActions,

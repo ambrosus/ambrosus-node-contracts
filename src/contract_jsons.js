@@ -44,6 +44,7 @@ import PoolsNodesManagerJson from './contracts/PoolsNodesManager.json';
 import PoolsStoreJson from './contracts/PoolsStore.json';
 import PoolJson from './contracts/Pool.json';
 import PoolEventsEmitterJson from './contracts/PoolEventsEmitter.json';
+import NodeAddressesStoreJson from './contracts/NodeAddressesStore.json';
 
 const contractJsons = {
   head: HeadJson,
@@ -76,7 +77,7 @@ const contractJsons = {
   transfersEventEmitter: TransfersEventEmitterJson,
   rewardsEventEmitter: RewardsEventEmitterJson,
   poolsNodesManager: PoolsNodesManagerJson,
-  poolsStore: PoolsStoreJson,
+  nodeAddressesStore: NodeAddressesStoreJson,
   poolEventsEmitter: PoolEventsEmitterJson,
   multiplexer: MultiplexerJson
 };
