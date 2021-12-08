@@ -47,9 +47,11 @@ describe('Roles Contract', () => {
   let blockRewards;
   let owner;
   let apollo;
+  let apolloStake;
   let atlas1;
   let atlas2;
   let atlas3;
+  let atlasStake;
   let hermes;
   let initialApollo;
 
@@ -79,7 +81,7 @@ describe('Roles Contract', () => {
 
   before(async () => {
     web3 = await createWeb3();
-    [owner, apollo, initialApollo, atlas1, atlas2, atlas3, hermes] = await web3.eth.getAccounts();
+    [owner, apollo, apolloStake, initialApollo, atlas1, atlas2, atlas3, atlasStake, hermes] = await web3.eth.getAccounts();
     ({roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards, rolesEventEmitter} = await deploy({
       web3,
       sender : owner,
@@ -191,6 +193,13 @@ describe('Roles Contract', () => {
         expect(await getRole(atlas3)).to.equal(ATLAS.toString());
       });
 
+      it('atlas safe', async () => {
+        await expect(onboardAsAtlasSafe(atlas1, url, atlasStake, ATLAS1_STAKE)).to.eventually.be.fulfilled;
+        expect(await getStake(atlasStake)).to.equal(ATLAS1_STAKE);
+        expect(await getUrl(atlas1)).to.equal(url);
+        expect(await getRole(atlas1)).to.equal(ATLAS.toString());
+      });
+
       it('throws if address has not been whitelisted for atlas role', async () => {
         await expect(onboardAsAtlas(url, apollo, ATLAS3_STAKE)).to.be.eventually.rejected;
         expect(await getRole(apollo)).to.equal('0');
@@ -250,6 +259,12 @@ describe('Roles Contract', () => {
       it('stores the role and deposit', async () => {
         await expect(onboardAsApollo(apollo, APOLLO_DEPOSIT)).to.eventually.be.fulfilled;
         expect(await isDepositing(apollo)).to.be.true;
+        expect(await getRole(apollo)).to.equal(APOLLO.toString());
+      });
+
+      it('stores the role and deposit safe', async () => {
+        await expect(onboardAsApolloSafe(apollo, apolloStake, APOLLO_DEPOSIT)).to.eventually.be.fulfilled;
+        expect(await isDepositing(apolloStake)).to.be.true;
         expect(await getRole(apollo)).to.equal(APOLLO.toString());
       });
 
