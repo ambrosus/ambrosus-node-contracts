@@ -57,7 +57,7 @@ export default class RolesWrapper extends ManagedOwnableContractWrapper {
 
   async onboardAsAtlasSafe(staking, address, stake, url) {
     const contract = await this.contract();
-    return this.processTransaction(contract.methods.onboardAsAtlas(address, url), {
+    return this.processTransaction(contract.methods.onboardAsAtlasSafe(address, url), {
       from: staking,
       value: stake
     });

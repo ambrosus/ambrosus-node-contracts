@@ -55,8 +55,10 @@ describe('Roles Contract', () => {
 
   const addToWhitelist = async (sender, address, role, deposit) => kycWhitelist.methods.add(address, role, deposit).send({from: sender});
   const onboardAsAtlas = async (url, sender, value) => roles.methods.onboardAsAtlas(url).send({from: sender, value});
+  const onboardAsAtlasSafe = async (address, url, sender, value) => roles.methods.onboardAsAtlasSafe(address, url).send({from: sender, value});
   const onboardAsHermes = async (url, sender) => roles.methods.onboardAsHermes(url).send({from: sender});
   const onboardAsApollo = async (sender, value) => roles.methods.onboardAsApollo().send({from: sender, value});
+  const onboardAsApolloSafe = async (address, sender, value) => roles.methods.onboardAsApolloSafe(address).send({from: sender, value});
   const retireAtlas = async (sender) => roles.methods.retireAtlas().send({from: sender, gasPrice: '0'});
   const retireHermes = async (sender) => roles.methods.retireHermes().send({from: sender});
   const retireApollo = async (sender) => roles.methods.retireApollo().send({from: sender, gasPrice: '0'});
@@ -94,7 +96,8 @@ describe('Roles Contract', () => {
         validatorProxy: true,
         validatorSet: true,
         blockRewards: true,
-        rolesEventEmitter: true
+        rolesEventEmitter: true,
+        nodeAddressesStore: true
       },
       params: {
         validatorSet: {
