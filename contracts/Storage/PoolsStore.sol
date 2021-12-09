@@ -30,10 +30,10 @@ contract PoolsStore is Base {
             if (pools[i] == pool) {
                 pools[i] = pools[pools.length - 1];
                 delete pools[pools.length - 1];
-                pools.length -= 1;
                 break;
             }
         }
+        pools.length -= 1;
         emit PoolRemoved(pool);
     }
 
