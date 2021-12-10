@@ -58,7 +58,6 @@ describe('PoolsStore Contract', () => {
 
   async function checkPools(pools) {
     const poolsCount = parseInt(await getPoolsCount(), 10);
-    //expect(poolsCount).to.equal(pools.length);
     if (!poolsCount) {
       return;
     }
