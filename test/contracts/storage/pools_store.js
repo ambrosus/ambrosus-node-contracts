@@ -25,6 +25,9 @@ describe('PoolsStore Contract', () => {
   const removePool = (pool, senderAddress = owner) => poolsStore.methods.removePool(pool).send({from: senderAddress});
   const isPool = (pool, senderAddress = owner) => poolsStore.methods.isPool(pool).call({from: senderAddress});
 
+  const getPoolsCount = (senderAddress = owner) => poolsStore.methods.getPoolsCount().call({from: senderAddress});
+  const getPools = (from, to, senderAddress = owner) => poolsStore.methods.getPools(from, to).call({from: senderAddress});
+
   before(async () => {
     web3 = await createWeb3();
     web3.eth.handleRevert = true;
@@ -53,25 +56,61 @@ describe('PoolsStore Contract', () => {
     expect(await nextId.call({from: owner})).to.equal('2');
   });
 
-  it('isPool, addPool, removePool', async () => {
+  async function checkPools(pools) {
+    const poolsCount = parseInt(await getPoolsCount(), 10);
+    if (!poolsCount) {
+      return;
+    }
+    for (const pool of pools) {
+      expect(await isPool(pool)).to.equal(true);
+    }
+    const poolsFromContract = await getPools(0, poolsCount);
+    expect(poolsFromContract).to.be.an('array');
+    expect(poolsFromContract).to.deep.equal(pools);
+  }
+
+  it('isPool, addPool, removePool with events', async () => {
     expect(await isPool(pool)).to.equal(false);
 
+    const pools = [];
+    await checkPools(pools);
+
+    // try add address(0) as a pool
     await assert.isReverted(addPool(ZERO_ADDRESS));
 
+    // add pool
     let receipt = await addPool(pool);
     expect(receipt).to.have.deep.nested.property('events.PoolAdded.returnValues', {
       0: pool,
       poolAddress: pool
     });
-    expect(await isPool(pool)).to.equal(true);
+    pools.push(pool);
+    await checkPools(pools);
+
+    // try add already existed pool
     await assert.isReverted(addPool(pool));
 
+    // remove pool
     receipt = await removePool(pool);
     expect(receipt).to.have.deep.nested.property('events.PoolRemoved.returnValues', {
       0: pool,
       poolAddress: pool
     });
-    expect(await isPool(pool)).to.equal(false);
+    pools.pop();
+    await checkPools(pools);
+
+    // try remove already removed pool
     await assert.isReverted(removePool(pool));
+
+    // add pool again
+    receipt = await addPool(pool);
+    expect(receipt).to.have.deep.nested.property('events.PoolAdded.returnValues', {
+      0: pool,
+      poolAddress: pool
+    });
+    pools.push(pool);
+    await checkPools(pools);
   });
+
+  // todo: try add/remove several pools
 });
