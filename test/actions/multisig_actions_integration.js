@@ -18,6 +18,7 @@ import BlockchainStateWrapper from '../../src/wrappers/blockchain_state_wrapper'
 import PoolsNodesManagerWrapper from '../../src/wrappers/pools_nodes_manager_wrapper';
 import AdministrativeActions from '../../src/actions/admin_actions';
 import HeadWrapper from '../../src/wrappers/head_wrapper';
+import RolesWrapper from '../../src/wrappers/roles_wrapper';
 import KycWhitelistWrapper from '../../src/wrappers/kyc_whitelist_wrapper';
 import FeesWrapper from '../../src/wrappers/fees_wrapper';
 import ValidatorProxyWrapper from '../../src/wrappers/validator_proxy_wrapper';
@@ -69,7 +70,8 @@ describe('Multisig actions integration', () => {
         rolesStore: true,
         rolesEventEmitter: true,
         config: true,
-        time: true
+        time: true,
+        nodeAddressesStore: true
       },
       params: {
         multiplexer: {
@@ -94,7 +96,8 @@ describe('Multisig actions integration', () => {
       new FeesWrapper(headWrapper, web3, owner),
       new ValidatorProxyWrapper(headWrapper, web3, owner),
       new BlockchainStateWrapper(web3),
-      new PoolsNodesManagerWrapper(headWrapper, web3, owner)
+      new PoolsNodesManagerWrapper(headWrapper, web3, owner),
+      new RolesWrapper(headWrapper, web3, owner)
     );
     await adminActions.moveOwnershipsToMultiplexer(multiplexer.options.address);
     const multiplexerWrapper = new MultiplexerWrapper(multiplexer.options.address, web3, owner);

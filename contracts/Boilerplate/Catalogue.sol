@@ -36,6 +36,7 @@ import "../Storage/ChallengesEventEmitter.sol";
 import "../Storage/RewardsEventEmitter.sol";
 import "../Storage/PoolsStore.sol";
 import "../Storage/PoolEventsEmitter.sol";
+import "../Storage/NodeAddressesStore.sol";
 
 
 contract Catalogue {
@@ -97,6 +98,7 @@ contract StorageCatalogue {
     RewardsEventEmitter public rewardsEventEmitter;
     PoolsStore public poolsStore;
     PoolEventsEmitter public poolEventsEmitter;
+    NodeAddressesStore public nodeAddressesStore;
 
     constructor(
         ApolloDepositStore _apolloDepositStore,
@@ -112,7 +114,8 @@ contract StorageCatalogue {
         ChallengesEventEmitter _challengesEventEmitter,
         RewardsEventEmitter _rewardsEventEmitter,
         PoolsStore _poolsStore,
-        PoolEventsEmitter _poolEventsEmitter
+        PoolEventsEmitter _poolEventsEmitter,
+        NodeAddressesStore _nodeAddressesStore
     ) public {
         apolloDepositStore = _apolloDepositStore;
         atlasStakeStore = _atlasStakeStore;
@@ -128,5 +131,6 @@ contract StorageCatalogue {
         rewardsEventEmitter = _rewardsEventEmitter;
         poolsStore = _poolsStore;
         poolEventsEmitter = _poolEventsEmitter;
+        nodeAddressesStore = _nodeAddressesStore;
     }
 }

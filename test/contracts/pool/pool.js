@@ -476,7 +476,7 @@ describe('Pool Contract', function() {
             await checkTx(owner, apolloPoolNodeStake, 0, 0, 0,
               () => deactivate());
           });
-          it('stake1 reward (100 times)', async function() {
+          it('stake1 reward (50 times)', async function() {
             async function checkReward()  {
               const totalStake = toBN(await getTotalStake());
               const reward = apolloPoolMinStake;
@@ -497,7 +497,7 @@ describe('Pool Contract', function() {
               await checkTx(staker1, stakedAmount.neg(), receivedTokens, stakedAmount, 0,
                 // eslint-disable-next-line no-loop-func
                 () => stake(staker1, {value:stakedAmount}));
-              for (let jx = 0; jx < 10; jx++) {
+              for (let jx = 0; jx < 5; jx++) {
                 await checkReward();
               }
             }

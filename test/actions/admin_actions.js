@@ -25,6 +25,7 @@ describe('Administrative actions', () => {
   let kycWhitelistWrapperMock;
   let validatorProxyWrapperMock;
   let poolsNodesManagerWrapperMock;
+  let rolesWrapperMock;
   const exampleAddress = '0x123';
   const defaultAddress = '0xc0ffee';
 
@@ -50,8 +51,11 @@ describe('Administrative actions', () => {
     poolsNodesManagerWrapperMock = {
       transferOwnership: sinon.stub().resolves()
     };
+    rolesWrapperMock = {
+      transferOwnership: sinon.stub().resolves()
+    };
     adminActions = new AdministrativeActions(headWrapperMock, kycWhitelistWrapperMock, feesWrapperMock,
-      validatorProxyWrapperMock, blockchainStatusWrapperMock, poolsNodesManagerWrapperMock);
+      validatorProxyWrapperMock, blockchainStatusWrapperMock, poolsNodesManagerWrapperMock, rolesWrapperMock);
   });
 
   describe('Move ownerships to multiplexer', () => {

@@ -50,6 +50,7 @@ contract Multiplexer is ConstructorOwnable {
         kycWhitelist.transferOwnership(newOwner);
         fees.transferOwnership(newOwner);
         validatorProxy.transferOwnership(newOwner);
+        roles.transferOwnership(newOwner);
     }
 
     function changeContext(Context context) public onlyOwner {

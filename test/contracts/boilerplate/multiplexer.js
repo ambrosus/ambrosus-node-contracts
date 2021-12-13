@@ -72,7 +72,8 @@ describe('Multiplexer', () => {
         apolloDepositStore: true,
         config: true,
         time: true,
-        rolesEventEmitter: true
+        rolesEventEmitter: true,
+        nodeAddressesStore: true
       },
       params: {
         multiplexer: {
@@ -94,6 +95,7 @@ describe('Multiplexer', () => {
     await kycWhitelist.methods.transferOwnership(multiplexer.options.address).send({from: oldOwner});
     await fees.methods.transferOwnership(multiplexer.options.address).send({from: oldOwner});
     await validatorProxy.methods.transferOwnership(multiplexer.options.address).send({from: oldOwner});
+    await roles.methods.transferOwnership(multiplexer.options.address).send({from: oldOwner});
   });
 
   beforeEach(async () => {
@@ -114,6 +116,7 @@ describe('Multiplexer', () => {
       await assertNewOwner(kycWhitelist);
       await assertNewOwner(fees);
       await assertNewOwner(validatorProxy);
+      await assertNewOwner(roles);
     });
 
     it('throws when not an owner tries to change ownership', async () => {

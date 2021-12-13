@@ -129,7 +129,9 @@ describe('Head Wrapper', () => {
       'kycWhitelistStore',
       'payoutsStore',
       'rolesStore',
-      'shelteringTransfersStore'
+      'shelteringTransfersStore',
+      'poolsStore',
+      'nodeAddressesStore'
     ];
 
     availableContractsNames.forEach((contractName) => {

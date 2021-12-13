@@ -7,9 +7,9 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-import ManagedContractWrapper from './managed_contract_wrapper';
+import ManagedOwnableContractWrapper from './managed_ownable_contract_wrapper';
 
-export default class RolesWrapper extends ManagedContractWrapper {
+export default class RolesWrapper extends ManagedOwnableContractWrapper {
   get getContractName() {
     return 'roles';
   }
@@ -39,10 +39,26 @@ export default class RolesWrapper extends ManagedContractWrapper {
     });
   }
 
+  async onboardAsApolloSafe(staking, address, deposit) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.onboardAsApolloSafe(address), {
+      from: staking,
+      value: deposit
+    });
+  }
+
   async onboardAsAtlas(address, stake, url) {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.onboardAsAtlas(url), {
       from: address,
+      value: stake
+    });
+  }
+
+  async onboardAsAtlasSafe(staking, address, stake, url) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.onboardAsAtlasSafe(address, url), {
+      from: staking,
       value: stake
     });
   }
