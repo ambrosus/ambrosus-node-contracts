@@ -32,9 +32,7 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
     address[] public validators;
     address[] public pendingValidators;
 
-    uint lastBlockWhenAddValidatorUsed;
-    uint lastBlockWhenRemoveValidatorUsed;
-    uint lastBlockWhenFinalizeChangeUsed;
+    uint lastBlockWhenValidatorFunctionUsed;
 
     /**
     @notice Constructor
@@ -69,7 +67,7 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
     }
 
     function addValidator(address _validator) public onlyOwner notInArray(_validator, pendingValidators, "Provided address is already a validator") {
-        require(lastBlockWhenAddValidatorUsed != block.number, "Only one addValidator could be called in one block");
+        require(lastBlockWhenValidatorFunctionUsed != block.number, "Only one validator function could be called in one block");
 
         // Should shuffle Validator Set for security. So one person / collusive group
         // can not assemble a chain of their nodes in succession at the end of the set
@@ -79,11 +77,11 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
 
         emitChangeEvent();
 
-        lastBlockWhenAddValidatorUsed = block.number;
+        lastBlockWhenValidatorFunctionUsed = block.number;
     }
 
     function removeValidator(address _validator) public onlyOwner inArray(_validator, pendingValidators, "Provided address is not a validator") {
-        require(lastBlockWhenRemoveValidatorUsed != block.number, "Only one removeValidator could be called in one block");
+        require(lastBlockWhenValidatorFunctionUsed != block.number, "Only one validator function could be called in one block");
 
         for (uint i = 0; i < pendingValidators.length; ++i) {
             if (pendingValidators[i] == _validator) {
@@ -95,16 +93,13 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
 
         emitChangeEvent();
 
-        lastBlockWhenRemoveValidatorUsed = block.number;
+        lastBlockWhenValidatorFunctionUsed = block.number;
     }
 
     function finalizeChange() public {
         require(msg.sender == superUser, "Must be called by super user");
-        require(lastBlockWhenFinalizeChangeUsed != block.number, "Only one finalizeChange could be called in one block");
 
         validators = pendingValidators;
-
-        lastBlockWhenFinalizeChangeUsed = block.number;
     }
 
     function emitChangeEvent() private {
