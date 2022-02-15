@@ -69,8 +69,10 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
     }
 
     function addValidator(address _validator) public onlyOwner notInArray(_validator, pendingValidators, "Provided address is already a validator") {
-        require(lastBlockWhenAddValidatorUsed != block.number);
+        require(lastBlockWhenAddValidatorUsed != block.number, "Only one addValidator could be called in one block");
 
+        // Should shuffle Validator Set for security. So one person / collusive group
+        // can not assemble a chain of their nodes in succession at the end of the set
         uint index = block.number % pendingValidators.length;
         pendingValidators.push(pendingValidators[index]);
         pendingValidators[index] = _validator;
@@ -79,7 +81,7 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
     }
 
     function removeValidator(uint index, address _validator) public onlyOwner inArray(_validator, pendingValidators, "Provided address is not a validator") {
-        require(lastBlockWhenRemoveValidatorUsed != block.number);
+        require(lastBlockWhenRemoveValidatorUsed != block.number, "Only one removeValidator could be called in one block");
 
         for (uint i = 0; i < pendingValidators.length; ++i) {
             if (pendingValidators[i] == _validator) {
@@ -95,7 +97,7 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
 
     function finalizeChange() public {
         require(msg.sender == superUser, "Must be called by super user");
-        require(lastBlockWhenFinalizeChangeUsed != block.number);
+        require(lastBlockWhenFinalizeChangeUsed != block.number, "Only one finalizeChange could be called in one block");
 
         validators = pendingValidators;
 
