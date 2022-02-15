@@ -77,10 +77,12 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
         pendingValidators.push(pendingValidators[index]);
         pendingValidators[index] = _validator;
 
+        emitChangeEvent();
+
         lastBlockWhenAddValidatorUsed = block.number;
     }
 
-    function removeValidator(uint index, address _validator) public onlyOwner inArray(_validator, pendingValidators, "Provided address is not a validator") {
+    function removeValidator(address _validator) public onlyOwner inArray(_validator, pendingValidators, "Provided address is not a validator") {
         require(lastBlockWhenRemoveValidatorUsed != block.number, "Only one removeValidator could be called in one block");
 
         for (uint i = 0; i < pendingValidators.length; ++i) {
@@ -90,6 +92,7 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
                 pendingValidators.length--;
             }
         }
+
         emitChangeEvent();
 
         lastBlockWhenRemoveValidatorUsed = block.number;
