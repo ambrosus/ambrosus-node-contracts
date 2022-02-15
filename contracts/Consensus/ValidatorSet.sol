@@ -32,6 +32,10 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
     address[] public validators;
     address[] public pendingValidators;
 
+    uint lastBlockWhenAddValidatorUsed;
+    uint lastBlockWhenRemoveValidatorUsed;
+    uint lastBlockWhenFinalizeChangeUsed;
+
     /**
     @notice Constructor
     @param _owner the owner of this contract, that can add/remove validators.
@@ -65,11 +69,18 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
     }
 
     function addValidator(address _validator) public onlyOwner notInArray(_validator, pendingValidators, "Provided address is already a validator") {
-        pendingValidators.push(_validator);    
-        emitChangeEvent();
+        require(lastBlockWhenAddValidatorUsed != block.number);
+
+        uint index = block.number % pendingValidators.length;
+        pendingValidators.push(pendingValidators[index]);
+        pendingValidators[index] = _validator;
+
+        lastBlockWhenAddValidatorUsed = block.number;
     }
 
-    function removeValidator(address _validator) public onlyOwner inArray(_validator, pendingValidators, "Provided address is not a validator") {
+    function removeValidator(uint index, address _validator) public onlyOwner inArray(_validator, pendingValidators, "Provided address is not a validator") {
+        require(lastBlockWhenRemoveValidatorUsed != block.number);
+
         for (uint i = 0; i < pendingValidators.length; ++i) {
             if (pendingValidators[i] == _validator) {
                 pendingValidators[i] = pendingValidators[pendingValidators.length - 1];
@@ -78,11 +89,17 @@ contract ValidatorSet is ValidatorSetBase, ConstructorOwnable {
             }
         }
         emitChangeEvent();
+
+        lastBlockWhenRemoveValidatorUsed = block.number;
     }
 
     function finalizeChange() public {
         require(msg.sender == superUser, "Must be called by super user");
+        require(lastBlockWhenFinalizeChangeUsed != block.number);
+
         validators = pendingValidators;
+
+        lastBlockWhenFinalizeChangeUsed = block.number;
     }
 
     function emitChangeEvent() private {
