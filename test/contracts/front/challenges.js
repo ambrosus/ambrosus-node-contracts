@@ -74,7 +74,7 @@ describe('Challenges Contract', () => {
   const startChallenge = async (sheltererId, bundleId, challengerId, fee) => challenges.methods.start(sheltererId, bundleId).send({from: challengerId, value: fee});
   const startChallengeForSystem = async (uploaderId, bundleId, challengeCount, challengerId, fee) => challenges.methods.startForSystem(uploaderId, bundleId, challengeCount).send({from: challengerId, value: fee});
   const resolveChallenge = async (challengeId, resolverId) => challenges.methods.resolve(challengeId).send({from: resolverId});
-  const markChallengeAsExpired = async (challengeId, marker) => challenges.methods.markAsExpired(challengeId).send({from: marker, gasPrice: '0'});
+  const markChallengeAsExpired = async (challengeId, marker) => challenges.methods.markAsExpired(challengeId).send({from: marker, gasPrice: '0x0'});
 
   const getChallengeId = async (sheltererId, bundleId) => challenges.methods.getChallengeId(sheltererId, bundleId).call();
   const getChallengeSequenceNumber = async (challengeId) => challenges.methods.getChallengeSequenceNumber(challengeId).call();
@@ -99,7 +99,7 @@ describe('Challenges Contract', () => {
   const setNumberOfStakers = async (numberOfStakers) => atlasStakeStore.methods.setNumberOfStakers(numberOfStakers).send({from: context});
   const removeLastStaker = async (nodeId, amount) => atlasStakeStore.methods.removeLastStaker(nodeId, amount).send({from: context});
   const addShelterer = async (bundleId, sheltererId, shelteringReward) => sheltering.methods.addShelterer(bundleId, sheltererId).send({from: context, value: shelteringReward});
-  const onboardAsAtlas = async(nodeUrl, nodeAddress, depositValue) => roles.methods.onboardAsAtlas(nodeUrl).send({from: nodeAddress, value: depositValue, gasPrice: '0'});
+  const onboardAsAtlas = async(nodeUrl, nodeAddress, depositValue) => roles.methods.onboardAsAtlas(nodeUrl).send({from: nodeAddress, value: depositValue, gasPrice: '0x0'});
 
   const getShelteringExpirationDate = async(bundleId, sheltererId) => sheltering.methods.getShelteringExpirationDate(bundleId, sheltererId).call();
   const getFeeForChallenge = async (storagePeriods) => fees.methods.getFeeForChallenge(storagePeriods).call();

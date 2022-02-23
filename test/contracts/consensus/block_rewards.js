@@ -120,16 +120,16 @@ describe('Block rewards contract', () => {
     });
 
     it('increases the total shares counter', async () => {
-      addBeneficiary(contract, owner, exampleBeneficiaries[0], '1002');
+      await addBeneficiary(contract, owner, exampleBeneficiaries[0], '1002');
       expect(await totalShares(contract, owner)).to.equal('1002');
-      addBeneficiary(contract, owner, exampleBeneficiaries[1], '2093');
+      await addBeneficiary(contract, owner, exampleBeneficiaries[1], '2093');
       expect(await totalShares(contract, owner)).to.equal('3095');
     });
 
     it('increases the beneficiary counter', async () => {
-      addBeneficiary(contract, owner, exampleBeneficiaries[0], '1002');
+      await addBeneficiary(contract, owner, exampleBeneficiaries[0], '1002');
       expect(await beneficiaryCount(contract, owner)).to.equal('1');
-      addBeneficiary(contract, owner, exampleBeneficiaries[1], '2093');
+      await addBeneficiary(contract, owner, exampleBeneficiaries[1], '2093');
       expect(await beneficiaryCount(contract, owner)).to.equal('2');
     });
 

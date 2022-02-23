@@ -21,7 +21,7 @@ import {expectEventEmission} from '../../helpers/web3EventObserver';
 import BN from 'bn.js';
 
 export const COINBASE = '0x0000000000000000000000000000000000000000';
-export const BLOCK_REWARD = utils.toWei(new BN(3));
+export const BLOCK_REWARD = new BN(utils.toWei('3'));
 
 chai.use(chaiEmitEvents);
 
@@ -47,12 +47,10 @@ describe('Upload Contract', () => {
   let developer;
 
   const bn10 = new BN(10);
-  const developerFee = new BN(333333);
-  const nonDeveloperFee = () => fee.sub(fee.mul(developerFee).div(new BN(1000000))).div(bn10)
-    .mul(bn10);
+  const developerFeeRate = new BN(300000);
+  const developerFee = () => fee.mul(developerFeeRate).div(new BN(1000000));
   const expectedMinersFee = () => fee.mul(new BN(3)).div(bn10);
-  const expectedDeveloperFee = () => fee.sub(nonDeveloperFee());
-  const expectedMinersWithoutDeveloperFee = () => nonDeveloperFee().mul(new BN(3))
+  const expectedMinersWithoutDeveloperFee = () => fee.sub(developerFee()).mul(new BN(3))
     .div(bn10);
   const registerBundle = (bundleId, storagePeriods, uploader, fee) => uploads.methods.registerBundle(bundleId, storagePeriods).send({from: uploader, value: fee, gasPrice: '0'});
   const setDeveloper = (developer, from = hermes) => fees.methods.setDeveloper(developer).send({from, gasPrice: '0'});
@@ -141,22 +139,22 @@ describe('Upload Contract', () => {
     const balanceBefore = new BN(await web3.eth.getBalance(COINBASE));
     await registerBundle(bundleId, 1, hermes, fee);
     const balanceAfter = new BN(await web3.eth.getBalance(COINBASE));
-    const actualFee = balanceAfter.sub(balanceBefore).sub(BLOCK_REWARD);
-    expect(actualFee.eq(expectedMinersFee().sub(new BN('1000000000000000000')))).to.be.true;
+    const actualFee = balanceAfter.sub(balanceBefore);
+    expect(actualFee.eq(BLOCK_REWARD)).to.be.true;
   });
 
   it('Pay fee to miner and developer', async () => {
     await setDeveloper(developer);
-    await setDeveloperUploadFee(developerFee);
+    await setDeveloperUploadFee(developerFeeRate);
     const minerBalanceBefore = new BN(await web3.eth.getBalance(COINBASE));
     const developerBalanceBefore = new BN(await web3.eth.getBalance(developer));
     await registerBundle(bundleId, 1, hermes, fee);
     const minerBalanceAfter = new BN(await web3.eth.getBalance(COINBASE));
     const developerBalanceAfter = new BN(await web3.eth.getBalance(developer));
-    const actualMinerFee = minerBalanceAfter.sub(minerBalanceBefore).sub(BLOCK_REWARD);
-    expect(actualMinerFee.eq(expectedMinersWithoutDeveloperFee().sub(new BN('1000000000000000000')))).to.be.true;
+    const actualMinerFee = minerBalanceAfter.sub(minerBalanceBefore);
     const actualDeveloperFee = developerBalanceAfter.sub(developerBalanceBefore);
-    expect(actualDeveloperFee.eq(expectedDeveloperFee())).to.be.true;
+    expect(actualMinerFee.eq(expectedMinersWithoutDeveloperFee())).to.be.true;
+    expect(actualDeveloperFee.eq(developerFee())).to.be.true;
   });
 
   it('Emits event signalizing payout of miner fee', async () => {

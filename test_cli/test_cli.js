@@ -7,7 +7,7 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
-const Ganache = require('ganache-core');
+const Ganache = require('ganache');
 const {exec} = require('child_process');
 const fs = require('fs');
 const dotenv = require('dotenv');
@@ -40,14 +40,23 @@ const printError = (message) => console.error('\x1b[31m', message, '\x1b[0m');
 
 const startGanacheServer = (privateKeys) => new Promise((resolve, reject) => {
   const accountRequests = privateKeys.map((value) => ({
-    balance: '10000000000000000000000000000000000',
+    balance: '0x1ed09bead87c0378d8e6400000000',
     secretKey: value
   }));
   const server = Ganache.server({
+    defaultBalance: 1000000000,
     accounts: [
       ...accountRequests,
-      ...Array(9).fill({balance: '10000000000000000000000000000000000'})
+      ...Array(9).fill({balance: '0x1ed09bead87c0378d8e6400000000'})
     ],
+    logging: {
+      logger: {
+        log: () => {} // don't do anything
+      }
+    },
+    chain: {
+      hardfork: 'istanbul'
+    },
     blockTime: 1 // add automatic mining over time
   });
   server.listen(PORT, (err) => {

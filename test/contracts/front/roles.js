@@ -442,7 +442,7 @@ describe('Roles Contract', () => {
     const newUrl = 'https://yahoo.com';
 
     it('correctly sets new URL', async () => {
-      onboardAsAtlas(oldUrl, atlas1, ATLAS1_STAKE);
+      await onboardAsAtlas(oldUrl, atlas1, ATLAS1_STAKE);
       expect(await getUrl(atlas1)).to.equal(oldUrl);
       await setUrl(atlas1, newUrl);
       expect(await getUrl(atlas1)).to.equal(newUrl);
