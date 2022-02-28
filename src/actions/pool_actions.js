@@ -39,11 +39,31 @@ export default class PoolActions {
         const id = await contract.methods.id().call();
         const active = await contract.methods.active().call();
         const totalStake = await contract.methods.totalStake().call();
-        const nodesCount = await contract.methods.getNodesCount().call();
-        console.log(id, active ? 'active' : '      ', name, address, nodesCount, this.web3.utils.fromWei(totalStake, 'ether'));
+        const nodeStake = await contract.methods.nodeStake().call();
+        const nodesCount = +await contract.methods.getNodesCount().call();
+        let service;
+        try {
+          service = await contract.methods.service().call();
+        // eslint-disable-next-line no-empty
+        } catch (error) {
+        }
+        console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), service);
       }
     } else {
       console.log('No pools found');
+    }
+  }
+
+  async getPoolNodesList(poolAddress) {
+    const contract = await loadContract(this.web3, PoolJson.abi, poolAddress);
+    const count = await contract.methods.getNodesCount().call();
+    if (+count > 0) {
+      const nodess = await contract.methods.getNodes(0, count).call();
+      for (const address of nodess) {
+        console.log(address);
+      }
+    } else {
+      console.log('Empty pool');
     }
   }
 

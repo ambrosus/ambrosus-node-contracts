@@ -26,6 +26,8 @@ export default class PoolingTask extends TaskBase {
       await this.activatePool(options[0], options[1]);
     } else if (command === 'deactivate') {
       await this.deactivatePool(options[0]);
+    } else if (command === 'nodes') {
+      await this.poolNodes(options[0]);
     } else if (command === 'stake') {
       await this.stake(options[0], options[1]);
     } else if (command === 'unstake') {
@@ -87,6 +89,13 @@ export default class PoolingTask extends TaskBase {
       return this.poolActions.deactivate(poolAddress);
     }
     console.error('Wrong address, use: yarn task pooling deactivate [pool address]');
+  }
+
+  async poolNodes(poolAddress) {
+    if (utils.isAddress(poolAddress)) {
+      return this.poolActions.getPoolNodesListdeactivate(poolAddress);
+    }
+    console.error('Wrong address, use: yarn task pooling nodes [pool address]');
   }
 
   async stake(poolAddress, value) {

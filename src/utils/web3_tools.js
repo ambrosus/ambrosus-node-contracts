@@ -28,26 +28,37 @@ function getDefaultGanacheOptions(secretKey) {
     throw 'Secret key not defined';
   }
   return {
-    accounts: [
-      {
-        balance: '10000000000000000000000000000000000',
-        secretKey
-      },
-      ...Array(9).fill({balance: '10000000000000000000000000000000000'})
-    ],
-    vmErrorsOnRPCResponse: false
+    wallet: {
+      defaultBalance: 1000000000,
+      accounts: [
+        {
+          balance: '0x1ed09bead87c0378d8e6400000000',
+          secretKey
+        },
+        ...Array(9).fill({balance: '0x1ed09bead87c0378d8e64000000000'})
+      ]
+    },
+    logging: {
+      logger: {
+        log: () => {} // don't do anything
+      }
+    },
+    chain: {
+      hardfork: 'istanbul',
+      vmErrorsOnRPCResponse: false
+    }
   };
 }
 
 export async function createGanacheServer(secretKey) {
-  const Ganache = require('ganache-core');
+  const Ganache = require('ganache');
   const server = Ganache.server(getDefaultGanacheOptions(secretKey));
   await server.listen(DEFAULT_PORT);
 }
 
 function createGanacheProvider(secretKey) {
   // import in code with purpose:D
-  const Ganache = require('ganache-core');
+  const Ganache = require('ganache');
   const memdown = require('memdown');
   return Ganache.provider({
     ...getDefaultGanacheOptions(secretKey),
