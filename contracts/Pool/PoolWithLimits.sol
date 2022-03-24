@@ -65,7 +65,7 @@ contract PoolWithLimits is IPool, Ownable {
     }
 
     function getVersion() external view returns (string) {
-        return "PoolWithLimits:0.0.1";
+        return "PoolWithLimits:0.0.2";
     }
 
     // todo use Ownable constructor?
@@ -185,6 +185,7 @@ contract PoolWithLimits is IPool, Ownable {
             totalStake = totalStake.sub(deposit);
         }
 
+        staker.total = staker.total.sub(staker.stakes[idx].stake);
         if (idx != staker.stakes.length - 1) {
             staker.stakes[idx] = staker.stakes[staker.stakes.length - 1];
         }
