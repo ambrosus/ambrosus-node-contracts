@@ -30,7 +30,7 @@ export default class PoolActions {
     console.log(name, ':', pool.options.address);
   }
 
-  async createPoolWithLimits(name, minStake, fee, poolsServiceAddress, nodeStake, maxTotalStake, maxUserUserStake) {
+  async createPoolWithLimits(name, minStake, fee, poolsServiceAddress, nodeStake, maxTotalStake, maxUserTotalStake) {
     const pool = await new this.web3.eth.Contract(PoolWithLimitsJson.abi, undefined, {
       gas: DEFAULT_GAS,
       gasPrice: this.web3.utils.toWei('5', 'gwei')
