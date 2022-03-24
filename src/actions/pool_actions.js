@@ -34,7 +34,7 @@ export default class PoolActions {
     const pool = await new this.web3.eth.Contract(PoolWithLimitsJson.abi, undefined, {
       gas: DEFAULT_GAS,
       gasPrice: this.web3.utils.toWei('5', 'gwei')
-    }).deploy({data: PoolJson.bytecode, arguments: [name, 3, nodeStake, minStake, fee, poolsServiceAddress, this.headContractAddress, maxTotalStake, maxUserTotalStake]})
+    }).deploy({data: PoolWithLimitsJson.bytecode, arguments: [name, 3, nodeStake, minStake, fee, poolsServiceAddress, this.headContractAddress, maxTotalStake, maxUserTotalStake]})
       .send({
         from: this.web3.eth.defaultAccount,
         gas: DEFAULT_GAS
@@ -49,6 +49,7 @@ export default class PoolActions {
       for (const address of pools) {
         const contract = await loadContract(this.web3, PoolJson.abi, address);
         const name = await contract.methods.name().call();
+        const version = await contract.methods.getVersion().call();
         const id = await contract.methods.id().call();
         const active = await contract.methods.active().call();
         const totalStake = await contract.methods.totalStake().call();
@@ -60,7 +61,7 @@ export default class PoolActions {
         // eslint-disable-next-line no-empty
         } catch (error) {
         }
-        console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), service);
+        console.log(id, active ? 'active' : '      ', name, version, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), service);
       }
     } else {
       console.log('No pools found');

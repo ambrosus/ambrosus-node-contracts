@@ -65,7 +65,7 @@ contract PoolWithLimits is IPool, Ownable {
     }
 
     function getVersion() external view returns (string) {
-        return "0.0.4";
+        return "PoolWithLimits:0.0.1";
     }
 
     // todo use Ownable constructor?

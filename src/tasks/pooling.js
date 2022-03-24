@@ -65,7 +65,7 @@ export default class PoolingTask extends TaskBase {
       console.error('Wrong max total stake value, use: yarn task pooling create [pool name, min stake, fee %, service address, node stake, max total stake]');
       return;
     }
-    return this.poolActions.createPool(
+    return await this.poolActions.createPool(
       name,
       this.poolActions.web3.utils.toWei(minStake, 'ether'),
       Math.floor((+fee) * 10000),
@@ -104,7 +104,7 @@ export default class PoolingTask extends TaskBase {
       console.error('Wrong max user total stake value, use: yarn task pooling create [pool name, min stake, fee %, service address, node stake, max total stake, max user total stake]');
       return;
     }
-    return this.poolActions.createPoolWithLimits(
+    return await this.poolActions.createPoolWithLimits(
       name,
       this.poolActions.web3.utils.toWei(minStake, 'ether'),
       Math.floor((+fee) * 10000),
