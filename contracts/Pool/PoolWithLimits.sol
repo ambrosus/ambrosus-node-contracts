@@ -65,7 +65,7 @@ contract PoolWithLimits is IPool, Ownable {
     }
 
     function getVersion() external view returns (string) {
-        return "PoolWithLimits:0.0.2";
+        return "PoolWithLimits:0.0.3";
     }
 
     // todo use Ownable constructor?
@@ -141,27 +141,7 @@ contract PoolWithLimits is IPool, Ownable {
         _onboardNodes();
     }
 
-    function unstake(uint tokens) external {
-        require(tokens <= token.balanceOf(msg.sender), "Sender has not enough tokens");
-
-        Staker storage staker = stakers[msg.sender];
-        uint idx = staker.stakes.length;
-        uint i;
-        for (; i < staker.stakes.length; i++) {
-            if (staker.stakes[i].tokens == tokens) {
-                if (idx < i) {
-                    if (staker.stakes[i].time < staker.stakes[idx].time) {
-                        idx = i;
-                    }
-                } else {
-                    idx = i;
-                }
-            }
-        }
-        require(idx < staker.stakes.length, "Sender has no available stakes");
-
-        require(getUnstakeFee(staker.stakes[idx].time) == 0, "Sender must pay an unstake fee");
-
+    function unstakeInternal(address sender, Staker storage staker, uint idx, uint tokens, uint unstakeFeeRate) private {
         uint tokenPrice = this.getTokenPrice();
         uint deposit = tokenPrice.mul(tokens).div(FIXEDPOINT);
         require(deposit <= totalStake.add(totalReward), "Total stake is less than deposit");
@@ -171,8 +151,14 @@ contract PoolWithLimits is IPool, Ownable {
             _removeNode();
         }
 
-        msg.sender.transfer(deposit);
-        _getManager().poolStakeChanged(msg.sender, -int(deposit), -int(tokens));
+        if (unstakeFeeRate > 0) {
+            uint unstakeFee = deposit.mul(unstakeFeeRate).div(MILLION);
+            owner.transfer(unstakeFee);
+            deposit = deposit.sub(unstakeFee);
+        }
+
+        sender.transfer(deposit);
+        _getManager().poolStakeChanged(sender, -int(deposit), -int(tokens));
 
         if (deposit <= totalReward) {
             totalReward = totalReward.sub(deposit);
@@ -190,6 +176,48 @@ contract PoolWithLimits is IPool, Ownable {
             staker.stakes[idx] = staker.stakes[staker.stakes.length - 1];
         }
         staker.stakes.length -= 1;
+    }
+
+    function getStakeIndex(Staker storage staker, uint tokens) private view returns (uint) {
+        uint idx = staker.stakes.length;
+        uint i;
+        for (; i < staker.stakes.length; i++) {
+            if (staker.stakes[i].tokens == tokens) {
+                if (idx < i) {
+                    if (staker.stakes[i].time < staker.stakes[idx].time) {
+                        idx = i;
+                    }
+                } else {
+                    idx = i;
+                }
+            }
+        }
+        require(idx < staker.stakes.length, "Sender has no available stakes");
+        return idx;
+    }
+
+    function unstake(uint tokens) external {
+        require(tokens <= token.balanceOf(msg.sender), "Sender has not enough tokens");
+
+        Staker storage staker = stakers[msg.sender];
+        uint idx = getStakeIndex(staker, tokens);
+
+        require(getUnstakeFee(staker.stakes[idx].time) == 0, "Sender must pay an unstake fee");
+
+        unstakeInternal(msg.sender, staker, idx, tokens, 0);
+    }
+
+    function unstakeWithFee(uint tokens) external {
+        require(tokens <= token.balanceOf(msg.sender), "Sender has not enough tokens");
+
+        Staker storage staker = stakers[msg.sender];
+        uint idx = getStakeIndex(staker, tokens);
+
+        uint unstakeFee = getUnstakeFee(staker.stakes[idx].time);
+
+        require(unstakeFee < MILLION, "Unstake is locked");
+
+        unstakeInternal(msg.sender, staker, idx, tokens, unstakeFee);
     }
 
     function addUnstakeFee(uint64 age, uint32 unstakeFee) external onlyOwner {
