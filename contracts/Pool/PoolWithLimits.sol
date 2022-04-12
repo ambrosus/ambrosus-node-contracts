@@ -65,7 +65,7 @@ contract PoolWithLimits is IPool, Ownable {
     }
 
     function getVersion() external view returns (string) {
-        return "PoolWithLimits:0.0.3";
+        return "PoolWithLimits:0.0.4";
     }
 
     // todo use Ownable constructor?
@@ -141,83 +141,159 @@ contract PoolWithLimits is IPool, Ownable {
         _onboardNodes();
     }
 
-    function unstakeInternal(address sender, Staker storage staker, uint idx, uint tokens, uint unstakeFeeRate) private {
-        uint tokenPrice = this.getTokenPrice();
-        uint deposit = tokenPrice.mul(tokens).div(FIXEDPOINT);
-        require(deposit <= totalStake.add(totalReward), "Total stake is less than deposit");
+    struct UnstakeFrame {
+        Stake[] stks;
+        uint32[] fees;
+        uint totalUnstake;
+        uint ownerFeeTokens;
+        uint tokenPrice;
+        uint deposit;
+    }
 
-        token.burn(msg.sender, tokens);
-        while (address(this).balance < deposit) {
+    function unstakeInternal(address sender, uint tokens, bool force) private {
+        require(tokens <= token.balanceOf(sender), "Sender has not enough tokens");
+
+        Staker storage staker = stakers[sender];
+        UnstakeFrame memory frame;
+        uint tks = tokens;
+
+        frame.stks = getSortedStakes(staker);
+        frame.fees = new uint32[](frame.stks.length);
+
+        uint idx = frame.stks.length - 1;
+
+        while (tks > 0) {
+            frame.fees[idx] = getUnstakeFee(frame.stks[idx].time);
+            if (force) {
+                require(frame.fees[idx] != MILLION, "Sender cannot unstake during the locking period");
+            } else {
+                require(frame.fees[idx] == 0, "Sender must pay an unstake fee");
+            }
+            if (frame.stks[idx].tokens <= tks) {
+                tks = tks.sub(frame.stks[idx].tokens);
+            } else {
+                tks = 0;
+            }
+            if (tks > 0) {
+                require(idx > 0, "Wrong stake index");
+                idx -= 1;
+            }
+        }
+
+        frame.tokenPrice = this.getTokenPrice();
+        frame.deposit = frame.tokenPrice.mul(tokens).div(FIXEDPOINT);
+        require(frame.deposit <= totalStake.add(totalReward), "Total stake is less than deposit");
+
+        token.burn(sender, tokens);
+        while (address(this).balance < frame.deposit) {
             _removeNode();
         }
 
-        if (unstakeFeeRate > 0) {
-            uint unstakeFee = deposit.mul(unstakeFeeRate).div(MILLION);
+        tks = tokens;
+        idx = frame.stks.length - 1;
+        while (tks > 0) {
+            uint unstakeTokens;
+            if (frame.stks[idx].tokens <= tks) {
+                unstakeTokens = frame.stks[idx].tokens;
+                tks = tks.sub(unstakeTokens);
+                frame.totalUnstake = frame.totalUnstake.sub(frame.stks[idx].stake);
+                removeStake(staker, frame.stks[idx]);
+            } else {
+                uint unstakeValue = tks.mul(frame.stks[idx].stake).div(frame.stks[idx].tokens);
+                frame.totalUnstake = frame.totalUnstake.sub(unstakeValue);
+                updateStake(staker, frame.stks[idx], tks, frame.stks[idx].stake.sub(unstakeValue));
+                tks = 0;
+            }
+            if (frame.fees[idx] > 0) {
+                frame.ownerFeeTokens = frame.ownerFeeTokens.add(unstakeTokens.mul(frame.fees[idx]).div(MILLION));
+            }
+            if (tks > 0) {
+                idx -= 1;
+            }
+        }
+
+        staker.total = staker.total.sub(frame.totalUnstake);
+        totalStake = totalStake.sub(frame.totalUnstake);
+        totalReward = totalReward.sub(frame.deposit.sub(frame.totalUnstake));
+
+        if (frame.ownerFeeTokens > 0) {
+            uint unstakeFee = frame.deposit.mul(frame.ownerFeeTokens).div(tokens);
             owner.transfer(unstakeFee);
-            deposit = deposit.sub(unstakeFee);
+            frame.deposit = frame.deposit.sub(unstakeFee);
         }
 
-        sender.transfer(deposit);
-        _getManager().poolStakeChanged(sender, -int(deposit), -int(tokens));
-
-        if (deposit <= totalReward) {
-            totalReward = totalReward.sub(deposit);
-            deposit = 0;
-        } else {
-            deposit = deposit.sub(totalReward);
-            totalReward = 0;
-        }
-        if (deposit > 0) {
-            totalStake = totalStake.sub(deposit);
-        }
-
-        staker.total = staker.total.sub(staker.stakes[idx].stake);
-        if (idx != staker.stakes.length - 1) {
-            staker.stakes[idx] = staker.stakes[staker.stakes.length - 1];
-        }
-        staker.stakes.length -= 1;
+        sender.transfer(frame.deposit);
+        _getManager().poolStakeChanged(sender, -int(frame.deposit), -int(tokens));
     }
 
-    function getStakeIndex(Staker storage staker, uint tokens) private view returns (uint) {
-        uint idx = staker.stakes.length;
-        uint i;
-        for (; i < staker.stakes.length; i++) {
-            if (staker.stakes[i].tokens == tokens) {
-                if (idx < i) {
-                    if (staker.stakes[i].time < staker.stakes[idx].time) {
-                        idx = i;
+    function getSortedStakes(Staker storage staker) private view returns (Stake[] memory) {
+        Stake[] memory stakes = staker.stakes;
+        if (staker.stakes.length > 1) {
+            uint i;
+            bool updated = true;
+            while (updated) {
+                updated = false;
+                for (i = 0; i < stakes.length - 1; i++) {
+                    if (stakes[i].time < stakes[i + 1].time) {
+                        (stakes[i], stakes[i + 1]) = (stakes[i + 1], stakes[i]);
+                        updated = true;
                     }
-                } else {
-                    idx = i;
                 }
             }
         }
-        require(idx < staker.stakes.length, "Sender has no available stakes");
-        return idx;
+        return stakes;
+    }
+
+    function removeStake(Staker storage staker, Stake memory stake_) private {
+        uint i;
+        for (; i < staker.stakes.length; i++) {
+            if (staker.stakes[i].tokens == stake_.tokens && staker.stakes[i].time == stake_.time) {
+                if (i < staker.stakes.length - 1) {
+                    staker.stakes[i] = staker.stakes[staker.stakes.length - 1];
+                }
+                staker.stakes.length -= 1;
+                break;
+            }
+        }
+    }
+
+    function updateStake(Staker storage staker, Stake memory stake_, uint newTokens, uint newStake) private returns (bool) {
+        uint i;
+        for (; i < staker.stakes.length; i++) {
+            if (staker.stakes[i].tokens == stake_.tokens && staker.stakes[i].time == stake_.time) {
+                staker.stakes[i].stake = newStake;
+                staker.stakes[i].tokens = newTokens;
+                return true;
+            }
+        }
+        return false;
     }
 
     function unstake(uint tokens) external {
-        require(tokens <= token.balanceOf(msg.sender), "Sender has not enough tokens");
-
-        Staker storage staker = stakers[msg.sender];
-        uint idx = getStakeIndex(staker, tokens);
-
-        require(getUnstakeFee(staker.stakes[idx].time) == 0, "Sender must pay an unstake fee");
-
-        unstakeInternal(msg.sender, staker, idx, tokens, 0);
+        unstakeInternal(msg.sender, tokens, false);
     }
 
     function unstakeWithFee(uint tokens) external {
-        require(tokens <= token.balanceOf(msg.sender), "Sender has not enough tokens");
+        unstakeInternal(msg.sender, tokens, true);
+    }
 
-        Staker storage staker = stakers[msg.sender];
-        uint idx = getStakeIndex(staker, tokens);
+    function getStakesCount() external view returns (uint) {
+        require(stakers[msg.sender].exists, "Sender has no stakes");
+        return stakers[msg.sender].stakes.length;
+    }
 
-        uint unstakeFee = getUnstakeFee(staker.stakes[idx].time);
+    function getStakeInfo(uint idx) external view returns (uint, uint, uint64, uint32) {
+        require(stakers[msg.sender].exists, "Sender has no stakes");
+        require(idx < stakers[msg.sender].stakes.length, "Stake index out of range");
+        Stake storage stk = stakers[msg.sender].stakes[idx];
+        uint32 unstakeFee = getUnstakeFee(stk.time);
 
-        require(unstakeFee < MILLION, "Unstake is locked");
-
-        unstakeInternal(msg.sender, staker, idx, tokens, unstakeFee);
+        return (
+            stk.stake,
+            stk.tokens,
+            stk.time,
+            unstakeFee
+        );
     }
 
     function addUnstakeFee(uint64 age, uint32 unstakeFee) external onlyOwner {
@@ -235,9 +311,9 @@ contract PoolWithLimits is IPool, Ownable {
                 updated = false;
                 for (i = 0; i < unstakeFees.length - 1; i++) {
                     if (unstakeFees[i].age > unstakeFees[i + 1].age) {
-                        uint64 tmp = unstakeFees[i].age;
-                        unstakeFees[i].age = unstakeFees[i + 1].age;
-                        unstakeFees[i + 1].age = tmp;
+                        UnstakeFee memory tmp = unstakeFees[i + 1];
+                        unstakeFees[i + 1] = unstakeFees[i];
+                        unstakeFees[i] = tmp;
                         updated = true;
                     }
                 }
@@ -270,7 +346,7 @@ contract PoolWithLimits is IPool, Ownable {
         unstakeFees.length -= 1;
     }
 
-    function getUnstakeFee(uint64 time) public view returns (uint) {
+    function getUnstakeFee(uint64 time) public view returns (uint32) {
         if (unstakeFees.length > 0) {
             uint64 age = now.castTo64() - time;
             if (unstakeFees[unstakeFees.length - 1].age >= age) {
