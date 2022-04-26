@@ -89,9 +89,9 @@ export default class OnboardActions {
     throw new Error('The node is not onboarded');
   }
 
-  async retireAtlasStaking(){
+  async retireAtlasStaking() {
     const role = await this.rolesWrapper.onboardedRole(this.rolesWrapper.defaultAddress);
-    if(role === ATLAS) {
+    if (role === ATLAS) {
       if (await this.atlasStakeWrapper.isShelteringAny(this.atlasStakeWrapper.defaultAddress)) {
         throw new Error('Cannot retire while still sheltering bundles');
       }
