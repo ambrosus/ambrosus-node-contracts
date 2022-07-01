@@ -19,7 +19,11 @@ contract RolesScopes {
         bool hasPrivilage
     ) public {
         rolesScope[roleName][selector] = hasPrivilage;
-        if (roleName == "DEFAULT_ADMIN_ROLE") {
+        string memory d = "DEFAULT_ADMIN_ROLE";
+        if (
+            keccak256(abi.encodePacked((roleName))) ==
+            keccak256(abi.encodePacked((d)))
+        ) {
             rolesNames[0x00] = roleName;
             rolesHexes[roleName] = 0x00;
         } else {
