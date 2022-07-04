@@ -228,15 +228,12 @@ contract MultiSigWallet is AccessControl {
         notConfirmed(transactionId, msg.sender)
     {
         bool isConfirmed = false;
-        bytes4 selector = bytes4(transactionId);
+        bytes4 selector = convertBytesToBytes4(
+            transactions[transactionId].data
+        );
         bytes32[] memory userRoles = getRoles(msg.sender);
         for (uint256 i = 0; i < userRoles.length; i++) {
-            if (
-                rolesScope.hasPrivilage(
-                    rolesScope.getRoleNameByHex(userRoles[i]),
-                    selector
-                )
-            ) {
+            if (rolesScope.hasPrivilage(userRoles[i], selector)) {
                 confirmations[transactionId][msg.sender] = true;
                 Confirmation(msg.sender, transactionId);
                 executeTransaction(transactionId);
@@ -433,5 +430,19 @@ contract MultiSigWallet is AccessControl {
         _transactionIds = new uint256[](to - from);
         for (i = from; i < to; i++)
             _transactionIds[i - from] = transactionIdsTemp[i];
+    }
+
+    function convertBytesToBytes4(bytes inBytes)
+        public
+        pure
+        returns (bytes4 outBytes4)
+    {
+        if (inBytes.length == 0) {
+            return 0x0;
+        }
+
+        assembly {
+            outBytes4 := mload(add(inBytes, 32))
+        }
     }
 }

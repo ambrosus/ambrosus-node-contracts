@@ -18,6 +18,7 @@ export default class RolesScopes extends ContractWrapper {
     super(web3, defaultAddress);
     this.address = rolesScopesContractAddress;
     this.contract = loadContract(web3, contractJsons.rolesScopes.abi, rolesScopesContractAddress);
+    this.setUpPredefinedRoles();
   }
 
   async setRole(roleName, role, hasPrivilage) {

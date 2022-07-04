@@ -13,10 +13,10 @@ library Strings {
     /**
      * @dev Converts a `uint256` to its ASCII `string` decimal representation.
      */
-    function toString(uint256 value) internal pure returns (string memory) {
+    function toString(uint256 intValue) internal pure returns (string memory) {
         // Inspired by OraclizeAPI's implementation - MIT licence
         // https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
-
+        uint256 value = intValue;
         if (value == 0) {
             return "0";
         }
@@ -54,11 +54,12 @@ library Strings {
     /**
      * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation with fixed length.
      */
-    function toHexString(uint256 value, uint256 length)
+    function toHexString(uint256 intValue, uint256 length)
         internal
         pure
         returns (string memory)
     {
+        uint256 value = intValue;
         bytes memory buffer = new bytes(2 * length + 2);
         buffer[0] = "0";
         buffer[1] = "x";

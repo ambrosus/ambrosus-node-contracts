@@ -1,11 +1,11 @@
 pragma solidity ^0.4.15;
 
 contract RolesScopes {
-    mapping(string => mapping(bytes4 => bool)) rolesScope;
+    mapping(bytes32 => mapping(bytes4 => bool)) rolesScope;
     mapping(bytes32 => string) private rolesNames;
     mapping(string => bytes32) private rolesHexes;
 
-    function hasPrivilage(string roleName, bytes4 selector)
+    function hasPrivilage(bytes32 roleName, bytes4 selector)
         public
         view
         returns (bool)
@@ -13,12 +13,7 @@ contract RolesScopes {
         return rolesScope[roleName][selector];
     }
 
-    function setRole(
-        string roleName,
-        bytes4 selector,
-        bool hasPrivilage
-    ) public {
-        rolesScope[roleName][selector] = hasPrivilage;
+    function setRole(string roleName, bytes4 selector, bool hasPrivilage) public {
         string memory d = "DEFAULT_ADMIN_ROLE";
         if (
             keccak256(abi.encodePacked((roleName))) ==
@@ -28,6 +23,7 @@ contract RolesScopes {
             rolesHexes[roleName] = 0x00;
         } else {
             bytes32 roleHex = keccak256(roleName);
+            rolesScope[roleHex][selector] = hasPrivilage;
             rolesNames[roleHex] = roleName;
             rolesHexes[roleName] = roleHex;
         }
