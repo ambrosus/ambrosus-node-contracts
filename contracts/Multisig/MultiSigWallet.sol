@@ -1,13 +1,12 @@
 /* solium-disable */
 pragma solidity ^0.4.15;
 pragma experimental ABIEncoderV2;
-import "../AccessControl/AccessControl.sol";
 import "./RolesScope.sol";
 
 /// @title Multisignature wallet - Allows multiple parties to agree on transactions before execution.
 /// @author Stefan George - <stefan.george@consensys.net>
-contract MultiSigWallet is AccessControl {
-    RolesScopes private rolesScope = new RolesScopes();
+contract MultiSigWallet {
+    RolesScopes private rolesScope;
     /*
      *  Events
      */
@@ -47,10 +46,7 @@ contract MultiSigWallet is AccessControl {
      *  Modifiers
      */
     modifier isAdmin(address user) {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "Caller is not an admin"
-        );
+        require(rolesScope.hasRole(0x00, user), "Caller is not an admin");
         _;
     }
 
@@ -115,35 +111,19 @@ contract MultiSigWallet is AccessControl {
     /// @dev Contract constructor sets initial owners and required number of confirmations.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
-    function MultiSigWallet(address[] _owners, uint256 _required)
-        public
-        validRequirement(_owners.length, _required)
-    {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    // add rolesScope object to the constructor
+    function MultiSigWallet(
+        address[] _owners,
+        uint256 _required,
+        RolesScopes _rolesScope
+    ) public validRequirement(_owners.length, _required) {
+        rolesScope = _rolesScope;
         for (uint256 i = 0; i < _owners.length; i++) {
             require(!isOwner[_owners[i]] && _owners[i] != 0);
             isOwner[_owners[i]] = true;
         }
         owners = _owners;
         required = _required;
-    }
-
-    function setUserRole(string roleName, address user)
-        public
-        isAdmin(msg.sender)
-    {
-        _grantRole(rolesScope.getRoleHexByName(roleName), user);
-    }
-
-    function setAdminRole(address user) public isAdmin(msg.sender) {
-        _grantRole(DEFAULT_ADMIN_ROLE, user);
-    }
-
-    function revokeUserRole(string roleName, address user)
-        public
-        isAdmin(msg.sender)
-    {
-        revokeRole(rolesScope.getRoleHexByName(roleName), user);
     }
 
     /// @dev Allows to add a new owner. Transaction has to be sent by wallet.
@@ -231,7 +211,7 @@ contract MultiSigWallet is AccessControl {
         bytes4 selector = convertBytesToBytes4(
             transactions[transactionId].data
         );
-        bytes32[] memory userRoles = getRoles(msg.sender);
+        bytes32[] memory userRoles = rolesScope.getRoles(msg.sender);
         for (uint256 i = 0; i < userRoles.length; i++) {
             if (rolesScope.hasPrivilage(userRoles[i], selector)) {
                 confirmations[transactionId][msg.sender] = true;

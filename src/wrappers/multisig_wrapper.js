@@ -66,16 +66,4 @@ export default class MultisigWrapper extends ContractWrapper {
   async getOwners() {
     return this.contract.methods.getOwners().call();
   }
-
-  async setUserRole(roleName, userAddress) {
-    return this.contract.methods.setUserRole(roleName, userAddress).encodeABI();
-  }
-
-  async setAdminRole(userAddress) {
-    return this.contract.methods.setAdminRole(userAddress).encodeABI();
-  }
-
-  async revokeUserRole(roleName, userAddress) {
-    return this.contract.methods.revokeUserRole(roleName, userAddress).encodeABI();
-  }
 }

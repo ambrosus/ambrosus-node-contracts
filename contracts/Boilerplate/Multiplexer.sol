@@ -16,7 +16,7 @@ import "../Front/Roles.sol";
 import "../Configuration/Fees.sol";
 import "../Middleware/ValidatorProxy.sol";
 import "../Pool/PoolsNodesManager.sol";
-
+import "../Multisig/RolesScope.sol";
 
 contract Multiplexer is ConstructorOwnable {
     Head public head;
@@ -25,7 +25,9 @@ contract Multiplexer is ConstructorOwnable {
     ValidatorProxy public validatorProxy;
     Roles public roles;
     PoolsNodesManager public poolsNodesManager;
+    RolesScopes public rolesScopes;
 
+    // add rolescope
     constructor(
         address _owner,
         Head _head,
@@ -33,16 +35,21 @@ contract Multiplexer is ConstructorOwnable {
         Fees _fees,
         ValidatorProxy _validatorProxy,
         Roles _roles,
-        PoolsNodesManager _poolsNodesManager
-    )
-    public ConstructorOwnable(_owner)
-    {
+        PoolsNodesManager _poolsNodesManager,
+        RolesScopes _rolesScopes
+    ) public ConstructorOwnable(_owner) {
         head = _head;
         kycWhitelist = _kycWhitelist;
         fees = _fees;
         validatorProxy = _validatorProxy;
         roles = _roles;
         poolsNodesManager = _poolsNodesManager;
+        rolesScopes = _rolesScopes;
+    }
+
+    modifier isAdmin(address user) {
+        require(rolesScopes.hasRole(0x00, user), "Caller is not an admin");
+        _;
     }
 
     function transferContractsOwnership(address newOwner) public onlyOwner {
@@ -57,7 +64,11 @@ contract Multiplexer is ConstructorOwnable {
         head.setContext(context);
     }
 
-    function addToWhitelist(address candidate, Consts.NodeType role, uint deposit) public onlyOwner {
+    function addToWhitelist(
+        address candidate,
+        Consts.NodeType role,
+        uint256 deposit
+    ) public onlyOwner {
         kycWhitelist.add(candidate, role, deposit);
     }
 
@@ -65,15 +76,21 @@ contract Multiplexer is ConstructorOwnable {
         kycWhitelist.remove(candidate);
     }
 
-    function setBaseUploadFee(uint fee) public onlyOwner {
+    function setBaseUploadFee(uint256 fee) public onlyOwner {
         fees.setBaseUploadFee(fee);
     }
 
-    function transferOwnershipForValidatorSet(address newOwner) public onlyOwner {
+    function transferOwnershipForValidatorSet(address newOwner)
+        public
+        onlyOwner
+    {
         validatorProxy.transferOwnershipForValidatorSet(newOwner);
     }
 
-    function transferOwnershipForBlockRewards(address newOwner) public onlyOwner {
+    function transferOwnershipForBlockRewards(address newOwner)
+        public
+        onlyOwner
+    {
         validatorProxy.transferOwnershipForBlockRewards(newOwner);
     }
 
@@ -113,5 +130,19 @@ contract Multiplexer is ConstructorOwnable {
 
     function removePool(address _pool) public onlyOwner {
         poolsNodesManager.removePool(_pool);
+    }
+
+    function setUserRole(string roleName, address user)
+        public
+        isAdmin(msg.sender)
+    {
+        rolesScopes._grantRole(rolesScopes.getRoleHexByName(roleName), user);
+    }
+
+    function revokeUserRole(string roleName, address user)
+        public
+        isAdmin(msg.sender)
+    {
+        rolesScopes.revokeRole(rolesScopes.getRoleHexByName(roleName), user);
     }
 }

@@ -11,7 +11,7 @@ import TaskBase from './base/task_base';
 import commandLineArgs from 'command-line-args';
 import {appendEnvFile} from '../utils/file';
 import config from '../../config/config';
-import {multisig} from '../../src/contract_jsons';
+import contractJsons, {multisig} from '../../src/contract_jsons';
 import {
   APPROVALS_REQUIRED
 } from '../constants';
@@ -41,7 +41,7 @@ export default class DeployMultisigTask extends TaskBase {
     if (options.required > approvalAdresses.length) {
       throw new Error(`There are fewer approvers than required approves (${approvalAdresses.length} provided, but required at least ${options.required}).`);
     }
-    const multisigContract = await this.deployActions.deployer.deployContract(multisig, [approvalAdresses, options.required], {});
+    const multisigContract = await this.deployActions.deployer.deployContract(multisig, [approvalAdresses, options.required, contractJsons.rolesScopes], {});
     const multiSigAddress = multisigContract.options.address;
     await this.multiplexerWrapper.contract.methods.transferOwnership(multiSigAddress).send({from: this.multiplexerWrapper.defaultAddress});
     console.log(`\tmultisig -> ${multiSigAddress}`);
