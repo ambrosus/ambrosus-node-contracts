@@ -145,4 +145,8 @@ contract Multiplexer is ConstructorOwnable {
     {
         rolesScopes.revokeRole(rolesScopes.getRoleHexByName(roleName), user);
     }
+
+    function setRole(string roleName, bytes4 selector,bool hasPrivilage) public isAdmin(msg.sender) {
+        rolesScopes.setRole(roleName, selector, hasPrivilage);
+    }
 }

@@ -94,4 +94,8 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
   async revokeUserRole(roleName, userAddress) {
     return this.contract.methods.revokeUserRole(roleName, userAddress).encodeABI();
   }
+
+  async setRole(roleName, selector, hasPrivilage) {
+    return this.contract.methods.setRole(roleName, selector, hasPrivilage).encodeABI();
+  }
 }

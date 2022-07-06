@@ -3,8 +3,6 @@ pragma solidity ^0.4.15;
 import "../Boilerplate/Head.sol";
 import "../AccessControl/AccessControl.sol";
 
-// from BASE internal
-// add to constructor address array to set admin roles
 contract RolesScopes is Base {
     // AccessControl fields
     struct RoleData {
@@ -55,10 +53,15 @@ contract RolesScopes is Base {
             rolesNames[0x00] = roleName;
             rolesHexes[roleName] = 0x00;
         } else {
-            bytes32 roleHex = keccak256(roleName);
-            rolesScope[roleHex][selector] = hasPrivilage;
-            rolesNames[roleHex] = roleName;
-            rolesHexes[roleName] = roleHex;
+            if (rolesHexes[roleName] == "") {
+                bytes32 roleHex = keccak256(roleName);
+                rolesScope[roleHex][selector] = hasPrivilage;
+                rolesNames[roleHex] = roleName;
+                rolesHexes[roleName] = roleHex;
+            }
+            else {
+                rolesScope[rolesHexes[roleName]][selector] = hasPrivilage;
+            }
         }
     }
 
@@ -105,7 +108,6 @@ contract RolesScopes is Base {
 
     function _checkRole(bytes32 role, address account)
         view
-        onlyContextInternalCalls
     {
         if (!hasRole(role, account)) {
             revert(
@@ -121,7 +123,7 @@ contract RolesScopes is Base {
         }
     }
 
-    function _checkRole(bytes32 role) view onlyContextInternalCalls {
+    function _checkRole(bytes32 role) view {
         _checkRole(role, _msgSender());
     }
 
@@ -149,7 +151,7 @@ contract RolesScopes is Base {
         }
     }
 
-    function _msgSender() view onlyContextInternalCalls returns (address) {
+    function _msgSender() view returns (address) {
         return msg.sender;
     }
 }
