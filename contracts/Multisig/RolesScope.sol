@@ -1,7 +1,6 @@
 pragma solidity ^0.4.15;
 
 import "../Boilerplate/Head.sol";
-import "../AccessControl/AccessControl.sol";
 
 contract RolesScopes is Base {
     // AccessControl fields
@@ -35,16 +34,51 @@ contract RolesScopes is Base {
         }
     }
 
-    function hasPrivilage(bytes32 roleName, bytes4 selector)
-        public
+    function _hasPrivilage(bytes32 roleName, bytes4 selector)
+        private
         view
         returns (bool)
     {
         return rolesScope[roleName][selector];
     }
 
-    // only internal context call
-    function setRole(string roleName,bytes4 selector,bool hasPrivilage) public onlyContextInternalCalls {
+    function hasPrivilage(address sender, bytes memory data)
+        public
+        view
+        onlyContextInternalCalls
+        returns (bool)
+    {
+        bool isConfirmed = false;
+        bytes4 selector = _convertBytesToBytes4(data);
+        bytes32[] memory userRoles = getRoles(sender);
+        for (uint256 i = 0; i < userRoles.length; i++) {
+            if (_hasPrivilage(userRoles[i], selector)) {
+                isConfirmed = true;
+                break;
+            }
+        }
+        return isConfirmed;
+    }
+
+    function _convertBytesToBytes4(bytes inBytes)
+        private
+        pure
+        returns (bytes4 outBytes4)
+    {
+        if (inBytes.length == 0) {
+            return 0x0;
+        }
+
+        assembly {
+            outBytes4 := mload(add(inBytes, 32))
+        }
+    }
+
+    function setRole(
+        string roleName,
+        bytes4 selector,
+        bool hasPrivilage
+    ) public onlyContextInternalCalls {
         string memory d = "DEFAULT_ADMIN_ROLE";
         if (
             keccak256(abi.encodePacked((roleName))) ==
@@ -58,8 +92,7 @@ contract RolesScopes is Base {
                 rolesScope[roleHex][selector] = hasPrivilage;
                 rolesNames[roleHex] = roleName;
                 rolesHexes[roleName] = roleHex;
-            }
-            else {
+            } else {
                 rolesScope[rolesHexes[roleName]][selector] = hasPrivilage;
             }
         }
@@ -73,6 +106,10 @@ contract RolesScopes is Base {
         return rolesHexes[roleName];
     }
 
+    function getRoleHexes() public view returns (bytes32[]) {
+        return _rolesList;
+    }
+
     function getRoles(address account) public returns (bytes32[] memory) {
         bytes32[] roles;
         for (uint256 i = 0; i < _rolesList.length; i++) {
@@ -83,10 +120,8 @@ contract RolesScopes is Base {
         return roles;
     }
 
-    function _setupRole(bytes32 role, address account)
-        onlyContextInternalCalls
-    {
-        _grantRole(role, account);
+    function _setupRole(bytes32 role, address account) private {
+        grantRole(role, account);
     }
 
     function hasRole(bytes32 role, address account) public view returns (bool) {
@@ -97,44 +132,14 @@ contract RolesScopes is Base {
         _revokeRole(role, account);
     }
 
-    function _revokeRole(bytes32 role, address account)
-        onlyContextInternalCalls
-    {
+    function _revokeRole(bytes32 role, address account) private {
         if (hasRole(role, account)) {
             _roles[role].members[account] = false;
-            emit RoleRevoked(role, account, _msgSender());
+            emit RoleRevoked(role, account, msg.sender);
         }
     }
 
-    function _checkRole(bytes32 role, address account)
-        view
-    {
-        if (!hasRole(role, account)) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "AccessControl: account ",
-                        Strings.toHexString(uint160(account), 20),
-                        " is missing role ",
-                        Strings.toHexString(uint256(role), 32)
-                    )
-                )
-            );
-        }
-    }
-
-    function _checkRole(bytes32 role) view {
-        _checkRole(role, _msgSender());
-    }
-
-    modifier onlyRole(bytes32 role) {
-        _checkRole(role);
-        _;
-    }
-
-    function _grantRole(bytes32 role, address account)
-        onlyContextInternalCalls
-    {
+    function grantRole(bytes32 role, address account) onlyContextInternalCalls {
         if (!hasRole(role, account)) {
             _roles[role].members[account] = true;
             bool haveRole = false;
@@ -147,11 +152,7 @@ contract RolesScopes is Base {
             if (!haveRole) {
                 _rolesList.push(role);
             }
-            emit RoleGranted(role, account, _msgSender());
+            emit RoleGranted(role, account, msg.sender);
         }
-    }
-
-    function _msgSender() view returns (address) {
-        return msg.sender;
     }
 }

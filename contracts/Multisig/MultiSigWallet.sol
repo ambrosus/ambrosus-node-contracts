@@ -207,24 +207,17 @@ contract MultiSigWallet {
         transactionExists(transactionId)
         notConfirmed(transactionId, msg.sender)
     {
-        bool isConfirmed = false;
-        bytes4 selector = convertBytesToBytes4(
-            transactions[transactionId].data
-        );
-        bytes32[] memory userRoles = rolesScope.getRoles(msg.sender);
-        for (uint256 i = 0; i < userRoles.length; i++) {
-            if (rolesScope.hasPrivilage(userRoles[i], selector)) {
-                confirmations[transactionId][msg.sender] = true;
-                Confirmation(msg.sender, transactionId);
-                executeTransaction(transactionId);
-                isConfirmed = true;
-                break;
-            }
-        }
         require(
-            isConfirmed,
+            rolesScope.hasPrivilage(
+                msg.sender,
+                transactions[transactionId].data
+            ),
             "User does not have privilage to confirm transaction"
         );
+
+        confirmations[transactionId][msg.sender] = true;
+        Confirmation(msg.sender, transactionId);
+        executeTransaction(transactionId);
     }
 
     /// @dev Allows an owner to revoke a confirmation for a transaction.

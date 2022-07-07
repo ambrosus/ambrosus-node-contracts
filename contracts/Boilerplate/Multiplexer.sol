@@ -27,7 +27,6 @@ contract Multiplexer is ConstructorOwnable {
     PoolsNodesManager public poolsNodesManager;
     RolesScopes public rolesScopes;
 
-    // add rolescope
     constructor(
         address _owner,
         Head _head,
@@ -45,11 +44,6 @@ contract Multiplexer is ConstructorOwnable {
         roles = _roles;
         poolsNodesManager = _poolsNodesManager;
         rolesScopes = _rolesScopes;
-    }
-
-    modifier isAdmin(address user) {
-        require(rolesScopes.hasRole(0x00, user), "Caller is not an admin");
-        _;
     }
 
     function transferContractsOwnership(address newOwner) public onlyOwner {
@@ -132,21 +126,19 @@ contract Multiplexer is ConstructorOwnable {
         poolsNodesManager.removePool(_pool);
     }
 
-    function setUserRole(string roleName, address user)
-        public
-        isAdmin(msg.sender)
-    {
-        rolesScopes._grantRole(rolesScopes.getRoleHexByName(roleName), user);
+    function setUserRole(string roleName, address user) public onlyOwner {
+        rolesScopes.grantRole(rolesScopes.getRoleHexByName(roleName), user);
     }
 
-    function revokeUserRole(string roleName, address user)
-        public
-        isAdmin(msg.sender)
-    {
+    function revokeUserRole(string roleName, address user) public onlyOwner {
         rolesScopes.revokeRole(rolesScopes.getRoleHexByName(roleName), user);
     }
 
-    function setRole(string roleName, bytes4 selector,bool hasPrivilage) public isAdmin(msg.sender) {
+    function setRole(
+        string roleName,
+        bytes4 selector,
+        bool hasPrivilage
+    ) public onlyOwner {
         rolesScopes.setRole(roleName, selector, hasPrivilage);
     }
 }

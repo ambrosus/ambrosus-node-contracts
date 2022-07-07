@@ -21,10 +21,6 @@ export default class RolesScopes extends ContractWrapper {
     this.setUpPredefinedRoles();
   }
 
-  async setRole(roleName, role, hasPrivilage) {
-    return this.contract.methods.setRole(roleName, role, hasPrivilage).call();
-  }
-
   async getAllMultiplexerSelectors() {
     const selectors = {};
     selectors.transferContractsOwnership = await this.web3.eth.abi.encodeFunctionSignature('transferContractsOwnership(address)');
@@ -60,5 +56,9 @@ export default class RolesScopes extends ContractWrapper {
       // setup DEFAULT_ADMIN_ROLE
       await this.setRole('DEFAULT_ADMIN_ROLE', selectors[key], true);
     }
+  }
+
+  async getRoleHexes() {
+    return this.contract.methods.getRoleHexes().call();
   }
 }
