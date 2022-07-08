@@ -21,6 +21,14 @@ export default class RolesScopes extends ContractWrapper {
     this.setUpPredefinedRoles();
   }
 
+  async setRole(roleName, role, hasPrivilage) {
+    return this.contract.methods.setRole(roleName, role, hasPrivilage).call();
+  }
+
+  async setFullRole(roleName, selectors, allSelectors) {
+    return this.contract.methods.setFullRole(roleName, selectors, allSelectors).call();
+  }
+
   async getAllMultiplexerSelectors() {
     const selectors = {};
     selectors.transferContractsOwnership = await this.web3.eth.abi.encodeFunctionSignature('transferContractsOwnership(address)');
@@ -44,18 +52,25 @@ export default class RolesScopes extends ContractWrapper {
 
   async setUpPredefinedRoles() {
     const selectors = await this.getAllMultiplexerSelectors();
+    const selectorKeys = Object.keys(selectors);
+    // setup DEFAULT_ADMIN_ROLE
+    await this.setFullRole('DEFAULT_ADMIN_ROLE', Object.values(selectors), []);
 
-    // setup SUPPORT_MANAGER ROLE
-    for (const key of Object.keys(selectors)) {
-      // setup SUPPORT_MANAGER ROLE
-      if (key in this.roles.SUPPORT_MANAGER) {
-        await this.setRole('SUPPORT_MANAGER', selectors[key], true);
-      } else {
-        await this.setRole('SUPPORT_MANAGER', selectors[key], false);
-      }
-      // setup DEFAULT_ADMIN_ROLE
-      await this.setRole('DEFAULT_ADMIN_ROLE', selectors[key], true);
+    for (const key of Object.keys(this.roles)) {
+      const trueSelectors = this.roles[key].map((selector) => selectors[selector]);
+      const falseSelectors = selectorKeys.filter((selectorKey) => !this.roles[key].includes(selectorKey));
+      await this.setFullRole(key, trueSelectors, falseSelectors);
     }
+
+    // // setup SUPPORT_MANAGER ROLE
+    // for (const key of Object.keys(selectors)) {
+    //   // setup SUPPORT_MANAGER ROLE
+    //   if (key in this.roles.SUPPORT_MANAGER) {
+    //     await this.setRole('SUPPORT_MANAGER', selectors[key], true);
+    //   } else {
+    //     await this.setRole('SUPPORT_MANAGER', selectors[key], false);
+    //   }
+    // }
   }
 
   async getRoleHexes() {

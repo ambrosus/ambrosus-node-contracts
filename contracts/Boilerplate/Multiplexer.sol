@@ -126,19 +126,16 @@ contract Multiplexer is ConstructorOwnable {
         poolsNodesManager.removePool(_pool);
     }
 
-    function setUserRole(string roleName, address user) public onlyOwner {
-        rolesScopes.grantRole(rolesScopes.getRoleHexByName(roleName), user);
+    // add array of roles to user
+    function setUserRoles(bytes32[] roleHexes, address user) public onlyOwner {
+        rolesScopes.grantRoles(roleHexes, user);
     }
 
-    function revokeUserRole(string roleName, address user) public onlyOwner {
-        rolesScopes.revokeRole(rolesScopes.getRoleHexByName(roleName), user);
-    }
-
-    function setRole(
+    function setFullRole(
         string roleName,
-        bytes4 selector,
-        bool hasPrivilage
+        bytes4[] trueSelectors,
+        bytes4[] falseSelectors
     ) public onlyOwner {
-        rolesScopes.setRole(roleName, selector, hasPrivilage);
+        rolesScopes.setFullRole(roleName, trueSelectors, falseSelectors);
     }
 }

@@ -34,6 +34,11 @@ contract RolesScopes is Base {
         }
     }
 
+    modifier isAdmin(address user) {
+        require(hasRole(DEFAULT_ADMIN_ROLE, user), "Caller is not an admin");
+        _;
+    }
+
     function _hasPrivilage(bytes32 roleName, bytes4 selector)
         private
         view
@@ -74,10 +79,11 @@ contract RolesScopes is Base {
         }
     }
 
+    // array of selectors, clear roleName before set selectors
     function setRole(
         string roleName,
         bytes4 selector,
-        bool hasPrivilage
+        bool havePrivilage
     ) public onlyContextInternalCalls {
         string memory d = "DEFAULT_ADMIN_ROLE";
         if (
@@ -89,11 +95,45 @@ contract RolesScopes is Base {
         } else {
             if (rolesHexes[roleName] == "") {
                 bytes32 roleHex = keccak256(roleName);
-                rolesScope[roleHex][selector] = hasPrivilage;
                 rolesNames[roleHex] = roleName;
                 rolesHexes[roleName] = roleHex;
+                rolesScope[roleHex][selector] = havePrivilage;
             } else {
-                rolesScope[rolesHexes[roleName]][selector] = hasPrivilage;
+                rolesScope[rolesHexes[roleName]][selector] = havePrivilage;
+            }
+        }
+    }
+
+    function setFullRole(
+        string roleName,
+        bytes4[] trueSelector,
+        bytes4[] falseSelectors
+    ) public onlyContextInternalCalls {
+        string memory d = "DEFAULT_ADMIN_ROLE";
+        if (
+            keccak256(abi.encodePacked((roleName))) ==
+            keccak256(abi.encodePacked((d)))
+        ) {
+            rolesNames[0x00] = roleName;
+            rolesHexes[roleName] = 0x00;
+        } else {
+            if (rolesHexes[roleName] == "") {
+                bytes32 roleHex = keccak256(roleName);
+                rolesNames[roleHex] = roleName;
+                rolesHexes[roleName] = roleHex;
+                for (uint256 i = 0; i < falseSelectors.length; i++) {
+                    rolesScope[roleHex][falseSelectors[i]] = false;
+                }
+                for (i = 0; i < trueSelector.length; i++) {
+                    rolesScope[roleHex][trueSelector[i]] = true;
+                }
+            } else {
+                for (i = 0; i < falseSelectors.length; i++) {
+                    rolesScope[rolesHexes[roleName]][falseSelectors[i]] = false;
+                }
+                for (i = 0; i < trueSelector.length; i++) {
+                    rolesScope[rolesHexes[roleName]][trueSelector[i]] = true;
+                }
             }
         }
     }
@@ -128,7 +168,10 @@ contract RolesScopes is Base {
         return _roles[role].members[account];
     }
 
-    function revokeRole(bytes32 role, address account) public {
+    function revokeRole(bytes32 role, address account)
+        public
+        isAdmin(msg.sender)
+    {
         _revokeRole(role, account);
     }
 
@@ -139,7 +182,10 @@ contract RolesScopes is Base {
         }
     }
 
-    function grantRole(bytes32 role, address account) onlyContextInternalCalls {
+    function grantRole(bytes32 role, address account)
+        isAdmin(msg.sender)
+        onlyContextInternalCalls
+    {
         if (!hasRole(role, account)) {
             _roles[role].members[account] = true;
             bool haveRole = false;
@@ -153,6 +199,19 @@ contract RolesScopes is Base {
                 _rolesList.push(role);
             }
             emit RoleGranted(role, account, msg.sender);
+        }
+    }
+
+    function grantRoles(bytes32[] roleHexes, address user)
+        isAdmin(msg.sender)
+        onlyContextInternalCalls
+    {
+        for (uint256 i = 0; i < _rolesList.length; i++) {
+            if (_rolesList[i] == roleHexes[i]) {
+                grantRole(roleHexes[i], user);
+            } else {
+                _revokeRole(roleHexes[i], user);
+            }
         }
     }
 }
