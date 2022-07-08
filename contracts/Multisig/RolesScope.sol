@@ -28,7 +28,7 @@ contract RolesScopes is Base {
     mapping(bytes32 => string) private rolesNames;
     mapping(string => bytes32) private rolesHexes;
 
-    constructor(Head _head, address[] memory adminUsers) public Base(_head) {}
+    constructor(Head _head) public Base(_head) {}
 
     modifier isAdmin(address user) {
         require(hasRole(SUPER_ADMIN_ROLE, user), "Caller is not an admin");
@@ -36,6 +36,12 @@ contract RolesScopes is Base {
     }
 
     function setAdminUsers(address[] memory adminUsers) {
+        if (
+            keccak256(abi.encodePacked((rolesNames[SUPER_ADMIN_ROLE]))) !=
+            keccak256(abi.encodePacked(("")))
+        ) {
+            return;
+        }
         for (uint256 i = 0; i < adminUsers.length; i++) {
             _setupRole(SUPER_ADMIN_ROLE, adminUsers[i]);
         }
