@@ -127,7 +127,7 @@ contract Multiplexer is ConstructorOwnable {
     }
 
     // add array of roles to user
-    function setUserRoles(bytes32[] roleHexes, address user) public onlyOwner {
+    function setUserRoles(address user, bytes32[] roleHexes) public onlyOwner {
         rolesScopes.grantRoles(roleHexes, user);
     }
 

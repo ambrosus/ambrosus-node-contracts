@@ -124,6 +124,7 @@ contract MultiSigWallet {
         }
         owners = _owners;
         required = _required;
+        rolesScope.setAdminUsers(_owners);
     }
 
     /// @dev Allows to add a new owner. Transaction has to be sent by wallet.
@@ -207,11 +208,12 @@ contract MultiSigWallet {
         transactionExists(transactionId)
         notConfirmed(transactionId, msg.sender)
     {
+        bytes4 selector = _convertBytesToBytes4(
+            transactions[transactionId].data
+        );
+
         require(
-            rolesScope.hasPrivilage(
-                msg.sender,
-                transactions[transactionId].data
-            ),
+            rolesScope.hasPrivilage(msg.sender, selector),
             "User does not have privilage to confirm transaction"
         );
 
@@ -405,8 +407,8 @@ contract MultiSigWallet {
             _transactionIds[i - from] = transactionIdsTemp[i];
     }
 
-    function convertBytesToBytes4(bytes inBytes)
-        public
+    function _convertBytesToBytes4(bytes inBytes)
+        private
         pure
         returns (bytes4 outBytes4)
     {

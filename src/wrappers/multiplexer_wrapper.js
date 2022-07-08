@@ -84,11 +84,11 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
   }
 
   async setUserRoles(roleHexes, userAddress) {
-    return this.contract.methods.setUserRole(roleHexes, userAddress).encodeABI();
+    return this.contract.methods.setUserRoles(userAddress, roleHexes).encodeABI();
   }
 
   async setAdminRole(userAddress) {
-    return this.contract.methods.setRole('DEFAULT_ADMIN_ROLE', userAddress).encodeABI();
+    return this.contract.methods.setRole('SUPER_ADMIN_ROLE', userAddress).encodeABI();
   }
 
   async setFullRole(roleName, trueSelectors, falseSelectors) {
