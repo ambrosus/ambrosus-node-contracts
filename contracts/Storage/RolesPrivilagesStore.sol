@@ -14,12 +14,14 @@ contract RolesPrivilagesStore is Base {
 
     constructor(Head _head) public Base(_head) {}
 
-    function setAdminUsers(address[] adminUsers) external {
+    function setAdminUsers(address[] adminUsers)
+        external
+    {
         if (rolesScope[SUPER_ADMIN_ROLE][0x0]) {
             return;
         }
         for (uint256 i = 0; i < adminUsers.length; i++) {
-             usersRoles[adminUsers[i]].push(SUPER_ADMIN_ROLE);
+            usersRoles[adminUsers[i]].push(SUPER_ADMIN_ROLE);
         }
         rolesScope[SUPER_ADMIN_ROLE][0x0] = true;
     }
@@ -45,7 +47,10 @@ contract RolesPrivilagesStore is Base {
         string roleName,
         bytes4[] trueSelector,
         bytes4[] falseSelectors
-    ) public onlyContextInternalCalls {
+    )
+	public
+        onlyContextInternalCalls
+    {
         if (rolesHexes[roleName] != SUPER_ADMIN_ROLE) {
             uint256 i;
             if (rolesHexes[roleName] == "") {

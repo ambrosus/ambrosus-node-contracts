@@ -11,7 +11,7 @@ import TaskBase from './base/task_base';
 import commandLineArgs from 'command-line-args';
 import {appendEnvFile} from '../utils/file';
 import config from '../../config/config';
-import contractJsons, {multisig} from '../../src/contract_jsons';
+import {multisig} from '../../src/contract_jsons';
 import {
   APPROVALS_REQUIRED
 } from '../constants';
@@ -44,7 +44,7 @@ export default class DeployMultisigTask extends TaskBase {
     }
     const multisigContract = await this.deployActions.deployer.deployContract(multisig, [approvalAdresses, options.required], {});
     const rtRolesPrivilagesStoreAddress = await this.rolesPrivilagesStoreWrapper.address();
-    await multisigContract.methods.setRolesPrivilagesStore( rtRolesPrivilagesStoreAddress).send({from: this.multiplexerWrapper.defaultAddress});
+    await multisigContract.methods.setRolesPrivilagesStore(rtRolesPrivilagesStoreAddress).send({from: this.multiplexerWrapper.defaultAddress});
     const multiSigAddress = multisigContract.options.address;
     await this.multiplexerWrapper.contract.methods.transferOwnership(multiSigAddress).send({from: this.multiplexerWrapper.defaultAddress});
     console.log(`\tmultisig -> ${multiSigAddress}`);

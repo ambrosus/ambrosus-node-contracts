@@ -62,7 +62,10 @@ contract Multiplexer is ConstructorOwnable {
         address candidate,
         Consts.NodeType role,
         uint256 deposit
-    ) public onlyOwner {
+    )
+        public
+        onlyOwner
+    {
         kycWhitelist.add(candidate, role, deposit);
     }
 
@@ -135,7 +138,10 @@ contract Multiplexer is ConstructorOwnable {
         string roleName,
         bytes4[] trueSelectors,
         bytes4[] falseSelectors
-    ) public onlyOwner {
+    )
+        public
+        onlyOwner
+    {
         rolesPrivilagesStore.setRole(roleName, trueSelectors, falseSelectors);
     }
 }
