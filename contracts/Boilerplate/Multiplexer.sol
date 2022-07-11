@@ -16,7 +16,7 @@ import "../Front/Roles.sol";
 import "../Configuration/Fees.sol";
 import "../Middleware/ValidatorProxy.sol";
 import "../Pool/PoolsNodesManager.sol";
-import "../Multisig/RolesScope.sol";
+import "../Storage/RolesPrivilagesStore.sol";
 
 contract Multiplexer is ConstructorOwnable {
     Head public head;
@@ -25,7 +25,7 @@ contract Multiplexer is ConstructorOwnable {
     ValidatorProxy public validatorProxy;
     Roles public roles;
     PoolsNodesManager public poolsNodesManager;
-    RolesScopes public rolesScopes;
+    RolesPrivilagesStore public rolesPrivilagesStore;
 
     constructor(
         address _owner,
@@ -35,7 +35,7 @@ contract Multiplexer is ConstructorOwnable {
         ValidatorProxy _validatorProxy,
         Roles _roles,
         PoolsNodesManager _poolsNodesManager,
-        RolesScopes _rolesScopes
+        RolesPrivilagesStore _rolesPrivilagesStore
     ) public ConstructorOwnable(_owner) {
         head = _head;
         kycWhitelist = _kycWhitelist;
@@ -43,7 +43,7 @@ contract Multiplexer is ConstructorOwnable {
         validatorProxy = _validatorProxy;
         roles = _roles;
         poolsNodesManager = _poolsNodesManager;
-        rolesScopes = _rolesScopes;
+        rolesPrivilagesStore = _rolesPrivilagesStore;
     }
 
     function transferContractsOwnership(address newOwner) public onlyOwner {
@@ -128,14 +128,14 @@ contract Multiplexer is ConstructorOwnable {
 
     // add array of roles to user
     function setUserRoles(address user, bytes32[] roleHexes) public onlyOwner {
-        rolesScopes.grantRoles(roleHexes, user);
+        rolesPrivilagesStore.setRoles(user, roleHexes);
     }
 
-    function setFullRole(
+    function setRole(
         string roleName,
         bytes4[] trueSelectors,
         bytes4[] falseSelectors
     ) public onlyOwner {
-        rolesScopes.setFullRole(roleName, trueSelectors, falseSelectors);
+        rolesPrivilagesStore.setRole(roleName, trueSelectors, falseSelectors);
     }
 }

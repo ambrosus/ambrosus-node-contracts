@@ -45,7 +45,7 @@ import PoolsStoreJson from './contracts/PoolsStore.json';
 import PoolJson from './contracts/Pool.json';
 import PoolEventsEmitterJson from './contracts/PoolEventsEmitter.json';
 import NodeAddressesStoreJson from './contracts/NodeAddressesStore.json';
-import RolesScopesJson from './contracts/RolesScopes.json';
+import RolesPrivilagesStoreJson from './contracts/RolesPrivilagesStore.json';
 
 const contractJsons = {
   head: HeadJson,
@@ -82,7 +82,7 @@ const contractJsons = {
   poolsStore: PoolsStoreJson,
   poolEventsEmitter: PoolEventsEmitterJson,
   multiplexer: MultiplexerJson,
-  rolesScopes: RolesScopesJson
+  rolesPrivilagesStore: RolesPrivilagesStoreJson
 };
 
 export const contractSuperSpeedJsons = {

@@ -6,27 +6,12 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
-import ContractWrapper from './contract_wrapper';
-import {loadContract} from '../utils/web3_tools';
-import contractJsons from '../contract_jsons';
 
-export default class RolesScopes extends ContractWrapper {
-  roles = {
-    SUPPORT_MANAGER: ['addToWhitelist', 'removeFromWhitelist']
-  }
-  constructor(rolesScopesContractAddress, web3, defaultAddress) {
-    super(web3, defaultAddress);
-    this.address = rolesScopesContractAddress;
-    this.contract = loadContract(web3, contractJsons.rolesScopes.abi, rolesScopesContractAddress);
-    this.setUpPredefinedRoles();
-  }
+import ManagedContractWrapper from './managed_contract_wrapper';
 
-  async setRole(roleName, role, hasPrivilage) {
-    return this.contract.methods.setRole(roleName, role, hasPrivilage).call();
-  }
-
-  async setFullRole(roleName, selectors, allSelectors) {
-    return this.contract.methods.setFullRole(roleName, selectors, allSelectors).call();
+export default class RolesPrivilagesStore extends ManagedContractWrapper {
+  get getContractName() {
+    return 'rolesPrivilagesStore';
   }
 
   async getAllMultiplexerSelectors() {
@@ -48,32 +33,5 @@ export default class RolesScopes extends ContractWrapper {
     selectors.addPool = await this.web3.eth.abi.encodeFunctionSignature('addPool(address)');
     selectors.removePool = await this.web3.eth.abi.encodeFunctionSignature('removePool(address)');
     return selectors;
-  }
-
-  async setUpPredefinedRoles() {
-    const selectors = await this.getAllMultiplexerSelectors();
-    const selectorKeys = Object.keys(selectors);
-    // setup DEFAULT_ADMIN_ROLE
-    await this.setFullRole('DEFAULT_ADMIN_ROLE', Object.values(selectors), []);
-
-    for (const key of Object.keys(this.roles)) {
-      const trueSelectors = this.roles[key].map((selector) => selectors[selector]);
-      const falseSelectors = selectorKeys.filter((selectorKey) => !this.roles[key].includes(selectorKey));
-      await this.setFullRole(key, trueSelectors, falseSelectors);
-    }
-
-    // // setup SUPPORT_MANAGER ROLE
-    // for (const key of Object.keys(selectors)) {
-    //   // setup SUPPORT_MANAGER ROLE
-    //   if (key in this.roles.SUPPORT_MANAGER) {
-    //     await this.setRole('SUPPORT_MANAGER', selectors[key], true);
-    //   } else {
-    //     await this.setRole('SUPPORT_MANAGER', selectors[key], false);
-    //   }
-    // }
-  }
-
-  async getRoleHexes() {
-    return this.contract.methods.getRoleHexes().call();
   }
 }

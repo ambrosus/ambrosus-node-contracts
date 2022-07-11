@@ -17,10 +17,11 @@ import {
 } from '../constants';
 
 export default class DeployMultisigTask extends TaskBase {
-  constructor(deployActions, multiplexerWrapper) {
+  constructor(deployActions, multiplexerWrapper, rolesPrivilagesStoreWrapper) {
     super();
     this.deployActions = deployActions;
     this.multiplexerWrapper = multiplexerWrapper;
+    this.rolesPrivilagesStoreWrapper = rolesPrivilagesStoreWrapper;
   }
 
   async execute(args) {
@@ -41,7 +42,9 @@ export default class DeployMultisigTask extends TaskBase {
     if (options.required > approvalAdresses.length) {
       throw new Error(`There are fewer approvers than required approves (${approvalAdresses.length} provided, but required at least ${options.required}).`);
     }
-    const multisigContract = await this.deployActions.deployer.deployContract(multisig, [approvalAdresses, options.required, contractJsons.rolesScopes], {});
+    const multisigContract = await this.deployActions.deployer.deployContract(multisig, [approvalAdresses, options.required], {});
+    const rtRolesPrivilagesStoreAddress = await this.rolesPrivilagesStoreWrapper.address();
+    await multisigContract.methods.setRolesPrivilagesStore( rtRolesPrivilagesStoreAddress).send({from: this.multiplexerWrapper.defaultAddress});
     const multiSigAddress = multisigContract.options.address;
     await this.multiplexerWrapper.contract.methods.transferOwnership(multiSigAddress).send({from: this.multiplexerWrapper.defaultAddress});
     console.log(`\tmultisig -> ${multiSigAddress}`);

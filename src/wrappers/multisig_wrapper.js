@@ -66,4 +66,8 @@ export default class MultisigWrapper extends ContractWrapper {
   async getOwners() {
     return this.contract.methods.getOwners().call();
   }
+
+  async setRolesPrivilagesStore(storeAddress) {
+    return this.processTransaction(this.contract.methods.setRolesPrivilagesStore(storeAddress));
+  }
 }
