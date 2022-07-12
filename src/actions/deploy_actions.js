@@ -81,7 +81,7 @@ export default class DeployActions {
     } else if (validatorProxyOwner === this.sender && validatorSetOwner === validatorProxyAddress) {
       await this.validatorProxyWrapper.transferOwnershipForValidatorSet(this.sender);
     } else {
-      throw `Failed to regain ownership for validator set contract from it's current owner: ${validatorSetOwner}`;
+      throw `Failed to regain ownership for validator set contract from it's current owner: ${validatorSetOwner} proxy owner: ${validatorProxyOwner} sender: ${this.sender}`;
     }
 
     const blockRewardsOwner = await this.blockRewardsWrapper.getOwner();
