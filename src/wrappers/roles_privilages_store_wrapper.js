@@ -34,4 +34,24 @@ export default class RolesPrivilagesStore extends ManagedContractWrapper {
     selectors.removePool = await this.web3.eth.abi.encodeFunctionSignature('removePool(address)');
     return selectors;
   }
+
+  async getRoleNameByHex(roleHex) {
+    const contract = await this.contract();
+    return contract.methods.getRoleNameByHex(roleHex).call();
+  }
+
+  async getRoleHexByName(roleName) {
+    const contract = await this.contract();
+    return contract.methods.getRoleHexByName(roleName).call();
+  }
+
+  async getRoleHexes() {
+    const contract = await this.contract();
+    return contract.methods.getRoleHexes().call();
+  }
+
+  async getRoles(account) {
+    const contract = await this.contract();
+    return contract.methods.getRoles(account).call();
+  }
 }
