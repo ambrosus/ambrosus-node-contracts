@@ -17,13 +17,14 @@ contract RolesPrivilagesStore is Base {
     function setAdminUsers(address[] adminUsers)
         external
     {
-        if (rolesScope[SUPER_ADMIN_ROLE][0x0]) {
+        if (rolesHexes[SUPER_ADMIN_ROLE_STR] == SUPER_ADMIN_ROLE) {
             return;
         }
+	rolesHexes[SUPER_ADMIN_ROLE_STR] = SUPER_ADMIN_ROLE;
+	rolesNames[SUPER_ADMIN_ROLE] = SUPER_ADMIN_ROLE_STR;
         for (uint256 i = 0; i < adminUsers.length; i++) {
             usersRoles[adminUsers[i]].push(SUPER_ADMIN_ROLE);
         }
-        rolesScope[SUPER_ADMIN_ROLE][0x0] = true;
     }
 
     function hasPrivilage(address sender, bytes4 selector)
