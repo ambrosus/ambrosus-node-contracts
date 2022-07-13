@@ -20,8 +20,8 @@ contract RolesPrivilagesStore is Base {
         if (rolesHexes[SUPER_ADMIN_ROLE_STR] == SUPER_ADMIN_ROLE) {
             return;
         }
-	rolesHexes[SUPER_ADMIN_ROLE_STR] = SUPER_ADMIN_ROLE;
-	rolesNames[SUPER_ADMIN_ROLE] = SUPER_ADMIN_ROLE_STR;
+        rolesHexes[SUPER_ADMIN_ROLE_STR] = SUPER_ADMIN_ROLE;
+        rolesNames[SUPER_ADMIN_ROLE] = SUPER_ADMIN_ROLE_STR;
         for (uint256 i = 0; i < adminUsers.length; i++) {
             usersRoles[adminUsers[i]].push(SUPER_ADMIN_ROLE);
         }
