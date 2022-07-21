@@ -82,4 +82,12 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
   async removePool(pool) {
     return this.contract.methods.removePool(pool).encodeABI();
   }
+
+  async setUserRoles(roleHexes, userAddress) {
+    return this.contract.methods.setUserRoles(userAddress, roleHexes).encodeABI();
+  }
+
+  async setRole(roleName, trueSelectors, falseSelectors) {
+    return this.contract.methods.setRole(roleName, trueSelectors, falseSelectors).encodeABI();
+  }
 }

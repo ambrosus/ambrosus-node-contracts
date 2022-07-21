@@ -47,6 +47,7 @@ describe('Multisig actions integration', () => {
   let blockRewards;
   let apolloDepositStore;
   let roles;
+  let rolesPrivilagesStore;
   let snapshotId;
 
   const onboardAsApollo = async (sender, value) => roles.methods.onboardAsApollo().send({from: sender, value});
@@ -55,7 +56,7 @@ describe('Multisig actions integration', () => {
     web3 = await createWeb3();
     [owner, otherOwner, otherAddress] = await web3.eth.getAccounts();
     multisigContract = await deployContract(web3, multisig, [[owner, otherOwner], 2]);
-    ({multiplexer, head, kycWhitelist, fees, validatorSet, blockRewards, apolloDepositStore, roles} = await deploy({
+    ({multiplexer, head, kycWhitelist, fees, validatorSet, blockRewards, apolloDepositStore, roles, rolesPrivilagesStore} = await deploy({
       web3,
       contracts: {
         multiplexer: true,
@@ -71,7 +72,8 @@ describe('Multisig actions integration', () => {
         rolesEventEmitter: true,
         config: true,
         time: true,
-        nodeAddressesStore: true
+        nodeAddressesStore: true,
+        rolesPrivilagesStore: true
       },
       params: {
         multiplexer: {
@@ -102,6 +104,7 @@ describe('Multisig actions integration', () => {
     await adminActions.moveOwnershipsToMultiplexer(multiplexer.options.address);
     const multiplexerWrapper = new MultiplexerWrapper(multiplexer.options.address, web3, owner);
     const multisigWrapper = new MultisigWrapper(multisigContract.options.address, web3, owner);
+    await multisigWrapper.setRolesPrivilagesStore(rolesPrivilagesStore.options.address);
     multisigActions = new MultisigActions(multisigWrapper, multiplexerWrapper, new MultisigFunctions(web3));
   });
 

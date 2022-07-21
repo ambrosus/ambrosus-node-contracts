@@ -37,7 +37,7 @@ import "../Storage/RewardsEventEmitter.sol";
 import "../Storage/PoolsStore.sol";
 import "../Storage/PoolEventsEmitter.sol";
 import "../Storage/NodeAddressesStore.sol";
-
+import "../Storage/RolesPrivilagesStore.sol";
 
 contract Catalogue {
     KycWhitelist public kycWhitelist;
@@ -82,7 +82,6 @@ contract Catalogue {
     }
 }
 
-
 contract StorageCatalogue {
     ApolloDepositStore public apolloDepositStore;
     AtlasStakeStore public atlasStakeStore;
@@ -99,6 +98,7 @@ contract StorageCatalogue {
     PoolsStore public poolsStore;
     PoolEventsEmitter public poolEventsEmitter;
     NodeAddressesStore public nodeAddressesStore;
+    RolesPrivilagesStore public rolesPrivilagesStore;
 
     constructor(
         ApolloDepositStore _apolloDepositStore,
@@ -115,7 +115,8 @@ contract StorageCatalogue {
         RewardsEventEmitter _rewardsEventEmitter,
         PoolsStore _poolsStore,
         PoolEventsEmitter _poolEventsEmitter,
-        NodeAddressesStore _nodeAddressesStore
+        NodeAddressesStore _nodeAddressesStore,
+        RolesPrivilagesStore _rolesPrivilagesStore
     ) public {
         apolloDepositStore = _apolloDepositStore;
         atlasStakeStore = _atlasStakeStore;
@@ -132,5 +133,6 @@ contract StorageCatalogue {
         poolsStore = _poolsStore;
         poolEventsEmitter = _poolEventsEmitter;
         nodeAddressesStore = _nodeAddressesStore;
+        rolesPrivilagesStore = _rolesPrivilagesStore;
     }
 }

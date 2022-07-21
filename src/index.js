@@ -49,6 +49,7 @@ import MultisigWrapper from './wrappers/multisig_wrapper';
 import MultisigActions from './actions/multisig_actions';
 import MultisigFunctions from './utils/multisig_functions';
 import NodeAddressesStoreWrapper from './wrappers/node_addresses_store_wrapper';
+import RolesPrivilagesStoreWrapper from './wrappers/roles_privilages_store_wrapper';
 const constants = require('./constants');
 
 module.exports = {
@@ -95,5 +96,6 @@ module.exports = {
   MultiplexerWrapper,
   MultisigWrapper,
   MultisigActions,
-  MultisigFunctions
+  MultisigFunctions,
+  RolesPrivilagesStoreWrapper
 };

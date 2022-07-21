@@ -45,6 +45,7 @@ import ChallengesEventEmitterWrapper from '../wrappers/challenges_event_emitter_
 import AtlasStakeStoreWrapper from '../wrappers/atlas_stake_store_wrapper';
 import PoolsNodesManagerWrapper from '../wrappers/pools_nodes_manager_wrapper';
 import PoolsStoreWrapper from '../wrappers/pools_store_wrapper';
+import RolesPrivilagesStoreWrapper from '../wrappers/roles_privilages_store_wrapper';
 import RetiringTask from './retire';
 import MoveOwnershipToMultiplexerTask from './move_ownership_to_multiplexer';
 import MultiplexerWrapper from '../wrappers/multiplexer_wrapper';
@@ -83,6 +84,7 @@ const runTask = async () => {
   const multisigWrapper = new MultisigWrapper(config.multisigContractAddress, web3, nodeAddress);
   const poolsNodesManagerWrapper = new PoolsNodesManagerWrapper(headWrapper, web3, nodeAddress);
   const poolsStoreWrapper = new PoolsStoreWrapper(headWrapper, web3, nodeAddress);
+  const rolesPrivilagesStoreWrapper = new RolesPrivilagesStoreWrapper(headWrapper, web3, nodeAddress);
 
   const deployActions = new DeployActions(deployer, headWrapper, validatorSetWrapper, blockRewardsWrapper, validatorProxyWrapper);
   const whitelistActions = new WhitelistActions(kycWhitelistWrapper);
@@ -99,7 +101,7 @@ const runTask = async () => {
   const args = process.argv.slice(2);
   list.add('deployGenesis', new DeployGenesisTask(web3, deployActions));
   list.add('deploy', new DeployTask(deployActions));
-  list.add('deployMultisig', new DeployMultisigTask(deployActions, multiplexerWrapper));
+  list.add('deployMultisig', new DeployMultisigTask(deployActions, multiplexerWrapper, rolesPrivilagesStoreWrapper));
   list.add('onboard', new OnboardingTask(web3, nodeAddress, onboardActions));
   list.add('whitelist', new WhitelistTask(web3, whitelistActions, onboardActions));
   list.add('upload', new UploadTask(uploadActions));
