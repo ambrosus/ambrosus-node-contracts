@@ -22,6 +22,7 @@ contract RolesPrivilagesStore is Base {
         }
         rolesHexes[SUPER_ADMIN_ROLE_STR] = SUPER_ADMIN_ROLE;
         rolesNames[SUPER_ADMIN_ROLE] = SUPER_ADMIN_ROLE_STR;
+        _rolesList.push(SUPER_ADMIN_ROLE);
         for (uint256 i = 0; i < adminUsers.length; i++) {
             usersRoles[adminUsers[i]].push(SUPER_ADMIN_ROLE);
         }
@@ -44,6 +45,14 @@ contract RolesPrivilagesStore is Base {
         return false;
     }
 
+    function hasRolePrivilage(bytes32 roleId, bytes4 selector)
+        public
+        view
+        returns (bool)
+    {
+        return rolesScope[roleId][selector];
+    }
+
     function setRole(
         string roleName,
         bytes4[] trueSelector,
@@ -58,7 +67,7 @@ contract RolesPrivilagesStore is Base {
                 bytes32 roleHex = keccak256(abi.encodePacked(roleName));
                 rolesNames[roleHex] = roleName;
                 rolesHexes[roleName] = roleHex;
-
+                _rolesList.push(roleHex);
                 for (i = 0; i < trueSelector.length; i++) {
                     rolesScope[roleHex][trueSelector[i]] = true;
                 }

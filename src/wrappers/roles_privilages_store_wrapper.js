@@ -9,7 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import ManagedContractWrapper from './managed_contract_wrapper';
 
-export default class RolesPrivilagesStore extends ManagedContractWrapper {
+export default class RolesPrivilagesStoreWrapper extends ManagedContractWrapper {
   get getContractName() {
     return 'rolesPrivilagesStore';
   }
@@ -32,7 +32,15 @@ export default class RolesPrivilagesStore extends ManagedContractWrapper {
     selectors.removeAdmin = await this.web3.eth.abi.encodeFunctionSignature('removeAdmin(address)');
     selectors.addPool = await this.web3.eth.abi.encodeFunctionSignature('addPool(address)');
     selectors.removePool = await this.web3.eth.abi.encodeFunctionSignature('removePool(address)');
+    selectors.setRole = await this.web3.eth.abi.encodeFunctionSignature('setRole(string,bytes4[],bytes4[]))');
+    selectors.setRoles = await this.web3.eth.abi.encodeFunctionSignature('setRoles(address,bytes32[]))');
+
     return selectors;
+  }
+
+  async hasRolePrivilage(roleHex, selector) {
+    const contract = await this.contract();
+    return contract.methods.hasRolePrivilage(roleHex, selector).call();
   }
 
   async getRoleNameByHex(roleHex) {
