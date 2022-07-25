@@ -9,6 +9,7 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {DEFAULT_GAS, loadContract} from '../utils/web3_tools';
 import PoolJson from '../contracts/Pool.json';
+import PoolWithLimitsJson from '../contracts/PoolWithLimits.json';
 
 export default class PoolActions {
   constructor(web3, poolsStoreWrapper, headContractAddress) {
@@ -29,6 +30,18 @@ export default class PoolActions {
     console.log(name, ':', pool.options.address);
   }
 
+  async createPoolWithLimits(name, minStake, fee, poolsServiceAddress, nodeStake, maxTotalStake, maxUserTotalStake) {
+    const pool = await new this.web3.eth.Contract(PoolWithLimitsJson.abi, undefined, {
+      gas: DEFAULT_GAS,
+      gasPrice: this.web3.utils.toWei('5', 'gwei')
+    }).deploy({data: PoolWithLimitsJson.bytecode, arguments: [name, 3, nodeStake, minStake, fee, poolsServiceAddress, this.headContractAddress, maxTotalStake, maxUserTotalStake]})
+      .send({
+        from: this.web3.eth.defaultAccount,
+        gas: DEFAULT_GAS
+      });
+    console.log(name, ':', pool.options.address);
+  }
+
   async getList() {
     const count = await this.poolsStoreWrapper.getPoolsCount();
     if (+count > 0) {
@@ -36,18 +49,20 @@ export default class PoolActions {
       for (const address of pools) {
         const contract = await loadContract(this.web3, PoolJson.abi, address);
         const name = await contract.methods.name().call();
+        const version = await contract.methods.getVersion().call();
         const id = await contract.methods.id().call();
         const active = await contract.methods.active().call();
         const totalStake = await contract.methods.totalStake().call();
         const nodeStake = await contract.methods.nodeStake().call();
         const nodesCount = +await contract.methods.getNodesCount().call();
+        const token = await contract.methods.token().call();
         let service;
         try {
           service = await contract.methods.service().call();
         // eslint-disable-next-line no-empty
         } catch (error) {
         }
-        console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), service);
+        console.log(id, active ? 'active' : '      ', name, version, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), service, token);
       }
     } else {
       console.log('No pools found');

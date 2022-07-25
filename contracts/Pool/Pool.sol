@@ -2,6 +2,7 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./IPool.sol";
 import "../Boilerplate/Head.sol";
 import "../Boilerplate/Context.sol";
 import "../Boilerplate/Catalogue.sol";
@@ -9,7 +10,7 @@ import "./PoolsNodesManager.sol";
 import "./PoolToken.sol";
 
 
-contract Pool is Ownable {
+contract Pool is IPool, Ownable {
 
     using SafeMath for uint;
 
@@ -40,7 +41,7 @@ contract Pool is Ownable {
         _;
     }
 
-    function getVersion() public pure returns (string) {
+    function getVersion() external view returns (string) {
         return "0.0.4";
     }
 
@@ -64,14 +65,14 @@ contract Pool is Ownable {
         id = _getManager().nextId();
     }
 
-    function activate() public payable onlyOwner {
+    function activate() external payable onlyOwner {
         require(!active, "Pool is already active");
         require(msg.value == nodeStake, "Send value not equals node stake value");
         active = true;
         _onboardNodes();
     }
 
-    function deactivate(uint maxNodes) public onlyOwner {
+    function deactivate(uint maxNodes) external onlyOwner {
         require(active, "Pool is not active");
         while (nodes.length > maxNodes) {
             _removeNode();
@@ -82,20 +83,20 @@ contract Pool is Ownable {
         }
     }
 
-    function setService(address newService) public onlyOwner {
+    function setService(address newService) external onlyOwner {
         require(newService != address(0x0), "Service must not be 0x0");
         service = newService;
     }
 
-    function setName(string memory newName) public onlyOwner {
+    function setName(string newName) external onlyOwner {
         name = newName;
     }
 
-    function stake() public payable {
+    function stake() external payable {
         require(active, "Pool is not active");
         require(msg.value >= minStakeValue, "Pool: stake value too low");
         require(maxTotalStake == 0 || msg.value.add(totalStake) <= maxTotalStake, "Pool: stake value too high");
-        uint tokenPrice = getTokenPrice();
+        uint tokenPrice = this.getTokenPrice();
         uint tokens = msg.value.mul(FIXEDPOINT).div(tokenPrice);
 
         // todo return (msg.value % tokenPrice) to user ?
@@ -105,9 +106,9 @@ contract Pool is Ownable {
         _onboardNodes();
     }
 
-    function unstake(uint tokens) public {
+    function unstake(uint tokens) external {
         require(tokens <= token.balanceOf(msg.sender), "Sender has not enough tokens");
-        uint tokenPrice = getTokenPrice();
+        uint tokenPrice = this.getTokenPrice();
         uint deposit = tokenPrice.mul(tokens).div(FIXEDPOINT);
         require(deposit <= totalStake, "Total stake is less than deposit");
 
@@ -120,11 +121,11 @@ contract Pool is Ownable {
         _getManager().poolStakeChanged(msg.sender, -int(deposit), -int(tokens));
     }
 
-    function viewStake() public view returns (uint) {
+    function viewStake() external view returns (uint) {
         return token.balanceOf(msg.sender);
     }
 
-    function getTokenPrice() public view returns (uint) {
+    function getTokenPrice() external view returns (uint) {
         uint total = token.totalSupply();
         if (total > 0) {
             return totalStake.mul(FIXEDPOINT).div(total);
@@ -139,7 +140,7 @@ contract Pool is Ownable {
         }
     }
 
-    function addReward() public payable {
+    function addReward() external payable {
         uint reward;
         if (nodes.length > 0) {
             reward = msg.value;
@@ -156,14 +157,14 @@ contract Pool is Ownable {
                     reward = reward.sub(reward.mul(fee).div(MILLION));
                 }
                 totalStake = totalStake.add(reward);
-                _getManager().poolReward(reward, getTokenPrice());
+                _getManager().poolReward(reward, this.getTokenPrice());
             }
         }
         owner.transfer(msg.value.sub(reward));
         _onboardNodes();
     }
 
-    function addNode(uint requestId, address node, uint nodeId) public onlyService {
+    function addNode(uint requestId, address node, uint nodeId) external onlyService {
         require(node != address(0), "Node can not be zero");
         require(_requestStake > 0, "No active requests");
         uint status;
@@ -185,11 +186,11 @@ contract Pool is Ownable {
         nodes.length--;
     }
 
-    function getNodesCount() public view returns(uint) {
+    function getNodesCount() external view returns(uint) {
         return nodes.length;
     }
 
-    function getNodes(uint from, uint to) public view returns (address[] _nodes) {
+    function getNodes(uint from, uint to) external view returns (address[] _nodes) {
         require(from >= 0 && from < nodes.length, "From index out of bounds");
         require(to > from && to <= nodes.length, "To index out of bounds");
         uint i;

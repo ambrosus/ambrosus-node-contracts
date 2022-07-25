@@ -22,6 +22,8 @@ export default class PoolingTask extends TaskBase {
       await this.poolsList();
     } else if (command === 'create') {
       await this.createPool(options[0], options[1], options[2], options[3], options[4], options[5]);
+    } else if (command === 'createWithLimits') {
+      await this.createPoolWithLimits(options[0], options[1], options[2], options[3], options[4], options[5], options[6]);
     } else if (command === 'activate') {
       await this.activatePool(options[0], options[1]);
     } else if (command === 'deactivate') {
@@ -73,6 +75,46 @@ export default class PoolingTask extends TaskBase {
     );
   }
 
+  async createPoolWithLimits(name, minStake, fee, serviceAddress, nodeStake, maxTotalStake, maxUserTotalStake) {
+    if (!utils.isAddress(serviceAddress)) {
+      console.error('Wrong service address, use: yarn task pooling create [pool name, min stake, fee %, service address, node stake, max total stake, max user total stake]');
+      return;
+    }
+    if (!name) {
+      console.error('Wrong pool name, use: yarn task pooling create [pool name, min stake, fee %, service address, node stake, max total stake, max user total stake]');
+      return;
+    }
+    if (!fee || +fee < 0 || +fee > 100) {
+      console.error('Wrong fee value, use: yarn task pooling create [pool name, min stake, fee %, service address, node stake, max total stake, max user total stake]');
+      return;
+    }
+    if (!minStake || +minStake < 0) {
+      console.error('Wrong min stake value, use: yarn task pooling create [pool name, min stake, fee %, service address, node stake, max total stake, max user total stake]');
+      return;
+    }
+    if (!nodeStake || +nodeStake < 0) {
+      console.error('Wrong node stake value, use: yarn task pooling create [pool name, min stake, fee %, service address, node stake, max total stake, max user total stake]');
+      return;
+    }
+    if (!maxTotalStake || +maxTotalStake < 0) {
+      console.error('Wrong max total stake value, use: yarn task pooling create [pool name, min stake, fee %, service address, node stake, max total stake, max user total stake]');
+      return;
+    }
+    if (!maxUserTotalStake || +maxUserTotalStake < 0) {
+      console.error('Wrong max user total stake value, use: yarn task pooling create [pool name, min stake, fee %, service address, node stake, max total stake, max user total stake]');
+      return;
+    }
+    return this.poolActions.createPoolWithLimits(
+      name,
+      this.poolActions.web3.utils.toWei(minStake, 'ether'),
+      Math.floor((+fee) * 10000),
+      serviceAddress,
+      this.poolActions.web3.utils.toWei(nodeStake, 'ether'),
+      this.poolActions.web3.utils.toWei(maxTotalStake, 'ether'),
+      this.poolActions.web3.utils.toWei(maxUserTotalStake, 'ether')
+    );
+  }
+
   async poolsList() {
     return this.poolActions.getList();
   }
@@ -93,7 +135,7 @@ export default class PoolingTask extends TaskBase {
 
   async poolNodes(poolAddress) {
     if (utils.isAddress(poolAddress)) {
-      return this.poolActions.getPoolNodesListdeactivate(poolAddress);
+      return this.poolActions.getPoolNodesList(poolAddress);
     }
     console.error('Wrong address, use: yarn task pooling nodes [pool address]');
   }
