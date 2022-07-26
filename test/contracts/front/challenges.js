@@ -10,7 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {deployContract, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import BN from 'bn.js';
 import {
@@ -126,7 +127,7 @@ describe('Challenges Contract', () => {
   // eslint-disable-next-line new-cap
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [context, challenger, uploader, atlases[0], atlases[1], atlases[2], atlases[3], atlases[4], shelterer, totalStranger] = await web3.eth.getAccounts();
     ({challenges, challengesStore, bundleStore, fees, sheltering, kycWhitelist, atlasStakeStore, time, roles, challengesEventEmitter} = await deploy({
       web3,

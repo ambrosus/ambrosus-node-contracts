@@ -10,7 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import deploy from '../../helpers/deploy';
 import {ONE} from '../../helpers/consts';
 import {
@@ -80,7 +81,7 @@ describe('Roles Contract', () => {
   let snapshotId;
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [owner, apollo, apolloStake, initialApollo, atlas1, atlas2, atlas3, atlasStake, hermes] = await web3.eth.getAccounts();
     ({roles, kycWhitelist, atlasStakeStore, apolloDepositStore, validatorSet, blockRewards, rolesEventEmitter} = await deploy({
       web3,

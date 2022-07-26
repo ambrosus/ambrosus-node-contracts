@@ -11,89 +11,11 @@ import Web3 from 'web3';
 import config from '../../config/config';
 
 export const DEFAULT_GAS = 6000000;
-const DEFAULT_PORT = 8545;
 
 export const {utils} = new Web3();
 
 function isValidRPCAddress(rpc) {
   return /^((?:https?)|(?:ws)):\/\//g.test(rpc);
-}
-
-function isUsingGanache(rpc) {
-  return rpc === 'ganache';
-}
-
-function getDefaultGanacheOptions(secretKey) {
-  if (!secretKey) {
-    throw 'Secret key not defined';
-  }
-  return {
-    wallet: {
-      defaultBalance: 1000000000,
-      accounts: [
-        {
-          balance: '0x1ed09bead87c0378d8e6400000000',
-          secretKey
-        },
-        ...Array(9).fill({balance: '0x1ed09bead87c0378d8e64000000000'})
-      ]
-    },
-    logging: {
-      logger: {
-        log: () => {} // don't do anything
-      }
-    },
-    chain: {
-      hardfork: 'istanbul',
-      vmErrorsOnRPCResponse: false
-    }
-  };
-}
-
-export async function createGanacheServer(secretKey) {
-  const Ganache = require('ganache');
-  const server = Ganache.server(getDefaultGanacheOptions(secretKey));
-  await server.listen(DEFAULT_PORT);
-}
-
-function createGanacheProvider(secretKey) {
-  // import in code with purpose:D
-  const Ganache = require('ganache');
-  const memdown = require('memdown');
-  return Ganache.provider({
-    ...getDefaultGanacheOptions(secretKey),
-    db: memdown()
-  });
-}
-
-async function ganacheTopUpDefaultAccount(web3) {
-  const [firstGanacheMasterAccount] = await web3.eth.getAccounts();
-  await web3.eth.sendTransaction({
-    from: firstGanacheMasterAccount,
-    to: getDefaultAddress(web3),
-    value: web3.utils.toWei('10', 'ether'),
-    gas: DEFAULT_GAS
-  });
-}
-
-function augmentWithSnapshotMethods(web3) {
-  web3.eth.extend({
-    methods: [
-      {
-        name: 'makeSnapshot',
-        call: 'evm_snapshot',
-        params: 0,
-        inputFormatter: [],
-        outputFormatter: web3.utils.hexToNumberString
-      },
-      {
-        name: 'restoreSnapshot',
-        call: 'evm_revert',
-        params: 1,
-        inputFormatter: [web3.utils.numberToHex]
-      }
-    ]
-  });
 }
 
 function importPrivateKey(web3, conf) {
@@ -112,14 +34,7 @@ export async function createWeb3(conf = config) {
   const web3 = new Web3();
 
   const rpc = conf.web3Rpc;
-  const account = importPrivateKey(web3, conf);
-
-  if (isUsingGanache(rpc)) {
-    web3.setProvider(createGanacheProvider(account.privateKey));
-    await ganacheTopUpDefaultAccount(web3);
-    augmentWithSnapshotMethods(web3);
-    return web3;
-  }
+  importPrivateKey(web3, conf);
 
   if (!isValidRPCAddress(rpc)) {
     throw new Error(`The config value for the Parity RPC server is invalid: ${rpc}`);

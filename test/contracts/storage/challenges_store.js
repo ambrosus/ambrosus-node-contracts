@@ -9,7 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import deploy from '../../helpers/deploy';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 import BN from 'bn.js';
@@ -49,7 +50,7 @@ describe('ChallengesStoreContract', () => {
   const getActiveChallengesOnBundleCount = (bundleId) => challengesStore.methods.getActiveChallengesOnBundleCount(bundleId).call();
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [deployer, shelterer, challenger, otherAddress] = await web3.eth.getAccounts();
     ({challengesStore} = await deploy({
       web3,

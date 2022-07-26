@@ -9,7 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import deploy from '../../helpers/deploy';
 import {APOLLO, HERMES, APOLLO_DEPOSIT} from '../../../src/constants';
 
@@ -55,7 +56,7 @@ describe('Multiplexer', () => {
   const baseReward = '2000000000000000000';
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [oldOwner, newOwner, otherAddress, superUser, apollo, developer, support] = await web3.eth.getAccounts();
     ({head, multiplexer, kycWhitelist, fees, roles, validatorProxy, validatorSet, blockRewards, apolloDepositStore} = await deploy({
       web3,

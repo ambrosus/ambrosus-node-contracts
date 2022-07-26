@@ -6,7 +6,8 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
-import {createWeb3, deployContract} from '../../src/utils/web3_tools';
+import {deployContract} from '../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../utils/web3_tools';
 import chai from 'chai';
 import BlockchainStateWrapper from '../../src/wrappers/blockchain_state_wrapper';
 import chaiAsPromised from 'chai-as-promised';
@@ -22,7 +23,7 @@ describe('BlockchainStateWrapper', () => {
   let wrapper;
 
   beforeEach(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     wrapper = new BlockchainStateWrapper(web3);
   });
 

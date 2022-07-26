@@ -9,7 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai, {expect} from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
+import {deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../utils/web3_tools';
 import ConstructorOwnableJson from '../../src/contracts/ConstructorOwnable.json';
 import GenesisContractWrapper from '../../src/wrappers/genesis_contract_wrapper';
 
@@ -25,7 +26,7 @@ describe('Genesis Contract Wrapper', () => {
   const deploy = async (web3, sender) => deployContract(web3, ConstructorOwnableJson, [sender], {from: sender});
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     ownerAddress = getDefaultAddress(web3);
     otherAddress = web3.eth.accounts.create().address;
   });

@@ -18,7 +18,8 @@ import {
   ROUND_DURATION
 } from '../../../src/constants';
 import deploy from '../../helpers/deploy';
-import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import AtlasStakeStoreMockJson from '../../../src/contracts/AtlasStakeStoreMock.json';
 import ChallengesStoreMockJson from '../../../src/contracts/ChallengesStoreMock.json';
@@ -85,7 +86,7 @@ describe('ShelteringTransfers Contract', () => {
   const timestampToPayoutPeriod = (timestamp) => Math.floor(timestamp / PAYOUT_PERIOD_UNIT);
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [deployer, hermes, atlas, notSheltering, notStaking] = await web3.eth.getAccounts();
     ({shelteringTransfers, atlasStakeStore, sheltering, rolesStore, time, payoutsStore, challenges, fees, transfersEventEmitter} = await deploy({
       web3,

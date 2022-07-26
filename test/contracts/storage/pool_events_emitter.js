@@ -9,7 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {expect} from '../../helpers/chaiPreconf';
 import deploy from '../../helpers/deploy';
-import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import {ROLE_CODES} from '../../../src/constants';
 
 describe('PoolEventsEmitter Contract', () => {
@@ -28,7 +29,7 @@ describe('PoolEventsEmitter Contract', () => {
   const addNodeRequestResolved = (pool, id, status, senderAddress = owner) => poolEventsEmitter.methods.addNodeRequestResolved(pool, id, status).send({from: senderAddress});
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     web3.eth.handleRevert = true;
     [owner, pool, user] = await web3.eth.getAccounts();
 

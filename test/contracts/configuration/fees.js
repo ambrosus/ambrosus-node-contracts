@@ -14,7 +14,8 @@ import deploy from '../../helpers/deploy';
 import {DAY, TWO} from '../../helpers/consts';
 import TimeMockJson from '../../../src/contracts/TimeMock.json';
 import BN from 'bn.js';
-import {makeSnapshot, restoreSnapshot, createWeb3, utils} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 
 const {expect} = chai;
 
@@ -55,7 +56,7 @@ describe('Fees Contract', () => {
   const developerFee = (fee) => fee.sub(nonDeveloperFee(fee));
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [from, other, developer, support] = await web3.eth.getAccounts();
     ({fees, time} = await deploy({
       web3,

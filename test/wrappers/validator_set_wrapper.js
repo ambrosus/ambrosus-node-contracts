@@ -10,7 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai, {expect} from 'chai';
 import sinon from 'sinon';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
+import {deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../utils/web3_tools';
 import contractJsons from '../../src/contract_jsons';
 import ValidatorSetWrapper from '../../src/wrappers/validator_set_wrapper';
 
@@ -28,7 +29,7 @@ describe('ValidatorSet Wrapper', () => {
   const deploy = async (web3, sender) => deployContract(web3, contractJsons.validatorSet, [sender, generateValidatorSet(3), sender], {from: sender});
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     ownerAddress = getDefaultAddress(web3);
     contract = await deploy(web3, ownerAddress);
     wrapper = new ValidatorSetWrapper(contract.options.address, web3, ownerAddress);

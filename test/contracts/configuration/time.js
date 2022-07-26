@@ -11,7 +11,8 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
-import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -33,7 +34,7 @@ describe('Time Contract', () => {
   const payoutPeriodOffset = (timestamp, senderAddress = validUser) => time.methods.payoutPeriodOffset(timestamp).call({from: senderAddress});
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [validUser] = await web3.eth.getAccounts();
     ({time} = await deploy({
       web3,

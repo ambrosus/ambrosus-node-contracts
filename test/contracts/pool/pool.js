@@ -11,7 +11,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import {expect, assert} from '../../helpers/chaiPreconf';
 import deploy from '../../helpers/deploy';
-import {createWeb3, makeSnapshot, restoreSnapshot, deployContract, DEFAULT_GAS} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot, deployContract, DEFAULT_GAS} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import PoolToken from '../../../src/contracts/PoolToken.json';
 import Pool from '../../../src/contracts/Pool.json';
 import {ROLE_CODES, APOLLO_DEPOSIT} from '../../../src/constants';
@@ -60,7 +61,7 @@ describe('Pool Contract', function() {
   const apolloPoolMaxTotalStake = apolloPoolNodeStake.mul(toBN(100));
 
   before(async function() {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     web3.eth.handleRevert = true;
     [owner, initialApollo, poolService, node1, node2, addr1, addr2] = await web3.eth.getAccounts();
 

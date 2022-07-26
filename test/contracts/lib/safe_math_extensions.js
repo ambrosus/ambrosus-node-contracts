@@ -10,7 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import SafeMathExtensionsAdapter from '../../../src/contracts/SafeMathExtensionsAdapter.json';
 import BN from 'bn.js';
 import {ONE} from '../../helpers/consts';
@@ -43,7 +44,7 @@ describe('SafeMathExtensions', () => {
   let snapshotId;
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     safeMathExtension = await deployContract(web3, SafeMathExtensionsAdapter);
   });
 

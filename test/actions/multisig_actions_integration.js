@@ -10,7 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {multisig} from '../../src/contract_jsons';
-import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../src/utils/web3_tools';
+import {deployContract, makeSnapshot, restoreSnapshot} from '../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../utils/web3_tools';
 import deploy from '../helpers/deploy';
 import MultiplexerWrapper from '../../src/wrappers/multiplexer_wrapper';
 import MultisigWrapper from '../../src/wrappers/multisig_wrapper';
@@ -53,7 +54,7 @@ describe('Multisig actions integration', () => {
   const onboardAsApollo = async (sender, value) => roles.methods.onboardAsApollo().send({from: sender, value});
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [owner, otherOwner, otherAddress] = await web3.eth.getAccounts();
     multisigContract = await deployContract(web3, multisig, [[owner, otherOwner], 2]);
     ({multiplexer, head, kycWhitelist, fees, validatorSet, blockRewards, apolloDepositStore, roles, rolesPrivilagesStore} = await deploy({

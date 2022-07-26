@@ -9,7 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
+import {deployContract, getDefaultAddress} from '../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../utils/web3_tools';
 import contractJsons from '../../src/contract_jsons';
 import HeadWrapper from '../../src/wrappers/head_wrapper';
 
@@ -52,7 +53,7 @@ describe('Head Wrapper', () => {
   };
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     ownerAddress = getDefaultAddress(web3);
     await deployCatalogue();
     await deployStorageCatalogue();
