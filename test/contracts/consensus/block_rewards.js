@@ -9,7 +9,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {createWeb3, deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {deployContract, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import BlockRewardsJson from '../../../src/contracts/BlockRewards.json';
 
@@ -56,7 +57,7 @@ describe('Block rewards contract', () => {
   let snapshotId;
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [deployer, owner, otherUser, superUser, newOwner] = await web3.eth.getAccounts();
     exampleBeneficiaries = Array(3)
       .fill(null)

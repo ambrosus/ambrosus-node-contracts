@@ -8,7 +8,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import {expect, assert} from '../../helpers/chaiPreconf';
-import {createWeb3, makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot, deployContract} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import PoolToken from '../../../src/contracts/PoolToken.json';
 import {utils} from 'web3';
 import {ZERO_ADDRESS} from '../../../src/constants';
@@ -33,7 +34,7 @@ describe('PoolToken Contract', () => {
   // const transferFrom = (_from, _to, _value, senderAddress = owner) => poolToken.methods.transferFrom(_from, _to, _value).send({from: senderAddress});
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     web3.eth.handleRevert = true;
     [owner, addr1, addr2] = await web3.eth.getAccounts();
     poolToken = await deployContract(web3, PoolToken);

@@ -10,7 +10,8 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import {createWeb3, deployContract, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {deployContract, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import DmpAlgorithmAdapterJson from '../../../src/contracts/DmpAlgorithmAdapter.json';
 import BN from 'bn.js';
 import {DMP_PRECISION} from '../../../src/constants';
@@ -31,7 +32,7 @@ describe('DMP algorithm library', () => {
   const selectingAtlasTier = async (dmpBaseHash, atlasCounts, atlasNum) => DmpAlgorithmAdapter.methods.selectingAtlasTier(dmpBaseHash, atlasCounts, atlasNum).call();
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     for (let ind = 0; ind < DMP_PRECISION * 5; ind++) {
       const hash = utils.keccak256(ind.toString());
       resultsToInputs[web3.utils

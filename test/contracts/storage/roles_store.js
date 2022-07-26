@@ -12,7 +12,8 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import {APOLLO, ATLAS, HERMES} from '../../../src/constants';
-import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -35,7 +36,7 @@ describe('RolesStore Contract', () => {
   const getUrl = async (node) => rolesStore.methods.getUrl(node).call();
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [from, atlas, hermes, apollo, other] = await web3.eth.getAccounts();
     ({rolesStore} = await deploy({
       web3,

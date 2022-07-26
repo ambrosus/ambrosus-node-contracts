@@ -11,7 +11,8 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
-import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import deploy from '../../helpers/deploy';
 import {ATLAS, HERMES} from '../../../src/constants';
 import {STORAGE_PERIOD_UNIT, PAYOUT_PERIOD_UNIT} from '../../helpers/consts';
@@ -86,7 +87,7 @@ describe('Sheltering Contract', () => {
   const timestampToPayoutPeriod = (timestamp) => Math.floor(timestamp / PAYOUT_PERIOD_UNIT);
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [deployer, hermes, atlas, atlas2, atlas3, other] = await web3.eth.getAccounts();
     ({bundleStore, sheltering, atlasStakeStore, rolesStore, payoutsStore, time} = await deploy({
       web3,

@@ -12,7 +12,8 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
-import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 
 chai.use(chaiEmitEvents);
 chai.use(sinonChai);
@@ -47,7 +48,7 @@ describe('BundleStore Contract', () => {
   const removeShelterer = async (bundleId, shelterer, sender = deployer) => bundleStore.methods.removeShelterer(bundleId, shelterer).send({from: sender});
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [deployer, targetUser, otherUser, ...otherUsers] = await web3.eth.getAccounts();
     ({bundleStore} = await deploy({
       web3,

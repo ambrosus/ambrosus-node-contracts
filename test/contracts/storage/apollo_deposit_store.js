@@ -11,7 +11,8 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
-import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
 
 chai.use(sinonChai);
@@ -32,7 +33,7 @@ describe('Apollo Deposit Contract', () => {
   const isDepositing = (apollo = from) => apolloDepositStore.methods.isDepositing(apollo).call();
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [from, other] = await web3.eth.getAccounts();
     ({apolloDepositStore} = await deploy({
       web3,

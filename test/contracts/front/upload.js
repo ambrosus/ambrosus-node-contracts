@@ -16,7 +16,8 @@ import chaiEmitEvents from '../../helpers/chaiEmitEvents';
 import deploy from '../../helpers/deploy';
 import {ATLAS, HERMES} from '../../../src/constants';
 import {SYSTEM_CHALLENGES_COUNT} from '../../helpers/consts';
-import {createWeb3, makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot, utils} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 import {expectEventEmission} from '../../helpers/web3EventObserver';
 import BN from 'bn.js';
 
@@ -57,7 +58,7 @@ describe('Upload Contract', () => {
   const setDeveloperUploadFee = (fee, from = hermes) => fees.methods.setDeveloperUploadFee(fee).send({from, gasPrice: '0'});
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     ({uploads, fees, challengesEventEmitter, bundleStore, rolesStore, rewardsEventEmitter} = await deploy({
       web3,
       contracts: {

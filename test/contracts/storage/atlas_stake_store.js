@@ -13,7 +13,8 @@ import sinonChai from 'sinon-chai';
 import deploy from '../../helpers/deploy';
 import BN from 'bn.js';
 import observeBalanceChange from '../../helpers/web3BalanceObserver';
-import {createWeb3, makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {makeSnapshot, restoreSnapshot} from '../../../src/utils/web3_tools';
+import {createWeb3Ganache} from '../../utils/web3_tools';
 
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -50,7 +51,7 @@ describe('AtlasStakeStore Contract', () => {
 
 
   before(async () => {
-    web3 = await createWeb3();
+    web3 = await createWeb3Ganache();
     [deployer, shelterer, otherAddress, ...moreShelterers] = await web3.eth.getAccounts();
     ({atlasStakeStore} = await deploy({
       web3,
