@@ -16,13 +16,9 @@ export default class RolesPrivilagesStoreWrapper extends ManagedContractWrapper 
 
   async getAllMultiplexerSelectors() {
     const selectors = {};
-    selectors.transferContractsOwnership = await this.web3.eth.abi.encodeFunctionSignature('transferContractsOwnership(address)');
-    selectors.changeContext = await this.web3.eth.abi.encodeFunctionSignature('changeContext(Context)');
-    selectors.addToWhitelist = await this.web3.eth.abi.encodeFunctionSignature('addToWhitelist(address,Consts.NodeType,uint)');
+    selectors.addToWhitelist = await this.web3.eth.abi.encodeFunctionSignature('addToWhitelist(address,Consts.NodeType,uint256)');
     selectors.removeFromWhitelist = await this.web3.eth.abi.encodeFunctionSignature('removeFromWhitelist(address)');
-    selectors.setBaseUploadFee = await this.web3.eth.abi.encodeFunctionSignature('setBaseUploadFee(uint)');
-    selectors.transferOwnershipForValidatorSet =  await this.web3.eth.abi.encodeFunctionSignature('transferOwnershipForValidatorSet(address)');
-    selectors.transferOwnershipForBlockRewards =  await this.web3.eth.abi.encodeFunctionSignature('transferOwnershipForBlockRewards(address)');
+    selectors.setBaseUploadFee = await this.web3.eth.abi.encodeFunctionSignature('setBaseUploadFee(uint256)');
     selectors.setBaseReward = await this.web3.eth.abi.encodeFunctionSignature('setBaseReward(uint256)');
     selectors.retireApollo =  await this.web3.eth.abi.encodeFunctionSignature('retireApollo(address)');
     selectors.setDeveloperFee = await this.web3.eth.abi.encodeFunctionSignature('setDeveloperFee(uint256)');
@@ -36,6 +32,11 @@ export default class RolesPrivilagesStoreWrapper extends ManagedContractWrapper 
     selectors.setRoles = await this.web3.eth.abi.encodeFunctionSignature('setRoles(address,bytes32[]))');
 
     return selectors;
+  }
+
+  async hasPrivilage(user, selector) {
+    const contract = await this.contract();
+    return contract.methods.hasPrivilage(user, selector).call();
   }
 
   async hasRolePrivilage(roleHex, selector) {
