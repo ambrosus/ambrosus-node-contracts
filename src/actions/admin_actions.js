@@ -7,6 +7,10 @@ This Source Code Form is subject to the terms of the Mozilla Public License, v. 
 This Source Code Form is “Incompatible With Secondary Licenses”, as defined by the Mozilla Public License, v. 2.0.
 */
 
+import {loadContract} from '../utils/web3_tools';
+const MultisigWalletJson = require('../contracts/MultiSigWallet.json');
+const MultiplexerJson = require('../contracts/Multiplexer.json');
+
 export default class AdministrativeActions {
   constructor(headWrapper, kycWhitelistWrapper, feesWrapper, validatorProxyWrapper, blockchainStateWrapper, poolsNodesManagerWrapper, rolesWrapper) {
     this.headWrapper = headWrapper;
@@ -35,5 +39,14 @@ export default class AdministrativeActions {
       throw new Error('Provided address is not a contract');
     }
     await this.headWrapper.setContext(newContextAddress);
+  }
+
+  async showInfo() {
+    console.log("Multisig: ", await this.feesWrapper.getOwner());
+    const multiplexer = await loadContract(this.headWrapper.web3, MultiplexerJson.abi, await this.feesWrapper.getOwner());
+    console.log("Multisig: ", await multiplexer.methods.owner().call());
+    const multisig = await loadContract(this.headWrapper.web3, MultisigWalletJson.abi, await multiplexer.methods.owner().call());
+    const owners = await multisig.methods.getOwners().call();
+    console.log("Multisig owners:", owners);
   }
 }

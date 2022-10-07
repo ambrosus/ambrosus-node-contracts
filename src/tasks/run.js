@@ -58,6 +58,7 @@ import MultisigOwnersTask from './multisig_owners';
 import PoolActions from '../actions/pool_actions';
 import PoolingTask from './pooling';
 import BaseFeeTask from './base_fee';
+import ShowInfoTask from './show_info';
 
 
 const runTask = async () => {
@@ -115,6 +116,7 @@ const runTask = async () => {
   list.add('multisigOwners', new MultisigOwnersTask(multisigWrapper));
   list.add('fee', new BaseFeeTask(feesWrapper));
   list.add('pooling', new PoolingTask(multisigActions, poolActions));
+  list.add('info', new ShowInfoTask(adminActions));
 
   await list.run(args[0], args.slice(1));
 };

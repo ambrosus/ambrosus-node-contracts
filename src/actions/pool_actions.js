@@ -41,13 +41,14 @@ export default class PoolActions {
         const totalStake = await contract.methods.totalStake().call();
         const nodeStake = await contract.methods.nodeStake().call();
         const nodesCount = +await contract.methods.getNodesCount().call();
+        const tpken = +await contract.methods.token().call();
         let service;
         try {
           service = await contract.methods.service().call();
         // eslint-disable-next-line no-empty
         } catch (error) {
         }
-        console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), service);
+        console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), token, service);
       }
     } else {
       console.log('No pools found');
