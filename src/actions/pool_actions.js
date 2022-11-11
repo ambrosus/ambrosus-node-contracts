@@ -41,7 +41,7 @@ export default class PoolActions {
         const totalStake = await contract.methods.totalStake().call();
         const nodeStake = await contract.methods.nodeStake().call();
         const nodesCount = +await contract.methods.getNodesCount().call();
-        const tpken = +await contract.methods.token().call();
+        const token = +await contract.methods.token().call();
         let service;
         try {
           service = await contract.methods.service().call();

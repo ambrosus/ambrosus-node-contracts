@@ -196,6 +196,13 @@ contract MultiSigWallet {
         uint256 value,
         bytes data
     ) public returns (uint256 transactionId) {
+        bytes4 selector = _convertBytesToBytes4(data);
+
+        require(
+            rolesScope.hasPrivilage(msg.sender, selector),
+            "User does not have privilage to create transaction"
+        );
+
         transactionId = addTransaction(destination, value, data);
         confirmTransaction(transactionId);
     }
@@ -208,15 +215,6 @@ contract MultiSigWallet {
         transactionExists(transactionId)
         notConfirmed(transactionId, msg.sender)
     {
-        bytes4 selector = _convertBytesToBytes4(
-            transactions[transactionId].data
-        );
-
-        require(
-            rolesScope.hasPrivilage(msg.sender, selector),
-            "User does not have privilage to confirm transaction"
-        );
-
         confirmations[transactionId][msg.sender] = true;
         emit Confirmation(msg.sender, transactionId);
         executeTransaction(transactionId);

@@ -42,11 +42,11 @@ export default class AdministrativeActions {
   }
 
   async showInfo() {
-    console.log("Multisig: ", await this.feesWrapper.getOwner());
+    console.log('Multisig:', await this.feesWrapper.getOwner());
     const multiplexer = await loadContract(this.headWrapper.web3, MultiplexerJson.abi, await this.feesWrapper.getOwner());
-    console.log("Multisig: ", await multiplexer.methods.owner().call());
+    console.log('Multisig:', await multiplexer.methods.owner().call());
     const multisig = await loadContract(this.headWrapper.web3, MultisigWalletJson.abi, await multiplexer.methods.owner().call());
     const owners = await multisig.methods.getOwners().call();
-    console.log("Multisig owners:", owners);
+    console.log('Multisig owners:', owners);
   }
 }

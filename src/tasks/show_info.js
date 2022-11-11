@@ -8,7 +8,6 @@ This Source Code Form is “Incompatible With Secondary Licenses”, as defined 
 */
 
 import TaskBase from './base/task_base';
-import {utils} from '../utils/web3_tools';
 
 export default class ShowInfoTask extends TaskBase {
   constructor(adminActions) {
@@ -16,7 +15,7 @@ export default class ShowInfoTask extends TaskBase {
     this.adminActions = adminActions;
   }
 
-  async execute(args) {
+  async execute() {
     await this.adminActions.showInfo();
   }
 
