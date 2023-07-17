@@ -17,10 +17,13 @@ export default class PayoutsTask extends TaskBase {
     this.payoutsActions = payoutsActions;
   }
 
-  async execute(args) {
-    const [command] = args;
+  async execute([command, ...options]) {
     if (command === 'total') {
-      await this.totalAmount();
+      if (options.length > 0) {
+        await this.totalAmountForAddress(options[0]);
+      } else {
+        await this.totalAmount();
+      }
     } else if (command === 'withdraw') {
       await this.withdraw();
     } else if (command === 'period') {
@@ -34,6 +37,16 @@ export default class PayoutsTask extends TaskBase {
   async totalAmount() {
     try {
       const amount = await this.payoutsActions.getTotalAvailablePayout();
+      console.log(`You can withdraw ${this.web3.utils.fromWei(amount, 'ether')} AMB now!`);
+    } catch (err) {
+      console.error(err.message);
+      process.exit(1);
+    }
+  }
+
+  async totalAmountForAddress(address) {
+    try {
+      const amount = await this.payoutsActions.getTotalAvailablePayoutForAddress(address);
       console.log(`You can withdraw ${this.web3.utils.fromWei(amount, 'ether')} AMB now!`);
     } catch (err) {
       console.error(err.message);

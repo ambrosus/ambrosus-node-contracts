@@ -35,6 +35,15 @@ export default class PayoutsActions {
     return availablePayout.toString();
   }
 
+  async getTotalAvailablePayoutForAddress(address) {
+    const currentPayout = parseInt(await this.currentPayoutPeriod(), 10);
+    let availablePayout = new BN('0');
+    for (let ind = FIRST_MEANINGFUL_PERIOD; ind < currentPayout; ind++) {
+      availablePayout = availablePayout.add(new BN(await this.payoutsWrapper.availablePayoutAmountInPeriodForAddress(address, ind)));
+    }
+    return availablePayout.toString();
+  }
+
   async withdraw() {
     await this.payoutsWrapper.withdraw();
   }

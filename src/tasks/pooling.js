@@ -93,7 +93,7 @@ export default class PoolingTask extends TaskBase {
 
   async poolNodes(poolAddress) {
     if (utils.isAddress(poolAddress)) {
-      return this.poolActions.getPoolNodesListdeactivate(poolAddress);
+      return this.poolActions.getPoolNodesList(poolAddress);
     }
     console.error('Wrong address, use: yarn task pooling nodes [pool address]');
   }
