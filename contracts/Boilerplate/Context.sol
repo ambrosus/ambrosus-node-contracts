@@ -34,4 +34,9 @@ contract Context {
     function isInternalToContext(address contractAddress) view public returns (bool) {
         return trustedAddresses[contractAddress];
     }
+
+    function setTrustedAddress(address _address, bool _trusted) public {
+        require(catalogue.fees().isAdmin(msg.sender));
+        trustedAddresses[_address] = _trusted;
+    }
 }

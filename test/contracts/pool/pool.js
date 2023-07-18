@@ -69,6 +69,7 @@ describe('Pool Contract', function() {
       web3,
       contracts: {
         config: true,
+        fees: true,
         kycWhitelistStore: true,
         atlasStakeStore: true,
         rolesStore: true,
