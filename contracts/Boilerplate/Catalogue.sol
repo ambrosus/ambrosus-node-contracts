@@ -83,29 +83,7 @@ contract Catalogue {
 
     function change(address _from, address _to) public {
         require(fees.isAdmin(msg.sender));
-        if (_from == address(kycWhitelist)) {
-            kycWhitelist = KycWhitelist(_to);
-        } else if (_from == address(roles)) {
-            roles = Roles(_to);
-        } else if (_from == address(fees)) {
-            fees = Fees(_to);
-        } else if (_from == address(challenges)) {
-            challenges = Challenges(_to);
-        } else if (_from == address(payouts)) {
-            payouts = Payouts(_to);
-        } else if (_from == address(shelteringTransfers)) {
-            shelteringTransfers = ShelteringTransfers(_to);
-        } else if (_from == address(sheltering)) {
-            sheltering = Sheltering(_to);
-        } else if (_from == address(uploads)) {
-            uploads = Uploads(_to);
-        } else if (_from == address(config)) {
-            config = Config(_to);
-        } else if (_from == address(validatorProxy)) {
-            validatorProxy = ValidatorProxy(_to);
-        } else if (_from == address(time)) {
-            time = Time(_to);
-        } else if (_from == address(poolsNodesManager)) {
+        if (_from == address(poolsNodesManager)) {
             poolsNodesManager = PoolsNodesManager(_to);
         }
     }
