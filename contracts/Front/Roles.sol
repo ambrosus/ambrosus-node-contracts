@@ -209,12 +209,16 @@ contract Roles is Base, Ownable {
         staking.transfer(amountToTransfer);
     }
 
-    function transferApollo(address apollo, address to) public {
-        require(head.context().catalogue().fees().isAdmin(msg.sender));
-        require(rolesStore.getRole(apollo) == Consts.NodeType.APOLLO);
-        address staking = getStakingAddress(apollo);
-        uint amountToTransfer = apolloDepositStore.releaseDeposit(staking, to);
-        emit ApolloTransfered(apollo, amountToTransfer);
+    function transferApollo(address[] apollo, address[] to) public {
+        require(head.context().catalogue().fees().isAdmin(msg.sender), "Must be admin");
+        require(apollo.length == to.length, "Array lengths not equals");
+        uint16 i;
+        for (i = 0; i < apollo.length; i++) {
+            require(rolesStore.getRole(apollo[i]) == Consts.NodeType.APOLLO, "Not an apollo");
+            address staking = getStakingAddress(apollo[i]);
+            uint amountToTransfer = apolloDepositStore.releaseDeposit(staking, to[i]);
+            emit ApolloTransfered(apollo[i], amountToTransfer);
+        }
     }
 
     function retire(address node, Consts.NodeType role) private {
