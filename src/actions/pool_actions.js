@@ -42,16 +42,16 @@ export default class PoolActions {
         const nodeStake = await contract.methods.nodeStake().call();
         const nodesCount = +await contract.methods.getNodesCount().call();
         const token = await contract.methods.token().call();
-//        const maxTotalStake = await contract.methods.maxTotalStake().call();
-//        const minStakeValue = await contract.methods.minStakeValue().call();
+        // const maxTotalStake = await contract.methods.maxTotalStake().call();
+        // const minStakeValue = await contract.methods.minStakeValue().call();
         let service;
         try {
           service = await contract.methods.service().call();
         // eslint-disable-next-line no-empty
         } catch (error) {
         }
-//        console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), token, service, this.web3.utils.fromWei(maxTotalStake), this.web3.utils.fromWei(minStakeValue));
-        console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), token);
+        // console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), token, service, this.web3.utils.fromWei(maxTotalStake), this.web3.utils.fromWei(minStakeValue));
+        console.log(id, active ? 'active' : '      ', name, address, this.web3.utils.fromWei(nodeStake, 'ether'), nodesCount, this.web3.utils.fromWei(totalStake, 'ether'), token, service);
       }
     } else {
       console.log('No pools found');

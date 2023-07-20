@@ -65,6 +65,7 @@ describe('PoolsNodesManager Contract', () => {
       web3,
       contracts: {
         config: true,
+        fees: true,
         kycWhitelistStore: true,
         atlasStakeStore: true,
         rolesStore: true,

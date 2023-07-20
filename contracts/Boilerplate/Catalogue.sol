@@ -80,6 +80,13 @@ contract Catalogue {
         validatorProxy = _validatorProxy;
         poolsNodesManager = _poolsNodesManager;
     }
+
+    function change(address _from, address _to) public {
+        require(fees.isAdmin(msg.sender));
+        if (_from == address(poolsNodesManager)) {
+            poolsNodesManager = PoolsNodesManager(_to);
+        }
+    }
 }
 
 contract StorageCatalogue {

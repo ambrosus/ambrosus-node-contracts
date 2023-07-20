@@ -19,9 +19,12 @@ import "../Storage/RolesStore.sol";
 import "../Storage/ApolloDepositStore.sol";
 import "../Storage/RolesEventEmitter.sol";
 import "../Storage/NodeAddressesStore.sol";
+import "../Configuration/Fees.sol";
 
 
 contract Roles is Base, Ownable {
+
+    event ApolloTransfered(address nodeAddress, uint releasedDeposit);
 
     AtlasStakeStore private atlasStakeStore;
     RolesStore private rolesStore;
@@ -31,6 +34,7 @@ contract Roles is Base, Ownable {
     Config private config;
     RolesEventEmitter private rolesEventEmitter;
     NodeAddressesStore private nodeAddressesStore;
+    Fees private fees;
 
     constructor(
         Head _head,
@@ -41,7 +45,8 @@ contract Roles is Base, Ownable {
         KycWhitelist _kycWhitelist,
         Config _config,
         RolesEventEmitter _rolesEventEmitter,
-        NodeAddressesStore _nodeAddressesStore
+        NodeAddressesStore _nodeAddressesStore,
+        Fees _fees
     ) 
         public Base(_head) 
     { 
@@ -53,11 +58,15 @@ contract Roles is Base, Ownable {
         config = _config;
         rolesEventEmitter = _rolesEventEmitter;
         nodeAddressesStore = _nodeAddressesStore;
+        fees = _fees;
     }
 
     function() public payable {}
 
     function onboardAsAtlas(string nodeUrl) public payable {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         require(canOnboard(msg.sender, Consts.NodeType.ATLAS, msg.value));
 
         atlasStakeStore.depositStake.value(msg.value)(msg.sender);
@@ -68,6 +77,9 @@ contract Roles is Base, Ownable {
     }
 
     function onboardAsAtlasSafe(address nodeAddress, string nodeUrl) public payable {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         require(canOnboard(nodeAddress, Consts.NodeType.ATLAS, msg.value));
 
         nodeAddressesStore.addNode(msg.sender, nodeAddress);
@@ -79,6 +91,9 @@ contract Roles is Base, Ownable {
     }
 
     function onboardAsApollo() public payable {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         require(canOnboard(msg.sender, Consts.NodeType.APOLLO, msg.value));
 
         apolloDepositStore.storeDeposit.value(msg.value)(msg.sender);
@@ -89,6 +104,9 @@ contract Roles is Base, Ownable {
     }
 
     function onboardAsApolloSafe(address nodeAddress) public payable {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         require(canOnboard(nodeAddress, Consts.NodeType.APOLLO, msg.value));
 
         nodeAddressesStore.addNode(msg.sender, nodeAddress);
@@ -100,6 +118,9 @@ contract Roles is Base, Ownable {
     }
 
     function onboardAsHermes(string nodeUrl) public {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         require(canOnboard(msg.sender, Consts.NodeType.HERMES, 0));
 
         rolesStore.setRole(msg.sender, Consts.NodeType.HERMES);
@@ -109,6 +130,9 @@ contract Roles is Base, Ownable {
     }
 
     function retireAtlas() public {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         address nodeAddress = getOperatingAddress(msg.sender);
         retire(nodeAddress, Consts.NodeType.ATLAS);
 
@@ -121,6 +145,9 @@ contract Roles is Base, Ownable {
     }
 
     function retireApollo() public {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         address nodeAddress = getOperatingAddress(msg.sender);
         retire(nodeAddress, Consts.NodeType.APOLLO);
 
@@ -134,6 +161,9 @@ contract Roles is Base, Ownable {
     }
 
     function retireHermes() public {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         retire(msg.sender, Consts.NodeType.HERMES);
 
         rolesEventEmitter.nodeRetired(msg.sender, 0, Consts.NodeType.HERMES);
@@ -163,6 +193,9 @@ contract Roles is Base, Ownable {
     }
 
     function retireApollo(address apollo) public onlyOwner {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         require(rolesStore.getRole(apollo) == Consts.NodeType.APOLLO);
         rolesStore.setRole(apollo, Consts.NodeType.NONE);
 
@@ -176,7 +209,22 @@ contract Roles is Base, Ownable {
         staking.transfer(amountToTransfer);
     }
 
+    function transferApollo(address[] apollo, address[] to) public {
+        require(fees.isAdmin(msg.sender), "Must be admin");
+        require(apollo.length == to.length, "Array lengths not equals");
+        uint16 i;
+        for (i = 0; i < apollo.length; i++) {
+            require(rolesStore.getRole(apollo[i]) == Consts.NodeType.APOLLO, "Not an apollo");
+            address staking = getStakingAddress(apollo[i]);
+            uint amountToTransfer = apolloDepositStore.releaseDeposit(staking, to[i]);
+            emit ApolloTransfered(apollo[i], amountToTransfer);
+        }
+    }
+
     function retire(address node, Consts.NodeType role) private {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         require(rolesStore.getRole(node) == role);
 
         if (role == Consts.NodeType.ATLAS || role == Consts.NodeType.HERMES) {

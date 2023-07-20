@@ -83,4 +83,9 @@ export default class FeesWrapper extends ManagedOwnableContractWrapper {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.removeAdmin(admin));
   }
+
+  async setPaused(paused) {
+    const contract = await this.contract();
+    return this.processTransaction(contract.methods.setPaused(paused));
+  }
 }

@@ -33,6 +33,7 @@ contract Fees is Base, Ownable {
     uint public developerUploadFeePPM = 0;
     address public developer;
     address public support;
+    bool public paused = false;
     Config private config;
     Time private time;
 
@@ -42,6 +43,10 @@ contract Fees is Base, Ownable {
     constructor(Head _head, Config _config, Time _time) public Base(_head) {
         config = _config;
         time = _time;
+    }
+
+    function setPaused(bool _paused) public onlyOwner {
+        paused = _paused;
     }
 
     function setDeveloper(address _developer) public onlyOwner {

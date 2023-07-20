@@ -144,4 +144,8 @@ contract Multiplexer is ConstructorOwnable {
     {
         rolesPrivilagesStore.setRole(roleName, trueSelectors, falseSelectors);
     }
+
+    function setPaused(bool _paused) public onlyOwner {
+        fees.setPaused(_paused);
+    }
 }

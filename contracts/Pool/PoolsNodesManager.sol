@@ -3,6 +3,7 @@ pragma solidity ^0.4.23;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../Configuration/Config.sol";
 import "../Configuration/Consts.sol";
+import "../Configuration/Fees.sol";
 import "../Boilerplate/Head.sol";
 import "../Storage/KycWhitelistStore.sol";
 import "../Middleware/ValidatorProxy.sol";
@@ -25,6 +26,7 @@ contract PoolsNodesManager is Base, Ownable {
     ApolloDepositStore private apolloDepositStore;
     RolesEventEmitter private rolesEventEmitter;
     PoolEventsEmitter private poolEventsEmitter;
+    Fees private fees;
 
     modifier onlyPoolsCalls() {
         require(poolsStore.isPool(address(msg.sender)), "The message sender is not pool");
@@ -41,7 +43,8 @@ contract PoolsNodesManager is Base, Ownable {
         RolesStore _rolesStore,
         ApolloDepositStore _apolloDepositStore,
         RolesEventEmitter _rolesEventEmitter,
-        PoolEventsEmitter _poolEventsEmitter
+        PoolEventsEmitter _poolEventsEmitter,
+        Fees _fees
     ) public Base(_head) {
         poolsStore = _poolsStore;
         config = _config;
@@ -52,11 +55,15 @@ contract PoolsNodesManager is Base, Ownable {
         apolloDepositStore = _apolloDepositStore;
         rolesEventEmitter = _rolesEventEmitter;
         poolEventsEmitter = _poolEventsEmitter;
+        fees = _fees;
     }
 
     function() public payable {}
 
     function onboard(address nodeAddress, Consts.NodeType nodeType) external payable onlyPoolsCalls {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         if (nodeType == Consts.NodeType.APOLLO) {
             require(msg.value >= config.APOLLO_DEPOSIT(), "Invalid deposit value");
             kycWhitelistStore.set(nodeAddress, Consts.NodeType.APOLLO, msg.value);
@@ -70,6 +77,9 @@ contract PoolsNodesManager is Base, Ownable {
     }
 
     function retire(address nodeAddress, Consts.NodeType nodeType) external onlyPoolsCalls returns (uint) {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         if (nodeType == Consts.NodeType.APOLLO) {
             uint amountToTransfer = apolloDepositStore.releaseDeposit(nodeAddress, this);
             validatorProxy.removeValidator(nodeAddress);
@@ -89,6 +99,9 @@ contract PoolsNodesManager is Base, Ownable {
     }
 
     function poolStakeChanged(address user, int stake, int tokens) public onlyPoolsCalls {
+        if (fees.paused()) {
+            revert("Temporary disabled");
+        }
         poolEventsEmitter.poolStakeChanged(msg.sender, user, stake, tokens);
     }
 
@@ -97,7 +110,9 @@ contract PoolsNodesManager is Base, Ownable {
     }
 
     function addNodeRequest(uint stake, uint requestId, uint nodeId, Consts.NodeType role) public onlyPoolsCalls {
-        poolEventsEmitter.addNodeRequest(msg.sender, requestId, nodeId, stake, role);
+        if (!fees.paused()) {
+            poolEventsEmitter.addNodeRequest(msg.sender, requestId, nodeId, stake, role);
+        }
     }
 
     function addNodeRequestResolved(uint requestId, uint status) public onlyPoolsCalls {

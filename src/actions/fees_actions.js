@@ -38,4 +38,8 @@ export default class FeesActions {
   async feeForChallenge(storagePeriods) {
     return this.feesWrapper.feeForChallenge(storagePeriods);
   }
+
+  async setPaused(paused) {
+    return this.feesWrapper.setPaused(paused);
+  }
 }
