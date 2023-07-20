@@ -32,6 +32,8 @@ export default class PoolingTask extends TaskBase {
       await this.stake(options[0], options[1]);
     } else if (command === 'unstake') {
       await this.unstake(options[0], options[1]);
+    } else if (command === 'setPaused') {
+      await this.setPaused(options[0]);
     } else {
       console.error('Unknown sub-command, see yarn task pooling help');
       process.exit(1);
@@ -110,6 +112,13 @@ export default class PoolingTask extends TaskBase {
       return this.poolActions.unstake(poolAddress, this.poolActions.web3.utils.toWei(value, 'ether'));
     }
     console.error('Wrong address, use: yarn task pooling unstake [pool address, tokens]');
+  }
+
+  async setPaused(paused) {
+    if (!paused) {
+      return;
+    }
+    return this.multisigActions.setPaused(paused);
   }
 
   help() {

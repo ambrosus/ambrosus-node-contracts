@@ -160,4 +160,8 @@ export default class MultisigActions {
   async removePool(pool) {
     return this.submitTransaction(await this.multiplexerWrapper.removePool(pool));
   }
+
+  async setPaused(paused) {
+    return this.submitTransaction(await this.multiplexerWrapper.setPaused(paused));
+  }
 }

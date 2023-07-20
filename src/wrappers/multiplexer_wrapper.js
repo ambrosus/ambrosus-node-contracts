@@ -90,4 +90,8 @@ export default class MultiplexerWrapper extends GenesisContractWrapper {
   async setRole(roleName, trueSelectors, falseSelectors) {
     return this.contract.methods.setRole(roleName, trueSelectors, falseSelectors).encodeABI();
   }
+
+  async setPaused(paused) {
+    return this.contract.methods.setPaused(paused).encodeABI();
+  }
 }

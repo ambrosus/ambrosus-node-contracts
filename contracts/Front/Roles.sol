@@ -210,7 +210,7 @@ contract Roles is Base, Ownable {
     }
 
     function transferApollo(address[] apollo, address[] to) public {
-        require(head.context().catalogue().fees().isAdmin(msg.sender), "Must be admin");
+        require(fees.isAdmin(msg.sender), "Must be admin");
         require(apollo.length == to.length, "Array lengths not equals");
         uint16 i;
         for (i = 0; i < apollo.length; i++) {
