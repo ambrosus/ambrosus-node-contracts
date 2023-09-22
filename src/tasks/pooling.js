@@ -34,6 +34,8 @@ export default class PoolingTask extends TaskBase {
       await this.unstake(options[0], options[1]);
     } else if (command === 'setPaused') {
       await this.setPaused(options[0]);
+    } else if (command === 'confirm') {
+      console.log(await this.confirm(options[0]));
     } else {
       console.error('Unknown sub-command, see yarn task pooling help');
       process.exit(1);
@@ -118,7 +120,11 @@ export default class PoolingTask extends TaskBase {
     if (!paused) {
       return;
     }
-    return this.multisigActions.setPaused(paused);
+    return this.multisigActions.setPaused(paused === 'true');
+  }
+
+  async confirm(tx) {
+    return this.multisigActions.confirmTransaction(tx);
   }
 
   help() {
