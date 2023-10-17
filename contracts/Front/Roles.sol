@@ -144,6 +144,22 @@ contract Roles is Base, Ownable {
         msg.sender.transfer(amountToTransfer);
     }
 
+    function retireAtlasFullProcedure() public {
+        address nodeAddress = getOperatingAddress(msg.sender);
+
+        uint amountToTransfer = atlasStakeStore.releaseStake(msg.sender, this);
+        nodeAddressesStore.removeNode(msg.sender);
+
+        rolesEventEmitter.nodeRetired(nodeAddress, amountToTransfer, Consts.NodeType.ATLAS);
+
+        msg.sender.transfer(amountToTransfer);
+    }
+
+    function quickRetireAtlas() public {
+        address nodeAddress = getOperatingAddress(msg.sender);
+        retire(nodeAddress, Consts.NodeType.ATLAS);
+    }
+
     function retireApollo() public {
         if (fees.paused()) {
             revert("Temporary disabled");

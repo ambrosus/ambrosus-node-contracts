@@ -75,6 +75,12 @@ export default class RolesWrapper extends ManagedOwnableContractWrapper {
     return this.processTransaction(contract.methods.retireAtlas());
   }
 
+  async retireAtlasStaking() {
+    const contract = await this.contract();
+    this.processTransaction(contract.methods.retireAtlasFullProcedure());
+    return contract.methods.quickRetireAtlas();
+  }
+
   async retireApollo() {
     const contract = await this.contract();
     return this.processTransaction(contract.methods.retireApollo());
